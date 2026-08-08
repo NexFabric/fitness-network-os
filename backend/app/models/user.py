@@ -47,8 +47,13 @@ class UserMfaMethod(Base):
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     # Secrets must be encrypted at rest, never stored in plaintext
-    encrypted_secret: Mapped[str] = mapped_column(String(255), nullable=False)
+    encrypted_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
     provider_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    
+    # Deprecated columns, keeping for backwards compatibility during migration
+    secret: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    method_type: Mapped[str] = mapped_column(String(50), nullable=False, default="totp")
+    
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     
     user: Mapped["User"] = relationship("User", back_populates="mfa_methods")

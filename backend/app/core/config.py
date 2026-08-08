@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     
     DATABASE_URL: PostgresDsn
+    MIGRATOR_DATABASE_URL: PostgresDsn
     REDIS_URL: RedisDsn
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")

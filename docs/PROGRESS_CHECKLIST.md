@@ -23,15 +23,15 @@
 
 ## Milestone: CORE HARDENING & API (WAVE 5.5B) - ⏳ IN PROGRESS
 
-### Phase 0-7: Core Correctness & Security (P0) - ✅ COMPLETED
-- [x] Phase 0: Status Truth & CI Recovery - 🟢 PRODUCTION VERIFIED
-- [x] Phase 1: Main Branch Protection - 🟢 PRODUCTION VERIFIED
-- [x] Phase 2: Authentication & Session P0 - 🟢 PRODUCTION VERIFIED
-- [x] Phase 3: MFA & Privileged Auth - 🟢 PRODUCTION VERIFIED
-- [x] Phase 4: Tenant Context & Real RLS Boundary - 🟢 PRODUCTION VERIFIED
-- [x] Phase 5: Tenancy Schema Linter V2 - 🟢 PRODUCTION VERIFIED
-- [x] Phase 6: Complete Composite FK Coverage - 🟢 PRODUCTION VERIFIED
-- [x] Phase 7: Authorization Engine (RBAC) - 🟢 PRODUCTION VERIFIED
+### Phase 0-7: Core Correctness & Security (P0) - ⏳ GATE CLOSURE V2 PENDING
+- [ ] Phase 0: Status Truth & CI Recovery - 🔴 NOT VERIFIED (CI Fails)
+- [ ] Phase 1: Main Branch Protection - 🟠 PROTECTED (Admin Bypass Remains)
+- [ ] Phase 2: Authentication & Session P0 - 🟢 CORE VERIFIED (CI Pending)
+- [ ] Phase 3: MFA & Privileged Auth - 🟠 FOUNDATION ONLY (Destructive Migration)
+- [ ] Phase 4: Tenant Context & Real RLS Boundary - 🟢 IMPLEMENTATION STRONG (CI Pending)
+- [ ] Phase 5: Tenancy Schema Linter V2 - 🟢 IMPLEMENTATION (CI Topology Broken)
+- [ ] Phase 6: Complete Composite FK Coverage - 🟢 STRONG
+- [ ] Phase 7: Authorization Engine (RBAC) - 🔴 SEMANTIC GAPS REMAIN
 
 ### Phase 8-17: Domain API & Services Implementation
 - [ ] Phase 8: Membership Domain Correctness
