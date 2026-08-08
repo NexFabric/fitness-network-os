@@ -57,13 +57,13 @@
 
 ## Milestone: GROWTH & SCALE
 
-### Wave 6 — Growth - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Lead CRM & Opportunities
-- [ ] Renewal Pipeline & Revenue Recovery
-- [ ] Member Health & Retention Cockpit
-- [ ] Tasks & Automations
+### Wave 6 — Growth - ✅ COMPLETED
+- [x] Lead CRM & Opportunities
+- [x] Renewal Pipeline & Revenue Recovery
+- [x] Member Health & Retention Cockpit
+- [x] Tasks & Automations
 
-### Wave 7 — Federation - 📝 PENDING
+### Wave 7 — Federation - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] Gym Passport
 - [ ] Compliance & Certification
 - [ ] Network Alerts & Benchmark
