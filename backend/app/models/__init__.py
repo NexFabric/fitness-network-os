@@ -12,6 +12,7 @@ from app.models.access import SigningKey, Device, AccessAttempt, Checkin, Offlin
 from app.models.report import ReportDefinition, ReportRun
 from app.models.notification import NotificationTemplate, NotificationDelivery
 from app.models.outbox import OutboxEvent, InboxEvent
+from app.models.growth import Lead, Opportunity, Task, RetentionCockpit
 
 __all__ = [
     "Organization", "Tenant", "User", "UserSession", "UserDevice", "UserMfaMethod",
@@ -23,6 +24,7 @@ __all__ = [
     "SigningKey", "Device", "AccessAttempt", "Checkin", "OfflineSnapshot",
     "ReportDefinition", "ReportRun",
     "NotificationTemplate", "NotificationDelivery",
-    "OutboxEvent", "InboxEvent"
+    "OutboxEvent", "InboxEvent",
+    "Lead", "Opportunity", "Task", "RetentionCockpit"
 ]
 
