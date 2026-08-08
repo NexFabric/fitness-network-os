@@ -1,0 +1,9 @@
+{
+  "name": "fitness-network-os-frontend",
+  "private": true,
+  "workspaces": [
+    "admin-web",
+    "scanner-pwa",
+    "packages/*"
+  ]
+}
