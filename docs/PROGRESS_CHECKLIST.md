@@ -17,16 +17,16 @@
 
 ## Milestone: CORE DOMAIN
 
-### Wave 1 — Gym Core - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Locations & Facilities models
-- [ ] Staff / TenantUser linking model
-- [ ] Members Core (Profiles, PII classification)
-- [ ] Member 360 (Tags & Notes)
-- [ ] Consent Registry (ADR-016)
+### Wave 1 — Gym Core - ✅ COMPLETED
+- [x] Locations & Facilities models
+- [x] Staff / TenantUser linking model
+- [x] Members Core (Profiles, PII classification)
+- [x] Member 360 (Tags & Notes)
+- [x] Consent Registry (ADR-016)
 - [ ] Documents & Secure File Storage
 - [ ] Import Engine Basics
 
-### Wave 2 — Membership - 📝 PENDING
+### Wave 2 — Membership - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] Plans & Plan Versions
 - [ ] Subscriptions / Periods
 - [ ] Freeze / Renew / Cancel Lifecycle
