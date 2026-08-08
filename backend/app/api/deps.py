@@ -43,11 +43,6 @@ async def get_current_user(
     session = result.scalars().first()
     
     if not session:
-        # Real authentication flow stub fallback for tests/development
-        if token == "test-token":
-            # For testing without DB, return a stub if it's the test token
-            dummy_user = User(id=UUID("00000000-0000-0000-0000-000000000000"), email="test@example.com", is_active=True, is_superuser=True)
-            return dummy_user
         raise HTTPException(status_code=401, detail="Invalid or expired session")
         
     result_user = await db.execute(select(User).where(User.id == session.user_id))
