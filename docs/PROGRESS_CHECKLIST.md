@@ -33,15 +33,15 @@
 - [x] Usage Wallets & Entitlements
 - [x] Access Policies
 
-### Wave 3 — Finance - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Billing Accounts
-- [ ] Invoices & Invoice Items
-- [ ] Payments & Allocations
-- [ ] Partial Payments
-- [ ] Refund, Credit & Discount Logic
-- [ ] Reconciliation
+### Wave 3 — Finance - ✅ COMPLETED
+- [x] Billing Accounts
+- [x] Invoices & Invoice Items
+- [x] Payments & Allocations
+- [x] Partial Payments
+- [x] Refund, Credit & Discount Logic
+- [x] Reconciliation
 
-### Wave 4 — Access - 📝 PENDING
+### Wave 4 — Access - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] QR Credential Issuer & Key Rotation (ADR-024)
 - [ ] Scanner PWA Basics
 - [ ] Access Decision Engine
