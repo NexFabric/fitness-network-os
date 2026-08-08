@@ -108,7 +108,33 @@ async def main_async():
                     if target_cols[idx] != "tenant_id":
                          errors.append(f"Model {cls.__name__} composite FK to {target_table} maps tenant_id to something else.")
 
+
+        # 5. tenant_id Index
+        has_index = False
+        tenant_col = cls.__table__.columns.get("tenant_id")
+        if tenant_col is not None and tenant_col.index:
+            has_index = True
+            
+        if not has_index:
+            for index in cls.__table__.indexes:
+                col_names = [c.name for c in index.columns]
+                if col_names and col_names[0] == "tenant_id":
+                    has_index = True
+                    break
+        
+        if not has_index:
+            for const in cls.__table__.constraints:
+                if type(const).__name__ in ("UniqueConstraint", "PrimaryKeyConstraint"):
+                    col_names = [c.name for c in const.columns]
+                    if col_names and col_names[0] == "tenant_id":
+                        has_index = True
+                        break
+                        
+        if not has_index:
+            errors.append(f"Model {cls.__name__} missing an index starting with tenant_id.")
+
         # 4. RLS enabled in DB
+
         await check_db_rls(errors, table_name)
     
     if errors:

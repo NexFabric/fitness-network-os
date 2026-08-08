@@ -2,7 +2,7 @@ import contextvars
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_session_token_from_cookie
@@ -74,6 +74,7 @@ async def get_tenant_id(
         
     if user.is_superuser:
         current_tenant_id_var.set(tenant_id)
+        await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
         return tenant_id
 
     # Verify user belongs to the requested tenant via UserRole
@@ -89,4 +90,5 @@ async def get_tenant_id(
         raise HTTPException(status_code=403, detail="User does not have access to this tenant")
         
     current_tenant_id_var.set(tenant_id)
+    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
     return tenant_id
