@@ -57,7 +57,7 @@ def test_authorization_evaluate_scope_tenant():
 def test_authorization_evaluate_scope_platform():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=None)
+    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=None, organization_id=None)
     user.user_roles = [user_role]
     
     assert AuthorizationService.evaluate_scope(user, Scope.PLATFORM) == True
@@ -74,10 +74,10 @@ def test_authorization_evaluate_scope_location():
 
 def test_authorization_evaluate_scope_federation_aggregate():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
-    tenant_id = uuid4()
+    org_id = uuid4()
     
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id)
+    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=None, organization_id=org_id)
     user.user_roles = [user_role]
     
-    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_tenant_id=tenant_id) == True
-    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_tenant_id=uuid4()) == False
+    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=org_id) == True
+    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=uuid4()) == False

@@ -19,17 +19,17 @@ class Scope(Enum):
     PLATFORM = "PLATFORM"     # Access to all resources across the platform
 
 class DefaultRole(Enum):
-    PLATFORM_SUPER_ADMIN = "platform_super_admin"
-    FEDERATION_ADMIN = "federation_admin"
-    FEDERATION_ANALYST = "federation_analyst"
-    FEDERATION_SUPPORT = "federation_support"
-    GYM_OWNER = "gym_owner"
-    GYM_ADMIN = "gym_admin"
-    GYM_MANAGER = "gym_manager"
-    ACCOUNTANT = "accountant"
-    FRONT_DESK = "front_desk"
-    TRAINER = "trainer"
-    MEMBER = "member"
+    PLATFORM_SUPER_ADMIN = "PLATFORM_SUPER_ADMIN"
+    FEDERATION_ADMIN = "FEDERATION_ADMIN"
+    FEDERATION_ANALYST = "FEDERATION_ANALYST"
+    FEDERATION_SUPPORT = "FEDERATION_SUPPORT"
+    GYM_OWNER = "GYM_OWNER"
+    GYM_ADMIN = "GYM_ADMIN"
+    GYM_MANAGER = "GYM_MANAGER"
+    ACCOUNTANT = "ACCOUNTANT"
+    FRONT_DESK = "FRONT_DESK"
+    TRAINER = "TRAINER"
+    MEMBER = "MEMBER"
 
 class DefaultPermission(Enum):
     USERS_READ = "users:read"
@@ -72,7 +72,8 @@ class AuthorizationService:
         resource_owner_id: UUID | None = None, 
         resource_tenant_id: UUID | None = None, 
         current_tenant_id: UUID | None = None,
-        assigned_user_ids: list[UUID] | None = None
+        assigned_user_ids: list[UUID] | None = None,
+        resource_organization_id: UUID | None = None,
     ) -> bool:
         if user.is_superuser:
             return True
@@ -87,7 +88,7 @@ class AuthorizationService:
                 return True
             return False
             
-        elif scope in (Scope.LOCATION, Scope.TENANT, Scope.FEDERATION_AGGREGATE):
+        elif scope in (Scope.LOCATION, Scope.TENANT):
             target_tenant = resource_tenant_id or current_tenant_id
             if target_tenant is not None:
                 has_tenant_access = any(
@@ -97,9 +98,18 @@ class AuthorizationService:
                     return True
             return False
             
+        elif scope == Scope.FEDERATION_AGGREGATE:
+            if resource_organization_id is not None:
+                has_org_access = any(
+                    ur.organization_id == resource_organization_id for ur in user.user_roles
+                )
+                if has_org_access:
+                    return True
+            return False
+            
         elif scope == Scope.PLATFORM:
             has_platform_access = any(
-                ur.tenant_id is None for ur in user.user_roles
+                ur.tenant_id is None and ur.organization_id is None for ur in user.user_roles
             )
             return has_platform_access
             

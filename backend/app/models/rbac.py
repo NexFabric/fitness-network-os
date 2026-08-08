@@ -39,13 +39,15 @@ class Role(Base):
     permissions: Mapped[list["Permission"]] = relationship("Permission", secondary=role_permissions, back_populates="roles")
     user_roles: Mapped[list["UserRole"]] = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
 
-class UserRole(Base, TenantMixin):
+class UserRole(Base):
     """
-    Associates a user with a role within the context of a specific tenant.
+    Associates a user with a role within the context of a specific tenant, federation (organization), or globally.
     """
     __tablename__ = "user_roles"
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     role_id: Mapped[UUID] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id: Mapped[UUID | None] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
+    organization_id: Mapped[UUID | None] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True, index=True)
 
     role: Mapped["Role"] = relationship("Role", back_populates="user_roles")
