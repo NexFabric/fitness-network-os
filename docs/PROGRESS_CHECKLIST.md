@@ -41,14 +41,14 @@
 - [x] Refund, Credit & Discount Logic
 - [x] Reconciliation
 
-### Wave 4 — Access - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] QR Credential Issuer & Key Rotation (ADR-024)
-- [ ] Scanner PWA Basics
-- [ ] Access Decision Engine
-- [ ] Device Heartbeats & Offline Gateway Interface
-- [ ] Anti-passback & Attendance Logic
+### Wave 4 — Access - ✅ COMPLETED
+- [x] QR Credential Issuer & Key Rotation (ADR-024)
+- [x] Scanner PWA Basics
+- [x] Access Decision Engine
+- [x] Device Heartbeats & Offline Gateway Interface
+- [x] Anti-passback & Attendance Logic
 
-### Wave 5 — Operational MVP - 📝 PENDING
+### Wave 5 — Operational MVP - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] Gym & Federation Dashboards
 - [ ] Report Engine (Runs, Exports)
 - [ ] Notifications & Deliveries
