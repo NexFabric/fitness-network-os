@@ -79,7 +79,6 @@ async def test_tenant_context_isolation(pg_engine, pg_session_maker):
     # Test Spoofed INSERT (Tenant A tries to insert for Tenant B)
     token_a = current_tenant_id_var.set(tenant_a)
     async with pg_session_maker() as session:
-        from sqlalchemy.exc import DBAPIError, IntegrityError, ProgrammingError
         
         # Test INSERT for Tenant B
         try:
@@ -104,7 +103,7 @@ async def test_tenant_context_isolation(pg_engine, pg_session_maker):
         await session.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_a}';"))
 
         # Test UPDATE on Tenant B's data
-        from sqlalchemy import update, delete
+        from sqlalchemy import delete, update
         upd_res = await session.execute(
             update(DummyTenantItem)
             .where(DummyTenantItem.id == b_id)

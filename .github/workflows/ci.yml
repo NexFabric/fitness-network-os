@@ -38,7 +38,7 @@ jobs:
       - name: SCA Scan (pip-audit)
         working-directory: ./backend
         run: |
-          uv export --format requirements-txt > requirements.txt
+          uv export --format requirements-txt --no-hashes --no-emit-workspace > requirements.txt
           pip-audit -r requirements.txt
           
       - name: Dependency Vulnerability Scan (Safety)
