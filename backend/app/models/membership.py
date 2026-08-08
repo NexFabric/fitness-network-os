@@ -52,3 +52,43 @@ class Entitlement(TenantMixin, Base):
     )
     entitlement_type: Mapped[str] = mapped_column(String, nullable=False)
     balance: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+class SubscriptionPeriod(TenantMixin, Base):
+    __tablename__ = "subscription_periods"
+
+    membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+    )
+    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class MembershipFreeze(TenantMixin, Base):
+    __tablename__ = "membership_freezes"
+
+    membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+    )
+    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expected_end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    actual_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reason: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class StatusHistory(TenantMixin, Base):
+    __tablename__ = "status_history"
+
+    membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+    )
+    old_status: Mapped[str] = mapped_column(String, nullable=False)
+    new_status: Mapped[str] = mapped_column(String, nullable=False)
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True) # ID of user/staff who made the change
