@@ -63,12 +63,12 @@
 - [x] Member Health & Retention Cockpit
 - [x] Tasks & Automations
 
-### Wave 7 — Federation - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Gym Passport
-- [ ] Compliance & Certification
-- [ ] Network Alerts & Benchmark
+### Wave 7 — Federation - ✅ COMPLETED
+- [x] Gym Passport
+- [x] Compliance & Certification
+- [x] Network Alerts & Benchmark
 
-### Wave 8 — Platform - 📝 PENDING
+### Wave 8 — Platform - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] SaaS Billing & Metering (ADR-028)
 - [ ] Feature Entitlements & Quotas
 - [ ] White Label & Custom Domains
