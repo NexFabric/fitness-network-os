@@ -60,3 +60,23 @@ def test_authorization_evaluate_scope_platform():
     user.user_roles = [user_role]
     
     assert AuthorizationService.evaluate_scope(user, Scope.PLATFORM) == True
+
+def test_authorization_evaluate_scope_location():
+    user = User(id=uuid4(), email="user@test.com", is_superuser=False)
+    tenant_id = uuid4()
+    
+    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id)
+    user.user_roles = [user_role]
+    
+    assert AuthorizationService.evaluate_scope(user, Scope.LOCATION, resource_tenant_id=tenant_id) == True
+    assert AuthorizationService.evaluate_scope(user, Scope.LOCATION, resource_tenant_id=uuid4()) == False
+
+def test_authorization_evaluate_scope_federation_aggregate():
+    user = User(id=uuid4(), email="user@test.com", is_superuser=False)
+    tenant_id = uuid4()
+    
+    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id)
+    user.user_roles = [user_role]
+    
+    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_tenant_id=tenant_id) == True
+    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_tenant_id=uuid4()) == False

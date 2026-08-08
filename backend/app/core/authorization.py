@@ -15,12 +15,19 @@ class Scope(Enum):
     ASSIGNED = "ASSIGNED"     # Access to resources assigned to user (e.g. trainer's clients)
     LOCATION = "LOCATION"     # Access to all resources in a specific branch/location (tenant)
     TENANT = "TENANT"         # Access to all resources in the organization/tenant
+    FEDERATION_AGGREGATE = "FEDERATION_AGGREGATE"  # Access across federated tenants
     PLATFORM = "PLATFORM"     # Access to all resources across the platform
 
 class DefaultRole(Enum):
-    PLATFORM_ADMIN = "platform_admin"
-    TENANT_ADMIN = "tenant_admin"
-    LOCATION_MANAGER = "location_manager"
+    PLATFORM_SUPER_ADMIN = "platform_super_admin"
+    FEDERATION_ADMIN = "federation_admin"
+    FEDERATION_ANALYST = "federation_analyst"
+    FEDERATION_SUPPORT = "federation_support"
+    GYM_OWNER = "gym_owner"
+    GYM_ADMIN = "gym_admin"
+    GYM_MANAGER = "gym_manager"
+    ACCOUNTANT = "accountant"
+    FRONT_DESK = "front_desk"
     TRAINER = "trainer"
     MEMBER = "member"
 
@@ -80,7 +87,7 @@ class AuthorizationService:
                 return True
             return False
             
-        elif scope == Scope.LOCATION or scope == Scope.TENANT:
+        elif scope in (Scope.LOCATION, Scope.TENANT, Scope.FEDERATION_AGGREGATE):
             target_tenant = resource_tenant_id or current_tenant_id
             if target_tenant is not None:
                 has_tenant_access = any(
