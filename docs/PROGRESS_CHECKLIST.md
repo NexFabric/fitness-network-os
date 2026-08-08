@@ -49,8 +49,8 @@
 - [x] Access Decision Engine (Database Models)
 - [x] Device Heartbeats & Offline Gateway Interface (Database Models)
 - [x] Anti-passback & Attendance Logic (Database Models)
-- [ ] Scanner PWA Basics & Gateway Apps
-- [ ] Secret Manager Integration for Key Material
+- [x] Scanner PWA Basics & Gateway Apps
+- [x] Secret Manager Integration for Key Material
 - [ ] API & Services Layer
 
 ### Wave 5 — Operational MVP - 🟠 PARTIAL (Models Only)
@@ -61,15 +61,15 @@
 - [ ] Support / Operations Console
 - [ ] API & Services Layer
 
-## Milestone: CORE HARDENING (Wave 5.5) - ⏳ IN PROGRESS
-- [ ] Real PostgreSQL RLS cross-tenant tests
-- [ ] Authenticated tenant resolver (from user + membership)
-- [ ] Real session/user implementation
-- [ ] Composite tenant FK constraints enforced in migrations
-- [ ] Secret-manager integration for signing keys (no plaintext in DB)
-- [ ] Real domain services & APIs for Core Models
-- [ ] Real QR issuer/verifier/replay pipeline
-- [ ] Fix CI pipeline and enforce main branch protection
+## Milestone: CORE HARDENING (Wave 5.5) - ✅ COMPLETED
+- [x] Real PostgreSQL RLS cross-tenant tests
+- [x] Authenticated tenant resolver (from user + membership)
+- [x] Real session/user implementation
+- [x] Composite tenant FK constraints enforced in migrations
+- [x] Secret-manager integration for signing keys (no plaintext in DB)
+- [x] Real domain services & APIs for Core Models
+- [x] Real QR issuer/verifier/replay pipeline
+- [x] Fix CI pipeline and enforce main branch protection
 
 ## Milestone: GROWTH & SCALE
 
