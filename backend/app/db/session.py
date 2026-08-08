@@ -21,7 +21,7 @@ def set_tenant_id(session, transaction, connection):
     from app.api.deps import current_tenant_id_var
     
     tenant_id = current_tenant_id_var.get(None)
-    if tenant_id:
+    if tenant_id and connection.dialect.name == 'postgresql':
         connection.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

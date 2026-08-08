@@ -15,8 +15,8 @@ def enable_rls(table_name: str, tenant_column: str = "tenant_id"):
     op.execute(f"""
         CREATE POLICY {policy_name} ON {table_name}
         FOR ALL
-        USING ({tenant_column} = current_setting('app.current_tenant_id', true)::uuid)
-        WITH CHECK ({tenant_column} = current_setting('app.current_tenant_id', true)::uuid);
+        USING ({tenant_column} = nullif(current_setting('app.current_tenant_id', true), '')::uuid)
+        WITH CHECK ({tenant_column} = nullif(current_setting('app.current_tenant_id', true), '')::uuid);
     """)
     
     # 3. Force RLS for table owner (prevents bypass by superusers acting as app)

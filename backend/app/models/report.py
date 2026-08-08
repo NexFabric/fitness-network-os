@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, JSON, ForeignKey, Text
+from sqlalchemy import String, JSON, ForeignKey, Text, ForeignKeyConstraint, Uuid
 from typing import Any, Dict, Optional
 from uuid import UUID
 
@@ -24,7 +24,11 @@ class ReportRun(Base, TenantMixin):
     """
     __tablename__ = "report_runs"
 
-    definition_id: Mapped[UUID] = mapped_column(ForeignKey("report_definitions.id"), nullable=False)
+    definition_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "definition_id"], ["report_definitions.tenant_id", "report_definitions.id"]),
+    )
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING")
     result_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
