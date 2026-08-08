@@ -13,6 +13,7 @@ from app.models.report import ReportDefinition, ReportRun
 from app.models.notification import NotificationTemplate, NotificationDelivery
 from app.models.outbox import OutboxEvent, InboxEvent
 from app.models.growth import Lead, Opportunity, Task, RetentionCockpit
+from app.models.federation import PassportConfig, ComplianceRecord, NetworkAlert
 
 __all__ = [
     "Organization", "Tenant", "User", "UserSession", "UserDevice", "UserMfaMethod",
@@ -25,6 +26,7 @@ __all__ = [
     "ReportDefinition", "ReportRun",
     "NotificationTemplate", "NotificationDelivery",
     "OutboxEvent", "InboxEvent",
-    "Lead", "Opportunity", "Task", "RetentionCockpit"
+    "Lead", "Opportunity", "Task", "RetentionCockpit",
+    "PassportConfig", "ComplianceRecord", "NetworkAlert"
 ]
 

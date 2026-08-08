@@ -35,7 +35,7 @@ class Device(TenantMixin, Base):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     location_id: Mapped[UUID] = mapped_column(ForeignKey("locations.id"), nullable=False)
-    capabilities: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
+    capabilities: Mapped[list[str]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
     status: Mapped[DeviceStatus] = mapped_column(Enum(DeviceStatus, name="device_status_enum", create_type=False), nullable=False, default=DeviceStatus.OFFLINE)
     last_heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -71,7 +71,7 @@ class OfflineSnapshot(TenantMixin, Base):
 
     device_id: Mapped[UUID] = mapped_column(ForeignKey("devices.id"), nullable=False)
     snapshot_type: Mapped[str] = mapped_column(String, nullable=False) # e.g., 'member_allowlist'
-    payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     version: Mapped[int] = mapped_column(nullable=False, default=1)
     
     device = relationship("Device")
