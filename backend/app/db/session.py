@@ -1,5 +1,7 @@
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import Session
+from sqlalchemy import event, text
 from app.core.config import settings
 
 engine = create_async_engine(
@@ -12,6 +14,17 @@ AsyncSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
 
+# RLS hook to inject current tenant into every transaction
+@event.listens_for(Session, "after_begin")
+def set_tenant_id(session, transaction, connection):
+    # Import locally to avoid potential circular dependencies if deps imports db
+    from app.api.deps import current_tenant_id_var
+    
+    tenant_id = current_tenant_id_var.get(None)
+    if tenant_id:
+        connection.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
+
