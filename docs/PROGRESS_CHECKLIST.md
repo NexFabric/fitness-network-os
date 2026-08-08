@@ -26,14 +26,14 @@
 - [ ] Documents & Secure File Storage
 - [ ] Import Engine Basics
 
-### Wave 2 — Membership - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Plans & Plan Versions
-- [ ] Subscriptions / Periods
-- [ ] Freeze / Renew / Cancel Lifecycle
-- [ ] Usage Wallets & Entitlements
-- [ ] Access Policies
+### Wave 2 — Membership - ✅ COMPLETED
+- [x] Plans & Plan Versions
+- [x] Subscriptions / Periods
+- [x] Freeze / Renew / Cancel Lifecycle
+- [x] Usage Wallets & Entitlements
+- [x] Access Policies
 
-### Wave 3 — Finance - 📝 PENDING
+### Wave 3 — Finance - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] Billing Accounts
 - [ ] Invoices & Invoice Items
 - [ ] Payments & Allocations
