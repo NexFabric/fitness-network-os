@@ -6,11 +6,13 @@ from app.models.location import Location
 from app.models.staff import Staff
 from app.models.member import Member, Tag, Note
 from app.models.consent import ConsentDefinition, ConsentVersion, ConsentRecord
+from app.models.membership import Plan, PlanVersion, Membership, Entitlement
 
 __all__ = [
     "Organization", "Tenant", "User", "UserSession", "UserDevice", "UserMfaMethod",
     "Role", "Permission", "UserRole",
     "Location", "Staff", "Member", "Tag", "Note",
-    "ConsentDefinition", "ConsentVersion", "ConsentRecord"
+    "ConsentDefinition", "ConsentVersion", "ConsentRecord",
+    "Plan", "PlanVersion", "Membership", "Entitlement"
 ]
 
