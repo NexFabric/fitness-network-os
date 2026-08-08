@@ -43,7 +43,6 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['location_id'], ['locations.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_staff_tenant_id'), 'staff', ['tenant_id'], unique=False)
