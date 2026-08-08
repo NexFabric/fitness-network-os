@@ -35,8 +35,8 @@ jobs:
       - name: SCA Scan (pip-audit)
         working-directory: ./backend
         run: |
-          uv pip compile pyproject.toml -o requirements.txt
-          pip-audit -r requirements.txt || true
+          uv export --format requirements-txt > requirements.txt
+          pip-audit -r requirements.txt
           
       - name: Dependency Vulnerability Scan (Safety)
         working-directory: ./backend
@@ -59,7 +59,7 @@ jobs:
         
       - name: Install dependencies
         working-directory: ./backend
-        run: uv pip install --system -r pyproject.toml
+        run: uv sync
         
       - name: Lint with ruff
         working-directory: ./backend
@@ -71,11 +71,11 @@ jobs:
         
       - name: Check tenancy enforcement
         working-directory: ./backend
-        run: python scripts/check_tenancy.py
+        run: uv run python scripts/check_tenancy.py
         
       - name: Check permissions matrix
         working-directory: ./backend
-        run: python scripts/check_permissions.py
+        run: uv run python scripts/check_permissions.py
 
   test:
     name: Unit & Integration Tests
@@ -110,7 +110,7 @@ jobs:
         
       - name: Install dependencies
         working-directory: ./backend
-        run: uv pip install --system -r pyproject.toml
+        run: uv sync
         
       - name: Run Pytest with Real DB
         working-directory: ./backend
