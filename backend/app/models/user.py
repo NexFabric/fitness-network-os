@@ -45,7 +45,6 @@ class UserMfaMethod(Base):
     __tablename__ = "user_mfa_methods"
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    method_type: Mapped[str] = mapped_column(String(50), nullable=False) # e.g. 'totp', 'sms'
     # Secrets must be encrypted at rest, never stored in plaintext
     encrypted_secret: Mapped[str] = mapped_column(String(255), nullable=False)
     provider_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
