@@ -61,6 +61,7 @@ async def check_db_rls(errors, table_name):
                 errors.append(f"DB Error: Table {table_name} lacks WITH CHECK policy with app.current_tenant_id.")
 
 async def main_async():
+    static_only = "--static" in sys.argv
     errors = []
     
     # Identify all tenant-owned models
@@ -134,8 +135,8 @@ async def main_async():
             errors.append(f"Model {cls.__name__} missing an index starting with tenant_id.")
 
         # 4. RLS enabled in DB
-
-        await check_db_rls(errors, table_name)
+        if not static_only:
+            await check_db_rls(errors, table_name)
     
     if errors:
         print("Tenancy violations found:")
