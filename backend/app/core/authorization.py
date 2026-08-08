@@ -1,30 +1,99 @@
-from fastapi import Depends, HTTPException, status
-from typing import List, Callable
-from app.api.deps import get_current_user
+from enum import Enum
+from typing import List, Optional
+from uuid import UUID
+
+from fastapi import HTTPException, status
+
+from app.models.user import User
 
 class SecurityException(HTTPException):
     def __init__(self, detail: str = "Not enough permissions"):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
-def require_permissions(required_permissions: List[str]) -> Callable:
-    """
-    Dependency generator that checks if the current user has the required permissions.
-    """
-    async def permission_checker(current_user: dict = Depends(get_current_user)):
-        # In a real implementation, we would fetch user's roles and permissions from DB or cache
-        # e.g., user_permissions = [p.name for role in user.user_roles for p in role.permissions]
-        user_permissions = current_user.get("permissions", [])
-        
-        # For development/stub purposes, we bypass the check if the user is a superuser
-        # or if they have the specific permissions. 
-        # (In reality, we'd pull from the DB context).
-        if current_user.get("is_superuser"):
-            return current_user
+class Scope(Enum):
+    SELF = "SELF"             # Access to own resources
+    ASSIGNED = "ASSIGNED"     # Access to resources assigned to user (e.g. trainer's clients)
+    LOCATION = "LOCATION"     # Access to all resources in a specific branch/location (tenant)
+    TENANT = "TENANT"         # Access to all resources in the organization/tenant
+    PLATFORM = "PLATFORM"     # Access to all resources across the platform
 
-        missing = [p for p in required_permissions if p not in user_permissions]
-        if missing:
-            raise SecurityException(detail=f"Missing required permissions: {', '.join(missing)}")
+class DefaultRole(Enum):
+    PLATFORM_ADMIN = "platform_admin"
+    TENANT_ADMIN = "tenant_admin"
+    LOCATION_MANAGER = "location_manager"
+    TRAINER = "trainer"
+    MEMBER = "member"
+
+class DefaultPermission(Enum):
+    USERS_READ = "users:read"
+    USERS_WRITE = "users:write"
+    MEMBERSHIPS_READ = "memberships:read"
+    MEMBERSHIPS_WRITE = "memberships:write"
+    TENANT_READ = "tenant:read"
+    TENANT_WRITE = "tenant:write"
+
+class AuthorizationService:
+    @staticmethod
+    def evaluate_permissions(
+        user: User, 
+        required_permissions: List[str], 
+        tenant_id: Optional[UUID] = None
+    ) -> bool:
+        if user.is_superuser:
+            return True
+            
+        user_permissions = set()
         
-        return current_user
-        
-    return permission_checker
+        for user_role in user.user_roles:
+            if tenant_id and user_role.tenant_id and user_role.tenant_id != tenant_id:
+                continue
+                
+            if user_role.role and user_role.role.permissions:
+                for permission in user_role.role.permissions:
+                    user_permissions.add(permission.name)
+                    
+        for req_perm in required_permissions:
+            if req_perm not in user_permissions:
+                return False
+                
+        return True
+
+    @staticmethod
+    def evaluate_scope(
+        user: User, 
+        scope: Scope, 
+        resource_owner_id: Optional[UUID] = None, 
+        resource_tenant_id: Optional[UUID] = None, 
+        current_tenant_id: Optional[UUID] = None,
+        assigned_user_ids: Optional[List[UUID]] = None
+    ) -> bool:
+        if user.is_superuser:
+            return True
+            
+        if scope == Scope.SELF:
+            if resource_owner_id is not None and resource_owner_id == user.id:
+                return True
+            return False
+            
+        elif scope == Scope.ASSIGNED:
+            if assigned_user_ids is not None and user.id in assigned_user_ids:
+                return True
+            return False
+            
+        elif scope == Scope.LOCATION or scope == Scope.TENANT:
+            target_tenant = resource_tenant_id or current_tenant_id
+            if target_tenant is not None:
+                has_tenant_access = any(
+                    ur.tenant_id == target_tenant for ur in user.user_roles
+                )
+                if has_tenant_access:
+                    return True
+            return False
+            
+        elif scope == Scope.PLATFORM:
+            has_platform_access = any(
+                ur.tenant_id is None for ur in user.user_roles
+            )
+            return has_platform_access
+            
+        return False
