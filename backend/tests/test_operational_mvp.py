@@ -1,19 +1,21 @@
-import pytest
 from uuid import uuid4
-from datetime import datetime, UTC
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
+
 
 @compiles(JSONB, 'sqlite')
 def compile_jsonb_sqlite(type_, compiler, **kw):
     return "JSON"
 
-from app.db.base import Base
-from app.models.report import ReportDefinition, ReportRun
-from app.models.notification import NotificationTemplate, NotificationDelivery
-from app.models.outbox import OutboxEvent, InboxEvent
 from app.api.deps import current_tenant_id_var
+from app.db.base import Base
+from app.models.notification import NotificationTemplate
+from app.models.outbox import InboxEvent, OutboxEvent
+from app.models.report import ReportDefinition
+
 
 @pytest.fixture
 async def operational_db():

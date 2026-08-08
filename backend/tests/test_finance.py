@@ -1,12 +1,21 @@
-import pytest
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
 from sqlalchemy import event, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
-from app.db.base import Base
+
 from app.api.deps import current_tenant_id_var
-from app.models.finance import BillingAccount, Invoice, InvoiceItem, Payment, PaymentAllocation
+from app.db.base import Base
+from app.models.finance import (
+    BillingAccount,
+    Invoice,
+    InvoiceItem,
+    Payment,
+    PaymentAllocation,
+)
 from app.models.member import Member
+
 
 @pytest.fixture
 async def finance_engine():

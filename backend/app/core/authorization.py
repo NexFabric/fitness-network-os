@@ -1,10 +1,10 @@
 from enum import Enum
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
 
 from app.models.user import User
+
 
 class SecurityException(HTTPException):
     def __init__(self, detail: str = "Not enough permissions"):
@@ -43,8 +43,8 @@ class AuthorizationService:
     @staticmethod
     def evaluate_permissions(
         user: User, 
-        required_permissions: List[str], 
-        tenant_id: Optional[UUID] = None
+        required_permissions: list[str], 
+        tenant_id: UUID | None = None
     ) -> bool:
         if user.is_superuser:
             return True
@@ -69,10 +69,10 @@ class AuthorizationService:
     def evaluate_scope(
         user: User, 
         scope: Scope, 
-        resource_owner_id: Optional[UUID] = None, 
-        resource_tenant_id: Optional[UUID] = None, 
-        current_tenant_id: Optional[UUID] = None,
-        assigned_user_ids: Optional[List[UUID]] = None
+        resource_owner_id: UUID | None = None, 
+        resource_tenant_id: UUID | None = None, 
+        current_tenant_id: UUID | None = None,
+        assigned_user_ids: list[UUID] | None = None
     ) -> bool:
         if user.is_superuser:
             return True

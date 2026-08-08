@@ -1,29 +1,31 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, DateTime, ForeignKeyConstraint
-from app.db.base import Base, TenantMixin
-from uuid import UUID
-from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base import Base, TenantMixin
+
 
 class BillingAccount(TenantMixin, Base):
     __tablename__ = "billing_accounts"
 
-    user_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
-    member_id: Mapped[Optional[UUID]] = mapped_column(nullable=True, index=True)
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    member_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     
     _model_table_args = (
         ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
     )
 
-    invoices: Mapped[List["Invoice"]] = relationship("Invoice", back_populates="billing_account")
-    payments: Mapped[List["Payment"]] = relationship("Payment", back_populates="billing_account")
+    invoices: Mapped[list["Invoice"]] = relationship("Invoice", back_populates="billing_account")
+    payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="billing_account")
 
 class Invoice(TenantMixin, Base):
     __tablename__ = "invoices"
 
     billing_account_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="OPEN") # DRAFT, OPEN, PAID, VOID
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     total_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
@@ -32,8 +34,8 @@ class Invoice(TenantMixin, Base):
     )
 
     billing_account: Mapped["BillingAccount"] = relationship("BillingAccount", back_populates="invoices")
-    items: Mapped[List["InvoiceItem"]] = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
-    allocations: Mapped[List["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="invoice")
+    items: Mapped[list["InvoiceItem"]] = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
+    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="invoice")
 
 class InvoiceItem(TenantMixin, Base):
     __tablename__ = "invoice_items"
@@ -63,7 +65,7 @@ class Payment(TenantMixin, Base):
     )
 
     billing_account: Mapped["BillingAccount"] = relationship("BillingAccount", back_populates="payments")
-    allocations: Mapped[List["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="payment")
+    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="payment")
 
 class PaymentAllocation(TenantMixin, Base):
     __tablename__ = "payment_allocations"

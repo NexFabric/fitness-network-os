@@ -1,8 +1,11 @@
+from datetime import UTC, datetime
 from uuid import UUID
+
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Boolean, ForeignKey, DateTime, JSON
+
 from app.db.base import Base, TenantMixin
-from datetime import datetime, UTC
+
 
 class PassportConfig(Base, TenantMixin):
     """

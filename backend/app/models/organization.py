@@ -1,6 +1,8 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base
+
 
 class Organization(Base):
     __tablename__ = "organizations"

@@ -1,11 +1,14 @@
-import pytest
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
 from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
-from app.db.base import Base
+
 from app.api.deps import current_tenant_id_var
-from app.models.federation import PassportConfig, ComplianceRecord
+from app.db.base import Base
+from app.models.federation import ComplianceRecord, PassportConfig
+
 
 @pytest.fixture
 async def mock_rls_engine():
@@ -17,7 +20,6 @@ async def mock_rls_engine():
     @event.listens_for(Session, "after_begin")
     def mock_set_tenant_id(session, transaction, connection):
         tenant_id = current_tenant_id_var.get(None)
-        pass
         
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

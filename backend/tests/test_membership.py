@@ -1,15 +1,18 @@
-import pytest
+from datetime import UTC, datetime
 from uuid import uuid4
-from datetime import datetime, UTC
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from app.db.base import Base
-from app.api.deps import current_tenant_id_var
-from sqlalchemy.orm import Session
+
+import pytest
 from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session
+
+from app.api.deps import current_tenant_id_var
+from app.db.base import Base
+from app.models.member import Member
 
 # Import the models we want to test
-from app.models.membership import Plan, PlanVersion, Membership, Entitlement
-from app.models.member import Member
+from app.models.membership import Entitlement, Membership, Plan, PlanVersion
+
 
 @pytest.fixture
 async def mock_engine():

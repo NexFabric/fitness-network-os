@@ -1,17 +1,17 @@
-from fastapi import Header, HTTPException, Request, Depends
-from typing import Optional
-from uuid import UUID
 import contextvars
-from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+
+from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_session_token_from_cookie
 from app.db.session import get_db
-from app.models.user import User, UserSession
 from app.models.rbac import UserRole
+from app.models.user import User, UserSession
 
 # Context variable to hold the current tenant ID for the request
-current_tenant_id_var: contextvars.ContextVar[Optional[UUID]] = contextvars.ContextVar(
+current_tenant_id_var: contextvars.ContextVar[UUID | None] = contextvars.ContextVar(
     "current_tenant_id", default=None
 )
 

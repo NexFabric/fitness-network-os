@@ -1,10 +1,11 @@
+
 from fastapi import Header, HTTPException, Request, status
-from typing import Optional
+
 
 async def verify_idempotency_key(
     request: Request,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key")
-) -> Optional[str]:
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key")
+) -> str | None:
     """
     Dependency that enforces the presence and validation of Idempotency-Key 
     for critical state-changing endpoints (e.g. POST, PUT, PATCH).

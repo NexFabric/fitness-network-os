@@ -11,7 +11,8 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
@@ -30,6 +31,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

@@ -1,6 +1,7 @@
 import ast
 from pathlib import Path
 
+
 def test_core_does_not_import_api_endpoints():
     """
     Architecture fitness test:

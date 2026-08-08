@@ -1,7 +1,7 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, ForeignKey, Table, Column, Uuid
-from typing import List, Optional
 from uuid import UUID
+
+from sqlalchemy import Boolean, Column, ForeignKey, String, Table
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TenantMixin
 
@@ -21,9 +21,9 @@ class Permission(Base):
     __tablename__ = "permissions"
 
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(String(255))
     
-    roles: Mapped[List["Role"]] = relationship("Role", secondary=role_permissions, back_populates="permissions")
+    roles: Mapped[list["Role"]] = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
 class Role(Base):
     """
@@ -33,11 +33,11 @@ class Role(Base):
     __tablename__ = "roles"
 
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(String(255))
     is_system: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    permissions: Mapped[List["Permission"]] = relationship("Permission", secondary=role_permissions, back_populates="roles")
-    user_roles: Mapped[List["UserRole"]] = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
+    permissions: Mapped[list["Permission"]] = relationship("Permission", secondary=role_permissions, back_populates="roles")
+    user_roles: Mapped[list["UserRole"]] = relationship("UserRole", back_populates="role", cascade="all, delete-orphan")
 
 class UserRole(Base, TenantMixin):
     """

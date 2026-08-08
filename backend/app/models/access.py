@@ -1,10 +1,19 @@
 import enum
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Enum, ForeignKey, DateTime, JSON, Text, ForeignKeyConstraint
+
+from sqlalchemy import (
+    JSON,
+    DateTime,
+    Enum,
+    ForeignKeyConstraint,
+    String,
+)
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TenantMixin
+
 
 class KeyStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"

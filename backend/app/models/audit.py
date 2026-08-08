@@ -1,10 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, JSON, Uuid
-from sqlalchemy import event
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
+from sqlalchemy import JSON, String, Uuid, event
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.base import Base, TenantMixin
+
 
 class AuditEvent(Base, TenantMixin):
     """
@@ -13,17 +14,17 @@ class AuditEvent(Base, TenantMixin):
     """
     __tablename__ = "audit_events"
 
-    user_id: Mapped[Optional[UUID]] = mapped_column(Uuid, index=True, nullable=True)
+    user_id: Mapped[UUID | None] = mapped_column(Uuid, index=True, nullable=True)
     action: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     resource_type: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
-    resource_id: Mapped[Optional[UUID]] = mapped_column(Uuid, index=True, nullable=True)
+    resource_id: Mapped[UUID | None] = mapped_column(Uuid, index=True, nullable=True)
     
     # Store old and new states for auditing changes
-    old_state: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    new_state: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    old_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    new_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
 @event.listens_for(AuditEvent, 'before_update')
