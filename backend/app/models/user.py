@@ -17,6 +17,7 @@ class User(Base):
     sessions: Mapped[List["UserSession"]] = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     devices: Mapped[List["UserDevice"]] = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
     mfa_methods: Mapped[List["UserMfaMethod"]] = relationship("UserMfaMethod", back_populates="user", cascade="all, delete-orphan")
+    user_roles: Mapped[List["UserRole"]] = relationship("UserRole", cascade="all, delete-orphan")
 
 class UserSession(Base):
     __tablename__ = "user_sessions"

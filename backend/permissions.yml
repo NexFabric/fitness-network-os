@@ -1,0 +1,58 @@
+roles:
+  PLATFORM_SUPER_ADMIN:
+    description: "Full access to entire platform"
+    permissions:
+      - "*"
+  FEDERATION_ADMIN:
+    description: "Full access to a specific federation and its gyms"
+    permissions:
+      - "federation:read"
+      - "federation:write"
+      - "gym:read"
+      - "gym:write"
+      - "users:read"
+      - "users:write"
+  GYM_OWNER:
+    description: "Owner of a specific gym tenant"
+    permissions:
+      - "gym:read"
+      - "gym:write"
+      - "memberships:read"
+      - "memberships:write"
+      - "checkins:read"
+  MEMBER:
+    description: "A standard gym member"
+    permissions:
+      - "profile:read"
+      - "profile:write"
+      - "memberships:read"
+      - "checkins:read"
+      - "checkins:write"
+
+permissions:
+  - id: "federation:read"
+    description: "Read federation details"
+  - id: "federation:write"
+    description: "Modify federation details"
+  - id: "gym:read"
+    description: "Read gym details"
+  - id: "gym:write"
+    description: "Modify gym details"
+  - id: "users:read"
+    description: "Read users in context"
+  - id: "users:write"
+    description: "Modify users in context"
+  - id: "memberships:read"
+    description: "Read memberships"
+  - id: "memberships:write"
+    description: "Modify memberships"
+  - id: "checkins:read"
+    description: "Read checkin history"
+  - id: "checkins:write"
+    description: "Create checkins"
+  - id: "profile:read"
+    description: "Read own profile"
+  - id: "profile:write"
+    description: "Update own profile"
+  - id: "*"
+    description: "Superuser wildcard"
