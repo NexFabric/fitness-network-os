@@ -17,58 +17,76 @@
 
 ## Milestone: CORE DOMAIN
 
-### Wave 1 — Gym Core - ✅ COMPLETED
+### Wave 1 — Gym Core - 🟠 PARTIAL (Models Only)
 - [x] Locations & Facilities models
 - [x] Staff / TenantUser linking model
 - [x] Members Core (Profiles, PII classification)
 - [x] Member 360 (Tags & Notes)
 - [x] Consent Registry (ADR-016)
-- [ ] Documents & Secure File Storage
+- [ ] Documents & Secure File Storage (ADR-034)
 - [ ] Import Engine Basics
+- [ ] API & Services Layer
 
-### Wave 2 — Membership - ✅ COMPLETED
+### Wave 2 — Membership - 🟠 PARTIAL (Models Only)
 - [x] Plans & Plan Versions
 - [x] Subscriptions / Periods
 - [x] Freeze / Renew / Cancel Lifecycle
 - [x] Usage Wallets & Entitlements
 - [x] Access Policies
+- [ ] API & Services Layer
 
-### Wave 3 — Finance - ✅ COMPLETED
+### Wave 3 — Finance - 🟠 PARTIAL (Models Only)
 - [x] Billing Accounts
 - [x] Invoices & Invoice Items
 - [x] Payments & Allocations
 - [x] Partial Payments
 - [x] Refund, Credit & Discount Logic
 - [x] Reconciliation
+- [ ] API & Services Layer
 
-### Wave 4 — Access - ✅ COMPLETED
-- [x] QR Credential Issuer & Key Rotation (ADR-024)
-- [x] Scanner PWA Basics
-- [x] Access Decision Engine
-- [x] Device Heartbeats & Offline Gateway Interface
-- [x] Anti-passback & Attendance Logic
+### Wave 4 — Access - 🟠 PARTIAL (Models Only)
+- [x] QR Credential Issuer & Key Rotation (ADR-024) (Database Models)
+- [x] Access Decision Engine (Database Models)
+- [x] Device Heartbeats & Offline Gateway Interface (Database Models)
+- [x] Anti-passback & Attendance Logic (Database Models)
+- [ ] Scanner PWA Basics & Gateway Apps
+- [ ] Secret Manager Integration for Key Material
+- [ ] API & Services Layer
 
-### Wave 5 — Operational MVP - ✅ COMPLETED
-- [x] Gym & Federation Dashboards
-- [x] Report Engine (Runs, Exports)
-- [x] Notifications & Deliveries
-- [x] Scheduled Jobs (Outbox/Inbox)
-- [x] Support / Operations Console
+### Wave 5 — Operational MVP - 🟠 PARTIAL (Models Only)
+- [x] Report Engine (Runs, Exports) (Database Models)
+- [x] Notifications & Deliveries (Database Models)
+- [x] Scheduled Jobs (Outbox/Inbox) (Database Models)
+- [ ] Gym & Federation Dashboards
+- [ ] Support / Operations Console
+- [ ] API & Services Layer
+
+## Milestone: CORE HARDENING (Wave 5.5) - ⏳ IN PROGRESS
+- [ ] Real PostgreSQL RLS cross-tenant tests
+- [ ] Authenticated tenant resolver (from user + membership)
+- [ ] Real session/user implementation
+- [ ] Composite tenant FK constraints enforced in migrations
+- [ ] Secret-manager integration for signing keys (no plaintext in DB)
+- [ ] Real domain services & APIs for Core Models
+- [ ] Real QR issuer/verifier/replay pipeline
+- [ ] Fix CI pipeline and enforce main branch protection
 
 ## Milestone: GROWTH & SCALE
 
-### Wave 6 — Growth - ✅ COMPLETED
+### Wave 6 — Growth - 🟠 PARTIAL (Models Only)
 - [x] Lead CRM & Opportunities
 - [x] Renewal Pipeline & Revenue Recovery
 - [x] Member Health & Retention Cockpit
 - [x] Tasks & Automations
+- [ ] API & Services Layer
 
-### Wave 7 — Federation - ✅ COMPLETED
+### Wave 7 — Federation - 🟠 PARTIAL (Models Only)
 - [x] Gym Passport
 - [x] Compliance & Certification
 - [x] Network Alerts & Benchmark
+- [ ] API & Services Layer
 
-### Wave 8 — Platform - ⏳ IN PROGRESS (Agent Çalışıyor)
+### Wave 8 — Platform - 📝 PENDING
 - [ ] SaaS Billing & Metering (ADR-028)
 - [ ] Feature Entitlements & Quotas
 - [ ] White Label & Custom Domains
