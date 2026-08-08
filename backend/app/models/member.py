@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, ForeignKeyConstraint, Uuid
 from app.db.base import Base, TenantMixin
 from uuid import UUID
 from typing import Optional
@@ -17,11 +17,19 @@ class Member(TenantMixin, Base):
 class Tag(TenantMixin, Base):
     __tablename__ = "member_tags"
 
-    member_id: Mapped[UUID] = mapped_column(ForeignKey("members.id"), nullable=False)
+    member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
 
 class Note(TenantMixin, Base):
     __tablename__ = "member_notes"
 
-    member_id: Mapped[UUID] = mapped_column(ForeignKey("members.id"), nullable=False)
+    member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+    )
     content: Mapped[str] = mapped_column(String, nullable=False)

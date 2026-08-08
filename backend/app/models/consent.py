@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime
+from sqlalchemy import String, ForeignKey, DateTime, ForeignKeyConstraint, Uuid
 from app.db.base import Base, TenantMixin
 from uuid import UUID
 from typing import Optional
@@ -15,14 +15,22 @@ class ConsentDefinition(TenantMixin, Base):
 class ConsentVersion(TenantMixin, Base):
     __tablename__ = "consent_versions"
 
-    definition_id: Mapped[UUID] = mapped_column(ForeignKey("consent_definitions.id"), nullable=False)
+    definition_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "definition_id"], ["consent_definitions.tenant_id", "consent_definitions.id"]),
+    )
     version_number: Mapped[str] = mapped_column(String, nullable=False)
     document_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
 class ConsentRecord(TenantMixin, Base):
     __tablename__ = "consent_records"
 
-    member_id: Mapped[UUID] = mapped_column(ForeignKey("members.id"), nullable=False)
+    member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+    )
     consent_type: Mapped[str] = mapped_column(String, nullable=False)
     document_version: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
