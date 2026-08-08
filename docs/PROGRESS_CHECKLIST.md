@@ -48,16 +48,16 @@
 - [x] Device Heartbeats & Offline Gateway Interface
 - [x] Anti-passback & Attendance Logic
 
-### Wave 5 — Operational MVP - ⏳ IN PROGRESS (Agent Çalışıyor)
-- [ ] Gym & Federation Dashboards
-- [ ] Report Engine (Runs, Exports)
-- [ ] Notifications & Deliveries
-- [ ] Scheduled Jobs (Outbox/Inbox)
-- [ ] Support / Operations Console
+### Wave 5 — Operational MVP - ✅ COMPLETED
+- [x] Gym & Federation Dashboards
+- [x] Report Engine (Runs, Exports)
+- [x] Notifications & Deliveries
+- [x] Scheduled Jobs (Outbox/Inbox)
+- [x] Support / Operations Console
 
 ## Milestone: GROWTH & SCALE
 
-### Wave 6 — Growth - 📝 PENDING
+### Wave 6 — Growth - ⏳ IN PROGRESS (Agent Çalışıyor)
 - [ ] Lead CRM & Opportunities
 - [ ] Renewal Pipeline & Revenue Recovery
 - [ ] Member Health & Retention Cockpit
