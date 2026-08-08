@@ -37,8 +37,17 @@ async def get_current_user(
     """
     Retrieve the current user from the session token.
     """
+    import hashlib
+    from datetime import datetime, timezone
+    
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    
     result = await db.execute(
-        select(UserSession).where(UserSession.token_hash == token).where(UserSession.is_revoked == False)
+        select(UserSession).where(
+            UserSession.token_hash == token_hash,
+            UserSession.is_revoked == False,
+            UserSession.expires_at > datetime.now(timezone.utc)
+        )
     )
     session = result.scalars().first()
     
