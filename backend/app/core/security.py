@@ -1,13 +1,30 @@
-from typing import Optional
+from typing import Optional, Tuple
 from fastapi import Request
+import secrets
+import hashlib
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed one. Dummy implementation."""
-    return plain_password + "_hashed" == hashed_password
+    """Verify a plain password against a hashed one using Argon2."""
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    """Hash a plain password. Dummy implementation."""
-    return password + "_hashed"
+    """Hash a plain password using Argon2."""
+    return pwd_context.hash(password)
+
+def generate_session_token() -> Tuple[str, str]:
+    """
+    Generates a secure random session token.
+    Returns:
+        Tuple[str, str]: (raw_token, token_hash)
+        - raw_token is to be sent to the client in an HttpOnly cookie.
+        - token_hash is to be stored in the database.
+    """
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    return raw_token, token_hash
 
 def get_session_token_from_cookie(request: Request) -> Optional[str]:
     """
