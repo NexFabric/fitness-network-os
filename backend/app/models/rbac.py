@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import Boolean, Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, TenantMixin
+from app.db.base import Base
 
 # Many-to-many relationship for Role <-> Permission
 role_permissions = Table(
