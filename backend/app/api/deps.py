@@ -1,4 +1,5 @@
 import contextvars
+from datetime import UTC
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, Request
@@ -38,7 +39,7 @@ async def get_current_user(
     Retrieve the current user from the session token.
     """
     import hashlib
-    from datetime import datetime, timezone
+    from datetime import datetime
     
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     
@@ -46,7 +47,7 @@ async def get_current_user(
         select(UserSession).where(
             UserSession.token_hash == token_hash,
             UserSession.is_revoked == False,
-            UserSession.expires_at > datetime.now(timezone.utc)
+            UserSession.expires_at > datetime.now(UTC)
         )
     )
     session = result.scalars().first()
