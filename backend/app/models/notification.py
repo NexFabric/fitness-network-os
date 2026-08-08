@@ -4,7 +4,11 @@ from uuid import UUID
 from sqlalchemy import ForeignKey, ForeignKeyConstraint, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from typing import TYPE_CHECKING
 from app.db.base import Base, TenantMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class NotificationTemplate(Base, TenantMixin):
