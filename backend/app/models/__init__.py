@@ -8,6 +8,7 @@ from app.models.member import Member, Tag, Note
 from app.models.consent import ConsentDefinition, ConsentVersion, ConsentRecord
 from app.models.membership import Plan, PlanVersion, Membership, Entitlement
 from app.models.finance import BillingAccount, Invoice, InvoiceItem, Payment, PaymentAllocation
+from app.models.access import SigningKey, Device, AccessAttempt, Checkin, OfflineSnapshot
 
 __all__ = [
     "Organization", "Tenant", "User", "UserSession", "UserDevice", "UserMfaMethod",
@@ -15,6 +16,7 @@ __all__ = [
     "Location", "Staff", "Member", "Tag", "Note",
     "ConsentDefinition", "ConsentVersion", "ConsentRecord",
     "Plan", "PlanVersion", "Membership", "Entitlement",
-    "BillingAccount", "Invoice", "InvoiceItem", "Payment", "PaymentAllocation"
+    "BillingAccount", "Invoice", "InvoiceItem", "Payment", "PaymentAllocation",
+    "SigningKey", "Device", "AccessAttempt", "Checkin", "OfflineSnapshot"
 ]
 
