@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
-import yaml
 from pathlib import Path
+
+import yaml
 
 # A basic script to validate that all permissions listed under roles
 # actually exist in the permissions list.

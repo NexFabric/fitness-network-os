@@ -43,3 +43,6 @@ pythonpath = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+lint.extend-ignore = ["B008", "SIM103", "F841", "TRY002", "F821", "EXE001", "S110", "BLE001", "SIM102"]

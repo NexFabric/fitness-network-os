@@ -1,9 +1,11 @@
-import pytest
-from sqlalchemy import text, Column, String, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
+
+import pytest
+from sqlalchemy import Column, String, select, text
+
 from app.api.deps import current_tenant_id_var
 from app.db.base import Base, TenantMixin
+
 
 # Dummy model for testing RLS structure
 class DummyTenantItem(Base, TenantMixin):

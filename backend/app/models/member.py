@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, ForeignKeyConstraint, Uuid
-from app.db.base import Base, TenantMixin
 from uuid import UUID
-from typing import Optional
+
+from sqlalchemy import ForeignKeyConstraint, String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base, TenantMixin
+
 
 class Member(TenantMixin, Base):
     __tablename__ = "members"
@@ -10,8 +12,8 @@ class Member(TenantMixin, Base):
     member_number: Mapped[str] = mapped_column(String, nullable=False, index=True)
     first_name: Mapped[str] = mapped_column(String, nullable=False)
     last_name: Mapped[str] = mapped_column(String, nullable=False)
-    email: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
-    phone: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
+    email: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    phone: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="LEAD")
 
 class Tag(TenantMixin, Base):

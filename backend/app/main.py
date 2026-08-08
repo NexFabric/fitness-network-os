@@ -1,7 +1,9 @@
+from datetime import UTC, datetime
+
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime, timezone
+from fastapi.responses import JSONResponse
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -22,7 +24,7 @@ def create_app() -> FastAPI:
     async def health_check():
         return {
             "status": "ok", 
-            "timestamp": datetime.now(timezone.utc).isoformat(), 
+            "timestamp": datetime.now(UTC).isoformat(), 
             "checks": {}
         }
 

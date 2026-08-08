@@ -1,13 +1,16 @@
-import pytest
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
 from sqlalchemy import event, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
-from app.db.base import Base
+
 from app.api.deps import current_tenant_id_var
+from app.db.base import Base
+from app.models.consent import ConsentDefinition, ConsentRecord
 from app.models.location import Location
-from app.models.member import Member, Tag, Note
-from app.models.consent import ConsentDefinition, ConsentVersion, ConsentRecord
+from app.models.member import Member, Tag
+
 
 @pytest.fixture
 async def gym_core_engine():

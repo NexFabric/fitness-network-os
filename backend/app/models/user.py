@@ -1,10 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, DateTime, ForeignKey
-from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -14,18 +15,18 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     
-    sessions: Mapped[List["UserSession"]] = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
-    devices: Mapped[List["UserDevice"]] = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
-    mfa_methods: Mapped[List["UserMfaMethod"]] = relationship("UserMfaMethod", back_populates="user", cascade="all, delete-orphan")
-    user_roles: Mapped[List["UserRole"]] = relationship("UserRole", cascade="all, delete-orphan")
+    sessions: Mapped[list["UserSession"]] = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+    devices: Mapped[list["UserDevice"]] = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
+    mfa_methods: Mapped[list["UserMfaMethod"]] = relationship("UserMfaMethod", back_populates="user", cascade="all, delete-orphan")
+    user_roles: Mapped[list["UserRole"]] = relationship("UserRole", cascade="all, delete-orphan")
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token_hash: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
     
@@ -36,7 +37,7 @@ class UserDevice(Base):
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     device_id: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False) # e.g. FCM token or hardware UUID
-    device_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_trusted: Mapped[bool] = mapped_column(Boolean, default=False)
     
     user: Mapped["User"] = relationship("User", back_populates="devices")
@@ -48,7 +49,7 @@ class UserMfaMethod(Base):
     method_type: Mapped[str] = mapped_column(String(50), nullable=False) # e.g. 'totp', 'sms'
     # Secrets must be encrypted at rest, never stored in plaintext
     encrypted_secret: Mapped[str] = mapped_column(String(255), nullable=False)
-    provider_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    provider_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     
     user: Mapped["User"] = relationship("User", back_populates="mfa_methods")

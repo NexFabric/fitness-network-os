@@ -1,5 +1,6 @@
 from alembic import op
 
+
 def enable_rls(table_name: str, tenant_column: str = "tenant_id"):
     """
     Helper function to enable RLS on a tenant-owned table.

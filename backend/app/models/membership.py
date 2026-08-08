@@ -1,15 +1,17 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Integer, Boolean, DateTime, ForeignKeyConstraint, Uuid
-from app.db.base import Base, TenantMixin
-from uuid import UUID
-from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import Boolean, DateTime, ForeignKeyConstraint, Integer, String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base, TenantMixin
+
 
 class Plan(TenantMixin, Base):
     __tablename__ = "plans"
 
     name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 class PlanVersion(TenantMixin, Base):
@@ -36,13 +38,13 @@ class Membership(TenantMixin, Base):
     )
     status: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE")
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    end_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class Entitlement(TenantMixin, Base):
     __tablename__ = "entitlements"
 
     member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
-    membership_id: Mapped[Optional[UUID]] = mapped_column(Uuid, nullable=True)
+    membership_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
 
     _model_table_args = (
         ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),

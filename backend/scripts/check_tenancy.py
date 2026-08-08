@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-import sys
-import os
 import asyncio
+import os
+import sys
 
 # Add backend directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from app.db.base import Base, TenantMixin
-from app.models import *  # ensure all models are loaded in Base.metadata
 from sqlalchemy import text
+
+from app.db.base import Base, TenantMixin
 from app.db.session import engine
+from app.models import *  # ensure all models are loaded in Base.metadata
+
 
 async def check_db_rls(errors, table_name):
     async with engine.connect() as conn:

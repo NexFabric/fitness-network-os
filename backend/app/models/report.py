@@ -1,9 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, JSON, ForeignKey, Text, ForeignKeyConstraint, Uuid
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
+from sqlalchemy import JSON, ForeignKeyConstraint, String, Text, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base, TenantMixin
+
 
 class ReportDefinition(Base, TenantMixin):
     """
@@ -12,8 +14,8 @@ class ReportDefinition(Base, TenantMixin):
     __tablename__ = "report_definitions"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    config: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
     runs: Mapped[list["ReportRun"]] = relationship("ReportRun", back_populates="definition", cascade="all, delete-orphan")
 
@@ -30,8 +32,8 @@ class ReportRun(Base, TenantMixin):
         ForeignKeyConstraint(["tenant_id", "definition_id"], ["report_definitions.tenant_id", "report_definitions.id"]),
     )
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING")
-    result_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    parameters: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    result_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parameters: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     definition: Mapped["ReportDefinition"] = relationship("ReportDefinition", back_populates="runs")

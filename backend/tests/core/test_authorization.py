@@ -1,8 +1,9 @@
-import pytest
 from uuid import uuid4
-from app.models.user import User
-from app.models.rbac import UserRole, Role, Permission
+
 from app.core.authorization import AuthorizationService, Scope
+from app.models.rbac import Permission, Role, UserRole
+from app.models.user import User
+
 
 def test_authorization_superuser():
     user = User(id=uuid4(), email="admin@test.com", is_superuser=True)

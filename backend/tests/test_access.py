@@ -1,14 +1,26 @@
-import pytest
+from datetime import UTC, datetime
 from uuid import uuid4
-from datetime import datetime, UTC
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
 from sqlalchemy import event, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
-from app.db.base import Base
+
 from app.api.deps import current_tenant_id_var
-from app.models.access import SigningKey, KeyStatus, Device, DeviceStatus, AccessAttempt, AccessStatus, Checkin, OfflineSnapshot
+from app.db.base import Base
+from app.models.access import (
+    AccessAttempt,
+    AccessStatus,
+    Checkin,
+    Device,
+    DeviceStatus,
+    KeyStatus,
+    OfflineSnapshot,
+    SigningKey,
+)
 from app.models.location import Location
 from app.models.member import Member
+
 
 @pytest.fixture
 async def access_engine():

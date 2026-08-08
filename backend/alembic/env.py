@@ -1,4 +1,6 @@
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -6,9 +8,6 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
-import os
-import sys
 
 # Add backend directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -30,7 +29,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from app.db.base import Base
-from app.models import Organization, Tenant
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
