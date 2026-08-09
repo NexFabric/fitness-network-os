@@ -1,6 +1,6 @@
 # Phase 15 — Outbox / Inbox / Job Engine
 
-**Status:** IN PROGRESS (`feat/phase15-outbox-inbox-engine`)  
+**Status:** 🟢 LOCKED (PR #22 merge `67b8214`)  
 **Depends on:** Phase 14 LOCKED
 
 ## Design
