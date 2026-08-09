@@ -34,7 +34,7 @@
 - [x] Phase 7: Authorization Engine (RBAC) - 🟢 PRODUCTION VERIFIED
 
 ### Phase 8-17: Domain API & Services Implementation
-- [x] Phase 8: Membership Domain Correctness - 🔵 SERVICE/API (DB & Logic Done, API Pending)
+- [x] Phase 8: Membership Domain Correctness - 🟢 PRODUCTION VERIFIED
 - [ ] Phase 9: Entitlement Engine
 - [ ] Phase 10: Finance Domain Completion
 - [ ] Phase 11: Remove Money Floats
@@ -68,9 +68,9 @@
 - Import Engine Basics - 📝 PENDING
 
 ### Wave 2 — Membership
-- Plans & Plan Versions - 🔵 SERVICE/API
-- Subscriptions / Periods - 🔵 SERVICE/API
-- Freeze / Renew / Cancel Lifecycle - 🔵 SERVICE/API
+- Plans & Plan Versions - 🟢 PRODUCTION VERIFIED
+- Subscriptions / Periods - 🟢 PRODUCTION VERIFIED
+- Freeze / Renew / Cancel Lifecycle - 🟢 PRODUCTION VERIFIED
 - Usage Wallets & Entitlements - 🟡 MODEL
 - Access Policies - 🟡 MODEL
 
