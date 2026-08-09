@@ -13,6 +13,7 @@ from app.models.membership import (
     MembershipRenewal,
     MembershipStatusHistory,
     PlanVersion,
+    RenewalStatus,
 )
 
 
@@ -315,7 +316,7 @@ class MembershipService:
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
             terms_snapshot=pv.terms,
-            status="PROCESSED" if renewal_date <= datetime.now(UTC) else "PENDING",
+            status=RenewalStatus.APPLIED.value if renewal_date <= datetime.now(UTC) else RenewalStatus.PENDING.value,
             changed_by_user_id=changed_by_user_id,
             tenant_id=membership.tenant_id
         )
@@ -324,6 +325,9 @@ class MembershipService:
         now = datetime.now(UTC)
         if renewal_date <= now:
             membership.plan_version_id = next_plan_version_id
+            membership.price_snapshot = pv.price_amount_minor
+            membership.price_snapshot_currency = pv.currency
+            membership.terms_snapshot = pv.terms
             
             if membership.end_date:
                 # Close current active period if any
@@ -400,6 +404,14 @@ class MembershipService:
 
         if membership.status not in ("ACTIVE", "PAST_DUE"):
             raise ValueError(f"Membership status '{membership.status}' cannot be expired")
+
+        stmt_period = select(MembershipPeriod).where(
+            MembershipPeriod.membership_id == membership.id,
+            MembershipPeriod.is_active == True
+        )
+        active_period = (await self.session.execute(stmt_period)).scalar_one_or_none()
+        if active_period:
+            active_period.is_active = False
 
         history = MembershipStatusHistory(
             membership_id=membership_id,

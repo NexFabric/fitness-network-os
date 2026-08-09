@@ -1,3 +1,4 @@
+import enum
 from datetime import datetime
 from uuid import UUID
 
@@ -12,6 +13,14 @@ from sqlalchemy import (
     Uuid,
     text,
 )
+
+class RenewalStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    APPLIED = "APPLIED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -137,7 +146,7 @@ class MembershipRenewal(TenantMixin, Base):
         ForeignKeyConstraint(["tenant_id", "next_plan_version_id"], ["plan_versions.tenant_id", "plan_versions.id"]),
     )
     renewal_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[str] = mapped_column(String, nullable=False, default="PENDING")
+    status: Mapped[str] = mapped_column(String, nullable=False, default=RenewalStatus.PENDING)
     price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
     price_snapshot_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     terms_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
