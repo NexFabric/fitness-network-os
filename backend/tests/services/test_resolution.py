@@ -101,7 +101,7 @@ async def setup_base_data(db_session, setup_tenant):
 @pytest.mark.asyncio
 async def test_activate_scheduled_memberships(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     start_date = now - timedelta(days=1)
@@ -144,7 +144,7 @@ async def test_activate_scheduled_memberships(db_session, pg_session_maker, setu
 @pytest.mark.asyncio
 async def test_process_expirations(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     m = Membership(
@@ -263,7 +263,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
     t1_id = setup_tenant.id
     t2_id = setup_tenant_2.id
     
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     start_date = now - timedelta(days=1)
     end_date = start_date + relativedelta(months=1)
@@ -347,7 +347,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
 @pytest.mark.asyncio
 async def test_renewal_error_isolation(setup_base_data, pg_session_maker, setup_tenant, db_session):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
 
     m1 = Membership(
