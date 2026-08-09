@@ -26,6 +26,14 @@ from app.models.membership import (
     Plan,
     PlanVersion,
 )
+
+from app.models.entitlement import (
+    EntitlementDefinition,
+    PlanEntitlement,
+    MembershipEntitlement,
+    EntitlementWallet,
+    EntitlementTransaction,
+)
 from app.models.notification import NotificationDelivery, NotificationTemplate
 from app.models.organization import Organization
 from app.models.outbox import InboxEvent, OutboxEvent

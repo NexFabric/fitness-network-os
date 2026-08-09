@@ -1,50 +1,70 @@
 from uuid import UUID
-
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.exc import IntegrityError
 from app.models.membership import Membership
-
+from app.models.entitlement import EntitlementWallet, EntitlementTransaction, EntitlementDefinition
 
 class EntitlementService:
     @staticmethod
-    async def check_access(db: AsyncSession, member_id: UUID, action: str = "gym_access") -> dict:
-        """
-        Check if the member has access to the specified action based on their active membership's terms_snapshot.
-        Includes logic for Offline TTL caching projection.
-        """
-        result = await db.execute(
-            select(Membership).where(
-                Membership.member_id == member_id,
-                Membership.status == "ACTIVE"
+    async def consume_access(db: AsyncSession, tenant_id: UUID, member_id: UUID, action: str, idempotency_key: str) -> dict:
+        try:
+            # Check for idempotency
+            tx_check = await db.execute(
+                select(EntitlementTransaction).where(
+                    EntitlementTransaction.tenant_id == tenant_id,
+                    EntitlementTransaction.idempotency_key == idempotency_key
+                )
             )
-        )
-        membership = result.scalars().first()
+            if tx_check.scalars().first():
+                return {"granted": True, "last_known_state": "ACTIVE", "reason": "IDEMPOTENT"}
 
-        if not membership:
-            return {
-                "granted": False,
-                "reason": "NO_ACTIVE_MEMBERSHIP",
-                "last_known_state": "INACTIVE"
-            }
+            # Get the definition
+            def_result = await db.execute(
+                select(EntitlementDefinition).where(
+                    EntitlementDefinition.tenant_id == tenant_id,
+                    EntitlementDefinition.code == action
+                )
+            )
+            ent_def = def_result.scalars().first()
+            if not ent_def:
+                return {"granted": False, "reason": "UNKNOWN_ACTION", "last_known_state": "ACTIVE"}
 
-        terms = membership.terms_snapshot or {}
-        
-        # Determine if the specific action is allowed by terms
-        action_allowed = terms.get(action, False)
-        if not action_allowed:
-            return {
-                "granted": False,
-                "reason": "ACTION_DENIED_BY_TERMS",
-                "last_known_state": "ACTIVE"
-            }
-            
-        # Offline TTL projection
-        offline_ttl = terms.get("offline_ttl_hours", 24)
+            # Get wallet with row lock
+            wallet_result = await db.execute(
+                select(EntitlementWallet).where(
+                    EntitlementWallet.tenant_id == tenant_id,
+                    EntitlementWallet.member_id == member_id,
+                    EntitlementWallet.entitlement_id == ent_def.id
+                ).with_for_update()
+            )
+            wallet = wallet_result.scalars().first()
 
-        return {
-            "granted": True,
-            "reason": None,
-            "last_known_state": "ACTIVE",
-            "offline_ttl_hours": offline_ttl
-        }
+            if not wallet:
+                return {"granted": False, "reason": "NO_WALLET", "last_known_state": "INACTIVE"}
+
+            if ent_def.type == "COUNT":
+                if wallet.remaining <= 0:
+                    return {"granted": False, "reason": "ZERO_BALANCE", "last_known_state": "ACTIVE"}
+                wallet.remaining -= 1
+                wallet.consumed += 1
+
+            # Log transaction
+            tx = EntitlementTransaction(
+                tenant_id=tenant_id,
+                wallet_id=wallet.id,
+                idempotency_key=idempotency_key,
+                amount=1,
+                action=action
+            )
+            db.add(tx)
+            await db.commit()
+
+            return {"granted": True, "last_known_state": "ACTIVE", "reason": None, "offline_ttl_hours": 24}
+
+        except IntegrityError:
+            await db.rollback()
+            return {"granted": False, "reason": "CONCURRENCY_ERROR", "last_known_state": "ACTIVE"}
+        except Exception:
+            await db.rollback()
+            raise

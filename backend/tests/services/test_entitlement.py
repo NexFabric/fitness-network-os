@@ -1,68 +1,38 @@
-from unittest.mock import AsyncMock, MagicMock
+import asyncio
 from uuid import uuid4
-
 import pytest
-
+from httpx import AsyncClient
 from app.services.entitlement import EntitlementService
-
-
-@pytest.mark.asyncio
-async def test_check_access_granted():
-    member_id = uuid4()
-    mock_db = AsyncMock()
-    
-    mock_membership = AsyncMock()
-    mock_membership.member_id = member_id
-    mock_membership.status = "ACTIVE"
-    mock_membership.terms_snapshot = {"gym_access": True, "offline_ttl_hours": 12}
-    
-    mock_scalars = MagicMock()
-    mock_scalars.first.return_value = mock_membership
-    
-    mock_result = MagicMock()
-    mock_result.scalars.return_value = mock_scalars
-    
-    mock_db.execute.return_value = mock_result
-    
-    res = await EntitlementService.check_access(mock_db, member_id, action="gym_access")
-    assert res["granted"] is True
-    assert res["offline_ttl_hours"] == 12
+from app.models.entitlement import EntitlementWallet, EntitlementDefinition, EntitlementType
 
 @pytest.mark.asyncio
-async def test_check_access_denied_no_membership():
-    member_id = uuid4()
-    mock_db = AsyncMock()
+async def test_entitlement_zero_balance(db_session, rls_tenant, member):
+    # RLS fixture implies db_session is authenticated as tenant
+    def_id = uuid4()
+    wallet_id = uuid4()
+    db_session.add(EntitlementDefinition(id=def_id, tenant_id=rls_tenant.id, code="PT_SESSION", name="PT", type=EntitlementType.COUNT))
+    db_session.add(EntitlementWallet(id=wallet_id, tenant_id=rls_tenant.id, member_id=member.id, entitlement_id=def_id, remaining=0))
+    await db_session.commit()
     
-    mock_scalars = MagicMock()
-    mock_scalars.first.return_value = None
-    
-    mock_result = MagicMock()
-    mock_result.scalars.return_value = mock_scalars
-    
-    mock_db.execute.return_value = mock_result
-    
-    res = await EntitlementService.check_access(mock_db, member_id, action="gym_access")
+    res = await EntitlementService.consume_access(db_session, rls_tenant.id, member.id, "PT_SESSION", "idem1")
     assert res["granted"] is False
-    assert res["reason"] == "NO_ACTIVE_MEMBERSHIP"
-    
+    assert res["reason"] == "ZERO_BALANCE"
+
 @pytest.mark.asyncio
-async def test_check_access_denied_by_terms():
-    member_id = uuid4()
-    mock_db = AsyncMock()
+async def test_entitlement_concurrent_double_consume(db_session, rls_tenant, member):
+    def_id = uuid4()
+    wallet_id = uuid4()
+    db_session.add(EntitlementDefinition(id=def_id, tenant_id=rls_tenant.id, code="PT_SESSION", name="PT", type=EntitlementType.COUNT))
+    db_session.add(EntitlementWallet(id=wallet_id, tenant_id=rls_tenant.id, member_id=member.id, entitlement_id=def_id, remaining=1))
+    await db_session.commit()
+
+    async def consume(idem):
+        return await EntitlementService.consume_access(db_session, rls_tenant.id, member.id, "PT_SESSION", idem)
     
-    mock_membership = AsyncMock()
-    mock_membership.member_id = member_id
-    mock_membership.status = "ACTIVE"
-    mock_membership.terms_snapshot = {"gym_access": False}
+    # Run two consumes concurrently
+    res1, res2 = await asyncio.gather(consume("idem2"), consume("idem3"))
     
-    mock_scalars = MagicMock()
-    mock_scalars.first.return_value = mock_membership
-    
-    mock_result = MagicMock()
-    mock_result.scalars.return_value = mock_scalars
-    
-    mock_db.execute.return_value = mock_result
-    
-    res = await EntitlementService.check_access(mock_db, member_id, action="gym_access")
-    assert res["granted"] is False
-    assert res["reason"] == "ACTION_DENIED_BY_TERMS"
+    # Only one should succeed
+    successes = sum(1 for r in [res1, res2] if r["granted"])
+    assert successes == 1
+
