@@ -1,8 +1,10 @@
-import pytest
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
-from unittest.mock import AsyncMock
+
+import pytest
 
 from app.services.entitlement import EntitlementService
+
 
 @pytest.mark.asyncio
 async def test_check_access_granted():
@@ -14,10 +16,10 @@ async def test_check_access_granted():
     mock_membership.status = "ACTIVE"
     mock_membership.terms_snapshot = {"gym_access": True, "offline_ttl_hours": 12}
     
-    mock_scalars = AsyncMock()
+    mock_scalars = MagicMock()
     mock_scalars.first.return_value = mock_membership
     
-    mock_result = AsyncMock()
+    mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
     
     mock_db.execute.return_value = mock_result
@@ -31,10 +33,10 @@ async def test_check_access_denied_no_membership():
     member_id = uuid4()
     mock_db = AsyncMock()
     
-    mock_scalars = AsyncMock()
+    mock_scalars = MagicMock()
     mock_scalars.first.return_value = None
     
-    mock_result = AsyncMock()
+    mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
     
     mock_db.execute.return_value = mock_result
@@ -53,10 +55,10 @@ async def test_check_access_denied_by_terms():
     mock_membership.status = "ACTIVE"
     mock_membership.terms_snapshot = {"gym_access": False}
     
-    mock_scalars = AsyncMock()
+    mock_scalars = MagicMock()
     mock_scalars.first.return_value = mock_membership
     
-    mock_result = AsyncMock()
+    mock_result = MagicMock()
     mock_result.scalars.return_value = mock_scalars
     
     mock_db.execute.return_value = mock_result

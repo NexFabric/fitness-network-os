@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from pydantic import BaseModel
-from typing import Optional
 
-from app.api.deps import get_db, get_current_user
-from app.services.entitlement import EntitlementService
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
+from app.services.entitlement import EntitlementService
 
 router = APIRouter()
 
@@ -16,8 +16,8 @@ class EntitlementConsumeRequest(BaseModel):
 class EntitlementConsumeResponse(BaseModel):
     granted: bool
     last_known_state: str
-    offline_ttl_hours: Optional[int] = None
-    reason: Optional[str] = None
+    offline_ttl_hours: int | None = None
+    reason: str | None = None
 
 @router.post("/{member_id}/entitlements/consume", response_model=EntitlementConsumeResponse)
 async def consume_entitlement(

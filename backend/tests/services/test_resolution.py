@@ -1,45 +1,99 @@
-import pytest
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
-from dateutil.relativedelta import relativedelta
 
+import pytest
+from dateutil.relativedelta import relativedelta
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.models.member import Member
 from app.models.membership import (
     Membership,
-    MembershipRenewal,
     MembershipPeriod,
+    MembershipRenewal,
+    Plan,
     PlanVersion,
 )
+from app.models.organization import Organization
+from app.models.tenant import Tenant
 from app.services.resolution import ResolutionEngine
 
-@pytest.mark.asyncio
-async def test_activate_scheduled_memberships(db_session, setup_tenant):
-    # Setup
+@pytest.fixture
+async def db_session(pg_engine) -> AsyncGenerator[AsyncSession, None]:
+    async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        yield session
+
+@pytest.fixture
+async def setup_tenant(db_session):
+    org = Organization(name="Test Org", domain=f"test-{uuid4()}.com")
+    db_session.add(org)
+    await db_session.flush()
+    t_id = uuid4()
+    tenant = Tenant(
+        id=t_id, 
+        name="Test Tenant", 
+        organization_id=org.id,
+        location_code=f"LOC-{t_id}"
+    )
+    db_session.add(tenant)
+    await db_session.commit()
+    return tenant
+
+@pytest.fixture
+async def setup_base_data(db_session, setup_tenant):
     tenant_id = setup_tenant.id
-    now = datetime.now(UTC)
-    member_id = uuid4()
+    
+    # Create member
+    member = Member(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        member_number=f"MEM-{uuid4().hex[:6]}",
+        first_name="Test",
+        last_name="Member",
+        email=f"test-{uuid4()}@example.com",
+    )
+    db_session.add(member)
+    
+    # Create Plan
+    plan = Plan(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        name="Test Plan"
+    )
+    db_session.add(plan)
     
     # Create PlanVersion
     pv = PlanVersion(
         id=uuid4(),
         tenant_id=tenant_id,
-        plan_id=uuid4(),
+        plan_id=plan.id,
         version=1,
         price_amount_minor=1000,
         currency="TRY",
         billing_cycle_months=1,
         terms={},
         is_published=True,
-        published_at=now
+        published_at=datetime.now(UTC)
     )
     db_session.add(pv)
+    await db_session.commit()
     
-    # Create scheduled membership
+    return member, plan, pv
+
+@pytest.mark.asyncio
+async def test_activate_scheduled_memberships(db_session, setup_tenant, setup_base_data):
+    tenant_id = setup_tenant.id
+    member, plan, pv = setup_base_data
+    now = datetime.now(UTC)
+    
     start_date = now - timedelta(days=1)
     end_date = start_date + relativedelta(months=1)
+    
     m = Membership(
         id=uuid4(),
         tenant_id=tenant_id,
-        member_id=member_id,
+        member_id=member.id,
         plan_version_id=pv.id,
         status="SCHEDULED",
         start_date=start_date,
@@ -50,7 +104,6 @@ async def test_activate_scheduled_memberships(db_session, setup_tenant):
     )
     db_session.add(m)
     
-    # Create period
     p = MembershipPeriod(
         membership_id=m.id,
         tenant_id=tenant_id,
@@ -59,30 +112,27 @@ async def test_activate_scheduled_memberships(db_session, setup_tenant):
         is_active=False
     )
     db_session.add(p)
-    
     await db_session.commit()
 
-    # Run resolution
     engine = ResolutionEngine(db_session)
     await engine.activate_scheduled_memberships()
     
-    # Verify
     await db_session.refresh(m)
     assert m.status == "ACTIVE"
     await db_session.refresh(p)
     assert p.is_active == True
 
 @pytest.mark.asyncio
-async def test_process_expirations(db_session, setup_tenant):
+async def test_process_expirations(db_session, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
-    member_id = uuid4()
     
     m = Membership(
         id=uuid4(),
         tenant_id=tenant_id,
-        member_id=member_id,
-        plan_version_id=uuid4(),
+        member_id=member.id,
+        plan_version_id=pv.id,
         status="ACTIVE",
         start_date=now - timedelta(days=30),
         end_date=now - timedelta(days=1),
@@ -100,16 +150,15 @@ async def test_process_expirations(db_session, setup_tenant):
     assert m.status == "EXPIRED"
 
 @pytest.mark.asyncio
-async def test_process_renewals(db_session, setup_tenant):
+async def test_process_renewals(db_session, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
-    member_id = uuid4()
     
-    # Create next PlanVersion
     next_pv = PlanVersion(
         id=uuid4(),
         tenant_id=tenant_id,
-        plan_id=uuid4(),
+        plan_id=plan.id,
         version=2,
         price_amount_minor=1200,
         currency="TRY",
@@ -119,12 +168,13 @@ async def test_process_renewals(db_session, setup_tenant):
         published_at=now
     )
     db_session.add(next_pv)
+    await db_session.flush()
     
     m = Membership(
         id=uuid4(),
         tenant_id=tenant_id,
-        member_id=member_id,
-        plan_version_id=uuid4(),
+        member_id=member.id,
+        plan_version_id=pv.id,
         status="ACTIVE",
         start_date=now - timedelta(days=60),
         end_date=now + timedelta(days=5),
@@ -134,7 +184,6 @@ async def test_process_renewals(db_session, setup_tenant):
     )
     db_session.add(m)
     
-    # Create active period
     p = MembershipPeriod(
         membership_id=m.id,
         tenant_id=tenant_id,
@@ -144,7 +193,6 @@ async def test_process_renewals(db_session, setup_tenant):
     )
     db_session.add(p)
     
-    # Create pending renewal
     r = MembershipRenewal(
         id=uuid4(),
         tenant_id=tenant_id,

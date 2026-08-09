@@ -1,8 +1,10 @@
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.membership import Membership
+
 
 class EntitlementService:
     @staticmethod
@@ -33,7 +35,7 @@ class EntitlementService:
         if not action_allowed:
             return {
                 "granted": False,
-                "reason": f"ACTION_DENIED_BY_TERMS",
+                "reason": "ACTION_DENIED_BY_TERMS",
                 "last_known_state": "ACTIVE"
             }
             
