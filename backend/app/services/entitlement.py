@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.money import assert_quantity
 from app.models.entitlement import (
     EntitlementDefinition,
     EntitlementTransaction,
@@ -118,7 +119,9 @@ class EntitlementService:
         action: str,
         quantity: int = 1,
     ) -> dict:
-        if quantity <= 0:
+        try:
+            quantity = assert_quantity(quantity)
+        except (TypeError, ValueError):
             return cls._result(
                 granted=False, reason="INVALID_QUANTITY", last_known_state="INACTIVE"
             )
@@ -201,7 +204,9 @@ class EntitlementService:
             return cls._result(
                 granted=False, reason="MISSING_IDEMPOTENCY_KEY", last_known_state="INACTIVE"
             )
-        if quantity <= 0:
+        try:
+            quantity = assert_quantity(quantity)
+        except (TypeError, ValueError):
             return cls._result(
                 granted=False, reason="INVALID_QUANTITY", last_known_state="INACTIVE"
             )
@@ -293,7 +298,8 @@ class EntitlementService:
                 reason=action,
             )
             db.add(tx)
-            await db.commit()
+            # Flush only — caller (API / unit of work) commits the transaction.
+            await db.flush()
 
             return cls._result(
                 granted=True,

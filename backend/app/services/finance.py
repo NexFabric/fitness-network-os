@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.money import assert_amount_minor, assert_quantity
 from app.models.finance import (
     BillingAccount,
     CreditApplication,
@@ -123,10 +124,13 @@ class FinanceService:
         line_total = 0
         built_items: list[InvoiceItem] = []
         for raw in items:
-            qty = int(raw.get("quantity", 1))
-            unit = int(raw["unit_amount_minor"] if "unit_amount_minor" in raw else raw["amount_minor"])
-            if qty <= 0:
-                raise ValueError("quantity must be > 0")
+            qty = assert_quantity(raw.get("quantity", 1))
+            unit_raw = (
+                raw["unit_amount_minor"]
+                if "unit_amount_minor" in raw
+                else raw["amount_minor"]
+            )
+            unit = assert_amount_minor(unit_raw)
             if unit < 0:
                 raise ValueError("unit_amount_minor must be >= 0")
             amount = unit * qty
@@ -268,8 +272,7 @@ class FinanceService:
         provider_ref: str | None = None,
         idempotency_key: str | None = None,
     ) -> Payment:
-        if not isinstance(amount_minor, int) or isinstance(amount_minor, bool):
-            raise TypeError("amount_minor must be int")
+        amount_minor = assert_amount_minor(amount_minor)
         if amount_minor <= 0:
             raise ValueError("amount_minor must be > 0")
 
@@ -351,7 +354,7 @@ class FinanceService:
 
         for alloc in allocations:
             invoice_id = alloc["invoice_id"]
-            amount = int(alloc["amount_minor"])
+            amount = assert_amount_minor(alloc["amount_minor"])
             if amount <= 0:
                 raise ValueError("allocation amount_minor must be > 0")
             if amount > available:
@@ -398,6 +401,7 @@ class FinanceService:
         reason: str | None = None,
         actor_id: UUID | None = None,
     ) -> Refund:
+        amount_minor = assert_amount_minor(amount_minor)
         if amount_minor <= 0:
             raise ValueError("refund amount_minor must be > 0")
 
@@ -496,6 +500,7 @@ class FinanceService:
         reason: str | None = None,
         actor_id: UUID | None = None,
     ) -> CreditNote:
+        amount_minor = assert_amount_minor(amount_minor)
         if amount_minor <= 0:
             raise ValueError("credit amount_minor must be > 0")
 
@@ -538,6 +543,7 @@ class FinanceService:
         invoice_id: UUID,
         amount_minor: int,
     ) -> CreditApplication:
+        amount_minor = assert_amount_minor(amount_minor)
         if amount_minor <= 0:
             raise ValueError("amount_minor must be > 0")
 
@@ -649,7 +655,7 @@ class FinanceService:
         await self.session.flush()
 
         for raw in items:
-            amount = int(raw["amount_minor"])
+            amount = assert_amount_minor(raw["amount_minor"])
             if amount == 0:
                 raise ValueError("reconciliation item amount cannot be 0")
             item = ReconciliationItem(

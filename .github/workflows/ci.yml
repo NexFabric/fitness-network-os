@@ -78,6 +78,10 @@ jobs:
         working-directory: ./backend
         run: uv run python scripts/check_permissions.py
 
+      - name: Architecture fitness — no money floats
+        working-directory: ./backend
+        run: uv run python scripts/check_no_money_floats.py
+
   test:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest

@@ -1,5 +1,8 @@
 # Phase 9: Entitlement & Resolution Engine
 
+**Status: COMPLETED / CI VERIFIED (merged main via PR #14)**  
+**Supersedes:** earlier “terms_snapshot boolean only” draft narrative.
+
 ## Goal
 
 Phase 8 delivered membership lifecycle, plan versions, and period invariants.  

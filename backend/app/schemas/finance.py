@@ -1,7 +1,15 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictInt
+
+# Strict int money fields — reject float coercion (100.5, 100.0, True)
+MoneyMinor = Annotated[StrictInt, Field(description="Integer minor currency units")]
+MoneyMinorNonNeg = Annotated[StrictInt, Field(ge=0)]
+MoneyMinorPos = Annotated[StrictInt, Field(gt=0)]
+StrictQty = Annotated[StrictInt, Field(ge=1)]
+BasisPoints = Annotated[StrictInt, Field(ge=0, le=10000)]
 
 
 class BillingAccountCreate(BaseModel):
@@ -23,8 +31,8 @@ class BillingAccountResponse(BaseModel):
 
 class InvoiceItemCreate(BaseModel):
     description: str
-    unit_amount_minor: int = Field(ge=0)
-    quantity: int = Field(default=1, ge=1)
+    unit_amount_minor: MoneyMinorNonNeg
+    quantity: StrictQty = 1
     source_type: str | None = None
     source_id: UUID | None = None
 
@@ -36,7 +44,7 @@ class InvoiceCreate(BaseModel):
     due_date: datetime | None = None
     membership_id: UUID | None = None
     discount_code: str | None = None
-    discount_amount_minor: int | None = Field(default=None, ge=0)
+    discount_amount_minor: MoneyMinorNonNeg | None = None
     issue: bool = False
 
 
@@ -71,12 +79,12 @@ class InvoiceResponse(BaseModel):
 
 class AllocationCreate(BaseModel):
     invoice_id: UUID
-    amount_minor: int = Field(gt=0)
+    amount_minor: MoneyMinorPos
 
 
 class PaymentCreate(BaseModel):
     billing_account_id: UUID
-    amount_minor: int = Field(gt=0)
+    amount_minor: MoneyMinorPos
     method: str
     currency: str = "TRY"
     allocations: list[AllocationCreate] = []
@@ -100,7 +108,7 @@ class PaymentResponse(BaseModel):
 
 
 class RefundCreate(BaseModel):
-    amount_minor: int = Field(gt=0)
+    amount_minor: MoneyMinorPos
     reason: str | None = None
 
 
@@ -117,7 +125,7 @@ class RefundResponse(BaseModel):
 
 class CreditNoteCreate(BaseModel):
     billing_account_id: UUID
-    amount_minor: int = Field(gt=0)
+    amount_minor: MoneyMinorPos
     currency: str = "TRY"
     reason: str | None = None
 
@@ -136,14 +144,14 @@ class CreditNoteResponse(BaseModel):
 
 class CreditApplyRequest(BaseModel):
     invoice_id: UUID
-    amount_minor: int = Field(gt=0)
+    amount_minor: MoneyMinorPos
 
 
 class DiscountCreate(BaseModel):
     code: str
     name: str
-    amount_minor: int | None = Field(default=None, ge=0)
-    percent_bps: int | None = Field(default=None, ge=0, le=10000)
+    amount_minor: MoneyMinorNonNeg | None = None
+    percent_bps: BasisPoints | None = None
 
 
 class DiscountResponse(BaseModel):
@@ -159,7 +167,7 @@ class DiscountResponse(BaseModel):
 
 class ReconciliationItemCreate(BaseModel):
     external_ref: str
-    amount_minor: int
+    amount_minor: MoneyMinor  # may be negative for bank lines; nonzero checked in service
     currency: str = "TRY"
 
 

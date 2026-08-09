@@ -1,58 +1,66 @@
-# FITNESS NETWORK OS - IMPLEMENTATION MASTER PLAN
+# FITNESS NETWORK OS — IMPLEMENTATION MASTER PLAN
 
-This document outlines the breakdown of the foundational implementation phases into actionable sub-tasks.
+**Status:** Living roadmap (Phase 0–26)  
+**Hierarchy (agents must follow):**
 
-## 01. Repository Bootstrap & Tooling
-- **Git & Monorepo Setup**: Initialize Git, create `.gitignore`.
-- **Backend Directory Structure**: `backend/app`, `backend/tests`, `scripts`.
-- **Python Package Management**: Set up `pyproject.toml` using `uv` or `poetry`.
-- **Linting & Formatting**: Configure `ruff`, `mypy`, `black`/`isort` (or `ruff` natively).
-- **Test Infrastructure**: Configure `pytest`, `pytest-cov`, `pytest-asyncio`.
-- **Pre-commit Hooks**: Setup pre-commit for formatting and linting.
+```text
+MASTER_SPEC
+  → PRODUCTION_READINESS
+    → IMPLEMENTATION_MASTER_PLAN  (this file)
+      → PROGRESS_CHECKLIST
+        → active phase plan (docs/plans/phaseN_*.md)
+```
 
-## 02. Docker Development Environment
-- **Dockerfiles**: Create `Dockerfile` for FastAPI backend.
-- **Docker Compose**: Create `docker-compose.yml` with:
-  - `backend` (FastAPI + Uvicorn with reload)
-  - `postgres` (PostgreSQL 16+)
-  - `redis` (Redis 7+)
-- **Scripts**: Makefile or `scripts/` shell scripts for easy `up`, `down`, `test`, `migrate`.
+Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-## 03. FastAPI & Core Setup
-- **App Factory**: Initialize FastAPI application with CORS, exception handlers.
-- **Settings Management**: Use `pydantic-settings` for environment variables.
-- **Observability Stub**: Setup OpenTelemetry middleware & logger configuration.
+---
 
-## 04. Database Foundation & SQLAlchemy
-- **SQLAlchemy 2.0**: Setup async engine, sessionmaker, and Base declarative model.
-- **Alembic**: Initialize Alembic for migrations, configured to run with async SQLAlchemy.
-- **Tenancy Aware Mixins**: Create a base model mixin that includes `tenant_id` and composite primary/foreign key support.
+## Milestone map
 
-## 05. Organizations & Tenants
-- **Domain Models**: `Organization` and `Tenant` tables.
-- **Tenant Context Resolver**: FastAPI dependency to extract `tenant_id` from headers/tokens and set it in contextvars.
-- **Schema Linter**: Script to ensure all tenant-owned tables have `tenant_id` and RLS enabled.
+| Phases | Theme | Status (see checklist) |
+|--------|--------|-------------------------|
+| 0–7 | Core gate / security / RLS / RBAC | COMPLETED (gate closure) |
+| 8 | Membership domain | CI VERIFIED |
+| 9 | Entitlement engine | CI VERIFIED (P1 prep before 13) |
+| 10 | Finance domain | CI VERIFIED (P1 audit ledger) |
+| 11 | Remove money floats | Closure on PR #17 (expand/contract + strict money) |
+| 12 | Real idempotency engine | **Next after Phase 11 LOCKED** |
+| 13 | QR & access engine | After 12 |
+| 14 | Member / gym core | After 13 |
+| 15 | Outbox / inbox / jobs | After 14 |
+| 16 | Notifications & reports API | |
+| 17 | Real API V1 routers completion | |
+| 18 | Vertical slice E2E | |
+| 19–20 | Admin Web / Scanner PWA MVP | |
+| 21–26 | CI V2, hardening, observability, exit gate | |
 
-## 06. Authentication, Sessions & MFA
-- **User Identity Models**: `User`, `Session`, `Device`.
-- **Token & Cookie Management**: Secure HttpOnly cookie handling for sessions.
-- **MFA Enablers**: Stubs/tables for MFA configuration.
+---
 
-## 07. PostgreSQL RLS (Row Level Security)
-- **Migration Helper**: Alembic macros to easily enable RLS on tables.
-- **DB Connection Setup**: Middleware or SQLAlchemy event to execute `SET LOCAL app.current_tenant_id = '...'` for every transaction.
-- **Isolation Tests**: `pytest` fixtures validating that Tenant A cannot query Tenant B's data.
+## Phase 11 (final closure on PR #17)
 
-## 08. Authorization & RBAC
-- **Roles & Permissions Models**: Define RBAC structures.
-- **Scopes**: API endpoint security scopes.
-- **Permission Matrix Checker**: CI script to validate scopes against a YAML source-of-truth matrix.
+- Expand-only migration head: `f7a8b9c0d1e2` (add + backfill; **no DROP**)  
+- CONTRACT: create a **new** revision later — never edit applied expand body  
+- Pre-production exception: no concurrent old/new app writers claimed  
+- Historical Opportunity currency: **TRY**  
+- Strict API money + BasisPoints; service `assert_amount_minor`  
+- Real PG migration reconciliation test + expand schema guard  
+- Details: `docs/plans/phase11_money_floats.md`
 
-## 09. Audit & Telemetry
-- **Audit Logging**: `audit_events` table for tracking critical actions (immutable).
-- **Idempotency Engine**: `idempotency_keys` table and middleware to prevent double execution.
+## Phase 12 (next — do not start early)
 
-## 10. CI / CD & Architecture Fitness
-- **GitHub Actions**: Workflows for Lint, Test, Security Scan.
-- **Architecture Fitness**: Tests (e.g., using `pytest-arch` or custom imports check) to ensure domain boundaries are respected.
-- **Release Gates**: Enforcement of the 12 Gates defined in `PRODUCTION_READINESS.md`.
+- New `IdempotencyRecord` (not legacy key-only model)  
+- `UNIQUE(tenant_id, operation, key)` + request_hash + PROCESSING/SUCCEEDED/FAILED  
+- Unit of Work; domain services **flush only**  
+- Integrate: invoice, payment, refund, credit, renewal, entitlement consume  
+- Concurrency exit: 100 parallel identical keys → 1 mutation  
+
+## Non-negotiables
+
+- Gym = tenant; RLS FORCE on tenant tables  
+- Money: `amount_minor` int (never binary float)  
+- Expand → backfill → switch → contract for destructive schema  
+- Domain boundaries (no Membership → WhatsApp shortcuts)  
+
+## Foundation archive (COMPLETED)
+
+Repository bootstrap, Docker, FastAPI factory, SQLAlchemy/Alembic, org/tenant, auth/MFA foundation, RLS helpers, RBAC matrix, audit model, CI gates — complete under Phase 0–7. Historical detail remains in git history and older docs; do not treat foundation section as the active execution plan.
