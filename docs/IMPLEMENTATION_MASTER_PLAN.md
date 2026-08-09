@@ -27,7 +27,7 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 12 | Real idempotency engine | 🟢 LOCKED (PR #19 merge `227f42e`) |
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
-| 15 | Outbox / inbox / jobs | **IN PROGRESS** |
+| 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
 | 16 | Notifications & reports API | |
 | 17 | Real API V1 routers completion | |
 | 18 | Vertical slice E2E | |
@@ -68,7 +68,7 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - UNIQUE(tenant_id, member_number), UNIQUE(tenant_id, user_id) on staff  
 - Details: `backend/docs/plans/phase14_member_gym_core.md`
 
-## Phase 15 (active)
+## Phase 15 — LOCKED
 
 - Transactional outbox enqueue/claim/publish with SKIP LOCKED  
 - Inbox exactly-once receive + handler dispatch  

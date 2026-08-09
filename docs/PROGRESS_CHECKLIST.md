@@ -41,7 +41,7 @@
 - [x] Phase 12: Real Idempotency Engine - 🟢 CI VERIFIED / LOCKED (PR #19 merge `227f42e`)
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
-- [ ] Phase 15: Outbox / Inbox / Job Engine  🟠 IN PROGRESS (`feat/phase15-outbox-inbox-engine`)
+- [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`)
 - [ ] Phase 16: Notifications & Reports API
 - [ ] Phase 17: Real API V1 Routers
 
@@ -94,7 +94,7 @@
 ### Wave 5 — Operational MVP
 - Report Engine (Runs, Exports) - 🟡 MODEL
 - Notifications & Deliveries - 🟡 MODEL
-- Scheduled Jobs (Outbox/Inbox) - 🟠 SERVICE (Phase 15 in progress)
+- Scheduled Jobs (Outbox/Inbox) - 🟢 CI VERIFIED (Phase 15)
 
 ### Wave 6 — Growth
 - Lead CRM & Opportunities - 🟡 MODEL (`value_amount_minor` + currency after Phase 11)
