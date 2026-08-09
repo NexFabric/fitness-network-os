@@ -148,3 +148,50 @@ jobs:
       - name: Run Pytest with Real DB
         working-directory: ./backend
         run: uv run pytest
+
+  # Phase 21 CI V2 — frontend production builds (workspace lockfile at frontend/)
+  admin-web:
+    name: Admin Web Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build admin-web
+        working-directory: ./frontend/admin-web
+        env:
+          VITE_API_URL: http://localhost:8000
+        run: npm run build
+
+  scanner-pwa:
+    name: Scanner PWA Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build scanner-pwa
+        working-directory: ./frontend/scanner-pwa
+        env:
+          VITE_API_URL: http://localhost:8000
+        run: npm run build
