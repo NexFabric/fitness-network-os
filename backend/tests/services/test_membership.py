@@ -1,16 +1,20 @@
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator
 
-from app.models.membership import Membership, MembershipFreeze, Plan, PlanVersion, StatusHistory
 from app.models.member import Member
+from app.models.membership import (
+    Membership,
+    Plan,
+    PlanVersion,
+)
+from app.models.organization import Organization
 from app.models.tenant import Tenant
 from app.services.membership import MembershipService
 
-from app.models.organization import Organization
 
 @pytest.fixture
 async def db_session(pg_session_maker) -> AsyncGenerator[AsyncSession, None]:
@@ -19,7 +23,7 @@ async def db_session(pg_session_maker) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 async def tenant_id(pg_engine) -> UUID:
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as db:
         org_id = uuid4()
@@ -41,7 +45,7 @@ async def tenant_id(pg_engine) -> UUID:
 @pytest.fixture
 async def setup_membership_data(pg_engine, tenant_id: UUID):
     """Fixture to set up basic membership data."""
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as db:
         # Create member
@@ -114,6 +118,7 @@ async def test_freeze_membership_success(db_session: AsyncSession, setup_members
     
     # Verify membership status changed
     m = await service.get_membership(membership.id)
+    assert m is not None
     assert m.status == "FROZEN"
     
 @pytest.mark.asyncio

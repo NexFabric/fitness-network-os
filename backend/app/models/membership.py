@@ -53,8 +53,8 @@ class Entitlement(TenantMixin, Base):
     entitlement_type: Mapped[str] = mapped_column(String, nullable=False)
     balance: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-class SubscriptionPeriod(TenantMixin, Base):
-    __tablename__ = "subscription_periods"
+class MembershipPeriod(TenantMixin, Base):
+    __tablename__ = "membership_periods"
 
     membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
 
@@ -80,8 +80,8 @@ class MembershipFreeze(TenantMixin, Base):
     reason: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
-class StatusHistory(TenantMixin, Base):
-    __tablename__ = "status_history"
+class MembershipStatusHistory(TenantMixin, Base):
+    __tablename__ = "membership_status_history"
 
     membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
 

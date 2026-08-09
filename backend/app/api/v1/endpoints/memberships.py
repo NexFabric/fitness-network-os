@@ -4,9 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_tenant_id
+from app.core.authorization import AuthorizationService, SecurityException
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.membership import MembershipFreezeCreate, MembershipFreezeResponse, MembershipResponse
+from app.schemas.membership import (
+    MembershipFreezeCreate,
+    MembershipFreezeResponse,
+    MembershipResponse,
+)
 from app.services.membership import MembershipService
 
 router = APIRouter()
@@ -19,6 +24,9 @@ async def freeze_membership(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+        raise SecurityException()
+        
     service = MembershipService(db)
     try:
         freeze = await service.freeze_membership(
@@ -40,6 +48,9 @@ async def unfreeze_membership(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+        raise SecurityException()
+
     service = MembershipService(db)
     try:
         membership = await service.unfreeze_membership(

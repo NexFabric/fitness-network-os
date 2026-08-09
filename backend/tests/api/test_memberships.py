@@ -5,17 +5,15 @@ from uuid import uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.db.session import get_db
 from app.main import app
 from app.models.member import Member
 from app.models.membership import Membership, Plan, PlanVersion
-from app.models.rbac import Role, UserRole, Permission
-from app.models.tenant import Tenant
 from app.models.organization import Organization
+from app.models.rbac import Permission, Role, UserRole
+from app.models.tenant import Tenant
 from app.models.user import User, UserSession
-from sqlalchemy import text
 
-
-from app.db.session import get_db
 
 @pytest.fixture
 async def api_client(pg_session_maker):
@@ -38,7 +36,7 @@ async def setup_data(pg_engine):
     token_a = "token_a_123"
     token_hash_a = hashlib.sha256(token_a.encode()).hexdigest()
 
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as db:
@@ -62,7 +60,7 @@ async def setup_data(pg_engine):
         db.add(user_a)
         await db.flush()
 
-        perm = Permission(name="members:write")
+        perm = Permission(name="memberships:write")
         db.add(perm)
         await db.flush()
 

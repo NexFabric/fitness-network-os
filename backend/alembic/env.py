@@ -28,8 +28,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+import app.models  # noqa: F401
 from app.db.base import Base
-import app.models
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

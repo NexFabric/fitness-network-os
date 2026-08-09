@@ -1,18 +1,17 @@
-from datetime import UTC, datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.membership import Membership, MembershipFreeze, StatusHistory
+from app.models.membership import Membership, MembershipFreeze, MembershipStatusHistory
 
 
 class MembershipService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_membership(self, membership_id: UUID) -> Optional[Membership]:
+    async def get_membership(self, membership_id: UUID) -> Membership | None:
         """Fetch a membership by ID."""
         stmt = select(Membership).where(Membership.id == membership_id)
         result = await self.session.execute(stmt)
@@ -23,8 +22,8 @@ class MembershipService:
         membership_id: UUID,
         start_date: datetime,
         expected_end_date: datetime,
-        reason: Optional[str],
-        changed_by_user_id: Optional[UUID] = None,
+        reason: str | None,
+        changed_by_user_id: UUID | None = None,
     ) -> MembershipFreeze:
         """
         Freeze a membership. Changes its status to 'FROZEN'.
@@ -47,7 +46,7 @@ class MembershipService:
         self.session.add(freeze)
 
         # 2. Record Status History
-        history = StatusHistory(
+        history = MembershipStatusHistory(
             membership_id=membership_id,
             old_status=membership.status,
             new_status="FROZEN",
@@ -67,7 +66,7 @@ class MembershipService:
     async def unfreeze_membership(
         self,
         membership_id: UUID,
-        changed_by_user_id: Optional[UUID] = None,
+        changed_by_user_id: UUID | None = None,
     ) -> Membership:
         """
         Unfreeze a membership manually. Changes status back to 'ACTIVE'
@@ -98,7 +97,7 @@ class MembershipService:
             #     membership.end_date += delta
         
         # Record Status History
-        history = StatusHistory(
+        history = MembershipStatusHistory(
             membership_id=membership_id,
             old_status="FROZEN",
             new_status="ACTIVE",

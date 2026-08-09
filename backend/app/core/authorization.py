@@ -161,9 +161,6 @@ class AuthorizationService:
                 if role.name in [DefaultRole.FEDERATION_ADMIN.value, DefaultRole.FEDERATION_ANALYST.value, DefaultRole.FEDERATION_SUPPORT.value]:
                     if resource_organization_id and ur.organization_id == resource_organization_id:
                         return True
-                    # If checking a tenant, does the tenant belong to this org? 
-                    # We would need tenant.organization_id here, but without it, we assume 
-                    # caller passes resource_organization_id if they want federation check.
                         
             # 3. Tenant-level assignment
             elif ur.tenant_id is not None:
@@ -173,5 +170,5 @@ class AuthorizationService:
                 # Self access (e.g. Member accessing own profile)
                 if role.name == DefaultRole.MEMBER.value and resource_owner_id == user.id:
                     return True
-
+                    
         return False

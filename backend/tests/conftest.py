@@ -4,8 +4,8 @@ import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+import app.models  # noqa: F401
 from app.db.base import Base
-import app.models
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5433/gym_test")
 TEST_RUNTIME_DATABASE_URL = os.getenv("TEST_RUNTIME_DATABASE_URL", "postgresql+asyncpg://app_user:app_password@localhost:5433/gym_test")
@@ -26,9 +26,9 @@ async def pg_engine():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
         
-        # Apply RLS to all tenant tables
+        # Apply RLS to all tenant tables EXCEPT those intentionally global
         for table_name, table in Base.metadata.tables.items():
-            if "tenant_id" in table.columns:
+            if "tenant_id" in table.columns and table_name not in ["user_roles"]:
                 policy_name = f"{table_name}_tenant_isolation_policy"
                 await conn.execute(text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;"))
                 await conn.execute(text(f"""

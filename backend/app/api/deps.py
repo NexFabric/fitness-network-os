@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_session_token_from_cookie
 from app.db.session import get_db
-from app.models.rbac import UserRole
+from app.models.rbac import Role, UserRole
 from app.models.user import User, UserSession
 
 # Context variable to hold the current tenant ID for the request
@@ -55,7 +55,16 @@ async def get_current_user(
     if not session:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
         
-    result_user = await db.execute(select(User).where(User.id == session.user_id))
+    from sqlalchemy.orm import selectinload
+    result_user = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.user_roles)
+            .selectinload(UserRole.role)
+            .selectinload(Role.permissions)
+        )
+        .where(User.id == session.user_id)
+    )
     user = result_user.scalars().first()
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User inactive or not found")

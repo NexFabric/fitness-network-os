@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 class MembershipFreezeCreate(BaseModel):
     start_date: datetime
     expected_end_date: datetime
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class MembershipFreezeResponse(BaseModel):
@@ -16,8 +15,8 @@ class MembershipFreezeResponse(BaseModel):
     membership_id: UUID
     start_date: datetime
     expected_end_date: datetime
-    actual_end_date: Optional[datetime] = None
-    reason: Optional[str] = None
+    actual_end_date: datetime | None = None
+    reason: str | None = None
     tenant_id: UUID
 
     class Config:
@@ -30,7 +29,7 @@ class MembershipResponse(BaseModel):
     plan_version_id: UUID
     status: str
     start_date: datetime
-    end_date: Optional[datetime] = None
+    end_date: datetime | None = None
 
     class Config:
         from_attributes = True
