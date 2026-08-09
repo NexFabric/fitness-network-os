@@ -151,3 +151,44 @@ async def test_staff_link(db_session, tenant):
 
     listed = await staff_svc.list_staff(tenant.id)
     assert len(listed) == 1
+
+
+@pytest.mark.asyncio
+async def test_member_user_id_binding_and_unique(db_session, tenant):
+    """Phase 15.5B: Member ↔ User binding for issue-self QR."""
+    user = User(
+        id=uuid4(),
+        email=f"member-user-{uuid4()}@example.com",
+        hashed_password="hashed",
+        is_active=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    svc = MemberService(db_session)
+    m = await svc.create_member(
+        tenant.id,
+        member_number="BOUND-1",
+        first_name="Self",
+        last_name="Serve",
+        user_id=user.id,
+    )
+    await db_session.commit()
+
+    found = await svc.get_member_by_user_id(tenant.id, user.id)
+    assert found is not None
+    assert found.id == m.id
+    assert found.user_id == user.id
+
+    missing = await svc.get_member_by_user_id(tenant.id, uuid4())
+    assert missing is None
+
+    with pytest.raises(ValueError, match="user_id_conflict"):
+        await svc.create_member(
+            tenant.id,
+            member_number="BOUND-2",
+            first_name="Other",
+            last_name="Person",
+            user_id=user.id,
+        )
+        await db_session.flush()

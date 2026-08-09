@@ -11,11 +11,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.events import build_event_envelope, is_envelope
+from app.core.events import build_event_envelope, is_envelope, validate_envelope
 from app.models.outbox import InboxEvent, OutboxEvent
 
 Handler = Callable[[AsyncSession, InboxEvent], Awaitable[None]]
@@ -61,16 +61,21 @@ class OutboxService:
         if not isinstance(payload, dict):
             raise TypeError("payload_must_be_object")
 
-        if wrap_envelope and not is_envelope(payload):
-            payload = build_event_envelope(
-                event_type=event_type,
-                tenant_id=tenant_id,
-                data=payload,
-                actor_id=actor_id,
-                correlation_id=correlation_id,
-                aggregate_type=aggregate_type,
-                aggregate_id=aggregate_id,
-            )
+        if wrap_envelope:
+            if is_envelope(payload):
+                validate_envelope(
+                    payload, tenant_id=tenant_id, event_type=event_type
+                )
+            else:
+                payload = build_event_envelope(
+                    event_type=event_type,
+                    tenant_id=tenant_id,
+                    data=payload,
+                    actor_id=actor_id,
+                    correlation_id=correlation_id,
+                    aggregate_type=aggregate_type,
+                    aggregate_id=aggregate_id,
+                )
 
         if dedupe_key:
             existing = await self.db.execute(
@@ -165,13 +170,37 @@ class OutboxService:
             await self.db.flush()
         return events
 
-    async def mark_published(self, event: OutboxEvent) -> OutboxEvent:
+    async def mark_published(
+        self, event: OutboxEvent, *, worker_id: str
+    ) -> OutboxEvent:
+        """CAS: only the claiming worker may publish (status=PROCESSING + worker_id)."""
+        if not worker_id:
+            raise ValueError("lease_ownership_lost")
+        now = datetime.now(UTC)
+        res = await self.db.execute(
+            update(OutboxEvent)
+            .where(
+                OutboxEvent.id == event.id,
+                OutboxEvent.tenant_id == event.tenant_id,
+                OutboxEvent.status == "PROCESSING",
+                OutboxEvent.worker_id == worker_id,
+            )
+            .values(
+                status="PUBLISHED",
+                processed_at=now,
+                error_message=None,
+                lease_until=None,
+                worker_id=None,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        if res.rowcount != 1:
+            raise ValueError("lease_ownership_lost")
         event.status = "PUBLISHED"
-        event.processed_at = datetime.now(UTC)
+        event.processed_at = now
         event.error_message = None
         event.lease_until = None
         event.worker_id = None
-        await self.db.flush()
         return event
 
     async def mark_failed(
@@ -179,35 +208,83 @@ class OutboxService:
         event: OutboxEvent,
         error: str,
         *,
+        worker_id: str,
         retry_after_seconds: int = 30,
         max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     ) -> OutboxEvent:
-        event.error_message = (error or "error")[:2000]
-        event.lease_until = None
-        event.worker_id = None
-        if (event.attempt_count or 0) >= max_attempts:
-            event.status = "DEAD"
+        """CAS: only the claiming worker may fail/retry (status=PROCESSING + worker_id)."""
+        if not worker_id:
+            raise ValueError("lease_ownership_lost")
+        attempts = event.attempt_count or 0
+        err = (error or "error")[:2000]
+        if attempts >= max_attempts:
+            new_status = "DEAD"
+            available_at = event.available_at
         else:
-            event.status = "FAILED"
-            event.available_at = datetime.now(UTC) + timedelta(
+            new_status = "FAILED"
+            available_at = datetime.now(UTC) + timedelta(
                 seconds=max(1, retry_after_seconds)
             )
-        await self.db.flush()
+        res = await self.db.execute(
+            update(OutboxEvent)
+            .where(
+                OutboxEvent.id == event.id,
+                OutboxEvent.tenant_id == event.tenant_id,
+                OutboxEvent.status == "PROCESSING",
+                OutboxEvent.worker_id == worker_id,
+            )
+            .values(
+                status=new_status,
+                error_message=err,
+                lease_until=None,
+                worker_id=None,
+                available_at=available_at,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        if res.rowcount != 1:
+            raise ValueError("lease_ownership_lost")
+        event.status = new_status
+        event.error_message = err
+        event.lease_until = None
+        event.worker_id = None
+        event.available_at = available_at
         return event
 
     async def dispatch_claimed(
         self,
         events: list[OutboxEvent],
         publisher: Callable[[OutboxEvent], Awaitable[None]],
+        *,
+        worker_id: str | None = None,
     ) -> dict[str, int]:
+        """Worker-only: ACK publisher then CAS mark_*; uses claim worker_id per event.
+
+        Prefer passing the same worker_id used in claim_pending. Falls back to
+        each event's worker_id from the claim row.
+        """
         published = failed = 0
         for ev in events:
+            claim_worker = worker_id or ev.worker_id
+            if not claim_worker:
+                failed += 1
+                continue
             try:
                 await publisher(ev)
-                await self.mark_published(ev)
-                published += 1
             except Exception as e:
-                await self.mark_failed(ev, str(e))
+                try:
+                    await self.mark_failed(ev, str(e), worker_id=claim_worker)
+                except ValueError as ve:
+                    if str(ve) != "lease_ownership_lost":
+                        raise
+                failed += 1
+                continue
+            try:
+                await self.mark_published(ev, worker_id=claim_worker)
+                published += 1
+            except ValueError as ve:
+                if str(ve) != "lease_ownership_lost":
+                    raise
                 failed += 1
         return {"published": published, "failed": failed}
 
@@ -293,7 +370,9 @@ class OutboxService:
             ev.attempt_count = (ev.attempt_count or 0) + 1
             await self.db.flush()
             try:
-                await handler(self.db, ev)
+                # Nested savepoint: domain flushes roll back on handler failure
+                async with self.db.begin_nested():
+                    await handler(self.db, ev)
                 ev.status = "PROCESSED"
                 ev.processed_at = datetime.now(UTC)
                 ev.error_message = None

@@ -1,8 +1,5 @@
 """CloudEvents-inspired standard event envelope (MASTER_SPEC / ADR-021).
 
-Outbox payload convention: either a full envelope dict, or wrap domain data via
-``build_event_envelope`` / ``envelope_for_outbox``.
-
 Terminology: delivery is at-least-once; consumers must be idempotent for
 effectively-once business effects.
 """
@@ -15,6 +12,10 @@ from uuid import UUID, uuid4
 
 SPEC_VERSION = "1.0"
 DEFAULT_SOURCE = "fitness-network-os/backend"
+
+
+class EnvelopeValidationError(ValueError):
+    """Invalid or mismatched event envelope."""
 
 
 def build_event_envelope(
@@ -32,10 +33,6 @@ def build_event_envelope(
     aggregate_type: str | None = None,
     aggregate_id: UUID | str | None = None,
 ) -> dict[str, Any]:
-    """Build a versioned event envelope for outbox / messaging.
-
-    ``event_type`` should be versioned, e.g. ``membership.renewed.v1``.
-    """
     if not event_type:
         raise ValueError("event_type_required")
     if not isinstance(data, dict):
@@ -71,7 +68,6 @@ def envelope_for_outbox(
     data: dict[str, Any],
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """Convenience wrapper used by domain services enqueueing outbox events."""
     return build_event_envelope(
         event_type=event_type,
         tenant_id=tenant_id,
@@ -88,3 +84,30 @@ def is_envelope(payload: dict[str, Any]) -> bool:
         and "id" in payload
         and "data" in payload
     )
+
+
+def validate_envelope(
+    payload: dict[str, Any],
+    *,
+    tenant_id: UUID | str,
+    event_type: str,
+) -> dict[str, Any]:
+    """Validate envelope shape and cross-check row tenant/type."""
+    if not isinstance(payload, dict):
+        raise EnvelopeValidationError("envelope_not_object")
+    if payload.get("specversion") != SPEC_VERSION:
+        raise EnvelopeValidationError("invalid_specversion")
+    eid = payload.get("id")
+    if not eid or not str(eid).strip():
+        raise EnvelopeValidationError("missing_id")
+    if not isinstance(payload.get("data"), dict):
+        raise EnvelopeValidationError("data_must_be_object")
+    if str(payload.get("tenantid")) != str(tenant_id):
+        raise EnvelopeValidationError("tenantid_mismatch")
+    if payload.get("type") != event_type:
+        raise EnvelopeValidationError("type_mismatch")
+    if not payload.get("source"):
+        raise EnvelopeValidationError("missing_source")
+    if not payload.get("time"):
+        raise EnvelopeValidationError("missing_time")
+    return payload

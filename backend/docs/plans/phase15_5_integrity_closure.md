@@ -1,40 +1,42 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** IN PROGRESS (`feat/phase15-5-integrity-closure`)  
+**Status:** IN REVIEW on PR #25 — **15.5B review fixes applied**  
 **Base:** main `af8f809` (Phase 8–15 LOCKED)  
-**Blocks:** Phase 16 Notifications / Reports
+**Blocks:** Phase 16 Notifications / Reports  
+**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3`
 
 ## Goal
 
-Close cross-phase integrity gaps **without reopening** Phase 8–15 product scope. Single hardening PR.
+Close cross-phase integrity gaps **without reopening** Phase 8–15 product scope.
 
-## Scope (exact)
+## Scope + evidence (15.5 + 15.5B)
 
-| # | Item | Deliverable |
-|---|------|-------------|
-| 1 | RBAC SoT drift | `permissions.yml` = runtime grants; CI DB↔YAML parity |
-| 2 | Idempotency atomic failure | Business savepoint; partial rollback; FAILED same-hash retry only |
-| 3 | Outbox crash recovery | `worker_id` + `lease_until`; stale PROCESSING reclaim |
-| 4 | Inbox retry | `available_at` + FAILED/DEAD backoff (effectively-once language) |
-| 5 | Event Envelope v1 | Shared envelope builder for outbox producers |
-| 6 | Finance allocation reversal | Append-only reversals; no mutate/delete allocations |
-| 7 | Entitlement ledger | Wallet FK RESTRICT; deny UPDATE/DELETE triggers |
-| 8 | Legacy Entitlement | Deprecation note + usage=0 plan (no DROP this rev) |
+| # | Item | Evidence |
+|---|------|----------|
+| 1 | RBAC least privilege | MEMBER: no tenant-wide `members:read` / `access:issue`; `access:issue:self` + `/access/qr/issue-self` via `members.user_id`. Tenant roles lose `outbox:dispatch`. |
+| 1b | YAML↔DB parity | `check_permissions_db.py` checks missing **and** extra grants; mutation test proves over-grant fails. |
+| 2 | Idempotency atomic failure | Nested savepoint UoW; FAILED same-hash only. |
+| 3 | Outbox lease + fencing | CAS `mark_published`/`mark_failed` on `worker_id`; stale worker denied. |
+| 4 | Inbox retry + atomicity | Handler in nested savepoint; domain flushes roll back on failure. |
+| 5 | Event envelope validation | `validate_envelope` for tenantid/type/data/id/specversion. |
+| 6 | Finance immutability | Allocation reversals + DB triggers deny UPDATE/DELETE. |
+| 7 | Entitlement ledger DoD | RESTRICT + triggers + PG negative tests. |
+| 8 | Legacy Entitlement | Deprecation note (DROP later). |
 
-## Explicitly deferred (Phase 16–26)
+## Dispatch safety
 
-- Full MFA / auth routers, KMS QR, offline gateway  
-- Audit DB role lockdown (beyond app triggers where done)  
-- Notification/Report product (Phase 16)  
-- Container / CORS / observability  
+- Public `/outbox/dispatch` returns **404** unless `ALLOW_OUTBOX_NOOP_DISPATCH=true` (default false).
+- Real workers must call `claim_pending` + publisher ACK + `mark_published(..., worker_id=...)`.
 
 ## Exit criteria
 
-- Real PG tests for each of 1–7  
-- `alembic check` clean  
-- CI green including permissions DB parity after migrate  
-- Docs: Phase 15.5 LOCKED path before Phase 16  
+- [x] Hostile PG tests (fencing, inbox atomicity, finance/entitlement, RBAC)
+- [x] `alembic check` clean
+- [ ] CI green after 15.5B push
+- [ ] Human review/approve — **no protection bypass**
+- [ ] Merge + main CI → Phase 16
 
 ## Terminology
 
-Outbox/Inbox: **at-least-once delivery + idempotent/deduped consumers → effectively-once business effects**. Avoid global “exactly-once” claims.
+**At-least-once delivery + idempotent/deduped consumers → effectively-once business effects.**  
+Do not claim global exactly-once.

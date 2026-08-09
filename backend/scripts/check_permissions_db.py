@@ -90,6 +90,11 @@ def main() -> int:
                 errors.append(
                     f"role {role_name} missing DB grants: {sorted(missing)}"
                 )
+            extra = actual - expected
+            if extra:
+                errors.append(
+                    f"role {role_name} has extra DB grants not in YAML: {sorted(extra)}"
+                )
 
     if errors:
         print("Permission DB parity FAILED:")

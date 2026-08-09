@@ -39,6 +39,7 @@ class MemberService:
         email: str | None = None,
         phone: str | None = None,
         status: str = "LEAD",
+        user_id: UUID | None = None,
     ) -> Member:
         if status not in ALLOWED_STATUSES:
             raise ValueError(f"invalid_status:{status}")
@@ -57,18 +58,34 @@ class MemberService:
             email=email.strip().lower() if email else None,
             phone=phone.strip() if phone else None,
             status=status,
+            user_id=user_id,
         )
         try:
             async with self.db.begin_nested():
                 self.db.add(member)
                 await self.db.flush()
         except IntegrityError as e:
+            msg = str(e.orig) if getattr(e, "orig", None) else str(e)
+            if "uq_members_tenant_user" in msg or "user_id" in msg.lower():
+                raise ValueError("user_id_conflict") from e
             raise ValueError("member_number_conflict") from e
         return member
 
     async def get_member(self, tenant_id: UUID, member_id: UUID) -> Member | None:
         result = await self.db.execute(
             select(Member).where(Member.tenant_id == tenant_id, Member.id == member_id)
+        )
+        return result.scalars().first()
+
+    async def get_member_by_user_id(
+        self, tenant_id: UUID, user_id: UUID
+    ) -> Member | None:
+        """Resolve Member bound to a login user within the tenant."""
+        result = await self.db.execute(
+            select(Member).where(
+                Member.tenant_id == tenant_id,
+                Member.user_id == user_id,
+            )
         )
         return result.scalars().first()
 
@@ -98,6 +115,8 @@ class MemberService:
         last_name: str | None = None,
         email: str | None = None,
         phone: str | None = None,
+        user_id: UUID | None = None,
+        clear_user_id: bool = False,
     ) -> Member:
         member = await self.get_member(tenant_id, member_id)
         if member is None:
@@ -110,7 +129,18 @@ class MemberService:
             member.email = email.strip().lower() if email else None
         if phone is not None:
             member.phone = phone.strip() if phone else None
-        await self.db.flush()
+        if clear_user_id:
+            member.user_id = None
+        elif user_id is not None:
+            member.user_id = user_id
+        try:
+            async with self.db.begin_nested():
+                await self.db.flush()
+        except IntegrityError as e:
+            msg = str(e.orig) if getattr(e, "orig", None) else str(e)
+            if "uq_members_tenant_user" in msg or "user_id" in msg.lower():
+                raise ValueError("user_id_conflict") from e
+            raise
         return member
 
     async def set_status(

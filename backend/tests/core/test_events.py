@@ -2,7 +2,14 @@
 
 from uuid import uuid4
 
-from app.core.events import build_event_envelope, is_envelope
+import pytest
+
+from app.core.events import (
+    EnvelopeValidationError,
+    build_event_envelope,
+    is_envelope,
+    validate_envelope,
+)
 
 
 def test_build_envelope():
@@ -17,3 +24,13 @@ def test_build_envelope():
     assert env["tenantid"] == str(tid)
     assert env["data"]["amount_minor"] == 100
     assert env["correlationid"] == "c1"
+    validate_envelope(env, tenant_id=tid, event_type="payment.captured.v1")
+
+
+def test_validate_rejects_type_mismatch():
+    tid = uuid4()
+    env = build_event_envelope(
+        event_type="a.v1", tenant_id=tid, data={}
+    )
+    with pytest.raises(EnvelopeValidationError, match="type_mismatch"):
+        validate_envelope(env, tenant_id=tid, event_type="b.v1")

@@ -54,11 +54,6 @@ class InboxReceiveResponse(BaseModel):
     is_duplicate: bool
 
 
-class DispatchResponse(BaseModel):
-    published: int
-    failed: int
-
-
 @router.post("/events", response_model=OutboxEventResponse, status_code=201)
 async def enqueue_outbox(
     body: OutboxEnqueueRequest,
@@ -90,26 +85,6 @@ async def enqueue_outbox(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-
-
-@router.post("/dispatch", response_model=DispatchResponse)
-async def dispatch_outbox(
-    tenant_id: UUID = Depends(get_tenant_id),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    limit: int = 50,
-):
-    """Claim and mark-publish (dev/ops sink — real transports later)."""
-    _require(current_user, tenant_id, "outbox:dispatch")
-    svc = OutboxService(db)
-    claimed = await svc.claim_pending(tenant_id=tenant_id, limit=limit)
-
-    async def _noop_publish(ev) -> None:
-        return None
-
-    stats = await svc.dispatch_claimed(claimed, _noop_publish)
-    await db.commit()
-    return DispatchResponse(**stats)
 
 
 @router.post("/inbox", response_model=InboxReceiveResponse, status_code=201)
