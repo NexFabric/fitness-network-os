@@ -2,10 +2,9 @@
 
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
-**Main HEAD (docs sync base):** `af8f809`  
-**PR #25 (15.5):** open · CI green · await independent APPROVE  
-**PR #26 (16):** open · stacked on 15.5 · integrity CLEAN · not LOCKED  
-**Alembic:** 15.5 `p9…` · 16 `q0…`
+**Main HEAD:** `125a8c6` (Phase 15.5 LOCKED)  
+**Alembic head on main:** `p9c0d1e2f3a4`  
+**Active stack:** Phase 16–20 on PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) — **not LOCKED**
 
 **Hierarchy (agents must follow):**
 
@@ -19,7 +18,7 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then merge **16–20 stack** on `feat/phase16-notifications-reports` (16 residual + 17A + 18 e2e + 19/20 frontends **IMPLEMENTED on branch**, not LOCKED).  
+**Next formal step:** Merge Phase **16+** stack (PR #26 after review) → then Phase **21** CI V2 full verification → 22–26.  
 **Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE.
 
 ---
@@ -37,12 +36,12 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
-| 15.5 | Cross-cutting integrity closure | 🟡 **PR #25 CI GREEN** — not LOCKED until independent APPROVE + merge |
-| 16 | Notifications & reports API | 🟠 **PR #26** IMPLEMENTED + integrity CLEAN on branch — not LOCKED; merge after 15.5 LOCKED |
-| 17 | Real API V1 routers completion | 🟠 **17A IMPLEMENTED on branch** (`/me/*`); 17B/C open — not LOCKED |
-| 18 | Vertical slice E2E | 🟠 **IMPLEMENTED on branch** (service-layer PG) — not LOCKED |
-| 19–20 | Admin Web / Scanner PWA MVP | 🟠 **IMPLEMENTED on branch** — not LOCKED |
-| 21–26 | CI V2, hardening, observability, exit gate | ⬜ |
+| 15.5 | Cross-cutting integrity closure | 🟢 **CI VERIFIED / LOCKED** (PR #25 merge `125a8c6`) |
+| 16 | Notifications & reports API | 🟡 branch (PR #26) — not LOCKED |
+| 17 | Real API V1 routers completion | 🟡 branch — not LOCKED |
+| 18 | Vertical slice E2E | 🟡 branch — not LOCKED |
+| 19–20 | Admin Web / Scanner PWA MVP | 🟡 branch — not LOCKED |
+| 21–26 | CI V2, hardening, observability, exit gate | ⬜ starting (21–23 skeleton) |
 
 ---
 
@@ -86,11 +85,11 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Expand: attempt_count, available_at, dedupe_key; UNIQUE(tenant_id, event_id)  
 - Details: `backend/docs/plans/phase15_outbox_inbox.md`
 
-### Phase 15.5 — MERGE GATE OPEN (not LOCKED)
+### Phase 15.5 — LOCKED (main `125a8c6`)
 
-**PR #25** head `ffba0a8` · alembic `p9c0d1e2f3a4` · PR CI green as of 2026-08-10.
+**PR #25** merged as `125a8c6` · alembic head `p9c0d1e2f3a4` · 🟢 CI VERIFIED / LOCKED.
 
-Delivered on branch (do not treat as main LOCKED yet):
+Delivered and on main:
 
 - RBAC `permissions.yml` ↔ DB parity (missing + extra grants)  
 - Idempotency business savepoint + FAILED same-hash only  
@@ -101,27 +100,22 @@ Delivered on branch (do not treat as main LOCKED yet):
 - No public generic `/outbox` HTTP inject; GYM_* lack outbox/inbox write  
 - MEMBER BOLA closed: `*:self` + `/me` + authz owner proof for self perms  
 
-**Remaining formal gates:** independent human APPROVE → merge → main CI green → docs LOCKED.
-
 Details: `backend/docs/plans/phase15_5_integrity_closure.md`
 
-### Phase 16 — 🟠 IN PROGRESS (merge after 15.5 LOCKED)
+### Phase 16 — ACTIVE ON BRANCH (not LOCKED)
 
-**PR #26** · branch `feat/phase16-notifications-reports` · stacked on 15.5 · migration `q0d1e2f3a4b5`  
-**Integrity closeout:** **CLEAN** (`backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md`) — not CI VERIFIED / not LOCKED.
+- Notification templates / deliveries service + API (PR #26)  
+- Report definitions / runs (export hooks)  
+- Prefer Outbox for async delivery; domain → Event → Notification (no WhatsApp shortcuts)  
+- No generic public `/inbox` reintroduction; provider webhooks only  
+- **Do not mark LOCKED** until merge to main + green required CI  
 
-Delivered on branch:
+### Phase 21+ — next hardening track (after 16–20 merge path)
 
-- **16A** Expand models + event registry (`report.run.requested.v1`) + permissions seed  
-- **16B** Schedule + outbox; HTTP always enqueues; non-SENT raises for outbox `mark_failed`  
-- **16C** Log provider adapters only  
-- **16D** Report definitions/runs MVP export metadata  
-- **16E** fail→DEAD, recipient tenant bind, API MEMBER 403, cross-tenant isolation, Membership↛providers  
-
-Architecture: **Domain → Outbox → Notification consumer → Adapter**.  
-Merge order: **15.5 first, then 16**.
-
-Details: `backend/docs/plans/phase16_notifications_reports.md`
+- Phase 21: CI V2 — frontend admin-web + scanner-pwa build jobs; keep backend gates  
+- Phase 22: Production container hardening checklist / Dockerfile improvements  
+- Phase 23: HTTP security baseline (CORS allowlist, security headers)  
+- Phase 24–26: observability, checklist truth model, CORE MVP EXIT GATE  
 
 ---
 
@@ -132,6 +126,7 @@ Details: `backend/docs/plans/phase16_notifications_reports.md`
 - Expand → backfill → switch → contract for destructive schema  
 - Domain boundaries (no Membership → WhatsApp shortcuts)  
 - Transactional outbox + idempotency on money/entitlement mutations  
+- No public generic outbox/inbox HTTP reintroduction  
 
 ## Foundation archive (COMPLETED)
 

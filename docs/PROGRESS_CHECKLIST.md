@@ -1,13 +1,9 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD (docs sync base):** `af8f809` (Phase 8–15 LOCKED)  
-**Active branch work:** `feat/phase16-notifications-reports` (stack tip includes Phase 16 residual → 20 MVP)  
-- Phase **15.5** PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) — **not LOCKED** (CI green; formal APPROVE + merge open)  
-- Phase **15.6** residual closeout — 🟢 **DONE on branch** — **not LOCKED**  
-- Phase **16** PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) — 🟠 **IMPLEMENTED on branch**, integrity **CLEAN** — **not LOCKED**  
-- Phase **17–20** — 🟠 **IMPLEMENTED on branch** (17A `/me/*`, 18 e2e slice, 19 admin-web, 20 scanner-pwa) — **not LOCKED**  
-**Alembic:** 15.5 head `p9c0d1e2f3a4` · Phase 16 branch adds `q0d1e2f3a4b5`
+**Main HEAD (15.5 merge):** `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25))  
+**Active branch work:** Phase **16–20** on `feat/phase16-notifications-reports` (PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26)) — **not LOCKED**  
+**Alembic head on main:** `p9c0d1e2f3a4` (15.5C trust boundaries; after `n7…` + `o8…`)
 
 **Maturity Levels:**
 - IMPLEMENTED
@@ -19,6 +15,7 @@
 - Only mark **CI VERIFIED / LOCKED** after merge to `main` + green required CI.
 - Do **not** claim PRODUCTION VERIFIED / production-ready until Phase 26 exit gate.
 - Domain “MODEL” rows may lag service work until checklist is intentionally promoted.
+- Do **not** lock Phase 16–20 until their own merge + main CI.
 
 ---
 
@@ -28,14 +25,9 @@
 |------|--------|
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
-| Phase 15.5 integrity closure | 🟡 **PR #25 CI GREEN** — **not LOCKED** (human APPROVE + merge + main CI still open) |
-| Phase 15.6 residual closeout | 🟢 **DONE on branch** (ops docs + dedupe 200/201) — **not LOCKED** (ships with 16 stack after 15.5) |
-| Phase 16 Notifications & Reports | 🟠 **PR #26 stacked** — IMPLEMENTED + integrity CLEAN on branch; **not LOCKED**; merge **after** 15.5 LOCKED |
-| Phase 17 API V1 completion | 🟠 **17A IMPLEMENTED on branch** (`/me/*`); 17B/17C open; **not LOCKED** |
-| Phase 18 Vertical slice E2E | 🟠 **IMPLEMENTED on branch** (service-layer PG); HTTP E2E gaps; **not LOCKED** |
-| Phase 19 Admin Web MVP | 🟠 **IMPLEMENTED on branch** (`frontend/admin-web`); **not LOCKED** |
-| Phase 20 Scanner PWA MVP | 🟠 **IMPLEMENTED on branch** (`frontend/scanner-pwa`); **not LOCKED** |
-| Phase 21–26 | ⬜ NOT STARTED |
+| Phase 15.5 integrity closure | 🟢 **CI VERIFIED / LOCKED** on `main` merge `125a8c6` |
+| Phase 16–20 (branch) | 🟡 **IN PROGRESS on feature branch** — not LOCKED |
+| Phase 21–26 | ⬜ STARTING / skeleton (21 CI V2, 22–23 plans) |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -76,38 +68,21 @@
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
 - [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`; docs #23)
-- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟡 **PR #25** (15.5B/C/D; PR CI green; **await independent APPROVE + merge** → LOCKED)
+- [x] Phase 15.5: Cross-Cutting Integrity Closure — 🟢 **CI VERIFIED / LOCKED** (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) merge `125a8c6`)
   - 15.5B: RBAC least-priv, fencing, inbox atomicity, finance/ledger DoD
   - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
-  - Alembic: `p9c0d1e2f3a4`
-- [x] Phase 15.6: Residual closeout / post-integrity ops polish — 🟢 **DONE on branch** (**not LOCKED**; plan `backend/docs/plans/phase15_6_residual_closeout.md`)
-  - Ops: `process_due_failed` documented + CLI `scripts/process_notification_due.py` (no public HTTP / product cron yet)
-  - API: notification/report dedupe → **200** when `created=False`, **201** when created
-  - Does **not** unlock 15.5 or 16; formal merge order unchanged
-- [ ] Phase 16: Notifications & Reports API — 🟠 **PR #26** stacked on 15.5 — **IMPLEMENTED on branch / integrity CLEAN** (**not LOCKED**; merge only after 15.5 LOCKED)
-  - Plan: `backend/docs/plans/phase16_notifications_reports.md`
-  - Integrity closeout: `backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md` → **CLEAN**
-  - 16A–D: models, services, log adapters, HTTP `/notifications` + `/reports`, migration `q0d1e2f3a4b5` + RBAC seed
-  - 16E tests: fail→DEAD, outbox non-SENT → mark_failed, recipient tenant bind, API MEMBER 403, cross-tenant isolation, architecture Membership↛providers
-  - Residual P2 reliability **CLOSED on branch** (IR-002/003/004/006/007); IR-005 ops CLI `process_notification_due.py` (product cron deferred); NotificationBridge helper (not wired into MembershipService)
-  - Still open process: PR CI green + merge **after** 15.5 LOCKED only
-- [ ] Phase 17: Real API V1 Routers (completion / gaps) — 🟠 **17A IMPLEMENTED on branch** (`backend/docs/plans/phase17_api_v1_completion.md`); **not LOCKED**
-  - 17A: `/me/profile`, `/me/member`, `/me/memberships`, `/me/entitlements`, `/me/checkins` + existing check — `require_self` / careful profile
-  - 17B: staff router gaps — **open**
-  - 17C: OpenAPI consistency — **open**
-  - Tests: `backend/tests/api/test_me_self_service.py`
-  - Depends: 15.5 LOCKED; 16 merge preferred; no BOLA / no client `member_id` on self paths
+  - Alembic head: `p9c0d1e2f3a4`
+- [ ] Phase 16: Notifications & Reports API — 🟡 **branch work only** (PR #26) — not LOCKED
+- [ ] Phase 17: Real API V1 Routers (completion / gaps) — 🟡 branch work only — not LOCKED
 
 ### Phase 18-26: Executable MVP & Verification
-- [ ] Phase 18: Executable Vertical Slice E2E — 🟠 **IMPLEMENTED on branch** (service-layer PG; plan `backend/docs/plans/phase18_vertical_slice_e2e.md`) — **not LOCKED**
-  - Tests: `backend/tests/e2e/test_vertical_slice_access.py` (+ alias `test_vertical_slice_member_qr.py`)
-  - Gaps: full HTTP ASGI E2E, finance chain, app_user RLS path in this suite
-- [ ] Phase 19: Admin Web MVP — 🟠 **IMPLEMENTED on branch** (`frontend/admin-web`, plan `backend/docs/plans/phase19_admin_web.md`) — **not LOCKED**
-- [ ] Phase 20: Scanner PWA MVP — 🟠 **IMPLEMENTED on branch** (`frontend/scanner-pwa`, plan `backend/docs/plans/phase20_scanner_pwa.md`) — **not LOCKED**
-- [ ] Phase 21: CI V2 Full Verification
-- [ ] Phase 22: Production Container Hardening
-- [ ] Phase 23: HTTP Security Baseline
+- [ ] Phase 18: Executable Vertical Slice E2E — 🟡 branch work only — not LOCKED
+- [ ] Phase 19: Admin Web MVP — 🟡 branch work only — not LOCKED
+- [ ] Phase 20: Scanner PWA MVP — 🟡 branch work only — not LOCKED
+- [ ] Phase 21: CI V2 Full Verification — ⬜ starting
+- [ ] Phase 22: Production Container Hardening — ⬜ plan/skeleton
+- [ ] Phase 23: HTTP Security Baseline — ⬜ plan/skeleton
 - [ ] Phase 24: Observability
 - [ ] Phase 25: Checklist Truth Model Implementation
 - [ ] Phase 26: CORE MVP EXIT GATE
@@ -148,8 +123,8 @@
 - Anti-passback & Attendance Logic - 🟡 MODEL
 
 ### Wave 5 — Operational MVP
-- Report Engine (Runs, Exports) - 🟡 MODEL → Phase 16
-- Notifications & Deliveries - 🟡 MODEL → Phase 16
+- Report Engine (Runs, Exports) - 🟡 MODEL → Phase 16 (branch)
+- Notifications & Deliveries - 🟡 MODEL → Phase 16 (branch)
 - Scheduled Jobs (Outbox/Inbox) - 🟢 CI VERIFIED (Phase 15; real bus adapters deferred)
 
 ### Wave 6 — Growth
@@ -185,7 +160,5 @@
 | 14 | `backend/docs/plans/phase14_member_gym_core.md` |
 | 15 | `backend/docs/plans/phase15_outbox_inbox.md` |
 | 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
-| 15.6 | `backend/docs/plans/phase15_6_residual_closeout.md` |
-| 16 | `backend/docs/plans/phase16_notifications_reports.md` |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |
 | Review stop | `docs/REVIEW_CHECKPOINT.md` |

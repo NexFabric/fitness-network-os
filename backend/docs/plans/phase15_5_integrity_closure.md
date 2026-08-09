@@ -1,15 +1,15 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** PR #25 head `ffba0a8` — **15.5D applied · PR CI GREEN · not LOCKED**  
-**Base:** main `af8f809` (Phase 8–15 LOCKED)  
-**Blocks:** Phase 16 Notifications / Reports  
-**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (15.5D: code-only, no new revision)
+**Status:** 🟢 **CI VERIFIED / LOCKED** on main merge `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25))  
+**Base at lock:** main `125a8c6`  
+**Unblocks:** Phase 16 Notifications / Reports (branch PR #26 — not LOCKED)  
+**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (head on main; 15.5D was code-only)
 
 ## Goal
 
 Close cross-phase integrity gaps **without reopening** Phase 8–15 product scope.
 
-## Scope + evidence (15.5 + 15.5B + 15.5C)
+## Scope + evidence (15.5 + 15.5B + 15.5C + 15.5D)
 
 | # | Item | Evidence |
 |---|------|----------|
@@ -34,22 +34,32 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 - Provider webhooks (Phase 16+): signature → tenant from integration config → allowlist/normalize → `receive_inbox` → fast ACK → worker.
 - Real workers call `claim_pending` + publisher ACK + `mark_published(..., worker_id=...)`.
 
-## Deferred (not merge blockers)
+## Deferred (not merge blockers; still open product work)
 
 - TRAINER → ASSIGNED members only
-- Full `/me/memberships` + `/me/checkins` product surface (perms exist; routes later)
 - Standalone worker process
 - Provider-specific webhook adapters
+- Real notification transports (Phase 16+ adapters)
 
 ## Exit criteria
 
 - [x] Hostile PG tests (fencing, crash-loop max-attempts, inbox atomicity, finance/entitlement, RBAC, BOLA, no public outbox, event registry)
 - [x] `alembic check` clean (local after migrate)
 - [x] PR CI green after 15.5D (`ffba0a8` — Security, Lint, Unit/Integration, CodeQL)
-- [ ] Independent human review/approve — **no protection bypass / no self-APPROVE as formal gate**
-- [ ] Merge + main CI → Phase 15.5 LOCKED → Phase 16 GO
+- [x] Independent human review/approve + merge to main
+- [x] Phase 15.5 **LOCKED** on main `125a8c6` · alembic head `p9c0d1e2f3a4` → Phase 16 GO (branch)
 
 ## Terminology
 
 **At-least-once delivery + idempotent/deduped consumers → effectively-once business effects.**  
 Do not claim global exactly-once.
+
+## Lock record
+
+| Field | Value |
+|-------|--------|
+| PR | #25 |
+| Merge SHA | `125a8c6` |
+| Alembic head | `p9c0d1e2f3a4` |
+| Maturity | 🟢 CI VERIFIED / LOCKED |
+| Production-ready | **No** (Phase 16–26 remaining) |
