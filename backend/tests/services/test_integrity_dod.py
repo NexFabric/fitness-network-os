@@ -366,7 +366,8 @@ def test_permissions_db_rejects_extra_grant_mutation(pg_engine):
     import subprocess
     import sys
 
-    from sqlalchemy import create_engine, text as sql_text
+    from sqlalchemy import create_engine
+    from sqlalchemy import text as sql_text
 
     url = os.environ.get("TEST_DATABASE_URL", "").replace("+asyncpg", "+psycopg")
     if not url:
