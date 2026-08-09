@@ -18,6 +18,7 @@ from app.models.organization import Organization
 from app.models.tenant import Tenant
 from app.services.resolution import ResolutionEngine
 
+
 @pytest.fixture
 async def db_session(pg_engine) -> AsyncGenerator[AsyncSession, None]:
     async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
@@ -84,7 +85,7 @@ async def setup_base_data(db_session, setup_tenant):
 @pytest.mark.asyncio
 async def test_activate_scheduled_memberships(db_session, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     start_date = now - timedelta(days=1)
@@ -125,7 +126,7 @@ async def test_activate_scheduled_memberships(db_session, setup_tenant, setup_ba
 @pytest.mark.asyncio
 async def test_process_expirations(db_session, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     m = Membership(
