@@ -49,6 +49,7 @@ class MemberResponse(BaseModel):
     email: str | None
     phone: str | None
     status: str
+    user_id: UUID | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

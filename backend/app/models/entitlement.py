@@ -210,7 +210,7 @@ class EntitlementTransaction(TenantMixin, Base):
         ForeignKeyConstraint(
             ["tenant_id", "wallet_id"],
             ["entitlement_wallets.tenant_id", "entitlement_wallets.id"],
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         Index("ix_entit_tx_tenant_idem_key", "tenant_id", "idempotency_key", unique=True),
         Index("ix_entit_tx_tenant_wallet", "tenant_id", "wallet_id"),

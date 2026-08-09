@@ -9,7 +9,11 @@ from app.db.base import Base, TenantMixin
 
 
 class OutboxEvent(TenantMixin, Base):
-    """Transactional Outbox — durable publish buffer (ADR-020 / outbox pattern)."""
+    """Transactional Outbox — durable publish buffer (ADR-020).
+
+    Delivery is at-least-once; consumers must be idempotent for effectively-once
+    business effects (do not claim global exactly-once).
+    """
 
     __tablename__ = "outbox_events"
 
@@ -29,17 +33,25 @@ class OutboxEvent(TenantMixin, Base):
     aggregate_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     aggregate_id: Mapped[UUID | None] = mapped_column(nullable=True)
     dedupe_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    worker_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    lease_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     _model_table_args = (
         UniqueConstraint(
             "tenant_id", "dedupe_key", name="uq_outbox_events_tenant_dedupe"
         ),
         Index("ix_outbox_events_available", "status", "available_at"),
+        Index("ix_outbox_events_lease", "status", "lease_until"),
     )
 
 
 class InboxEvent(TenantMixin, Base):
-    """Transactional Inbox — exactly-once intake for webhooks/external events."""
+    """Transactional Inbox — deduplicated intake for external events.
+
+    At-least-once receive + UNIQUE(tenant_id, event_id) + retryable handlers.
+    """
 
     __tablename__ = "inbox_events"
 
@@ -54,9 +66,13 @@ class InboxEvent(TenantMixin, Base):
     processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    available_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     _model_table_args = (
         UniqueConstraint(
             "tenant_id", "event_id", name="uq_inbox_events_tenant_event_id"
         ),
+        Index("ix_inbox_events_available", "status", "available_at"),
     )

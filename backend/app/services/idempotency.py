@@ -86,6 +86,9 @@ class IdempotencyService:
         Acquire or resolve an idempotency record for (tenant, operation, key).
 
         Flush only — no commit. Concurrent inserts resolve via SELECT FOR UPDATE.
+
+        ``expires_at`` is retention/cleanup horizon only — it does not authorize
+        rebinding the same key to a different request_hash.
         """
         now = datetime.now(UTC)
         record = IdempotencyRecord(
@@ -192,9 +195,14 @@ class IdempotencyService:
             )
 
         if status == IdempotencyStatus.FAILED.value:
-            # Allow retry with new lease / hash.
+            # Key is bound to the original request_hash forever (until retention
+            # cleanup via expires_at). Same hash may retry; different hash → CONFLICT.
+            if record.request_hash != request_hash:
+                return IdempotencyBeginResult(
+                    outcome=IdempotencyOutcome.CONFLICT,
+                    record=record,
+                )
             record.status = IdempotencyStatus.PROCESSING.value
-            record.request_hash = request_hash
             record.owner_token = owner_token
             record.locked_until = now + timedelta(seconds=lease_seconds)
             record.attempt_count = (record.attempt_count or 0) + 1

@@ -28,7 +28,9 @@ from app.models.member import Member
 from app.models.membership import Membership, Plan, PlanVersion
 from app.models.organization import Organization
 from app.models.tenant import Tenant
+from app.models.user import User
 from app.services.access import AccessService
+from app.services.member import MemberService
 
 
 @pytest_asyncio.fixture
@@ -309,6 +311,42 @@ async def test_no_entitlement_denied(db_session, tenant):
         "NO_WALLET",
         "NOT_ENTITLED",
     )
+
+
+@pytest.mark.asyncio
+async def test_issue_self_resolution_via_user_binding(db_session, tenant):
+    """issue-self path: resolve member from user_id binding, never body member_id."""
+    user = User(
+        id=uuid4(),
+        email=f"self-qr-{uuid4()}@example.com",
+        hashed_password="hashed",
+        is_active=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    members = MemberService(db_session)
+    member = await members.create_member(
+        tenant.id,
+        member_number=f"SELF-{uuid4().hex[:6]}",
+        first_name="Self",
+        last_name="QR",
+        user_id=user.id,
+    )
+    await db_session.commit()
+
+    bound = await members.get_member_by_user_id(tenant.id, user.id)
+    assert bound is not None
+    assert bound.id == member.id
+
+    # Unbound user → no member (API would 404)
+    assert await members.get_member_by_user_id(tenant.id, uuid4()) is None
+
+    svc = AccessService(db_session)
+    issued = await svc.issue_qr_token(tenant.id, bound.id, ttl_seconds=60)
+    await db_session.commit()
+    assert issued.token
+    assert issued.credential_id
 
 
 @pytest.mark.asyncio

@@ -22,6 +22,7 @@ from app.models.finance import (
     InvoiceStatus,
     Payment,
     PaymentAllocation,
+    PaymentAllocationReversal,
     PaymentStatus,
     ReconciliationItem,
     ReconciliationItemStatus,
@@ -427,15 +428,6 @@ class FinanceService:
         if amount_minor > refundable:
             raise ValueError("refund exceeds refundable amount")
 
-        # Reduce invoice paid amounts from most recent allocations (LIFO)
-        await self._unwind_allocations_for_refund(tenant_id, payment, amount_minor)
-
-        payment.refunded_amount_minor += amount_minor
-        if payment.refunded_amount_minor >= payment.amount_minor:
-            payment.status = PaymentStatus.REFUNDED.value
-        else:
-            payment.status = PaymentStatus.PARTIALLY_REFUNDED.value
-
         refund = Refund(
             tenant_id=tenant_id,
             payment_id=payment.id,
@@ -448,11 +440,43 @@ class FinanceService:
         )
         self.session.add(refund)
         await self.session.flush()
+
+        # Append-only allocation reversals (never mutate/delete allocation rows)
+        await self._unwind_allocations_for_refund(
+            tenant_id, payment, amount_minor, refund_id=refund.id
+        )
+
+        payment.refunded_amount_minor += amount_minor
+        if payment.refunded_amount_minor >= payment.amount_minor:
+            payment.status = PaymentStatus.REFUNDED.value
+        else:
+            payment.status = PaymentStatus.PARTIALLY_REFUNDED.value
+
+        await self.session.flush()
         return refund
 
+    async def _allocation_remaining(
+        self, tenant_id: UUID, allocation: PaymentAllocation
+    ) -> int:
+        rev = (
+            await self.session.execute(
+                select(PaymentAllocationReversal.amount_minor).where(
+                    PaymentAllocationReversal.tenant_id == tenant_id,
+                    PaymentAllocationReversal.allocation_id == allocation.id,
+                )
+            )
+        ).scalars().all()
+        return allocation.amount_minor - sum(rev)
+
     async def _unwind_allocations_for_refund(
-        self, tenant_id: UUID, payment: Payment, refund_amount: int
+        self,
+        tenant_id: UUID,
+        payment: Payment,
+        refund_amount: int,
+        *,
+        refund_id: UUID | None = None,
     ) -> None:
+        """LIFO reverse allocations via append-only PaymentAllocationReversal rows."""
         allocs = (
             await self.session.execute(
                 select(PaymentAllocation)
@@ -469,18 +493,27 @@ class FinanceService:
         for alloc in allocs:
             if remaining_refund <= 0:
                 break
+            open_amt = await self._allocation_remaining(tenant_id, alloc)
+            if open_amt <= 0:
+                continue
             invoice = await self._get_invoice(
                 tenant_id, alloc.invoice_id, for_update=True
             )
-            reduce_by = min(alloc.amount_minor, remaining_refund)
-            alloc.amount_minor -= reduce_by
+            reduce_by = min(open_amt, remaining_refund)
+            self.session.add(
+                PaymentAllocationReversal(
+                    tenant_id=tenant_id,
+                    allocation_id=alloc.id,
+                    refund_id=refund_id,
+                    amount_minor=reduce_by,
+                    reason="refund_unwind",
+                )
+            )
             invoice.paid_amount_minor -= reduce_by
             if invoice.paid_amount_minor < 0:
                 raise ValueError("invoice paid amount invariant broken")
             invoice.status = self._invoice_status_from_paid(invoice)
             remaining_refund -= reduce_by
-            if alloc.amount_minor == 0:
-                await self.session.delete(alloc)
 
         # Unallocated payment headroom does not require invoice unwind
         # remaining_refund can stay > 0 if payment was only partially allocated
@@ -790,15 +823,19 @@ class FinanceService:
         return payment
 
     async def _payment_allocated_total(self, tenant_id: UUID, payment_id: UUID) -> int:
-        rows = (
+        """Net allocated = sum(allocations) - sum(reversals for those allocations)."""
+        allocs = (
             await self.session.execute(
-                select(PaymentAllocation.amount_minor).where(
+                select(PaymentAllocation).where(
                     PaymentAllocation.tenant_id == tenant_id,
                     PaymentAllocation.payment_id == payment_id,
                 )
             )
         ).scalars().all()
-        return sum(rows)
+        total = 0
+        for alloc in allocs:
+            total += await self._allocation_remaining(tenant_id, alloc)
+        return total
 
     def invoice_remaining(self, invoice: Invoice) -> int:
         return invoice.total_amount_minor - invoice.paid_amount_minor

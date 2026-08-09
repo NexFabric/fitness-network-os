@@ -42,7 +42,7 @@ async def test_enqueue_and_publish(db_session, tenant):
     svc = OutboxService(db_session)
     r = await svc.enqueue(
         tenant.id,
-        "membership.activated",
+        "membership.activated.v1",
         {"membership_id": str(uuid4())},
         aggregate_type="membership",
     )
@@ -50,15 +50,15 @@ async def test_enqueue_and_publish(db_session, tenant):
     assert r.created is True
     assert r.event.status == "PENDING"
 
-    claimed = await svc.claim_pending(tenant_id=tenant.id)
+    claimed = await svc.claim_pending(tenant_id=tenant.id, worker_id="w-pub")
     assert len(claimed) == 1
     assert claimed[0].status == "PROCESSING"
     await db_session.commit()
 
     async def pub(ev):
-        assert ev.event_type == "membership.activated"
+        assert ev.event_type == "membership.activated.v1"
 
-    stats = await svc.dispatch_claimed(claimed, pub)
+    stats = await svc.dispatch_claimed(claimed, pub, worker_id="w-pub")
     await db_session.commit()
     assert stats["published"] == 1
 
@@ -75,11 +75,11 @@ async def test_enqueue_and_publish(db_session, tenant):
 async def test_dedupe_key(db_session, tenant):
     svc = OutboxService(db_session)
     a = await svc.enqueue(
-        tenant.id, "payment.captured", {"n": 1}, dedupe_key="pay-1"
+        tenant.id, "payment.captured.v1", {"n": 1}, dedupe_key="pay-1"
     )
     await db_session.commit()
     b = await svc.enqueue(
-        tenant.id, "payment.captured", {"n": 2}, dedupe_key="pay-1"
+        tenant.id, "payment.captured.v1", {"n": 2}, dedupe_key="pay-1"
     )
     await db_session.commit()
     assert a.created is True
@@ -134,15 +134,15 @@ async def test_inbox_exactly_once(db_session, tenant):
 @pytest.mark.asyncio
 async def test_publish_failure_retries(db_session, tenant):
     svc = OutboxService(db_session)
-    await svc.enqueue(tenant.id, "notify.email", {"to": "a@b.c"})
+    await svc.enqueue(tenant.id, "notification.email.v1", {"to": "a@b.c"})
     await db_session.commit()
-    claimed = await svc.claim_pending(tenant_id=tenant.id)
+    claimed = await svc.claim_pending(tenant_id=tenant.id, worker_id="w-fail")
     await db_session.commit()
 
     async def boom(_ev):
         raise RuntimeError("smtp down")
 
-    stats = await svc.dispatch_claimed(claimed, boom)
+    stats = await svc.dispatch_claimed(claimed, boom, worker_id="w-fail")
     await db_session.commit()
     assert stats["failed"] == 1
     row = (
