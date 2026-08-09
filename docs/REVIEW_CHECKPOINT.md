@@ -10,9 +10,9 @@
 | Phase 8 Membership | [#13](https://github.com/NexFabric/fitness-network-os/pull/13) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 9 Entitlements | [#14](https://github.com/NexFabric/fitness-network-os/pull/14) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 10 Finance | [#15](https://github.com/NexFabric/fitness-network-os/pull/15) | yes | 🟢 LOCKED / CI VERIFIED |
-| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | **open** | 🟠 FINAL CLOSURE — wait CI + review |
+| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | **MERGED** `607b087` | 🟢 LOCKED / CI VERIFIED |
 
-## Phase 11 PR #17 (merge after CI green + human GO)
+## Phase 11 — LOCKED
 
 - Branch: `feat/phase11-remove-money-floats`
 - Final closure:

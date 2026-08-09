@@ -1,6 +1,6 @@
 # Phase 11 — Remove Money Floats
 
-**Status:** FINAL CLOSURE (PR #17)  
+**Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)  
 **Current migration head:** `f7a8b9c0d1e2` (EXPAND only)
 
 ## Goal
@@ -69,3 +69,10 @@ The EXPAND/CONTRACT shape establishes the standard for future production migrati
 - BigInteger for amount_minor  
 - Real dual-write if/when production rolling deploys exist  
 - CONTRACT revision after dual-column window  
+
+
+## P2 audit note — legacy float conversion
+
+Legacy binary-float CRM `Opportunity.value` values may contain historical IEEE-754 ambiguity.
+Migrated `value_amount_minor` values are **best-effort normalized** and are **not** financial ledger amounts
+(Payment/Invoice already used integer minor units). Tests allow ±1 minor unit on expansion reconciliation for this reason.
