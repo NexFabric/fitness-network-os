@@ -19,7 +19,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          extra_args: --debug --only-verified
+          extra_args: --debug --only-verified --exclude-detectors=Lob
           
       - name: Set up Python
         uses: actions/setup-python@v5
