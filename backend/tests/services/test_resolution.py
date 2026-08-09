@@ -96,12 +96,12 @@ async def setup_base_data(db_session, setup_tenant):
     db_session.add(pv)
     await db_session.commit()
     
-    return member, _plan, pv
+    return member, plan, pv
 
 @pytest.mark.asyncio
 async def test_activate_scheduled_memberships(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, _plan, pv = setup_base_data
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     start_date = now - timedelta(days=1)
@@ -144,7 +144,7 @@ async def test_activate_scheduled_memberships(db_session, pg_session_maker, setu
 @pytest.mark.asyncio
 async def test_process_expirations(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, _plan, pv = setup_base_data
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     m = Membership(
@@ -184,7 +184,7 @@ async def test_process_expirations(db_session, pg_session_maker, setup_tenant, s
 @pytest.mark.asyncio
 async def test_process_renewals(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, _plan, pv = setup_base_data
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     next_pv = PlanVersion(
@@ -263,7 +263,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
     t1_id = setup_tenant.id
     t2_id = setup_tenant_2.id
     
-    member, _plan, pv = setup_base_data
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
     start_date = now - timedelta(days=1)
     end_date = start_date + relativedelta(months=1)
@@ -283,7 +283,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
     )
     p1 = MembershipPeriod(membership_id=m1.id, tenant_id=t1_id, start_date=start_date, end_date=end_date, is_active=False)
     
-    # Create member for tenant 2
+    # Create member, plan, and pv for tenant 2
     member2 = Member(
         id=uuid4(),
         tenant_id=t2_id,
@@ -293,6 +293,23 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
         email=f"test2-{uuid4()}@example.com",
     )
     db_session.add(member2)
+    
+    plan2 = Plan(id=uuid4(), tenant_id=t2_id, name="Tenant 2 Plan")
+    db_session.add(plan2)
+    
+    pv2 = PlanVersion(
+        id=uuid4(),
+        tenant_id=t2_id,
+        plan_id=plan2.id,
+        version=1,
+        price_amount_minor=1000,
+        currency="TRY",
+        billing_cycle_months=1,
+        terms={},
+        is_published=True,
+        published_at=now
+    )
+    db_session.add(pv2)
     await db_session.flush()
 
     # Scheduled for tenant 2
@@ -300,7 +317,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
         id=uuid4(),
         tenant_id=t2_id,
         member_id=member2.id,
-        plan_version_id=pv.id,
+        plan_version_id=pv2.id,
         status="SCHEDULED",
         start_date=start_date,
         end_date=end_date,
@@ -322,19 +339,17 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
     await db_session.refresh(m1)
     await db_session.refresh(m2)
     
-    # m1 should remain SCHEDULED, m2 should be ACTIVE
+    # m1 remains SCHEDULED because it belongs to t1
     assert m1.status == "SCHEDULED"
+    # m2 becomes ACTIVE because we ran engine for t2
     assert m2.status == "ACTIVE"
 
-
 @pytest.mark.asyncio
-async def test_renewal_error_isolation(db_session, pg_session_maker, setup_tenant, setup_base_data):
-    """Test where 'first renewal fails, second succeeds' to prove the error isolation works."""
+async def test_renewal_error_isolation(setup_base_data, pg_session_maker, setup_tenant, db_session):
     tenant_id = setup_tenant.id
-    member, _plan, pv = setup_base_data
+    member, plan, pv = setup_base_data
     now = datetime.now(UTC)
-    
-    # First renewal with non-existent next_plan_version_id (will fail)
+
     m1 = Membership(
         id=uuid4(),
         tenant_id=tenant_id,
@@ -342,24 +357,24 @@ async def test_renewal_error_isolation(db_session, pg_session_maker, setup_tenan
         plan_version_id=pv.id,
         status="ACTIVE",
         start_date=now - timedelta(days=30),
-        end_date=now + timedelta(days=5),
+        end_date=now - timedelta(days=1),
         price_snapshot=1000,
         price_snapshot_currency="TRY",
         terms_snapshot={}
     )
+    p1 = MembershipPeriod(membership_id=m1.id, tenant_id=tenant_id, start_date=m1.start_date, end_date=m1.end_date, is_active=True)
     r1 = MembershipRenewal(
         id=uuid4(),
         tenant_id=tenant_id,
         membership_id=m1.id,
-        next_plan_version_id=uuid4(), # non-existent
-        renewal_date=now - timedelta(hours=1),
+        next_plan_version_id=pv.id,
+        renewal_date=now - timedelta(hours=2),
         status=RenewalStatus.PENDING.value,
-        price_snapshot=1200,
+        price_snapshot=1000,
         price_snapshot_currency="TRY",
         terms_snapshot={}
     )
     
-    # Second renewal with valid next_plan_version_id
     m2 = Membership(
         id=uuid4(),
         tenant_id=tenant_id,
@@ -377,7 +392,7 @@ async def test_renewal_error_isolation(db_session, pg_session_maker, setup_tenan
         id=uuid4(),
         tenant_id=tenant_id,
         membership_id=m2.id,
-        next_plan_version_id=pv.id, # valid
+        next_plan_version_id=pv.id,
         renewal_date=now - timedelta(hours=1),
         status=RenewalStatus.PENDING.value,
         price_snapshot=1000,
@@ -385,17 +400,24 @@ async def test_renewal_error_isolation(db_session, pg_session_maker, setup_tenan
         terms_snapshot={}
     )
     
-    db_session.add_all([m1, r1, m2, p2, r2])
+    db_session.add_all([m1, p1, r1, m2, p2, r2])
     await db_session.commit()
 
     async with pg_session_maker() as runtime_session:
         engine = ResolutionEngine(runtime_session)
+        original_get = engine.membership_service.get_membership
+        
+        async def mock_get(mid, *args, **kwargs):
+            if mid == m1.id:
+                raise ValueError("Simulated failure")
+            return await original_get(mid, *args, **kwargs)
+            
+        engine.membership_service.get_membership = mock_get
         await engine.run_for_tenant(tenant_id)
         await runtime_session.commit()
     
     await db_session.refresh(r1)
     await db_session.refresh(r2)
-    
-    # First should fail, second should succeed (APPLIED)
+        
     assert r1.status == RenewalStatus.FAILED.value
     assert r2.status == RenewalStatus.APPLIED.value

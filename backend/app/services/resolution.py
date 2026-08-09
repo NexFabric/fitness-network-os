@@ -22,7 +22,7 @@ class ResolutionEngine:
         self.membership_service = MembershipService(session)
 
     async def run_for_tenant(self, tenant_id: UUID):
-        await self.session.execute(text("SET LOCAL app.current_tenant_id = :t_id"), {"t_id": str(tenant_id)})
+        await self.session.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
         await self.activate_scheduled_memberships(tenant_id)
         await self.process_renewals(tenant_id)
         await self.process_expirations(tenant_id)
