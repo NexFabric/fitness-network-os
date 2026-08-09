@@ -24,6 +24,19 @@ async def pg_engine():
         await conn.execute(text("CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password' NOSUPERUSER NOBYPASSRLS;"))
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Apply RLS to all tenant tables
+        for table_name, table in Base.metadata.tables.items():
+            if "tenant_id" in table.columns:
+                policy_name = f"{table_name}_tenant_isolation_policy"
+                await conn.execute(text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;"))
+                await conn.execute(text(f"""
+                    CREATE POLICY {policy_name} ON {table_name}
+                    FOR ALL
+                    USING (tenant_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)
+                    WITH CHECK (tenant_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid);
+                """))
+                await conn.execute(text(f"ALTER TABLE {table_name} FORCE ROW LEVEL SECURITY;"))
         await conn.execute(text("GRANT USAGE ON SCHEMA public TO app_user;"))
         await conn.execute(text("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO app_user;"))
         await conn.execute(text("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO app_user;"))

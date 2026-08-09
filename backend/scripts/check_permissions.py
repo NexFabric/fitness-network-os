@@ -23,9 +23,32 @@ def main():
     
     roles_dict = data.get("roles", {})
     
+    REQUIRED_ROLES = {
+        "PLATFORM_SUPER_ADMIN",
+        "FEDERATION_ADMIN",
+        "FEDERATION_ANALYST",
+        "FEDERATION_SUPPORT",
+        "GYM_OWNER",
+        "GYM_ADMIN",
+        "GYM_MANAGER",
+        "ACCOUNTANT",
+        "FRONT_DESK",
+        "TRAINER",
+        "MEMBER",
+    }
+    
     has_error = False
     
+    # Check for missing roles
+    for req_role in REQUIRED_ROLES:
+        if req_role not in roles_dict:
+            print(f"Error: Required canonical role '{req_role}' is missing from permissions.yml")
+            has_error = True
+
     for role_name, role_data in roles_dict.items():
+        if role_name not in REQUIRED_ROLES:
+            print(f"Error: Unknown role '{role_name}' found in permissions.yml")
+            has_error = True
         role_permissions = role_data.get("permissions", [])
         for perm in role_permissions:
             if perm not in valid_permission_ids:

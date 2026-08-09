@@ -52,8 +52,14 @@ class AuthorizationService:
         user_permissions = set()
         
         for user_role in user.user_roles:
-            if tenant_id and user_role.tenant_id and user_role.tenant_id != tenant_id:
-                continue
+            # If a tenant_id is requested, ONLY consider roles assigned to that specific tenant
+            if tenant_id is not None:
+                if user_role.tenant_id != tenant_id:
+                    continue
+            else:
+                # If no tenant is requested, we might be checking global permissions, but we shouldn't
+                # leak tenant-scoped roles into global evaluation. (We'll handle this in a combined method).
+                pass
                 
             if user_role.role and user_role.role.permissions:
                 for permission in user_role.role.permissions:
@@ -101,7 +107,9 @@ class AuthorizationService:
         elif scope == Scope.FEDERATION_AGGREGATE:
             if resource_organization_id is not None:
                 has_org_access = any(
-                    ur.organization_id == resource_organization_id for ur in user.user_roles
+                    ur.organization_id == resource_organization_id 
+                    and ur.role.name in [DefaultRole.FEDERATION_ADMIN.value, DefaultRole.FEDERATION_ANALYST.value, DefaultRole.FEDERATION_SUPPORT.value]
+                    for ur in user.user_roles
                 )
                 if has_org_access:
                     return True
@@ -109,8 +117,61 @@ class AuthorizationService:
             
         elif scope == Scope.PLATFORM:
             has_platform_access = any(
-                ur.tenant_id is None and ur.organization_id is None for ur in user.user_roles
+                ur.tenant_id is None and ur.organization_id is None
+                and ur.role.name == DefaultRole.PLATFORM_SUPER_ADMIN.value
+                for ur in user.user_roles
             )
             return has_platform_access
             
+        return False
+
+    @staticmethod
+    def is_authorized(
+        user: User,
+        permission: str,
+        resource_tenant_id: UUID | None = None,
+        resource_organization_id: UUID | None = None,
+        resource_owner_id: UUID | None = None,
+    ) -> bool:
+        """
+        Unified authorization check. 
+        Evaluates permission, assignment scope, and resource context together.
+        """
+        if user.is_superuser:
+            return True
+            
+        for ur in user.user_roles:
+            role = ur.role
+            if not role or not role.permissions:
+                continue
+                
+            has_perm = any(p.name == permission or p.name == "*" for p in role.permissions)
+            if not has_perm:
+                continue
+                
+            # If the role has the permission, check if the scope of the assignment covers the resource
+            
+            # 1. Platform-level assignment
+            if ur.tenant_id is None and ur.organization_id is None:
+                if role.name == DefaultRole.PLATFORM_SUPER_ADMIN.value:
+                    return True # Platform super admin can do anything anywhere
+                    
+            # 2. Federation-level assignment
+            elif ur.organization_id is not None and ur.tenant_id is None:
+                if role.name in [DefaultRole.FEDERATION_ADMIN.value, DefaultRole.FEDERATION_ANALYST.value, DefaultRole.FEDERATION_SUPPORT.value]:
+                    if resource_organization_id and ur.organization_id == resource_organization_id:
+                        return True
+                    # If checking a tenant, does the tenant belong to this org? 
+                    # We would need tenant.organization_id here, but without it, we assume 
+                    # caller passes resource_organization_id if they want federation check.
+                        
+            # 3. Tenant-level assignment
+            elif ur.tenant_id is not None:
+                if resource_tenant_id and ur.tenant_id == resource_tenant_id:
+                    return True
+                    
+                # Self access (e.g. Member accessing own profile)
+                if role.name == DefaultRole.MEMBER.value and resource_owner_id == user.id:
+                    return True
+
         return False

@@ -1,0 +1,87 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.9, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/emrah/GymClubNex/backend
+configfile: pyproject.toml
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-4.14.2
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 1 item
+
+tests/api/test_memberships.py F                                          [100%]
+
+=================================== FAILURES ===================================
+_______________ test_tenant_a_cannot_freeze_tenant_b_membership ________________
+
+api_client = <httpx.AsyncClient object at 0x10d631400>
+setup_data = {'tenant_a': UUID('8f22c85c-c542-42f6-8654-d674c75baa2a'), 'tenant_b': UUID('8fe28cef-7e29-4d06-9eff-9d7c58dc1696'), 'token_a': 'token_a_123', 'membership_a_id': UUID('893e060a-6236-4a2d-b30c-67bad9d892e8'), ...}
+
+    @pytest.mark.asyncio
+    async def test_tenant_a_cannot_freeze_tenant_b_membership(api_client, setup_data):
+        # Try to freeze Tenant B's membership using Tenant A's token and X-Tenant-ID
+        headers = {
+            "Authorization": f"Bearer {setup_data['token_a']}",
+            "X-Tenant-ID": str(setup_data['tenant_a'])
+        }
+    
+        start = datetime.now(UTC)
+        end = start + timedelta(days=30)
+    
+        response = await api_client.post(
+            f"/api/v1/memberships/{setup_data['membership_b_id']}/freeze",
+            headers=headers,
+            json={
+                "start_date": start.isoformat(),
+                "expected_end_date": end.isoformat(),
+                "reason": "Test"
+            }
+        )
+    
+        # Membership B is in Tenant B. But we are querying it under Tenant A's context.
+        # The get_membership service method should return None because RLS prevents Tenant A
+        # from seeing Tenant B's rows.
+        # The service raises ValueError("Membership not found") -> 400
+>       assert response.status_code == 400
+E       assert 200 == 400
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/api/test_memberships.py:179: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /Users/emrah/GymClubNex/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+app/schemas/membership.py:14
+  /Users/emrah/GymClubNex/backend/app/schemas/membership.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class MembershipFreezeResponse(BaseModel):
+
+app/schemas/membership.py:26
+  /Users/emrah/GymClubNex/backend/app/schemas/membership.py:26: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class MembershipResponse(BaseModel):
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'AccessAttempt.device' will copy column devices.tenant_id to column access_attempts.tenant_id, which conflicts with relationship(s): 'AccessAttempt.member' (copies members.tenant_id to access_attempts.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="member"' to the 'AccessAttempt.device' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'Checkin.location' will copy column locations.tenant_id to column checkins.tenant_id, which conflicts with relationship(s): 'Checkin.member' (copies members.tenant_id to checkins.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="member"' to the 'Checkin.location' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'Checkin.device' will copy column devices.tenant_id to column checkins.tenant_id, which conflicts with relationship(s): 'Checkin.location' (copies locations.tenant_id to checkins.tenant_id), 'Checkin.member' (copies members.tenant_id to checkins.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="location,member"' to the 'Checkin.device' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'Payment.allocations' will copy column payments.tenant_id to column payment_allocations.tenant_id, which conflicts with relationship(s): 'Invoice.allocations' (copies invoices.tenant_id to payment_allocations.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="allocations"' to the 'Payment.allocations' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'PaymentAllocation.payment' will copy column payments.tenant_id to column payment_allocations.tenant_id, which conflicts with relationship(s): 'Invoice.allocations' (copies invoices.tenant_id to payment_allocations.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="allocations"' to the 'PaymentAllocation.payment' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+  /Users/emrah/GymClubNex/backend/tests/api/test_memberships.py:42: SAWarning: relationship 'PaymentAllocation.invoice' will copy column invoices.tenant_id to column payment_allocations.tenant_id, which conflicts with relationship(s): 'Payment.allocations' (copies payments.tenant_id to payment_allocations.tenant_id), 'PaymentAllocation.payment' (copies payments.tenant_id to payment_allocations.tenant_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="allocations,payment"' to the 'PaymentAllocation.invoice' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+    org = Organization(name="Test Org", domain="test.com")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/api/test_memberships.py::test_tenant_a_cannot_freeze_tenant_b_membership
+======================== 1 failed, 9 warnings in 1.49s =========================

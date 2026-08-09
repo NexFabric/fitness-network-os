@@ -78,6 +78,9 @@ async def get_tenant_id(
         await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
         return tenant_id
 
+    # Temporarily set the RLS context so we can read the UserRole for this tenant
+    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
+    
     # Verify user belongs to the requested tenant via UserRole
     result = await db.execute(
         select(UserRole).where(
@@ -88,8 +91,9 @@ async def get_tenant_id(
     user_role = result.scalars().first()
     
     if not user_role:
+        # Reset RLS if unauthorized
+        await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
         raise HTTPException(status_code=403, detail="User does not have access to this tenant")
         
     current_tenant_id_var.set(tenant_id)
-    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
     return tenant_id
