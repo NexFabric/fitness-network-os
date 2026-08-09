@@ -315,6 +315,7 @@ class MembershipService:
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
             terms_snapshot=pv.terms,
+            status="PROCESSED" if renewal_date <= datetime.now(UTC) else "PENDING",
             changed_by_user_id=changed_by_user_id,
             tenant_id=membership.tenant_id
         )
