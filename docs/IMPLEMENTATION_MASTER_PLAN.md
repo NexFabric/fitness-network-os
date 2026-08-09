@@ -2,9 +2,9 @@
 
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
-**Main HEAD:** `125a8c6` (Phase 15.5 MERGED / CI VERIFIED)  
-**Alembic head on main:** `p9c0d1e2f3a4`  
-**Active stack:** Phase 16–25 on PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) — **IMPLEMENTED / PARTIAL on branch; not on main**
+**Main HEAD:** `5046f10` (PR #26 stack MVP) · tip `398e858`
+**Alembic head on main:** `q0d1e2f3a4b5`
+**Status:** Phase 16–25 IMPLEMENTED on main; Phase 26 FAIL — not production-ready
 
 **Hierarchy (agents must follow):**
 
@@ -40,12 +40,12 @@ Exit gate: `backend/docs/plans/phase26_core_mvp_exit_gate.md` — **FAIL / NOT P
 | 14 | Member / gym core | 🟢 MERGED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 MERGED (PR #22 merge `67b8214`) |
 | 15.5 | Cross-cutting integrity closure | 🟢 **MERGED / CI VERIFIED** (PR #25 merge `125a8c6`) |
-| 16 | Notifications & reports API | 🟡 **IMPLEMENTED on PR #26** — not on main |
-| 17 | Real API V1 routers completion | 🟡 **PARTIAL on PR #26** (17A done; 17B/17C open) |
-| 18 | Vertical slice E2E | 🟡 **PARTIAL on PR #26** (service e2e; HTTP deferred) |
-| 19–20 | Admin Web / Scanner PWA MVP | 🟡 **IMPLEMENTED scaffold on PR #26** |
-| 21–24 | CI V2, container, HTTP, observability | 🟡 **PARTIAL light MVP on PR #26** |
-| 25 | Checklist truth model | 🟡 **IMPLEMENTED on branch** (docs) |
+| 16 | Notifications & reports API | 🟠 **IMPLEMENTED on main** (PR #26) |
+| 17 | Real API V1 routers completion | 🟠 **IMPLEMENTED on main** (17A; 17B/17C open) |
+| 18 | Vertical slice E2E | 🟠 **IMPLEMENTED on main** (service e2e; HTTP deferred) |
+| 19–20 | Admin Web / Scanner PWA MVP | 🟠 **IMPLEMENTED on main** (scaffolds) |
+| 21–25 | CI V2, container, HTTP, obs, truth | 🟠 **IMPLEMENTED on main** (MVP) |
+
 | 26 | CORE MVP EXIT GATE | 🔴 **FAIL / NOT PASSED** — **not production-ready** |
 
 ---
@@ -107,7 +107,7 @@ Delivered and on main:
 
 Details: `backend/docs/plans/phase15_5_integrity_closure.md`
 
-### Phase 16–20 — ACTIVE ON BRANCH (not on main)
+### Phase 16–20 — IMPLEMENTED on main (PR #26)
 
 - **16:** Notification templates/deliveries + report definitions/runs; log provider; outbox path (PR #26)  
 - **17:** 17A `/me/*` self-service expansion; 17B/17C still open  

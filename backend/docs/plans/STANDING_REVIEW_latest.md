@@ -1,69 +1,44 @@
-# Standing Review — post-pass notes (stack 16–26 MVP)
+# Standing Review — post PR #26 merge (control)
 
 **Date:** 2026-08-10  
-**Reviewer role:** orchestrator post-pass (code + git + GitHub)  
-**Scope:** PR #26 stack after main docs merge (#27) rebased/merged; phases 21–26 MVP  
-**Verdict:** 🟠 **NEEDS_WORK for production** · 🟢 **stack implementation complete as MVP on branch**
+**Main tip:** `398e858` (docs #28) · stack `5046f10` (PR #26)  
+**Verdict:** 🟠 **NEEDS_WORK for production** · 🟢 **MVP stack IMPLEMENTED on main**
 
-Do **not** claim production-ready. Do **not** mark Phase 16–26 LOCKED until merge + green main CI. Phase 26 exit gate **NOT PASSED**.
+**Not production-ready.** Phase 26 **FAIL**.
 
----
+## SHAs
 
-## Executive summary
+| Item | SHA / ref |
+|------|-----------|
+| PR #26 merge | `5046f10` |
+| 15.5 | `125a8c6` |
+| Alembic | `q0d1e2f3a4b5` |
+| Post-merge docs #28 | `398e858` |
 
-| Item | Truth |
-|------|--------|
-| Phase 15.5 on main | ✅ code `125a8c6` + docs PR #27 |
-| PR #26 base | ✅ `main` |
-| Phase 16–20 | 🟠 IMPLEMENTED on branch |
-| Phase 21 CI V2 | 🟠 FE admin-web + scanner-pwa build jobs in `ci.yml` |
-| Phase 22 container | 🟠 `Dockerfile.prod` multi-stage non-root |
-| Phase 23 HTTP | 🟠 prod CORS env + security headers |
-| Phase 24 observability | 🟠 X-Request-ID / correlation + structured access log |
-| Phase 25 truth model | 🟠 checklist + phase25 plan |
-| Phase 26 exit gate | 📄 EVALUATED — **NOT PASSED** (matrix in phase26 plan) |
-| Public outbox | ✅ still absent |
-| Production-ready | ❌ no |
+## Phase 21–26 matrix
 
----
+| Phase | Status |
+|-------|--------|
+| 21 CI V2 FE builds | IMPLEMENTED on main |
+| 22 Dockerfile.prod | IMPLEMENTED on main |
+| 23 CORS + headers | IMPLEMENTED on main |
+| 24 Request-id + access log | IMPLEMENTED on main |
+| 25 Truth model | IMPLEMENTED on main |
+| 26 Exit gate | FAIL — not production-ready |
 
-## Mandatory checks
+## Health evidence
 
-| # | Check | Result |
-|---|--------|--------|
-| 1 | 15.5 on main | **PASS** |
-| 2 | Docs lock 15.5 only (not 16–26) | **PASS** |
-| 3 | PR #26 base main | **PASS** |
-| 4 | Phase 21 does not weaken backend CI | **PASS** (additive FE jobs) |
-| 5 | No public outbox reintroduced | **PASS** |
-| 6 | No false LOCK / production-ready | **PASS** |
+- Local: 258 passed, 1 skipped (PG :5433 isolated)  
+- Local FE builds: admin-web + scanner-pwa OK  
+- PR #26 CI: Security, Lint, Unit, Admin Web Build, Scanner PWA Build SUCCESS  
 
----
+## Remaining FAILs / hard PARTIALS
 
-## Phase 21–26 status matrix (branch)
+- Phase 26 overall FAIL  
+- Backup/restore drill missing  
+- Real transports / HTTP E2E / camera / cookie auth  
+- Human production APPROVE open  
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| 21 | IMPLEMENTED on branch | Admin Web Build + Scanner PWA Build |
-| 22 | IMPLEMENTED on branch | `backend/Dockerfile.prod` |
-| 23 | IMPLEMENTED on branch | CORS + headers; non-prod still permissive |
-| 24 | IMPLEMENTED on branch | request logging middleware |
-| 25 | IMPLEMENTED on branch | truth model + checklist honesty |
-| 26 | EVALUATED FAIL | See PASS/PARTIAL/FAIL matrix — not production-ready |
+## Branch protection
 
----
-
-## Remaining FAILs / hard residuals (from Phase 26)
-
-- Backup/restore plan not operationalized  
-- Human gate sign-off open  
-- 16–25 not yet on main / not LOCKED  
-- Product partials: HTTP E2E, admin/scanner polish, real notification transports  
-
----
-
-## Next control-review path
-
-1. Green required CI on PR #26 (backend + FE builds)  
-2. Merge #26 to main (admin merge if needed; restore review_count=1)  
-3. Re-score Phase 26 after main green — still expect **not production-ready** until residual FAILs closed  
+`required_approving_review_count` = **1**

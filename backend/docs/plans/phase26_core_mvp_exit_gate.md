@@ -2,7 +2,7 @@
 
 **Status:** 🔴 **OPEN — overall FAIL for production-ready**  
 **Date:** 2026-08-10  
-**Scored against:** current repo (main `125a8c6` + branch `feat/phase16-notifications-reports` / PR #26)  
+**Scored against:** main `5046f10` (PR #26 merge; includes 15.5 `125a8c6` lineage)  
 **Truth model:** `backend/docs/plans/phase25_checklist_truth.md`  
 **Do not claim production-ready** until this gate is **PASS**.
 
@@ -44,18 +44,18 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 
 ---
 
-### A2. Product stack 16–20 (PR #26 — not on main)
+### A2. Product stack 16–20 (on main via PR #26 merge `5046f10`)
 
 | # | Criterion | Score | Evidence / gap |
 |---|-----------|-------|----------------|
-| A2.1 | Phase 16 notifications/reports services + API | **PARTIAL** | IMPLEMENTED on branch (migration `q0d1e2f3a4b5`, services, RBAC, PG tests). **Not on main.** Log provider only; no real transports. PR CI/merge pending. |
-| A2.2 | Phase 17 API V1 completion | **PARTIAL** | **17A** `/me/*` IMPLEMENTED on branch. **17B** staff gaps / **17C** OpenAPI **not done**. |
-| A2.3 | Phase 18 vertical slice E2E | **PARTIAL** | Service-layer PG e2e (`tests/e2e/test_vertical_slice_access.py`). **HTTP/ASGI E2E deferred.** No finance vertical. |
-| A2.4 | Phase 19 Admin Web MVP | **PARTIAL** | Scaffold: login via token paste, members/locations list. No cookie auth, no create/edit, no finance UI. |
-| A2.5 | Phase 20 Scanner PWA MVP | **PARTIAL** | Scaffold: paste QR → validate. No camera, offline gateway, or hardened device auth. |
-| A2.6 | Stack 16–20 merged to main + required CI green | **FAIL** | Still feature branch PR #26 only. |
+| A2.1 | Phase 16 notifications/reports services + API | **PARTIAL** | **IMPLEMENTED on main** (`q0d1e2f3a4b5`, services, RBAC, tests). Log provider only; no real transports. |
+| A2.2 | Phase 17 API V1 completion | **PARTIAL** | **17A** `/me/*` on main. **17B** staff gaps / **17C** OpenAPI **not done**. |
+| A2.3 | Phase 18 vertical slice E2E | **PARTIAL** | Service-layer PG e2e on main. **HTTP/ASGI E2E deferred.** No finance vertical. |
+| A2.4 | Phase 19 Admin Web MVP | **PARTIAL** | Scaffold on main: token paste, members/locations. No cookie auth / create-edit / finance UI. |
+| A2.5 | Phase 20 Scanner PWA MVP | **PARTIAL** | Scaffold on main: paste QR. No camera, offline gateway, device auth. |
+| A2.6 | Stack 16–20 merged to main + required CI green | **PARTIAL** | Merged PR #26 → `5046f10`. Post-merge main CI must stay green (FE builds already green on merge run). |
 
-**Band A2 summary:** **PARTIAL** (strong branch MVP; **not shipped**).
+**Band A2 summary:** **PARTIAL** (shipped MVP on main; product depth incomplete).
 
 ---
 
@@ -63,13 +63,13 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 
 | # | Criterion | Score | Evidence / gap |
 |---|-----------|-------|----------------|
-| A3.1 | Phase 21 CI V2 includes frontend builds | **PARTIAL** | `.github/workflows/ci.yml` jobs `admin-web` + `scanner-pwa` (Node 20, workspace `npm ci` + build). Not proven green as required checks on main; branch protection update deferred. |
-| A3.2 | Phase 22 production containers | **PARTIAL** | `backend/Dockerfile.prod` multi-stage, non-root `appuser`, no `--reload`. No digest pins, HEALTHCHECK, SBOM, image signing, prod compose profile. |
-| A3.3 | Phase 23 HTTP security baseline | **PARTIAL** | `ENVIRONMENT=production` CORS allowlist; `X-Content-Type-Options`, `X-Frame-Options`. No HSTS, CSP, CSRF, TrustedHost, rate limit. |
-| A3.4 | Phase 24 observability | **PARTIAL** | Stub on branch: `RequestLoggingMiddleware` (`X-Request-ID` / `X-Correlation-ID` + path-only access log, no PII). No OTel/metrics/log shipping. **not LOCKED**. |
-| A3.5 | Phase 25 checklist truth model | **PARTIAL** | Docs truth pass (this gate + phase25 plan + checklist/master plan). No automation enforcing truth. **not LOCKED**. |
+| A3.1 | Phase 21 CI V2 includes frontend builds | **PARTIAL** | Jobs on main CI; green on merge/PR. Not all FE jobs are **required** branch-protection checks. |
+| A3.2 | Phase 22 production containers | **PARTIAL** | `Dockerfile.prod` multi-stage non-root; no SBOM/signing/HEALTHCHECK/prod compose. |
+| A3.3 | Phase 23 HTTP security baseline | **PARTIAL** | Prod CORS + nosniff/DENY; no HSTS/CSP/CSRF/TrustedHost. |
+| A3.4 | Phase 24 observability | **PARTIAL** | RequestLoggingMiddleware on main; no OTel/metrics. |
+| A3.5 | Phase 25 checklist truth model | **PARTIAL** | Truth model docs on main; no automated enforcement. |
 
-**Band A3 summary:** **PARTIAL** (21–24 light/stub MVP on branch; 25 docs only; none LOCKED).
+**Band A3 summary:** **PARTIAL** (MVP hardening on main; not production-complete).
 
 ---
 
@@ -86,10 +86,10 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | B7 | QR issue/validate + replay protection | **PASS** | Phase 13 on main (KMS deferred) |
 | B8 | Member/gym core (profiles, locations, staff link) | **PASS** | Phase 14 on main (docs/import deferred) |
 | B9 | Outbox/inbox job spine | **PASS** | Phase 15 on main (real workers/buses deferred) |
-| B10 | Notifications path Domain → Event → Outbox → Adapter | **PARTIAL** | Phase 16 on branch; log adapter only; no provider webhooks |
-| B11 | Reports definitions/runs | **PARTIAL** | Phase 16 on branch; placeholder export metadata |
-| B12 | MEMBER self-service without BOLA | **PARTIAL** | 15.5 patterns on main + 17A `/me/*` on branch; full surface incomplete |
-| B13 | Executable vertical access slice | **PARTIAL** | Service e2e on branch; not full product E2E |
+| B10 | Notifications path Domain → Event → Outbox → Adapter | **PARTIAL** | Phase 16 on main; log adapter only; no provider webhooks |
+| B11 | Reports definitions/runs | **PARTIAL** | Phase 16 on main; placeholder export metadata |
+| B12 | MEMBER self-service without BOLA | **PARTIAL** | 15.5 + 17A `/me/*` on main; full surface incomplete |
+| B13 | Executable vertical access slice | **PARTIAL** | Service e2e on main; not full product E2E |
 | B14 | Staff admin UI usable for day-1 ops | **PARTIAL** | Minimal admin-web scaffold |
 | B15 | Door scanner path usable | **PARTIAL** | Minimal scanner-pwa scaffold |
 
@@ -119,9 +119,9 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | # | Criterion | Score | Evidence / gap |
 |---|-----------|-------|----------------|
 | D1 | Phase 15.5 on main with CI VERIFIED docs | **PASS** | `125a8c6` + progress docs |
-| D2 | Phase 16–20 MERGED to main | **FAIL** | PR #26 branch only |
-| D3 | Required CI green on main after stack merge | **FAIL** | Stack not merged |
-| D4 | Checklist + master plan match git reality | **PARTIAL** | Phase 25 truth pass (this commit); standing reviews may lag |
+| D2 | Phase 16–20 MERGED to main | **PASS** | PR #26 merge `5046f10` |
+| D3 | Required CI green on main after stack merge | **PARTIAL** | Merge-time PR CI green; post-merge main workflow must stay green |
+| D4 | Checklist + master plan match git reality | **PARTIAL** | Post-merge truth sync (this docs pass) |
 | D5 | Independent human APPROVE for production claim | **FAIL** | Exit gate not open for claim |
 | D6 | Explicit deferred list published (not silent) | **PASS** | Checklist “Known intentional deferrals” + phase plans |
 
@@ -132,28 +132,28 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | Aggregate | Result |
 |-----------|--------|
 | Band A (0–15.5 on main) | **PASS** |
-| Band A2 (16–20) | **PARTIAL** |
+| Band A2 (16–20) | **PARTIAL** (on main, depth incomplete) |
 | Band A3 (21–25) | **PARTIAL** |
 | Functional B | **PARTIAL** (core domain PASS; ops surfaces PARTIAL) |
-| Security C | **PARTIAL** (several FAIL/PARTIAL blockers) |
-| Process D | **FAIL** (stack not on main; no prod APPROVE) |
+| Security C | **PARTIAL** |
+| Process D | **PARTIAL** (merged; no prod APPROVE) |
 | **CORE MVP EXIT GATE** | 🔴 **FAIL** |
 | **Production-ready?** | **NO** |
 
 ### Why FAIL (blocking themes)
 
-1. **Phases 16–20 not on main** — notifications, `/me` expansion, e2e, admin, scanner remain branch-only.  
-2. **Hardening incomplete** — observability is a stub only; HTTP/container security are light MVPs; none of 21–25 LOCKED.  
-3. **Operator UX incomplete** — admin/scanner scaffolds are not day-1 production ops.  
+1. **Product depth incomplete** — log-only notifications, service-layer E2E (not HTTP), admin/scanner scaffolds only.  
+2. **Hardening incomplete** — light CORS/headers/container/obs; FE CI jobs not all required checks; no backup/restore drill.  
+3. **Operator UX incomplete** — not day-1 production ops.  
 4. **No formal production APPROVE** — gate intentionally closed.
 
 ### What would move the gate toward PASS (ordered)
 
-1. Merge PR #26 (or successor) to `main` after green required CI; mark 16–20 MERGED/CI VERIFIED honestly (wave-by-wave OK).  
+1. Confirm post-merge main CI stays green; keep docs honest (IMPLEMENTED on main ≠ production-ready).  
 2. Close 17B/17C critical staff/OpenAPI gaps needed by admin.  
-3. At least one HTTP vertical E2E (or document accepted service-only risk with product sign-off).  
-4. Finish Phase 21 required checks; deepen 22–23 to agreed baseline.  
-5. Deepen Phase 24 beyond request-id stub (health/deps, error rate, optional OTel).  
+3. At least one HTTP vertical E2E (or product sign-off for service-only risk).  
+4. Make Phase 21 FE builds required checks if desired; deepen 22–23 baseline.  
+5. Deepen Phase 24 (health/deps, error rates, optional OTel); document backup/restore.  
 6. Re-score this document; independent APPROVE; only then claim production-ready.
 
 ---
