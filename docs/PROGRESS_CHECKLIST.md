@@ -13,9 +13,10 @@
 
 **Truth rules:**
 - Only mark **CI VERIFIED / LOCKED** after merge to `main` + green required CI.
-- Do **not** claim PRODUCTION VERIFIED / production-ready until Phase 26 exit gate.
+- Do **not** claim PRODUCTION VERIFIED / production-ready until Phase 26 exit gate is **explicitly passed** (see `backend/docs/plans/phase26_core_mvp_exit_gate.md` — currently **NOT PASSED**).
 - Domain “MODEL” rows may lag service work until checklist is intentionally promoted.
-- Do **not** lock Phase 16–20 until their own merge + main CI.
+- Do **not** lock Phase 16–20 (or 21–26) until their own merge + main CI.
+- Full maturity model: `backend/docs/plans/phase25_checklist_truth.md`.
 
 ---
 
@@ -27,7 +28,7 @@
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
 | Phase 15.5 integrity closure | 🟢 **CI VERIFIED / LOCKED** on `main` merge `125a8c6` |
 | Phase 16–20 (branch) | 🟡 **IN PROGRESS on feature branch** — not LOCKED |
-| Phase 21–26 | ⬜ STARTING / skeleton (21 CI V2, 22–23 plans) |
+| Phase 21–26 | ⬜ **OPENING** on branch (21–25 stubs/partial; 26 criteria only) — **none LOCKED**; Phase 26 **NOT PASSED** |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -80,12 +81,12 @@
 - [ ] Phase 18: Executable Vertical Slice E2E — 🟡 branch work only — not LOCKED
 - [ ] Phase 19: Admin Web MVP — 🟡 branch work only — not LOCKED
 - [ ] Phase 20: Scanner PWA MVP — 🟡 branch work only — not LOCKED
-- [ ] Phase 21: CI V2 Full Verification — ⬜ starting
-- [ ] Phase 22: Production Container Hardening — ⬜ plan/skeleton
-- [ ] Phase 23: HTTP Security Baseline — ⬜ plan/skeleton
-- [ ] Phase 24: Observability
-- [ ] Phase 25: Checklist Truth Model Implementation
-- [ ] Phase 26: CORE MVP EXIT GATE
+- [ ] Phase 21: CI V2 Full Verification — ⬜ partial on branch (frontend build jobs) / **not LOCKED**
+- [ ] Phase 22: Production Container Hardening — ⬜ partial on branch (Dockerfile.prod sketch) / **not LOCKED**
+- [ ] Phase 23: HTTP Security Baseline — ⬜ partial on branch (prod CORS + security headers) / **not LOCKED**
+- [ ] Phase 24: Observability — ⬜ stub on branch (request logging middleware + plan) / **not LOCKED**
+- [ ] Phase 25: Checklist Truth Model Implementation — ⬜ plan + checklist honesty on branch / **not LOCKED**
+- [ ] Phase 26: CORE MVP EXIT GATE — ⬜ criteria doc only; **NOT PASSED** / **not LOCKED**
 
 ## Domain Feature Tracking (Future Reference)
 
@@ -123,8 +124,8 @@
 - Anti-passback & Attendance Logic - 🟡 MODEL
 
 ### Wave 5 — Operational MVP
-- Report Engine (Runs, Exports) - 🟡 MODEL → Phase 16 (branch)
-- Notifications & Deliveries - 🟡 MODEL → Phase 16 (branch)
+- Report Engine (Runs, Exports) - 🟠 IMPLEMENTED on branch (Phase 16; not LOCKED)
+- Notifications & Deliveries - 🟠 IMPLEMENTED on branch (Phase 16; not LOCKED)
 - Scheduled Jobs (Outbox/Inbox) - 🟢 CI VERIFIED (Phase 15; real bus adapters deferred)
 
 ### Wave 6 — Growth
@@ -160,5 +161,10 @@
 | 14 | `backend/docs/plans/phase14_member_gym_core.md` |
 | 15 | `backend/docs/plans/phase15_outbox_inbox.md` |
 | 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
+| 16–20 | `backend/docs/plans/phase16_notifications_reports.md` … `phase20_scanner_pwa.md` |
+| 21–23 | `backend/docs/plans/phase21_ci_v2.md`, `phase22_container_hardening.md`, `phase23_http_security.md` |
+| 24 | `backend/docs/plans/phase24_observability.md` |
+| 25 | `backend/docs/plans/phase25_checklist_truth.md` |
+| 26 | `backend/docs/plans/phase26_core_mvp_exit_gate.md` (**NOT PASSED** / overall FAIL) |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |
 | Review stop | `docs/REVIEW_CHECKPOINT.md` |
