@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `4120b7f` (includes PR #26 stack + health docs #28)  
+**Main HEAD:** `4120b7f` (includes PR #26 stack `5046f10` + health/truth docs #28/#30)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**

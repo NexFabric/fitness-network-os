@@ -12,13 +12,14 @@
 | Phase 15.5 | PR #25 → `125a8c6` |
 | Phase 15.5 docs | PR #27 |
 | Phase 16–26 MVP stack | PR #26 → `5046f10` |
-| Health docs | PR #28 → `398e858` |
+| Health docs | PR #28 → `398e858`; truth sync PR #30 → `4120b7f` |
 
 ## Open / residual
 
 | Item | Status |
 |------|--------|
-| PR #29 docs truth polish | may still open — optional |
+| PR #31 Main HEAD SHA bump + health docs | open docs-only (merge when CI green) |
+| PR #32 phase26 rescore | open docs-only (merge when CI green) |
 | Phase 26 exit gate | **NOT PASSED** |
 | Production-ready | **NO** |
 
