@@ -31,3 +31,32 @@ class MembershipResponse(BaseModel):
     end_date: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class MembershipCancellationCreate(BaseModel):
+    effective_date: datetime
+    reason: str | None = None
+
+class MembershipCancellationResponse(BaseModel):
+    id: UUID
+    membership_id: UUID
+    cancelled_at: datetime
+    effective_date: datetime
+    reason: str | None = None
+    tenant_id: UUID
+
+    model_config = ConfigDict(from_attributes=True)
+
+class MembershipRenewalCreate(BaseModel):
+    next_plan_version_id: UUID
+    renewal_date: datetime
+
+class MembershipRenewalResponse(BaseModel):
+    id: UUID
+    membership_id: UUID
+    next_plan_version_id: UUID | None = None
+    renewal_date: datetime
+    price_snapshot: int | None = None
+    terms_snapshot: str | None = None
+    tenant_id: UUID
+
+    model_config = ConfigDict(from_attributes=True)

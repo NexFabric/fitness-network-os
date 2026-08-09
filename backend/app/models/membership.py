@@ -25,6 +25,8 @@ class PlanVersion(TenantMixin, Base):
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     price_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
     billing_cycle_months: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class Membership(TenantMixin, Base):
     __tablename__ = "memberships"
@@ -39,6 +41,8 @@ class Membership(TenantMixin, Base):
     status: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE")
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
 
 class Entitlement(TenantMixin, Base):
     __tablename__ = "entitlements"
@@ -92,3 +96,31 @@ class MembershipStatusHistory(TenantMixin, Base):
     new_status: Mapped[str] = mapped_column(String, nullable=False)
     changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True) # ID of user/staff who made the change
+
+class MembershipCancellation(TenantMixin, Base):
+    __tablename__ = "membership_cancellations"
+
+    membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+    )
+    cancelled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    reason: Mapped[str | None] = mapped_column(String, nullable=True)
+    changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+
+class MembershipRenewal(TenantMixin, Base):
+    __tablename__ = "membership_renewals"
+
+    membership_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    next_plan_version_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+
+    _model_table_args = (
+        ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+        ForeignKeyConstraint(["tenant_id", "next_plan_version_id"], ["plan_versions.tenant_id", "plan_versions.id"]),
+    )
+    renewal_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
+    changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)

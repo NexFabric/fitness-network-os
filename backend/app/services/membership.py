@@ -4,7 +4,14 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.membership import Membership, MembershipFreeze, MembershipStatusHistory
+from app.models.membership import (
+    Membership,
+    MembershipCancellation,
+    MembershipFreeze,
+    MembershipRenewal,
+    MembershipStatusHistory,
+    PlanVersion,
+)
 
 
 class MembershipService:
@@ -37,8 +44,18 @@ class MembershipService:
         if not membership:
             raise ValueError("Membership not found")
             
-        if membership.status in ("FROZEN", "CANCELLED", "EXPIRED", "DRAFT"):
+        valid_from_statuses = {"ACTIVE", "PAST_DUE"}
+        if membership.status not in valid_from_statuses:
             raise ValueError(f"Membership status '{membership.status}' cannot be frozen")
+
+        # Check for existing active freeze
+        stmt = select(MembershipFreeze).where(
+            MembershipFreeze.membership_id == membership_id,
+            MembershipFreeze.actual_end_date.is_(None)
+        )
+        existing_freeze = await self.session.execute(stmt)
+        if existing_freeze.scalar_one_or_none():
+            raise ValueError("Membership already has an active freeze")
 
         # 1. Create Freeze Record
         freeze = MembershipFreeze(
@@ -113,6 +130,141 @@ class MembershipService:
         self.session.add(history)
 
         membership.status = "ACTIVE"
+        
+        await self.session.flush()
+        return membership
+
+    async def cancel_membership(
+        self,
+        membership_id: UUID,
+        effective_date: datetime,
+        reason: str | None,
+        changed_by_user_id: UUID | None = None,
+    ) -> MembershipCancellation:
+        membership = await self.get_membership(membership_id, for_update=True)
+        if not membership:
+            raise ValueError("Membership not found")
+
+        valid_from_statuses = {"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"}
+        if membership.status not in valid_from_statuses:
+            raise ValueError(f"Membership status '{membership.status}' cannot be cancelled")
+
+        cancellation = MembershipCancellation(
+            membership_id=membership_id,
+            cancelled_at=datetime.now(UTC),
+            effective_date=effective_date,
+            reason=reason,
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(cancellation)
+
+        history = MembershipStatusHistory(
+            membership_id=membership_id,
+            old_status=membership.status,
+            new_status="CANCELLED",
+            changed_at=datetime.now(UTC),
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(history)
+
+        membership.status = "CANCELLED"
+        membership.end_date = effective_date
+
+        await self.session.flush()
+        return cancellation
+
+    async def renew_membership(
+        self,
+        membership_id: UUID,
+        next_plan_version_id: UUID,
+        renewal_date: datetime,
+        changed_by_user_id: UUID | None = None,
+    ) -> MembershipRenewal:
+        membership = await self.get_membership(membership_id, for_update=True)
+        if not membership:
+            raise ValueError("Membership not found")
+
+        valid_from_statuses = {"ACTIVE", "FROZEN", "PAST_DUE"}
+        if membership.status not in valid_from_statuses:
+            raise ValueError(f"Membership status '{membership.status}' cannot be renewed")
+        
+        stmt = select(PlanVersion).where(PlanVersion.id == next_plan_version_id)
+        result = await self.session.execute(stmt)
+        pv = result.scalar_one_or_none()
+        if not pv:
+            raise ValueError("Next plan version not found")
+        
+        renewal = MembershipRenewal(
+            membership_id=membership_id,
+            next_plan_version_id=next_plan_version_id,
+            renewal_date=renewal_date,
+            price_snapshot=pv.price_amount_minor,
+            terms_snapshot=str(pv.version), # placeholder for actual terms
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(renewal)
+
+        # Extend membership
+        if membership.end_date:
+            from dateutil.relativedelta import relativedelta
+            membership.end_date += relativedelta(months=pv.billing_cycle_months)
+
+        await self.session.flush()
+        return renewal
+
+    async def expire_membership(
+        self,
+        membership_id: UUID,
+        changed_by_user_id: UUID | None = None,
+    ) -> Membership:
+        membership = await self.get_membership(membership_id, for_update=True)
+        if not membership:
+            raise ValueError("Membership not found")
+
+        if membership.status not in ("ACTIVE", "PAST_DUE"):
+            raise ValueError(f"Membership status '{membership.status}' cannot be expired")
+
+        history = MembershipStatusHistory(
+            membership_id=membership_id,
+            old_status=membership.status,
+            new_status="EXPIRED",
+            changed_at=datetime.now(UTC),
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(history)
+
+        membership.status = "EXPIRED"
+        
+        await self.session.flush()
+        return membership
+
+    async def mark_past_due(
+        self,
+        membership_id: UUID,
+        changed_by_user_id: UUID | None = None,
+    ) -> Membership:
+        membership = await self.get_membership(membership_id, for_update=True)
+        if not membership:
+            raise ValueError("Membership not found")
+
+        if membership.status != "ACTIVE":
+            raise ValueError(f"Membership status '{membership.status}' cannot be marked PAST_DUE")
+
+        history = MembershipStatusHistory(
+            membership_id=membership_id,
+            old_status=membership.status,
+            new_status="PAST_DUE",
+            changed_at=datetime.now(UTC),
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(history)
+
+        membership.status = "PAST_DUE"
         
         await self.session.flush()
         return membership

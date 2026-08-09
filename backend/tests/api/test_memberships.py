@@ -249,10 +249,12 @@ async def test_successful_freeze(api_client, setup_data):
 async def test_non_privileged_user_cannot_freeze(api_client, setup_data, pg_engine):
     # Create a user with FRONT_DESK role (which doesn't have memberships:write)
     tenant_a = setup_data['tenant_a']
-    from app.models.user import User, UserSession
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
     import hashlib
     from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+    from app.models.user import User, UserSession
     
     token = f"token_front_{uuid4().hex[:6]}"
     token_hash = hashlib.sha256(token.encode()).hexdigest()
