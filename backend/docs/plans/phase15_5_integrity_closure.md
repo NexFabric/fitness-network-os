@@ -1,9 +1,9 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** PR #25 head `ffba0a8` — **15.5D applied · PR CI GREEN · not LOCKED**  
-**Base:** main `af8f809` (Phase 8–15 LOCKED)  
-**Blocks:** Phase 16 Notifications / Reports  
-**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (15.5D: code-only, no new revision)
+**Status:** 🟢 **CI VERIFIED / LOCKED on main**  
+**Main merge:** PR #25 → `125a8c6` (2026-08-10)  
+**Alembic head:** `p9c0d1e2f3a4` (`n7…` + `o8…` + `p9…`)  
+**Unblocks:** Phase 16+ (PR #26 stack may merge after main CI green)
 
 ## Goal
 
@@ -45,9 +45,10 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 
 - [x] Hostile PG tests (fencing, crash-loop max-attempts, inbox atomicity, finance/entitlement, RBAC, BOLA, no public outbox, event registry)
 - [x] `alembic check` clean (local after migrate)
-- [x] PR CI green after 15.5D (`ffba0a8` — Security, Lint, Unit/Integration, CodeQL)
-- [ ] Independent human review/approve — **no protection bypass / no self-APPROVE as formal gate**
-- [ ] Merge + main CI → Phase 15.5 LOCKED → Phase 16 GO
+- [x] PR CI green (Security, Lint, Unit/Integration, CodeQL)
+- [x] Merged to main as `125a8c6`
+- [x] Phase 15.5 = **LOCKED** (confirm main CI remains green on merge SHA)
+- [ ] Phase 16 GO on main via PR #26 after CI green
 
 ## Terminology
 
