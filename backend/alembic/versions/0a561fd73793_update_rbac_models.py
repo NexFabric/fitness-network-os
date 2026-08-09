@@ -27,7 +27,6 @@ def upgrade() -> None:
                nullable=True)
     op.drop_constraint('uq_user_roles_tenant_id', 'user_roles', type_='unique')
     op.create_index(op.f('ix_user_roles_organization_id'), 'user_roles', ['organization_id'], unique=False)
-    op.drop_constraint('fk_user_roles_tenants', 'user_roles', type_='foreignkey')
     op.create_foreign_key('fk_user_roles_tenants', 'user_roles', 'tenants', ['tenant_id'], ['id'], ondelete='CASCADE')
     op.create_foreign_key('fk_user_roles_organizations', 'user_roles', 'organizations', ['organization_id'], ['id'], ondelete='CASCADE')
     disable_rls('user_roles')
@@ -39,7 +38,6 @@ def downgrade() -> None:
     enable_rls('user_roles')
     op.drop_constraint('fk_user_roles_organizations', 'user_roles', type_='foreignkey')
     op.drop_constraint('fk_user_roles_tenants', 'user_roles', type_='foreignkey')
-    op.create_foreign_key('fk_user_roles_tenants', 'user_roles', 'tenants', ['tenant_id'], ['id'], ondelete='CASCADE')
     op.drop_index(op.f('ix_user_roles_organization_id'), table_name='user_roles')
     op.create_unique_constraint('uq_user_roles_tenant_id', 'user_roles', ['tenant_id', 'id'])
     op.alter_column('user_roles', 'tenant_id',
