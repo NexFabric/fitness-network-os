@@ -18,6 +18,7 @@ Environment-aware CORS allowlist and basic browser security headers without brea
 | Helpers | `Settings.is_production`, `Settings.cors_origins_list` |
 | CORS | Production: origins from `CORS_ORIGINS` only; non-production: keep `allow_origins=["*"]` |
 | Headers | Middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` |
+| Request id | See Phase 24 (`X-Request-ID`); out of scope for this plan |
 | Tests | `tests/core/test_config_cors.py` — CORS list parsing + production flag |
 | Env example | `.env.example` documents optional `ENVIRONMENT` / `CORS_ORIGINS` |
 

@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 
@@ -47,7 +48,10 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
+    # Last registered runs first on the request path (Starlette).
     app.add_middleware(SecurityHeadersMiddleware)
+    # Phase 24 stub: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
+    app.add_middleware(RequestLoggingMiddleware)
 
     @app.get("/health")
     async def health_check():
