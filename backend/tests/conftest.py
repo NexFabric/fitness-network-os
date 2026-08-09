@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from urllib.parse import urlparse
+
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
@@ -17,9 +19,11 @@ SYNC_TEST_DATABASE_URL = TEST_DATABASE_URL.replace("+asyncpg", "")
 def setup_database():
     """Run Alembic migrations once per session."""
     env = os.environ.copy()
-    env["PGPASSWORD"] = "postgres"
+    parsed = urlparse(TEST_DATABASE_URL)
+    if parsed.password:
+        env["PGPASSWORD"] = parsed.password
     env["DATABASE_URL"] = TEST_DATABASE_URL
-    subprocess.run(["psql", SYNC_TEST_DATABASE_URL, "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO postgres; GRANT ALL ON SCHEMA public TO public;"], env=env, check=True)
+    subprocess.run(["psql", SYNC_TEST_DATABASE_URL, "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO CURRENT_USER; GRANT ALL ON SCHEMA public TO public;"], env=env, check=True)
     subprocess.run(["psql", SYNC_TEST_DATABASE_URL, "-c", "DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'app_user') THEN CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password' NOSUPERUSER NOBYPASSRLS; END IF; END $$; GRANT USAGE ON SCHEMA public TO app_user; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user; GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app_user; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO app_user;"], env=env, check=True)
     
     # Run migrations
