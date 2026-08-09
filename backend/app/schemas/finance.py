@@ -9,6 +9,7 @@ MoneyMinor = Annotated[StrictInt, Field(description="Integer minor currency unit
 MoneyMinorNonNeg = Annotated[StrictInt, Field(ge=0)]
 MoneyMinorPos = Annotated[StrictInt, Field(gt=0)]
 StrictQty = Annotated[StrictInt, Field(ge=1)]
+BasisPoints = Annotated[StrictInt, Field(ge=0, le=10000)]
 
 
 class BillingAccountCreate(BaseModel):
@@ -150,7 +151,7 @@ class DiscountCreate(BaseModel):
     code: str
     name: str
     amount_minor: MoneyMinorNonNeg | None = None
-    percent_bps: int | None = Field(default=None, ge=0, le=10000)
+    percent_bps: BasisPoints | None = None
 
 
 class DiscountResponse(BaseModel):

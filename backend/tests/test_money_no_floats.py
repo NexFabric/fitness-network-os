@@ -13,7 +13,7 @@ from app.core.money import (
     minor_to_major,
 )
 from app.models.growth import Opportunity, RetentionCockpit
-from app.schemas.finance import MoneyMinorPos
+from app.schemas.finance import BasisPoints, MoneyMinorPos
 
 
 def test_major_to_minor_decimal():
@@ -115,3 +115,18 @@ def test_strict_money_minor_rejects_float_coercion():
         ta.validate_python(True)
     with pytest.raises(ValidationError):
         ta.validate_python("100")
+
+
+def test_strict_basis_points():
+    ta = TypeAdapter(BasisPoints)
+    assert ta.validate_python(1250) == 1250
+    assert ta.validate_python(0) == 0
+    assert ta.validate_python(10000) == 10000
+    with pytest.raises(ValidationError):
+        ta.validate_python(1250.0)
+    with pytest.raises(ValidationError):
+        ta.validate_python(True)
+    with pytest.raises(ValidationError):
+        ta.validate_python("1250")
+    with pytest.raises(ValidationError):
+        ta.validate_python(10001)

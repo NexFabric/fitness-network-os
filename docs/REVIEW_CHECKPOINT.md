@@ -10,19 +10,19 @@
 | Phase 8 Membership | [#13](https://github.com/NexFabric/fitness-network-os/pull/13) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 9 Entitlements | [#14](https://github.com/NexFabric/fitness-network-os/pull/14) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 10 Finance | [#15](https://github.com/NexFabric/fitness-network-os/pull/15) | yes | 🟢 LOCKED / CI VERIFIED |
-| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | **open** | 🟠 CLOSING — expand-only + strict money |
+| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | **open** | 🟠 FINAL CLOSURE — wait CI + review |
 
-## Phase 11 PR #17 (merge after CI)
+## Phase 11 PR #17 (merge after CI green + human GO)
 
 - Branch: `feat/phase11-remove-money-floats`
-- Closure items (review findings):
-  - **EXPAND** migration only (legacy float columns kept until CONTRACT)
-  - Historical Opportunity currency assumption: **TRY**
-  - Conversion tests (major string → minor, bps)
-  - StrictInt money at API + `assert_amount_minor` in services
-  - EntitlementService flushes only (API commits) — Phase 12 UoW prep
-  - Docs: IMPLEMENTATION_MASTER_PLAN + phase11 plan
-- Deferred CONTRACT: `g8b9c0d1e2f3` no-op placeholder until dual-column window ends
+- Final closure:
+  - **EXPAND only** head `f7a8b9c0d1e2` — no no-op placeholder revision
+  - CONTRACT = **future NEW revision** (never edit applied migration)
+  - Real PG old-schema → seed → upgrade → reconcile test
+  - Expand schema guard (legacy + new columns coexist)
+  - StrictInt money + BasisPoints
+  - Pre-production migration exception documented (no dual-write claim)
+  - EntitlementService flush-only
 
 ## Do not start yet
 

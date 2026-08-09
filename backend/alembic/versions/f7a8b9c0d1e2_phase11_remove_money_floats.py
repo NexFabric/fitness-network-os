@@ -6,13 +6,21 @@ Create Date: 2026-08-09 21:00:00.000000
 
 EXPAND / CONTRACT policy (PRODUCTION_READINESS):
   This revision only ADDS new columns and BACKFILLs them.
-  Legacy float columns remain until a later CONTRACT migration:
+  Legacy float columns remain until a future CONTRACT migration is *created
+  as a NEW revision* from the then-current head (never edit this file after
+  merge to inject DROP):
     - opportunities.value
     - retention_cockpit.churn_probability
 
 Assumption:
   Historical Opportunity.value values before Phase 11 are assumed TRY.
   No multi-currency existed on Opportunity pre-Phase 11.
+
+PRE-PRODUCTION MIGRATION EXCEPTION:
+  No live rolling multi-version deployment is supported for this expand.
+  Concurrent old-version writers after backfill are NOT supported.
+  The EXPAND/CONTRACT *shape* establishes the production standard; this
+  revision does not claim zero-downtime dual-write coexistence.
 """
 from collections.abc import Sequence
 

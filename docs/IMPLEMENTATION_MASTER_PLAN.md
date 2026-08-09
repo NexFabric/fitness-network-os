@@ -36,13 +36,14 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 
 ---
 
-## Phase 11 (current closure)
+## Phase 11 (final closure on PR #17)
 
-- Expand-only migration: add `value_amount_minor` / `currency` / `churn_probability_bps` + backfill  
-- **No DROP** of legacy float columns until CONTRACT revision (deferred no-op head `g8b9c0d1e2f3`)  
-- Historical Opportunity currency assumption: **TRY**  
-- Strict API money: `StrictInt` money fields; `assert_amount_minor`  
-- Fitness: no ORM Float columns (`scripts/check_no_money_floats.py`)  
+- Expand-only migration head: `f7a8b9c0d1e2` (add + backfill; **no DROP**)  
+- CONTRACT: create a **new** revision later — never edit applied expand body  
+- Pre-production exception: no concurrent old/new app writers claimed  
+- Historical Opportunity currency: **TRY**  
+- Strict API money + BasisPoints; service `assert_amount_minor`  
+- Real PG migration reconciliation test + expand schema guard  
 - Details: `docs/plans/phase11_money_floats.md`
 
 ## Phase 12 (next — do not start early)
