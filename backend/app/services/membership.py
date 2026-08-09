@@ -351,6 +351,17 @@ class MembershipService:
                 self.session.add(period)
                 membership.end_date = new_end_date
 
+            # Immediate renew: allocate/refresh entitlement wallets from new plan version
+            from app.services.entitlement import EntitlementService
+
+            await EntitlementService.grant_from_plan_version(
+                self.session,
+                membership,
+                next_plan_version_id,
+                actor_id=changed_by_user_id,
+                reason="renewal_immediate",
+            )
+
         await self.session.flush()
         return renewal
 
@@ -389,6 +400,17 @@ class MembershipService:
             tenant_id=membership.tenant_id
         )
         self.session.add(history)
+
+        from app.services.entitlement import EntitlementService
+
+        await EntitlementService.grant_from_plan_version(
+            self.session,
+            membership,
+            membership.plan_version_id,
+            actor_id=changed_by_user_id,
+            reason="activate",
+        )
+
         await self.session.flush()
         
         return membership

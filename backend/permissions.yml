@@ -31,6 +31,10 @@ roles:
       - "memberships:read"
       - "memberships:write"
       - "checkins:read"
+      - "entitlements:read"
+      - "entitlements:check"
+      - "entitlements:consume"
+      - "entitlements:manage"
   GYM_ADMIN:
     description: "Admin of a specific gym tenant"
     permissions:
@@ -41,6 +45,10 @@ roles:
       - "checkins:read"
       - "users:read"
       - "users:write"
+      - "entitlements:read"
+      - "entitlements:check"
+      - "entitlements:consume"
+      - "entitlements:manage"
   GYM_MANAGER:
     description: "Manager of a specific gym tenant"
     permissions:
@@ -49,11 +57,15 @@ roles:
       - "memberships:write"
       - "checkins:read"
       - "users:read"
+      - "entitlements:read"
+      - "entitlements:check"
+      - "entitlements:consume"
   ACCOUNTANT:
     description: "Accountant for a gym"
     permissions:
       - "gym:read"
       - "memberships:read"
+      - "entitlements:read"
   FRONT_DESK:
     description: "Front desk staff"
     permissions:
@@ -61,12 +73,17 @@ roles:
       - "memberships:read"
       - "checkins:read"
       - "checkins:write"
+      - "entitlements:read"
+      - "entitlements:check"
+      - "entitlements:consume"
   TRAINER:
     description: "Trainer in a gym"
     permissions:
       - "gym:read"
       - "memberships:read"
       - "checkins:read"
+      - "entitlements:read"
+      - "entitlements:check"
   MEMBER:
     description: "A standard gym member"
     permissions:
@@ -75,6 +92,8 @@ roles:
       - "memberships:read"
       - "checkins:read"
       - "checkins:write"
+      - "entitlements:read"
+      - "entitlements:check"
 
 permissions:
   - id: "federation:read"
@@ -97,6 +116,14 @@ permissions:
     description: "Read checkin history"
   - id: "checkins:write"
     description: "Create checkins"
+  - id: "entitlements:read"
+    description: "Read entitlement balances and definitions"
+  - id: "entitlements:check"
+    description: "Check entitlement without mutation"
+  - id: "entitlements:consume"
+    description: "Consume entitlement balance"
+  - id: "entitlements:manage"
+    description: "Manage entitlement definitions and allocations"
   - id: "profile:read"
     description: "Read own profile"
   - id: "profile:write"
