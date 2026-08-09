@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     ForeignKeyConstraint,
@@ -35,6 +36,7 @@ class PlanVersion(TenantMixin, Base):
     price_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     billing_cycle_months: Mapped[int] = mapped_column(Integer, nullable=False)
+    terms: Mapped[dict] = mapped_column(JSON, nullable=False, server_default='{}')
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -54,7 +56,7 @@ class Membership(TenantMixin, Base):
     scheduled_cancellation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
     price_snapshot_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
-    terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
+    terms_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 class Entitlement(TenantMixin, Base):
     __tablename__ = "entitlements"
@@ -137,5 +139,5 @@ class MembershipRenewal(TenantMixin, Base):
     renewal_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
     price_snapshot_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
-    terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
+    terms_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)

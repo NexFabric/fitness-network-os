@@ -91,7 +91,7 @@ class MembershipService:
             end_date=end_date,
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
-            terms_snapshot=str(pv.version),
+            terms_snapshot=pv.terms,
             tenant_id=tenant_id
         )
         self.session.add(membership)
@@ -101,7 +101,7 @@ class MembershipService:
             membership_id=membership.id,
             start_date=start_date,
             end_date=end_date,
-            is_active=True,
+            is_active=status == "ACTIVE",
             tenant_id=tenant_id
         )
         self.session.add(period)
@@ -314,29 +314,79 @@ class MembershipService:
             renewal_date=renewal_date,
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
-            terms_snapshot=str(pv.version),
+            terms_snapshot=pv.terms,
             changed_by_user_id=changed_by_user_id,
             tenant_id=membership.tenant_id
         )
         self.session.add(renewal)
 
-        membership.plan_version_id = next_plan_version_id
-        
-        if membership.end_date:
-            new_end_date = membership.end_date + relativedelta(months=pv.billing_cycle_months)
+        now = datetime.now(UTC)
+        if renewal_date <= now:
+            membership.plan_version_id = next_plan_version_id
             
-            period = MembershipPeriod(
-                membership_id=membership.id,
-                start_date=membership.end_date,
-                end_date=new_end_date,
-                is_active=True,
-                tenant_id=membership.tenant_id
-            )
-            self.session.add(period)
-            membership.end_date = new_end_date
+            if membership.end_date:
+                # Close current active period if any
+                stmt_active_period = select(MembershipPeriod).where(
+                    MembershipPeriod.membership_id == membership.id,
+                    MembershipPeriod.is_active == True
+                )
+                active_period = (await self.session.execute(stmt_active_period)).scalar_one_or_none()
+                if active_period:
+                    active_period.is_active = False
+                    
+                new_end_date = membership.end_date + relativedelta(months=pv.billing_cycle_months)
+                
+                period = MembershipPeriod(
+                    membership_id=membership.id,
+                    start_date=membership.end_date,
+                    end_date=new_end_date,
+                    is_active=membership.status == "ACTIVE",
+                    tenant_id=membership.tenant_id
+                )
+                self.session.add(period)
+                membership.end_date = new_end_date
 
         await self.session.flush()
         return renewal
+
+    async def activate_scheduled_membership(
+        self,
+        membership_id: UUID,
+        changed_by_user_id: UUID | None = None,
+    ) -> Membership:
+        membership = await self.get_membership(membership_id, for_update=True)
+        if not membership:
+            raise ValueError("Membership not found")
+
+        if membership.status != "SCHEDULED":
+            raise ValueError(f"Membership status '{membership.status}' cannot be activated")
+
+        if membership.start_date > datetime.now(UTC):
+            raise ValueError("Membership start date is in the future")
+
+        membership.status = "ACTIVE"
+        
+        # Activate the period
+        stmt_period = select(MembershipPeriod).where(
+            MembershipPeriod.membership_id == membership.id,
+            MembershipPeriod.is_active == False
+        ).order_by(MembershipPeriod.start_date.asc())
+        period = (await self.session.execute(stmt_period)).scalars().first()
+        if period:
+            period.is_active = True
+
+        history = MembershipStatusHistory(
+            membership_id=membership.id,
+            old_status="SCHEDULED",
+            new_status="ACTIVE",
+            changed_at=datetime.now(UTC),
+            changed_by_user_id=changed_by_user_id,
+            tenant_id=membership.tenant_id
+        )
+        self.session.add(history)
+        await self.session.flush()
+        
+        return membership
 
     async def expire_membership(
         self,

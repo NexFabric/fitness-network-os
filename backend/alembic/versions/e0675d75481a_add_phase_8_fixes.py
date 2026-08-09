@@ -26,7 +26,13 @@ def upgrade() -> None:
     op.add_column('membership_renewals', sa.Column('price_snapshot_currency', sa.String(length=3), nullable=True))
     op.add_column('memberships', sa.Column('scheduled_cancellation_at', sa.DateTime(timezone=True), nullable=True))
     op.add_column('memberships', sa.Column('price_snapshot_currency', sa.String(length=3), nullable=True))
-    op.add_column('plan_versions', sa.Column('currency', sa.String(length=3), nullable=False))
+    op.add_column('plan_versions', sa.Column('currency', sa.String(length=3), nullable=True))
+    
+    # Backfill
+    op.execute("UPDATE plan_versions SET currency = 'TRY' WHERE currency IS NULL")
+    
+    # Contract
+    op.alter_column('plan_versions', 'currency', nullable=False)
     # ### end Alembic commands ###
 
 
