@@ -101,7 +101,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     conn = op.get_bind()
-    for _, perms in ROLE_GRANTS.items():
+    for perms in ROLE_GRANTS.values():
         for perm_name in perms:
             conn.execute(
                 sa.text(
