@@ -417,3 +417,163 @@ async def test_delivery_and_run_dedupe_returns_200(api_client, pg_engine):
     assert run2.status_code == 200, run2.text
     assert run2.json()["created"] is False
     assert run2.json()["id"] == run_id
+
+
+# ----- IR-004: free-form address requires write; tenant user_id needs send -----
+
+
+@pytest.mark.asyncio
+async def test_ir004_send_only_cannot_schedule_free_form_address(api_client, pg_engine):
+    """FRONT_DESK-like: notifications:send only + address-only body → 403."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(
+            name="P16 IR004 Send Org", domain=f"p16-ir4s-{uuid4().hex[:6]}.com"
+        )
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="P16 IR004 Send T",
+            organization_id=org.id,
+            location_code=f"I4S-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        _user, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="FRONT_DESK",
+            # Real FRONT_DESK matrix: read + send, no write
+            perm_names=["notifications:read", "notifications:send"],
+            email_prefix="p16-ir4-send",
+        )
+        await db.commit()
+        tenant_id = tenant.id
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant_id),
+    }
+
+    resp = await api_client.post(
+        "/api/v1/notifications/deliveries",
+        headers=headers,
+        json={
+            "channel": "EMAIL",
+            "recipient_address": "blast@example.com",
+            "body": "free-form address only",
+        },
+    )
+    assert resp.status_code == 403, resp.text
+
+
+@pytest.mark.asyncio
+async def test_ir004_write_can_schedule_free_form_address(api_client, pg_engine):
+    """notifications:write + address-only body → 201 (admin-ish free-form)."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(
+            name="P16 IR004 Write Org", domain=f"p16-ir4w-{uuid4().hex[:6]}.com"
+        )
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="P16 IR004 Write T",
+            organization_id=org.id,
+            location_code=f"I4W-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        _user, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="GYM_ADMIN",
+            perm_names=["notifications:write"],
+            email_prefix="p16-ir4-write",
+        )
+        await db.commit()
+        tenant_id = tenant.id
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant_id),
+    }
+
+    resp = await api_client.post(
+        "/api/v1/notifications/deliveries",
+        headers=headers,
+        json={
+            "channel": "EMAIL",
+            "recipient_address": "admin-blast@example.com",
+            "subject": "Hello",
+            "body": "free-form with write",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    data = resp.json()
+    assert data["recipient_address"] == "admin-blast@example.com"
+    assert data["recipient_user_id"] is None
+    assert data["created"] is True
+
+
+@pytest.mark.asyncio
+async def test_ir004_send_can_schedule_to_tenant_recipient_user(api_client, pg_engine):
+    """notifications:send + recipient_user_id in tenant (UserRole) → 201."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(
+            name="P16 IR004 User Org", domain=f"p16-ir4u-{uuid4().hex[:6]}.com"
+        )
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="P16 IR004 User T",
+            organization_id=org.id,
+            location_code=f"I4U-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        _sender, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="FRONT_DESK",
+            perm_names=["notifications:read", "notifications:send"],
+            email_prefix="p16-ir4-fd",
+        )
+        # Recipient must have UserRole in same tenant (service tenant bind)
+        recipient, _ = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="MEMBER",
+            perm_names=["profile:read"],
+            email_prefix="p16-ir4-rcpt",
+        )
+        await db.commit()
+        tenant_id = tenant.id
+        recipient_id = recipient.id
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant_id),
+    }
+
+    resp = await api_client.post(
+        "/api/v1/notifications/deliveries",
+        headers=headers,
+        json={
+            "channel": "EMAIL",
+            "recipient_user_id": str(recipient_id),
+            "subject": "Hi",
+            "body": "tenant user target",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    data = resp.json()
+    assert data["recipient_user_id"] == str(recipient_id)
+    assert data["created"] is True

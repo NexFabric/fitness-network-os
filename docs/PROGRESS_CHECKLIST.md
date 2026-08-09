@@ -30,7 +30,8 @@
 | Phase 15.5 integrity closure | 🟡 **PR #25 CI GREEN** — **not LOCKED** (human APPROVE + merge + main CI still open) |
 | Phase 15.6 residual closeout | 🟢 **DONE on branch** (ops docs + dedupe 200/201) — **not LOCKED** (ships with 16 stack after 15.5) |
 | Phase 16 Notifications & Reports | 🟠 **PR #26 stacked** — code + tests + integrity CLEAN on branch; **not LOCKED**; merge **after** 15.5 LOCKED |
-| Phase 17–26 | ⬜ NOT STARTED |
+| Phase 17 API V1 completion | 🟡 **Plan opened (17A)** — docs only; **not started** heavy impl; **not LOCKED** |
+| Phase 18–26 | ⬜ NOT STARTED |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -77,7 +78,7 @@
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
   - Alembic: `p9c0d1e2f3a4`
 - [x] Phase 15.6: Residual closeout / post-integrity ops polish — 🟢 **DONE on branch** (**not LOCKED**; plan `backend/docs/plans/phase15_6_residual_closeout.md`)
-  - Ops: `process_due_failed` documented as **required** production job (no HTTP/cron product yet)
+  - Ops: `process_due_failed` documented + CLI `scripts/process_notification_due.py` (no public HTTP / product cron yet)
   - API: notification/report dedupe → **200** when `created=False`, **201** when created
   - Does **not** unlock 15.5 or 16; formal merge order unchanged
 - [ ] Phase 16: Notifications & Reports API — 🟠 **PR #26** stacked on 15.5 — **IN PROGRESS / integrity CLEAN** (**not LOCKED**; merge only after 15.5 LOCKED)
@@ -85,8 +86,13 @@
   - Integrity closeout: `backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md` → **CLEAN**
   - 16A–D: models, services, log adapters, HTTP `/notifications` + `/reports`, migration `q0d1e2f3a4b5` + RBAC seed
   - 16E tests: fail→DEAD, outbox non-SENT → mark_failed, recipient tenant bind, API MEMBER 403, cross-tenant isolation, architecture Membership↛providers
-  - Residual P2 (post-15.6): free-form staff address; dual handlers; report FAILED redrive; standalone worker productization
-- [ ] Phase 17: Real API V1 Routers (completion / gaps)
+  - Residual P2 reliability **CLOSED on branch** (IR-002/003/004/006/007); IR-005 ops CLI `process_notification_due.py` (product cron deferred); NotificationBridge helper (not wired into MembershipService)
+  - Still open process: PR CI green + merge **after** 15.5 LOCKED only
+- [ ] Phase 17: Real API V1 Routers (completion / gaps) — 🟡 **plan opened (17A)** (`backend/docs/plans/phase17_api_v1_completion.md`); **not started** implementation-heavy; **not LOCKED**
+  - 17A: `/me/*` expansion (`require_self` only — memberships, entitlements read, checkins read if model exists)
+  - 17B: staff router gaps
+  - 17C: OpenAPI consistency
+  - Depends: 15.5 LOCKED; 16 merge preferred; no BOLA / no client `member_id` on self paths
 
 ### Phase 18-26: Executable MVP & Verification
 - [ ] Phase 18: Executable Vertical Slice E2E

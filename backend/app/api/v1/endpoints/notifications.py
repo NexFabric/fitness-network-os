@@ -171,7 +171,18 @@ async def schedule_delivery(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    _require(current_user, tenant_id, "notifications:send")
+    """Schedule a delivery.
+
+    Permission policy (IR-004):
+    - ``recipient_user_id`` present (tenant-bound user) → ``notifications:send``
+    - free-form ``recipient_address`` only (no user_id) → ``notifications:write``
+      (stricter; FRONT_DESK with send-only cannot blast arbitrary addresses)
+    """
+    # Free-form address alone requires write; in-tenant user target needs send.
+    if body.recipient_user_id is not None:
+        _require(current_user, tenant_id, "notifications:send")
+    else:
+        _require(current_user, tenant_id, "notifications:write")
     svc = NotificationService(db)
     try:
         result = await svc.schedule_delivery(

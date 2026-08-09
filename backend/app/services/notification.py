@@ -153,7 +153,9 @@ class NotificationService:
         if channel not in ALLOWED_CHANNELS:
             raise ValueError(f"invalid_channel:{channel}")
 
-        # Free-form address allowed for staff/internal send; require non-empty + length.
+        # Free-form address: non-empty + max length. HTTP layer requires
+        # notifications:write for address-only (no recipient_user_id); send alone
+        # is enough when targeting a tenant-bound recipient_user_id (IR-004).
         if recipient_address is not None:
             recipient_address = recipient_address.strip()
             if not recipient_address:
@@ -321,29 +323,12 @@ class NotificationService:
     async def handle_notification_requested(
         self, _db: AsyncSession, event: InboxEvent | Any
     ) -> None:
-        """Outbox/inbox-style handler: payload must include delivery_id.
+        """Compatibility wrap — prefer module ``outbox_notification_requested_handler``.
 
-        Raises when the delivery is not SENT so Outbox mark_failed can retry.
+        Uses ``self.db`` (not ``_db``) for historical callers. Single parse/raise
+        policy lives in the module handler (IR-006).
         """
-        payload = event.payload if hasattr(event, "payload") else event
-        if isinstance(payload, dict) and is_envelope(payload):
-            data = payload["data"]
-        elif isinstance(payload, dict):
-            data = payload.get("data", payload)
-        else:
-            raise ValueError("invalid_payload")
-        if not isinstance(data, dict):
-            raise TypeError("invalid_payload")
-        delivery_id = data.get("delivery_id")
-        if not delivery_id:
-            raise ValueError("delivery_id_required")
-        tenant_id = event.tenant_id
-        delivery = await self.dispatch_delivery(tenant_id, UUID(str(delivery_id)))
-        if delivery.status != DELIVERY_SENT:
-            raise RuntimeError(
-                f"notification_delivery_not_sent:"
-                f"{delivery.status}:{delivery.error_message or ''}"
-            )
+        await outbox_notification_requested_handler(self.db, event)
 
     async def process_due_failed(
         self,
@@ -384,28 +369,38 @@ class NotificationService:
         return {"sent": sent, "failed": failed, "dead": dead}
 
 
-async def outbox_notification_requested_handler(db: AsyncSession, event: Any) -> None:
-    """Adapter for OutboxService.dispatch publisher-style or inbox handlers.
-
-    When used as outbox *publisher*, ``event`` is OutboxEvent; when inbox, InboxEvent.
-    Raises on non-SENT so OutboxService.mark_failed / retry backoff runs.
-    """
-    svc = NotificationService(db)
-    payload = event.payload
+def _extract_notification_delivery_id(event: Any) -> UUID:
+    """Shared payload parse for notification.requested.v1 (IR-006)."""
+    payload = event.payload if hasattr(event, "payload") else event
     if isinstance(payload, dict) and is_envelope(payload):
         data = payload["data"]
     elif isinstance(payload, dict):
         data = payload.get("data", payload)
     else:
-        data = {}
+        raise ValueError("invalid_payload")
     if not isinstance(data, dict):
-        data = {}
+        raise TypeError("invalid_payload")
     delivery_id = data.get("delivery_id")
     if not delivery_id:
         raise ValueError("delivery_id_required")
-    delivery = await svc.dispatch_delivery(event.tenant_id, UUID(str(delivery_id)))
-    if delivery.status != DELIVERY_SENT:
-        raise RuntimeError(
-            f"notification_delivery_not_sent:{delivery.status}:"
-            f"{delivery.error_message or 'unknown'}"
-        )
+    return UUID(str(delivery_id))
+
+
+async def outbox_notification_requested_handler(db: AsyncSession, event: Any) -> None:
+    """Public outbox publisher path for notification.requested.v1 (IR-006).
+
+    When used as outbox *publisher*, ``event`` is OutboxEvent; when inbox, InboxEvent.
+
+    Raise policy (IR-007):
+    - SENT / CANCELLED / DEAD → success (no outbox burn; terminal or complete)
+    - FAILED / other non-terminal → raise so OutboxService.mark_failed retries
+    """
+    svc = NotificationService(db)
+    delivery_id = _extract_notification_delivery_id(event)
+    delivery = await svc.dispatch_delivery(event.tenant_id, delivery_id)
+    if delivery.status in (DELIVERY_SENT, DELIVERY_CANCELLED, DELIVERY_DEAD):
+        return
+    raise RuntimeError(
+        f"notification_delivery_not_sent:{delivery.status}:"
+        f"{delivery.error_message or 'unknown'}"
+    )

@@ -61,12 +61,12 @@ Phase 16 remains safe to document as **IN PROGRESS on branch only** — **not LO
 | ID | Sev | Issue | Notes |
 |----|-----|-------|-------|
 | IR-001 | **P2** **CLOSED (15.6)** | HTTP returns **201** even when dedupe returns `created=False` | **CLOSED:** `POST /deliveries` and `POST /runs` set 201 if created else 200; API test `test_delivery_and_run_dedupe_returns_200`. |
-| IR-002 | **P2** | Report outbox handler does **not** raise on `FAILED` | `execute_run` swallows exceptions → FAILED; outbox still `mark_published`. Report retry depends on re-drive policy not implemented. Acceptable for MVP placeholder export. |
-| IR-003 | **P2** | `execute_run` can re-drive terminal **FAILED** | Early-return for SUCCEEDED/CANCELLED only; FAILED can become RUNNING again on redelivery. |
-| IR-004 | **P2** | Free-form `recipient_address` allowed for staff with `notifications:send` | By design for MVP; `recipient_user_id` is tenant-bound. Production harden: bind address to member/contact or restrict free-form to higher roles / internal callers. |
-| IR-005 | **P2** **DOCUMENTED (15.6)** | `process_due_failed` has no cron/worker/HTTP surface | Mitigated for outbox path: handler raise keeps outbox retry alive. **15.6:** documented as **required ops job** before production reliability claims (`phase15_6_residual_closeout.md`). Product cron still deferred. |
-| IR-006 | **P2** | Dual notification handlers (`handle_notification_requested` + module `outbox_notification_requested_handler`) | Both raise on non-SENT; still duplicated parse logic — keep one path long-term. |
-| IR-007 | **P2** | After delivery **DEAD**, handler still raises → outbox burns remaining attempts | Correct eventual DEAD on outbox; slightly wasteful. Optional: treat delivery DEAD as handler success or short-circuit. |
+| IR-002 | **P2** **CLOSED** | Report outbox handler does **not** raise on `FAILED` | **CLOSED:** `outbox_report_run_requested_handler` raises `report_run_failed` when run ends FAILED → outbox `mark_failed`. |
+| IR-003 | **P2** **CLOSED** | `execute_run` can re-drive terminal **FAILED** | **CLOSED:** FAILED is terminal unless `redrive=True`; SUCCEEDED/CANCELLED always no-op. |
+| IR-004 | **P2** **CLOSED** | Free-form `recipient_address` allowed for staff with `notifications:send` | **CLOSED:** address-only schedule requires `notifications:write`; `recipient_user_id` path keeps `notifications:send` + tenant UserRole bind. |
+| IR-005 | **P2** **MITIGATED** | `process_due_failed` has no cron/worker/HTTP surface | Ops CLI `scripts/process_notification_due.py` + docs. Product cron still deferred; no public HTTP. |
+| IR-006 | **P2** **CLOSED** | Dual notification handlers (`handle_notification_requested` + module `outbox_notification_requested_handler`) | **CLOSED:** shared `_extract_notification_delivery_id`; instance method delegates to module handler. |
+| IR-007 | **P2** **CLOSED** | After delivery **DEAD**, handler still raises → outbox burns remaining attempts | **CLOSED:** SENT / CANCELLED / DEAD → handler success (no outbox burn); FAILED still raises. |
 | IR-008 | **Process** | Formal PR CI green + Phase 15.5 human APPROVE/merge not part of this review | Checklist docs still show 15.5 awaiting APPROVE; Phase 16 merge **after** 15.5 LOCKED only. |
 
 No **P0/P1** integrity regressions found against the must-verify list.
@@ -91,7 +91,7 @@ No **P0/P1** integrity regressions found against the must-verify list.
 | Phase **15.5 LOCKED** | **No** — process gate open (PR APPROVE → merge → main CI → docs LOCKED) |
 | Phase **16 LOCKED** | **No** |
 | Phase 16 **CI VERIFIED** | **No** (this review did not re-run full CI; do not self-declare) |
-| Production-ready notifications/reports | **No** — log adapters, placeholder report export, no scheduled delivery worker, residual P2s |
+| Production-ready notifications/reports | **No** — log adapters, placeholder report export, product cron still deferred (ops CLI only) |
 | Safe to merge Phase 16 to `main` ahead of 15.5 | **No** — merge order: **15.5 LOCKED first**, then Phase 16 |
 
 ### Explicit non-claims
@@ -124,7 +124,7 @@ No **P0/P1** integrity regressions found against the must-verify list.
 
 1. Keep Phase 16 branch stacked; **do not merge** until Phase 15.5 is **LOCKED on `main`**.  
 2. Run formal PR CI (security / lint / unit+integration) on this branch before any merge attempt.  
-3. Optionally burn down residual P2s (201-on-dedupe, report FAILED redrive, single outbox handler, free-form address policy) in a follow-up commit — **not blockers** for this integrity closeout checklist.  
+3. Residual P2 IR-001–004/006/007 **CLOSED** on branch (reliability + address policy batch); IR-005 mitigated via ops CLI (product cron deferred).  
 4. Only after merge + main CI green may docs move Phase 16 toward **CI VERIFIED / LOCKED** (never from this document alone).
 
 ---

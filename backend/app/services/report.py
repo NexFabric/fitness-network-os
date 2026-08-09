@@ -156,8 +156,18 @@ class ReportService:
             )
         return RunRequestResult(run=run, created=True)
 
-    async def execute_run(self, tenant_id: UUID, run_id: UUID) -> ReportRun:
-        """MVP executor: mark SUCCESS with synthetic export URL (no file store)."""
+    async def execute_run(
+        self,
+        tenant_id: UUID,
+        run_id: UUID,
+        *,
+        redrive: bool = False,
+    ) -> ReportRun:
+        """MVP executor: mark SUCCESS with synthetic export URL (no file store).
+
+        Terminal statuses SUCCEEDED/CANCELLED always no-op.
+        FAILED is terminal unless ``redrive=True`` (explicit redrive policy).
+        """
         result = await self.db.execute(
             select(ReportRun)
             .where(ReportRun.tenant_id == tenant_id, ReportRun.id == run_id)
@@ -167,6 +177,9 @@ class ReportService:
         if run is None:
             raise ValueError("run_not_found")
         if run.status in (REPORT_STATUS_SUCCEEDED, REPORT_STATUS_CANCELLED):
+            return run
+        # IR-003: do not re-drive terminal FAILED unless explicit redrive flag.
+        if run.status == REPORT_STATUS_FAILED and not redrive:
             return run
 
         run.status = REPORT_STATUS_RUNNING
@@ -197,6 +210,13 @@ class ReportService:
 
 
 async def outbox_report_run_requested_handler(db: AsyncSession, event: Any) -> None:
+    """Outbox publisher for report.run.requested.v1.
+
+    Mirrors notification pattern: raise on FAILED so OutboxService.mark_failed
+    keeps retry/backoff alive. SUCCEEDED/CANCELLED complete without raise.
+    Default execute_run does not redrive terminal FAILED (IR-003); outbox
+    redelivery of an already-FAILED run still raises (IR-002) until max attempts.
+    """
     payload = event.payload
     if isinstance(payload, dict) and is_envelope(payload):
         data = payload["data"]
@@ -207,4 +227,6 @@ async def outbox_report_run_requested_handler(db: AsyncSession, event: Any) -> N
     run_id = data.get("run_id") if isinstance(data, dict) else None
     if not run_id:
         raise ValueError("run_id_required")
-    await ReportService(db).execute_run(event.tenant_id, UUID(str(run_id)))
+    run = await ReportService(db).execute_run(event.tenant_id, UUID(str(run_id)))
+    if run.status == REPORT_STATUS_FAILED:
+        raise RuntimeError(f"report_run_failed:{run.error_message or 'unknown'}")

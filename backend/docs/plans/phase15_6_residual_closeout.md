@@ -34,8 +34,19 @@ Minimal residual after Phase **15.5 Integrity Closure** and the Phase **16** int
 | Purpose | Claim tenant-scoped `FAILED` deliveries with `available_at <= now` and `attempt_count < max_attempts` (`SKIP LOCKED`); re-dispatch without public inbox inject |
 | Why required | Outbox path keeps retry alive when the handler **raises** on non-SENT. Deliveries that land in `FAILED` after provider failure also need this dual path when not re-driven solely by outbox. Without a scheduled/ops job calling this method, some failed deliveries can stall until manual intervention. |
 | Topology (MVP) | **Per-tenant** job (or operator loop over tenants). Index `ix_notification_deliveries_available` is `(status, available_at)` — fine for tenant-scoped workers. Platform-wide multi-tenant worker is a later index/API change (P16-013). |
-| Surface today | Service method + unit/integration tests. **No** public HTTP route, **no** cron product surface — intentional MVP. |
-| Production gate | Wire cron / worker / ops runbook to invoke `process_due_failed` (or equivalent outbox re-drive) **before** claiming production notification reliability. |
+| Surface today | Service method + unit/integration tests + **ops CLI** `scripts/process_notification_due.py`. **No** public HTTP route, **no** product cron scheduler — intentional MVP. |
+| Production gate | Wire cron / worker / ops runbook to invoke `process_due_failed` (or the CLI below) **before** claiming production notification reliability. |
+
+**How to run (ops CLI):**
+
+```bash
+# from backend/, DATABASE_URL (and env) loaded as for the app
+uv run python scripts/process_notification_due.py <tenant_uuid>
+uv run python scripts/process_notification_due.py <tenant_uuid> --limit 50 --max-attempts 5
+```
+
+Stdout is one JSON line, e.g. `{"tenant_id":"…","sent":1,"failed":0,"dead":0}`.  
+Per-tenant only (loop tenants in the scheduler if multi-tenant). Do **not** expose this as a public HTTP endpoint.
 
 **Deferred (not 15.6):** standalone worker process, multi-tenant global claim API, real provider SDKs.
 
@@ -66,16 +77,17 @@ main (Phase 8–15 LOCKED)
 `gh pr merge 25 --merge` and `gh pr merge 25 --admin --merge` both fail without an independent approving review.  
 Do **not** weaken branch protection permanently. Do **not** force-push main.
 
-## Residual P2 still open (not 15.6 scope)
+## Residual P2 (post reliability batch on Phase 16 branch)
 
-From integrity reviews — defer:
+From integrity reviews — status on `feat/phase16-notifications-reports`:
 
-- IR-002/003 / P16-011: report `FAILED` redrive / terminal handling  
-- IR-004: free-form `recipient_address` staff policy  
-- IR-006/007: dual notification handlers; DEAD still raises  
-- P16-010: model vs migration partial unique index parity  
-- Domain → notification bridges (membership.activated → schedule)  
-- Full deep RLS suite optional  
+- IR-002/003 / P16-011: report `FAILED` redrive / terminal handling — **CLOSED** (raise on FAILED; `redrive=` flag)  
+- IR-004: free-form `recipient_address` staff policy — **CLOSED** (address-only → `notifications:write`)  
+- IR-006/007: dual handlers / DEAD raises — **CLOSED** (shared parse; DEAD/CANCELLED success)  
+- IR-005: `process_due_failed` surface — **MITIGATED** (ops CLI; product cron deferred)  
+- P16-010: model vs migration partial unique index parity — still open (docs/hygiene)  
+- Domain → notification bridges — **helper landed** (`NotificationBridge`; not wired into MembershipService)  
+- Full deep RLS suite optional — isolation suite present; further depth deferred
 
 ## Terminology
 

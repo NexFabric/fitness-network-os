@@ -12,6 +12,8 @@ from app.core.event_types import REPORT_RUN_REQUESTED_V1
 from app.models.organization import Organization
 from app.models.outbox import OutboxEvent
 from app.models.report import (
+    REPORT_STATUS_CANCELLED,
+    REPORT_STATUS_FAILED,
     REPORT_STATUS_PENDING,
     REPORT_STATUS_SUCCEEDED,
     ReportRun,
@@ -215,3 +217,170 @@ async def test_outbox_handler_executes_run(db_session, tenant):
     ).scalar_one()
     assert run.status == REPORT_STATUS_SUCCEEDED
     assert run.result_url is not None
+
+
+@pytest.mark.asyncio
+async def test_execute_run_failed_and_cancelled_are_terminal_without_redrive(
+    db_session, tenant
+):
+    """IR-003: FAILED/CANCELLED no-op by default; redrive=True revives FAILED only."""
+    svc = ReportService(db_session)
+    await svc.create_definition(
+        tenant.id,
+        code="terminal_rpt",
+        name="Terminal Report",
+    )
+    await db_session.commit()
+
+    requested = await svc.request_run(
+        tenant.id,
+        definition_code="terminal_rpt",
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+    run = requested.run
+
+    # Simulate terminal FAILED — default execute_run must not re-drive
+    run.status = REPORT_STATUS_FAILED
+    run.error_message = "export_boom"
+    await db_session.flush()
+    await db_session.commit()
+
+    again = await svc.execute_run(tenant.id, run.id)
+    await db_session.commit()
+    assert again.status == REPORT_STATUS_FAILED
+    assert again.error_message == "export_boom"
+    assert again.result_url is None
+
+    # Explicit redrive may re-execute placeholder → SUCCEEDED
+    revived = await svc.execute_run(tenant.id, run.id, redrive=True)
+    await db_session.commit()
+    assert revived.status == REPORT_STATUS_SUCCEEDED
+    assert revived.result_url is not None
+    assert revived.error_message is None
+
+    # CANCELLED stays CANCELLED even with redrive
+    requested2 = await svc.request_run(
+        tenant.id,
+        definition_code="terminal_rpt",
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+    cancelled = requested2.run
+    cancelled.status = REPORT_STATUS_CANCELLED
+    await db_session.flush()
+    await db_session.commit()
+
+    still = await svc.execute_run(tenant.id, cancelled.id, redrive=True)
+    await db_session.commit()
+    assert still.status == REPORT_STATUS_CANCELLED
+
+
+@pytest.mark.asyncio
+async def test_outbox_handler_raises_on_failed_run_marks_outbox_failed(
+    db_session, tenant
+):
+    """IR-002: run FAILED → handler raises → dispatch_claimed mark_failed."""
+    svc = ReportService(db_session)
+    await svc.create_definition(
+        tenant.id,
+        code="fail_outbox_rpt",
+        name="Fail Outbox Report",
+    )
+    await db_session.commit()
+
+    requested = await svc.request_run(
+        tenant.id,
+        definition_code="fail_outbox_rpt",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+    run = requested.run
+    outbox_id = (
+        (
+            await db_session.execute(
+                select(OutboxEvent).where(
+                    OutboxEvent.tenant_id == tenant.id,
+                    OutboxEvent.event_type == REPORT_RUN_REQUESTED_V1,
+                )
+            )
+        )
+        .scalar_one()
+        .id
+    )
+
+    # Pre-terminal FAILED (default execute_run no-ops; handler still raises)
+    run.status = REPORT_STATUS_FAILED
+    run.error_message = "synthetic_export_fail"
+    await db_session.flush()
+    await db_session.commit()
+
+    outbox = OutboxService(db_session)
+    claimed = await outbox.claim_pending(tenant_id=tenant.id, worker_id="w-rpt-fail")
+    await db_session.commit()
+    assert len(claimed) == 1
+
+    async def publisher(ev: OutboxEvent) -> None:
+        await outbox_report_run_requested_handler(db_session, ev)
+
+    stats = await outbox.dispatch_claimed(claimed, publisher, worker_id="w-rpt-fail")
+    await db_session.commit()
+    assert stats["failed"] == 1
+    assert stats["published"] == 0
+
+    run_after = (
+        await db_session.execute(select(ReportRun).where(ReportRun.id == run.id))
+    ).scalar_one()
+    assert run_after.status == REPORT_STATUS_FAILED
+    assert run_after.error_message == "synthetic_export_fail"
+
+    ob = (
+        await db_session.execute(select(OutboxEvent).where(OutboxEvent.id == outbox_id))
+    ).scalar_one()
+    assert ob.status == "FAILED"
+    assert ob.error_message is not None
+    assert "report_run_failed" in ob.error_message
+    assert "synthetic_export_fail" in ob.error_message
+
+
+@pytest.mark.asyncio
+async def test_outbox_handler_raises_when_execute_returns_failed(
+    db_session, tenant, monkeypatch
+):
+    """IR-002 direct path: handler raises RuntimeError if execute_run ends FAILED."""
+    svc = ReportService(db_session)
+    await svc.create_definition(
+        tenant.id,
+        code="handler_raise_direct",
+        name="Handler Raise Direct",
+    )
+    await db_session.commit()
+
+    requested = await svc.request_run(
+        tenant.id,
+        definition_code="handler_raise_direct",
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+    run_id = requested.run.id
+
+    async def _force_failed(self, tenant_id, run_id_arg, *, redrive=False):
+        run = await ReportService.get_run(self, tenant_id, run_id_arg)
+        assert run is not None
+        run.status = REPORT_STATUS_FAILED
+        run.error_message = "injected_execute_fail"
+        await self.db.flush()
+        return run
+
+    monkeypatch.setattr(ReportService, "execute_run", _force_failed)
+
+    class _Ev:
+        def __init__(self):
+            self.tenant_id = tenant.id
+            self.payload = {
+                "run_id": str(run_id),
+                "definition_code": "handler_raise_direct",
+            }
+
+    with pytest.raises(RuntimeError, match="report_run_failed:injected_execute_fail"):
+        await outbox_report_run_requested_handler(db_session, _Ev())

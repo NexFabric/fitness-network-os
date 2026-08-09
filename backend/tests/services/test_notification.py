@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.event_types import NOTIFICATION_REQUESTED_V1
 from app.models.notification import (
+    DELIVERY_CANCELLED,
     DELIVERY_DEAD,
     DELIVERY_FAILED,
     DELIVERY_QUEUED,
@@ -20,7 +21,9 @@ from app.models.organization import Organization
 from app.models.outbox import OutboxEvent
 from app.models.tenant import Tenant
 from app.services.notification import (
+    DEFAULT_MAX_ATTEMPTS,
     NotificationService,
+    _extract_notification_delivery_id,
     outbox_notification_requested_handler,
 )
 from app.services.notification_providers import (
@@ -562,3 +565,214 @@ async def test_fail_then_process_due_failed_until_dead(db_session, tenant):
     assert final.status == DELIVERY_DEAD
     assert final.attempt_count == max_attempts
     assert final.error_message == "provider_forced_failure"
+
+
+@pytest.mark.asyncio
+async def test_outbox_handler_dead_delivery_marks_outbox_published(
+    db_session, tenant, monkeypatch
+):
+    """IR-007: this dispatch promotes to DEAD → handler OK → outbox PUBLISHED (no burn)."""
+    fail = FailingNotificationProvider()
+
+    def _failing_providers():
+        return {"EMAIL": fail, "SMS": fail, "WHATSAPP": fail, "PUSH": fail}
+
+    monkeypatch.setattr(
+        "app.services.notification.default_providers", _failing_providers
+    )
+
+    svc = NotificationService(db_session, providers=_failing_providers())
+    await svc.create_template(
+        tenant.id,
+        code="outbox-dead",
+        name="Outbox Dead",
+        channel="EMAIL",
+        body_template="dead",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="dead-outbox@example.com",
+        template_code="outbox-dead",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+    delivery_id = scheduled.delivery.id
+    outbox_id = scheduled.outbox_event_id
+    assert outbox_id is not None
+
+    # Next dispatch attempt_count becomes DEFAULT_MAX_ATTEMPTS → DEAD.
+    # (Cannot monkeypatch DEFAULT_MAX_ATTEMPTS: default arg bound at def time.)
+    row = (
+        await db_session.execute(
+            select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
+        )
+    ).scalar_one()
+    row.attempt_count = DEFAULT_MAX_ATTEMPTS - 1
+    await db_session.flush()
+    await db_session.commit()
+
+    outbox = OutboxService(db_session)
+    claimed = await outbox.claim_pending(tenant_id=tenant.id, worker_id="w-notif-dead")
+    await db_session.commit()
+    assert len(claimed) == 1
+
+    async def publisher(ev: OutboxEvent) -> None:
+        await outbox_notification_requested_handler(db_session, ev)
+
+    stats = await outbox.dispatch_claimed(claimed, publisher, worker_id="w-notif-dead")
+    await db_session.commit()
+    assert stats["published"] == 1
+    assert stats["failed"] == 0
+
+    delivery = (
+        await db_session.execute(
+            select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
+        )
+    ).scalar_one()
+    assert delivery.status == DELIVERY_DEAD
+    assert delivery.attempt_count == DEFAULT_MAX_ATTEMPTS
+
+    ob = (
+        await db_session.execute(select(OutboxEvent).where(OutboxEvent.id == outbox_id))
+    ).scalar_one()
+    assert ob.status == "PUBLISHED"
+
+
+@pytest.mark.asyncio
+async def test_outbox_handler_does_not_raise_on_dead_or_cancelled(db_session, tenant):
+    """IR-007: pre-terminal DEAD/CANCELLED → handler succeeds (no outbox burn)."""
+    svc = NotificationService(db_session)
+    await svc.create_template(
+        tenant.id,
+        code="dead-ok",
+        name="Dead Ok",
+        channel="EMAIL",
+        body_template="x",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="dead-ok@example.com",
+        template_code="dead-ok",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+    delivery = scheduled.delivery
+    outbox_id = scheduled.outbox_event_id
+    assert outbox_id is not None
+
+    # Terminal DEAD before dispatch — handler must not raise
+    delivery.status = DELIVERY_DEAD
+    delivery.error_message = "already_dead"
+    await db_session.flush()
+    await db_session.commit()
+
+    outbox = OutboxService(db_session)
+    claimed = await outbox.claim_pending(tenant_id=tenant.id, worker_id="w-dead-ok")
+    await db_session.commit()
+    assert len(claimed) == 1
+
+    async def publisher(ev: OutboxEvent) -> None:
+        await outbox_notification_requested_handler(db_session, ev)
+
+    stats = await outbox.dispatch_claimed(claimed, publisher, worker_id="w-dead-ok")
+    await db_session.commit()
+    assert stats["published"] == 1
+    assert stats["failed"] == 0
+
+    ob = (
+        await db_session.execute(select(OutboxEvent).where(OutboxEvent.id == outbox_id))
+    ).scalar_one()
+    assert ob.status == "PUBLISHED"
+
+    # CANCELLED path: fresh delivery + outbox
+    scheduled2 = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="cancel-ok@example.com",
+        template_code="dead-ok",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+    delivery2 = scheduled2.delivery
+    outbox_id2 = scheduled2.outbox_event_id
+    delivery2.status = DELIVERY_CANCELLED
+    await db_session.flush()
+    await db_session.commit()
+
+    claimed2 = await outbox.claim_pending(tenant_id=tenant.id, worker_id="w-cancel-ok")
+    await db_session.commit()
+    assert len(claimed2) == 1
+    stats2 = await outbox.dispatch_claimed(claimed2, publisher, worker_id="w-cancel-ok")
+    await db_session.commit()
+    assert stats2["published"] == 1
+    assert stats2["failed"] == 0
+    ob2 = (
+        await db_session.execute(
+            select(OutboxEvent).where(OutboxEvent.id == outbox_id2)
+        )
+    ).scalar_one()
+    assert ob2.status == "PUBLISHED"
+
+
+@pytest.mark.asyncio
+async def test_handle_notification_requested_shares_parse_and_raise_policy(
+    db_session, tenant, monkeypatch
+):
+    """IR-006: instance method delegates to module handler (shared parse/raise)."""
+    fail = FailingNotificationProvider()
+
+    def _failing_providers():
+        return {"EMAIL": fail, "SMS": fail, "WHATSAPP": fail, "PUSH": fail}
+
+    # Module handler builds a fresh NotificationService(db) → default_providers.
+    monkeypatch.setattr(
+        "app.services.notification.default_providers", _failing_providers
+    )
+
+    svc = NotificationService(db_session, providers=_failing_providers())
+    await svc.create_template(
+        tenant.id,
+        code="shared-handler",
+        name="Shared Handler",
+        channel="EMAIL",
+        body_template="shared",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="shared@example.com",
+        template_code="shared-handler",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+
+    outbox_row = (
+        await db_session.execute(
+            select(OutboxEvent).where(OutboxEvent.id == scheduled.outbox_event_id)
+        )
+    ).scalar_one()
+
+    # Shared parse helper accepts OutboxEvent payload shape
+    extracted = _extract_notification_delivery_id(outbox_row)
+    assert extracted == scheduled.delivery.id
+
+    # Instance path uses same raise policy as module handler (FAILED → raise)
+    with pytest.raises(RuntimeError, match="notification_delivery_not_sent:FAILED"):
+        await svc.handle_notification_requested(db_session, outbox_row)
+
+    delivery = (
+        await db_session.execute(
+            select(NotificationDelivery).where(
+                NotificationDelivery.id == scheduled.delivery.id
+            )
+        )
+    ).scalar_one()
+    assert delivery.status == DELIVERY_FAILED

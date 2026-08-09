@@ -5,7 +5,7 @@
 **Stacked on:** Phase 15.5 branch work (outbox fencing, event registry, no public generic inbox)  
 **Plan path:** `backend/docs/plans/phase16_notifications_reports.md`  
 **Do not claim:** production-ready (Phase 26 exit gate only)  
-**Residual (2026-08-10):** P1 harden path CLOSED on branch (HTTP always enqueues outbox; outbox handler raises `notification_delivery_not_sent`; `recipient_not_in_tenant` for `recipient_user_id`). Formal CI green + 15.5 merge-first still required.
+**Residual (2026-08-10):** P1 harden path CLOSED. Residual P2 reliability batch CLOSED on branch (IR-002/003/004/006/007; IR-005 ops CLI). Formal CI green + 15.5 merge-first still required. **Not LOCKED / not production-ready.**
 
 ## Goal
 
@@ -160,6 +160,32 @@ schedule_delivery(..., enqueue_outbox=True)
 
 Domain services that need notifications (membership activated, payment received, etc.) **enqueue domain events or call NotificationService in-process** — they must **not** import WhatsApp/Email SDKs.
 
+### NotificationBridge (domain → schedule helper)
+
+**Module:** `app/services/notification_bridge.py`
+
+Thin wrapper around `NotificationService.schedule_delivery` for orchestrators:
+
+| Method | Role |
+|--------|------|
+| `schedule_for_member_user(tenant_id, user_id, template_code, channel, context, dedupe_key, …)` | Target tenant-bound user; enqueues `notification.requested.v1` |
+| `schedule_from_domain_event(..., event_type, event_id, …)` | Same + sets `source_event_type` / `source_event_id` (e.g. `membership.activated.v1`) |
+
+**Phase 16 scope:** helper + real-PG tests only. **Not** wired into `MembershipService` (architecture tests forbid `app.services.notification*` imports from membership).
+
+**Phase 17/18 intended call path:**
+
+```text
+Membership activate (domain TX)
+  → optional outbox membership.activated.v1
+  → consumer / app service (not MembershipService)
+  → NotificationBridge.schedule_for_member_user(..., source_event_type=MEMBERSHIP_ACTIVATED_V1)
+  → delivery + notification.requested.v1
+  → worker → provider adapter
+```
+
+Callers resolve Member → User themselves (User ≠ Member). Bridge does not import membership.
+
 ### Explicit non-goals for ingress
 
 - ❌ `POST /outbox/inbox` or generic tenant event dump API  
@@ -254,9 +280,10 @@ Honest status on `feat/phase16-notifications-reports` (2026-08-10). **Not LOCKED
 - [x] 16A–16D implemented behind routers + services (templates/deliveries, log providers, report definitions/runs, outbox types)
 - [x] Expand migration + permission seed (`q0d1e2f3a4b5`); keep `alembic check` / permissions parity green on PR
 - [x] 16E **MVP** tests on real PG path: service outbox/dedupe/fail→DEAD/`process_due_failed`; API schedule/run; MEMBER 403 RBAC; handler raises `notification_delivery_not_sent`; no client `enqueue_outbox`; `recipient_not_in_tenant`
-- [ ] Full 16E table optional residual: deep RLS isolation suite + Membership↛providers architecture fitness test
+- [x] Residual P2 reliability: report FAILED raise (IR-002), FAILED terminal/`redrive` (IR-003), free-form address → write (IR-004), single handler path (IR-006), DEAD/CANCELLED no outbox burn (IR-007)
+- [x] Tenancy isolation suite + Membership↛providers architecture fitness tests present on branch
 - [ ] PR CI fully green (do not self-claim CI VERIFIED until required checks pass)
-- [ ] Independent review residual closed; merge **only after** Phase 15.5 is LOCKED on main (**15.5 still not LOCKED**)
+- [ ] Independent human APPROVE / merge **only after** Phase 15.5 is LOCKED on main (**15.5 still not LOCKED**)
 - [ ] Docs: checklist + master plan → Phase 16 CI VERIFIED / LOCKED (**post-merge only** — do not mark LOCKED now)
 
 ---
