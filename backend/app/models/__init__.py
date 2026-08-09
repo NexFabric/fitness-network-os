@@ -6,6 +6,13 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
+from app.models.entitlement import (
+    EntitlementDefinition,
+    EntitlementTransaction,
+    EntitlementWallet,
+    MembershipEntitlement,
+    PlanEntitlement,
+)
 from app.models.federation import ComplianceRecord, NetworkAlert, PassportConfig
 from app.models.finance import (
     BillingAccount,
@@ -20,11 +27,14 @@ from app.models.member import Member, Note, Tag
 from app.models.membership import (
     Entitlement,
     Membership,
+    MembershipCancellation,
     MembershipFreeze,
     MembershipPeriod,
+    MembershipRenewal,
     MembershipStatusHistory,
     Plan,
     PlanVersion,
+    RenewalStatus,
 )
 from app.models.notification import NotificationDelivery, NotificationTemplate
 from app.models.organization import Organization
@@ -45,6 +55,9 @@ __all__ = [
     "ConsentVersion",
     "Device",
     "Entitlement",
+    "EntitlementDefinition",
+    "EntitlementTransaction",
+    "EntitlementWallet",
     "InboxEvent",
     "Invoice",
     "InvoiceItem",
@@ -52,8 +65,11 @@ __all__ = [
     "Location",
     "Member",
     "Membership",
+    "MembershipCancellation",
+    "MembershipEntitlement",
     "MembershipFreeze",
     "MembershipPeriod",
+    "MembershipRenewal",
     "MembershipStatusHistory",
     "NetworkAlert",
     "Note",
@@ -68,7 +84,9 @@ __all__ = [
     "PaymentAllocation",
     "Permission",
     "Plan",
+    "PlanEntitlement",
     "PlanVersion",
+    "RenewalStatus",
     "ReportDefinition",
     "ReportRun",
     "RetentionCockpit",
@@ -82,6 +100,5 @@ __all__ = [
     "UserDevice",
     "UserMfaMethod",
     "UserRole",
-    "UserSession"
+    "UserSession",
 ]
-

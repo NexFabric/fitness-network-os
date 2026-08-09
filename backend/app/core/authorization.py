@@ -36,6 +36,10 @@ class DefaultPermission(Enum):
     USERS_WRITE = "users:write"
     MEMBERSHIPS_READ = "memberships:read"
     MEMBERSHIPS_WRITE = "memberships:write"
+    ENTITLEMENTS_READ = "entitlements:read"
+    ENTITLEMENTS_CHECK = "entitlements:check"
+    ENTITLEMENTS_CONSUME = "entitlements:consume"
+    ENTITLEMENTS_MANAGE = "entitlements:manage"
     TENANT_READ = "tenant:read"
     TENANT_WRITE = "tenant:write"
 
