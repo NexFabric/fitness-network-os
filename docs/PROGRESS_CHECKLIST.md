@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `398e858` (includes PR #26 stack + health docs #28)  
+**Main HEAD:** `e19d935` (PR #26 stack + docs #28/#30/#32; demo seed on follow-up branch)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
@@ -72,3 +72,5 @@
 - `docs/IMPLEMENTATION_MASTER_PLAN.md`  
 - `backend/docs/plans/phase26_core_mvp_exit_gate.md`  
 - `backend/docs/plans/CONTROL_HEALTH_REPORT.md`  
+- `backend/docs/plans/REMAINING_WORK_BOARD.md`  
+- `READY_TO_RUN.md`  

@@ -4,7 +4,7 @@
 
 | Check | Result |
 |-------|--------|
-| Local `main` == `origin/main` | **YES** after hard reset to `398e858` |
+| Local `main` == `origin/main` | **YES** at `e19d935` (post #32) |
 | ruff / mypy / app import | PASS (prior control) |
 | Focused pytest | 50 PASS (prior control) |
 | PR #25 / #26 / #27 / #28 | **MERGED** |
@@ -15,7 +15,7 @@
 | False claim (stale docs) | Truth |
 |--------------------------|--------|
 | “PR #26 not on main” | **FALSE** — merged `5046f10` |
-| Local main behind / ref glitch | **FIXED** — `git reset --hard origin/main` → `398e858` |
+| Local main behind / ref glitch | **FIXED** — equality at `e19d935` |
 | Alembic main only `p9…` | **FALSE after #26** — head includes `q0d1e2f3a4b5` |
 
 ## Phase matrix

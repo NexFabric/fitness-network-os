@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Seed a demo Organization + Tenant + GYM_ADMIN user + session for Admin Web.
+"""Seed a demo Organization + Tenant + GYM_OWNER user + session for Admin Web.
 
-Idempotent: re-running refreshes the admin password hash and issues a new
+Idempotent: re-running refreshes the password hash and issues a new
 session token (previous demo session rows for this user are revoked).
+
+Also seeds a sample Location + Member so Admin Members/Locations lists
+are non-empty after login.
 
 Prerequisites
 -------------
@@ -14,24 +17,28 @@ Usage (from ``backend/``)::
 
     set -a && source .env && set +a
     uv run python scripts/seed_demo_tenant.py
+    # alias:
+    uv run python scripts/seed_demo.py
 
     # optional flags
-    uv run python scripts/seed_demo_tenant.py --role GYM_OWNER --no-member
+    uv run python scripts/seed_demo_tenant.py --role GYM_ADMIN --no-member
     uv run python scripts/seed_demo_tenant.py --email admin@demo.local --password 'ChangeMe!'
 
-Prints on stdout (copy into Admin login at http://localhost:5173/)::
+Prints on stdout (copy into Admin login at http://localhost:5173/login)::
 
     === Demo seed ready ===
     tenant_id:      <uuid>
     email:          demo.admin@demo.local
     password:       DemoAdmin123!
-    role:           GYM_ADMIN
+    role:           GYM_OWNER
     bearer_token:   <raw session token — paste without Bearer prefix>
     member_id:      <uuid or (none)>
+    location_id:    <uuid or (none)>
     Authorization:  Bearer <raw>
     X-Tenant-ID:    <uuid>
 
 Admin Web login only needs **Session token** + **Tenant ID**.
+Not production-ready — local/dev credentials only.
 """
 
 from __future__ import annotations
@@ -56,7 +63,8 @@ DEMO_TENANT_NAME = "Demo Gym"
 DEMO_EMAIL = "demo.admin@demo.local"
 DEMO_PASSWORD = "DemoAdmin123!"
 DEMO_MEMBER_NUMBER = "DEMO-001"
-DEFAULT_ROLE = "GYM_ADMIN"
+DEMO_LOCATION_NAME = "Demo Main Floor"
+DEFAULT_ROLE = "GYM_OWNER"
 SESSION_DAYS = 30
 
 
@@ -98,12 +106,15 @@ async def seed_demo(
     password: str = DEMO_PASSWORD,
     role_name: str = DEFAULT_ROLE,
     with_member: bool = True,
+    with_location: bool = True,
 ) -> dict[str, str | None]:
-    """Create or update demo tenant + admin user; return printable credentials."""
+    """Create or update demo tenant + owner user; return printable credentials."""
     from sqlalchemy import select
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    from sqlalchemy.orm import selectinload
 
     from app.core.security import generate_session_token, get_password_hash
+    from app.models.location import Location
     from app.models.member import Member
     from app.models.organization import Organization
     from app.models.rbac import Role, UserRole
@@ -144,8 +155,6 @@ async def seed_demo(
                 await session.flush()
 
             # --- Canonical system role (seeded by migrations / permissions.yml) ---
-            from sqlalchemy.orm import selectinload
-
             role = (
                 await session.execute(
                     select(Role)
@@ -228,10 +237,35 @@ async def seed_demo(
             )
             await session.flush()
 
-            # --- Optional Member bound to user (for /me) ---
+            # Tenant-owned tables need GUC even when connected as migrator
+            # if FORCE ROW LEVEL SECURITY is enabled.
+            await _set_tenant_rls(session, tenant.id)
+
+            # --- Optional sample Location (Admin Locations page) ---
+            location_id: str | None = None
+            if with_location:
+                loc = (
+                    await session.execute(
+                        select(Location).where(
+                            Location.tenant_id == tenant.id,
+                            Location.name == DEMO_LOCATION_NAME,
+                        )
+                    )
+                ).scalar_one_or_none()
+                if loc is None:
+                    loc = Location(
+                        tenant_id=tenant.id,
+                        name=DEMO_LOCATION_NAME,
+                        timezone="Europe/Istanbul",
+                        address="Demo St 1",
+                    )
+                    session.add(loc)
+                    await session.flush()
+                location_id = str(loc.id)
+
+            # --- Optional Member bound to user (for /me + Admin Members) ---
             member_id: str | None = None
             if with_member:
-                await _set_tenant_rls(session, tenant.id)
                 member = (
                     await session.execute(
                         select(Member).where(
@@ -245,7 +279,7 @@ async def seed_demo(
                         tenant_id=tenant.id,
                         member_number=DEMO_MEMBER_NUMBER,
                         first_name="Demo",
-                        last_name="Admin",
+                        last_name="Owner",
                         email=email,
                         status="ACTIVE",
                         user_id=user.id,
@@ -271,6 +305,7 @@ async def seed_demo(
                 "role_permission_count": str(perm_count),
                 "bearer_token": raw_token,
                 "member_id": member_id,
+                "location_id": location_id,
             }
     finally:
         await engine.dispose()
@@ -279,24 +314,32 @@ async def seed_demo(
 def _print_result(result: dict[str, str | None]) -> None:
     token = result["bearer_token"] or ""
     tenant_id = result["tenant_id"] or ""
-    print("=== Demo seed ready ===")
+    print("=== Demo seed ready (local/dev only — not production) ===")
     print(f"tenant_id:      {tenant_id}")
     print(f"organization_id:{result['organization_id']}")
     print(f"user_id:        {result['user_id']}")
     print(f"email:          {result['email']}")
-    print(f"password:       {result['password']}")
+    print(f"password:       {result['password']}  (hashed; Admin uses token paste)")
     print(f"role:           {result['role']} ({result['role_permission_count']} perms)")
     print(f"bearer_token:   {token}")
     print(f"member_id:      {result['member_id'] or '(none)'}")
+    print(f"location_id:    {result.get('location_id') or '(none)'}")
     print(f"Authorization:  Bearer {token}")
     print(f"X-Tenant-ID:    {tenant_id}")
     print()
-    print("Admin Web (http://localhost:5173/login): paste bearer_token + tenant_id")
+    print("Admin Web → http://localhost:5173/login")
+    print("  Session token  = bearer_token (no 'Bearer ' prefix)")
+    print("  Tenant ID      = tenant_id")
+    print()
+    print(
+        f'curl -sS -H "Authorization: Bearer {token}" '
+        f'-H "X-Tenant-ID: {tenant_id}" http://localhost:8000/api/v1/members'
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Seed demo tenant + GYM_ADMIN session for local Admin Web."
+        description="Seed demo tenant + GYM_OWNER session for local Admin Web."
     )
     parser.add_argument(
         "--email",
