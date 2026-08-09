@@ -1,7 +1,8 @@
 # Phase 11 — Remove Money Floats
 
 **Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)  
-**Current migration head:** `f7a8b9c0d1e2` (EXPAND only)
+**Phase 11 expand revision:** `f7a8b9c0d1e2` (EXPAND only; still no CONTRACT DROP)  
+**Repo alembic head (2026-08-09):** `m6f7a8b9c0d1` (later phases advanced chain; Phase 11 expand body unchanged)
 
 ## Goal
 

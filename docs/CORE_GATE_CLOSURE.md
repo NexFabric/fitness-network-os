@@ -1,5 +1,8 @@
 # CORE GATE CLOSURE — PHASE 0–7 FINAL VERIFICATION
 
+> **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.  
+> Live progress: `docs/PROGRESS_CHECKLIST.md`. This document is the historical gate checklist (do not re-open Phase 8 from here).
+
 This document outlines the final gate closures required before moving to Phase 8. DO NOT PROCEED TO PHASE 8 until all items here are completely finished and verified in CI.
 
 ## P0-1 — MAIN BRANCH PROTECTION

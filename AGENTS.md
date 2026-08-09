@@ -2,6 +2,8 @@
 
 Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için source of truth'tur. Bütün geliştirme adımlarında bu belgelere uygunluk esastır.
 
+**Progress truth (2026-08-09):** Phase **0–15** domain track on `main` is CI VERIFIED / LOCKED through Outbox (see `docs/PROGRESS_CHECKLIST.md`). **Next = Phase 16**. Do **not** claim production-ready. Active maturity: checklist + `docs/IMPLEMENTATION_MASTER_PLAN.md` + `docs/REVIEW_CHECKPOINT.md`.
+
 ## Temel Kurallar ve Mimari Kararlar
 
 - Federation != Tenant.

@@ -1,7 +1,8 @@
 # Phase 14 — Member / Gym Core Completion
 
 **Status:** 🟢 LOCKED (PR #21 merge `e332cf5`)  
-**Depends on:** Phase 13 LOCKED (QR & Access)
+**Depends on:** Phase 13 LOCKED (QR & Access)  
+**Migration:** `k4d5e6f7a8b9` (member_number/staff uniqueness + permissions)
 
 ## Scope
 
