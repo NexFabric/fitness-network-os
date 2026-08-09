@@ -194,7 +194,7 @@ class OutboxService:
             )
             .execution_options(synchronize_session=False)
         )
-        if res.rowcount != 1:
+        if getattr(res, "rowcount", 0) != 1:
             raise ValueError("lease_ownership_lost")
         event.status = "PUBLISHED"
         event.processed_at = now
@@ -242,7 +242,7 @@ class OutboxService:
             )
             .execution_options(synchronize_session=False)
         )
-        if res.rowcount != 1:
+        if getattr(res, "rowcount", 0) != 1:
             raise ValueError("lease_ownership_lost")
         event.status = new_status
         event.error_message = err
