@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKeyConstraint, String, Uuid
+from sqlalchemy import ForeignKeyConstraint, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -15,6 +15,12 @@ class Member(TenantMixin, Base):
     email: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     phone: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="LEAD")
+
+    _model_table_args = (
+        UniqueConstraint(
+            "tenant_id", "member_number", name="uq_members_tenant_member_number"
+        ),
+    )
 
 class Tag(TenantMixin, Base):
     __tablename__ = "member_tags"
