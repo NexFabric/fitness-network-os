@@ -26,8 +26,8 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 11 | Remove money floats | 🟢 LOCKED (PR #17) |
 | 12 | Real idempotency engine | 🟢 LOCKED (PR #19 merge `227f42e`) |
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
-| 14 | Member / gym core | **IN PROGRESS** |
-| 15 | Outbox / inbox / jobs | After 14 |
+| 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
+| 15 | Outbox / inbox / jobs | **IN PROGRESS** |
 | 16 | Notifications & reports API | |
 | 17 | Real API V1 routers completion | |
 | 18 | Vertical slice E2E | |
@@ -61,12 +61,18 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Validate → entitlement check → AccessAttempt (+ Checkin)  
 - Details: `backend/docs/plans/phase13_qr_access.md`
 
-## Phase 14 (active)
+## Phase 14 — LOCKED
 
 - Member CRUD + status transitions, tags/notes, consent records  
 - Locations + Staff user linking (User ≠ Member)  
 - UNIQUE(tenant_id, member_number), UNIQUE(tenant_id, user_id) on staff  
-- Details: `backend/docs/plans/phase14_member_gym_core.md`  
+- Details: `backend/docs/plans/phase14_member_gym_core.md`
+
+## Phase 15 (active)
+
+- Transactional outbox enqueue/claim/publish with SKIP LOCKED  
+- Inbox exactly-once receive + handler dispatch  
+- Details: `backend/docs/plans/phase15_outbox_inbox.md`  
 
 ## Non-negotiables
 

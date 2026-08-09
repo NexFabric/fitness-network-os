@@ -1,6 +1,6 @@
 # Phase 14 — Member / Gym Core Completion
 
-**Status:** IN PROGRESS (`feat/phase14-member-gym-core`)  
+**Status:** 🟢 LOCKED (PR #21 merge `e332cf5`)  
 **Depends on:** Phase 13 LOCKED (QR & Access)
 
 ## Scope
