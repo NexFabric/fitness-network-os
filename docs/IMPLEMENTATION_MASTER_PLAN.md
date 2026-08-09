@@ -23,9 +23,9 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 8 | Membership domain | CI VERIFIED |
 | 9 | Entitlement engine | CI VERIFIED (P1 prep before 13) |
 | 10 | Finance domain | CI VERIFIED (P1 audit ledger) |
-| 11 | Remove money floats | Closure on PR #17 (expand/contract + strict money) |
-| 12 | Real idempotency engine | **Next after Phase 11 LOCKED** |
-| 13 | QR & access engine | After 12 |
+| 11 | Remove money floats | 🟢 LOCKED (PR #17) |
+| 12 | Real idempotency engine | 🟢 LOCKED (PR #19 merge `227f42e`) |
+| 13 | QR & access engine | **IN PROGRESS** after Phase 12 |
 | 14 | Member / gym core | After 13 |
 | 15 | Outbox / inbox / jobs | After 14 |
 | 16 | Notifications & reports API | |
@@ -46,13 +46,20 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Real PG migration reconciliation test + expand schema guard  
 - Details: `docs/plans/phase11_money_floats.md`
 
-## Phase 12 (next — do not start early)
+## Phase 12 — LOCKED
 
-- New `IdempotencyRecord` (not legacy key-only model)  
-- `UNIQUE(tenant_id, operation, key)` + request_hash + PROCESSING/SUCCEEDED/FAILED  
-- Unit of Work; domain services **flush only**  
-- Integrate: invoice, payment, refund, credit, renewal, entitlement consume  
-- Concurrency exit: 100 parallel identical keys → 1 mutation  
+- `IdempotencyRecord` UNIQUE(tenant_id, operation, key) + request_hash + lease  
+- Flush-only service + `run_idempotent` UoW  
+- Wired: finance invoice/payment/refund/credit + entitlement consume  
+- Details: `backend/docs/plans/phase12_idempotency.md`
+
+## Phase 13 (active)
+
+- Short-lived signed QR (`exp`+`jti` required); HMAC local ref / future KMS  
+- Key lifecycle ACTIVE → VERIFY_ONLY → REVOKED  
+- `qr_jti_replays` tenant-scoped replay protection  
+- Validate → entitlement check → AccessAttempt (+ Checkin)  
+- Details: `backend/docs/plans/phase13_qr_access.md`  
 
 ## Non-negotiables
 

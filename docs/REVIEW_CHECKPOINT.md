@@ -1,7 +1,7 @@
-# Review Checkpoint — After Phase 8–11
+# Review Checkpoint — Phase 12 LOCKED / Phase 13 active
 
 **Date:** 2026-08-09  
-**Purpose:** Human review stop before Phase 12 (Idempotency Engine).
+**Purpose:** Track sequential locks through Phase 13 (QR & Access).
 
 ## Locked / CI verified on `main`
 
@@ -10,40 +10,19 @@
 | Phase 8 Membership | [#13](https://github.com/NexFabric/fitness-network-os/pull/13) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 9 Entitlements | [#14](https://github.com/NexFabric/fitness-network-os/pull/14) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 10 Finance | [#15](https://github.com/NexFabric/fitness-network-os/pull/15) | yes | 🟢 LOCKED / CI VERIFIED |
-| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | **MERGED** `607b087` | 🟢 LOCKED / CI VERIFIED |
+| Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | `607b087` | 🟢 LOCKED / CI VERIFIED |
+| Phase 12 Idempotency | [#19](https://github.com/NexFabric/fitness-network-os/pull/19) | `227f42e` | 🟢 LOCKED / CI VERIFIED |
 
-## Phase 11 — LOCKED
+## Phase 13 — IN PROGRESS
 
-- Branch: `feat/phase11-remove-money-floats`
-- Final closure:
-  - **EXPAND only** head `f7a8b9c0d1e2` — no no-op placeholder revision
-  - CONTRACT = **future NEW revision** (never edit applied migration)
-  - Real PG old-schema → seed → upgrade → reconcile test
-  - Expand schema guard (legacy + new columns coexist)
-  - StrictInt money + BasisPoints
-  - Pre-production migration exception documented (no dual-write claim)
-  - EntitlementService flush-only
+- Branch: `feat/phase13-qr-access-engine`
+- Short-lived HMAC QR, jti replay, key rotation, AccessAttempt/Checkin
+- Plan: `backend/docs/plans/phase13_qr_access.md`
 
 ## Do not start yet
 
-- Phase 12 — Real Idempotency Engine (until Phase 11 LOCKED on main)  
-- Phase 13+ (QR, Member core, Outbox, etc.)
-
-## Suggested review focus
-
-1. Expand/contract correctness (no DROP in expand rev)  
-2. Strict money coercion rejection  
-3. Finance ledger audit debt (allocation mutation on refund) — P1 later  
-4. Legacy `Entitlement` model deprecation — before Phase 13
+- Phase 14+ (Member core, Outbox, etc.) until Phase 13 LOCKED
 
 ## Local verification notes
 
 - Postgres test DB often on Docker port **5433**  
-- Full suite last local run (pre-review): 60–67 passed depending on suite contents after Phase 10/11
-
-## After review
-
-1. Merge PR #17 when green  
-2. Confirm `main` CI green  
-3. Mark Phase 11 🟢 CI VERIFIED in checklist  
-4. Only then open Phase 12  

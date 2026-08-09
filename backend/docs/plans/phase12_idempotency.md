@@ -1,6 +1,6 @@
 # Phase 12 — Real Idempotency Engine
 
-**Status:** IN PROGRESS (`feat/phase12-idempotency-engine`)
+**Status:** 🟢 LOCKED (PR #19 merge `227f42e`)
 
 ## Design
 
