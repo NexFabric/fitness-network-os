@@ -1,7 +1,7 @@
 # Review Checkpoint — Main status
 
 **Date:** 2026-08-10  
-**Main HEAD:** `398e858`  
+**Main HEAD:** `4120b7f`  
 **Alembic head:** `q0d1e2f3a4b5`
 
 ## Merged on main (truth)
