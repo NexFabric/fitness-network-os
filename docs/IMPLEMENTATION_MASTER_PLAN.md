@@ -18,7 +18,7 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then **16 Notifications & Reports**  
+**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then merge **16 Notifications & Reports** (already 🟠 IN PROGRESS on `feat/phase16-notifications-reports`).  
 **Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE.
 
 ---
@@ -37,7 +37,7 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
 | 15.5 | Cross-cutting integrity closure | 🟡 **PR CI GREEN** (`ffba0a8`) — not LOCKED until merge |
-| 16 | Notifications & reports API | ⬜ after 15.5 LOCKED |
+| 16 | Notifications & reports API | 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (merge after 15.5 LOCKED) |
 | 17 | Real API V1 routers completion | ⬜ |
 | 18 | Vertical slice E2E | ⬜ |
 | 19–20 | Admin Web / Scanner PWA MVP | ⬜ |
@@ -104,12 +104,22 @@ Delivered on branch (do not treat as main LOCKED yet):
 
 Details: `backend/docs/plans/phase15_5_integrity_closure.md`
 
-### Phase 16 — AFTER 15.5 LOCKED (not started)
+### Phase 16 — 🟠 IN PROGRESS (merge after 15.5 LOCKED)
 
-- Notification templates / deliveries service + API  
-- Report definitions / runs (export hooks)  
-- Prefer Outbox for async delivery; domain → Event → Notification (no WhatsApp shortcuts)  
-- No generic public `/inbox` reintroduction; provider webhooks only  
+**Branch:** `feat/phase16-notifications-reports` · stacked on 15.5; **merge order: 15.5 first, then 16**.
+
+Waves:
+
+- **16A** Contracts/models (templates, deliveries, report definitions/runs; event registry; permissions)  
+- **16B** Service schedule + outbox (`notification.requested.v1` consumer)  
+- **16C** Adapters — **log provider only** (no real WhatsApp/SMS/Email SDK)  
+- **16D** Reports — definitions + async runs via outbox; MVP export metadata  
+- **16E** Tests/CI (dedupe, retry/DEAD, RLS, RBAC, no public generic inbox)
+
+Architecture: **Domain → Outbox → Notification consumer → Adapter**.  
+No generic public `/inbox`; provider webhooks later only.
+
+Details: `backend/docs/plans/phase16_notifications_reports.md`
 
 ---
 

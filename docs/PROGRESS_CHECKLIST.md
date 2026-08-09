@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-10  
 **Main HEAD (docs sync base):** `af8f809` (Phase 8–15 LOCKED)  
-**Active branch work:** Phase **15.5** on PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) head `ffba0a8`  
+**Active branch work:** Phase **15.5** on PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) head `ffba0a8`; Phase **16** 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (stacked; merge **after** 15.5 LOCKED)  
 **Alembic head (15.5 branch):** `p9c0d1e2f3a4` (after `n7…` + `o8…`)
 
 **Maturity Levels:**
@@ -25,7 +25,8 @@
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
 | Phase 15.5 integrity closure | 🟡 **CODE + PR CI GREEN** (`ffba0a8`) — **not LOCKED** (await human APPROVE + merge + main CI) |
-| Phase 16–26 | ⬜ NOT STARTED (16 after 15.5 LOCKED) |
+| Phase 16 Notifications & Reports | 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (merge after 15.5 LOCKED) |
+| Phase 17–26 | ⬜ NOT STARTED |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -71,7 +72,12 @@
   - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
   - Alembic: `p9c0d1e2f3a4`
-- [ ] Phase 16: Notifications & Reports API — **only after 15.5 LOCKED on main**
+- [ ] Phase 16: Notifications & Reports API — 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (plan: `backend/docs/plans/phase16_notifications_reports.md`; **merge only after 15.5 LOCKED on main**)
+  - 16A: contracts/models + event registry + permissions
+  - 16B: schedule + outbox consumer (Domain → Outbox → Notification → Adapter)
+  - 16C: log provider adapters only (no real WhatsApp/SMS SDK)
+  - 16D: report definitions/runs (MVP export metadata)
+  - 16E: tests/CI — no generic public `/inbox`; provider webhooks later
 - [ ] Phase 17: Real API V1 Routers (completion / gaps)
 
 ### Phase 18-26: Executable MVP & Verification
@@ -157,5 +163,7 @@
 | 13 | `backend/docs/plans/phase13_qr_access.md` |
 | 14 | `backend/docs/plans/phase14_member_gym_core.md` |
 | 15 | `backend/docs/plans/phase15_outbox_inbox.md` |
+| 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
+| 16 | `backend/docs/plans/phase16_notifications_reports.md` |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |
 | Review stop | `docs/REVIEW_CHECKPOINT.md` |
