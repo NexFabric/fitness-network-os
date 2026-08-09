@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db.base import Base
+import app.models
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5433/gym_test")
 TEST_RUNTIME_DATABASE_URL = os.getenv("TEST_RUNTIME_DATABASE_URL", "postgresql+asyncpg://app_user:app_password@localhost:5433/gym_test")

@@ -127,6 +127,10 @@ jobs:
         working-directory: ./backend
         run: uv run alembic upgrade head
         
+      - name: Check for Schema Drift
+        working-directory: ./backend
+        run: uv run alembic check
+        
       - name: Check tenancy enforcement (Dynamic)
         working-directory: ./backend
         run: uv run python scripts/check_tenancy.py
