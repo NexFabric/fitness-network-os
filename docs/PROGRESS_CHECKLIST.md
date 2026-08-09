@@ -38,7 +38,7 @@
 - [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
 - [x] Phase 11: Remove Money Floats - 🟢 CI VERIFIED / LOCKED (PR #17 merge `607b087`)
-- [ ] Phase 12: Real Idempotency Engine  ← only after Phase 11 LOCKED
+- [ ] Phase 12: Real Idempotency Engine  🟠 IN PROGRESS (`feat/phase12-idempotency-engine`)
 - [ ] Phase 13: Real QR & Access Engine
 - [ ] Phase 14: Member / Gym Core Completion
 - [ ] Phase 15: Outbox / Inbox / Job Engine

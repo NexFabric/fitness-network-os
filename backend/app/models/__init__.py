@@ -29,6 +29,7 @@ from app.models.finance import (
     Refund,
 )
 from app.models.growth import Lead, Opportunity, RetentionCockpit, Task
+from app.models.idempotency import IdempotencyKey, IdempotencyRecord, IdempotencyStatus
 from app.models.location import Location
 from app.models.member import Member, Note, Tag
 from app.models.membership import (
@@ -68,6 +69,9 @@ __all__ = [
     "EntitlementDefinition",
     "EntitlementTransaction",
     "EntitlementWallet",
+    "IdempotencyKey",
+    "IdempotencyRecord",
+    "IdempotencyStatus",
     "InboxEvent",
     "Invoice",
     "InvoiceDiscount",

@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
+from app.api.idempotency_uow import materialize_replay, run_idempotent
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
 from app.schemas.finance import (
@@ -25,6 +26,12 @@ from app.schemas.finance import (
     RefundResponse,
 )
 from app.services.finance import FinanceService
+from app.services.idempotency import (
+    FINANCE_CREDIT_ISSUE,
+    FINANCE_INVOICE_CREATE,
+    FINANCE_PAYMENT_CREATE,
+    FINANCE_REFUND_CREATE,
+)
 
 router = APIRouter()
 
@@ -81,6 +88,7 @@ async def create_billing_account(
 @router.post("/invoices", response_model=InvoiceResponse)
 async def create_invoice(
     body: InvoiceCreate,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -88,24 +96,45 @@ async def create_invoice(
 ):
     _require(current_user, tenant_id, "finance:write")
     svc = FinanceService(db)
-    try:
-        inv = await svc.create_invoice(
-            tenant_id,
-            body.billing_account_id,
-            [item.model_dump() for item in body.items],
-            currency=body.currency,
-            due_date=body.due_date,
-            membership_id=body.membership_id,
-            discount_code=body.discount_code,
-            discount_amount_minor=body.discount_amount_minor,
-            idempotency_key=idempotency_key,
-            issue=body.issue,
-        )
+    payload = body.model_dump(mode="json")
+
+    async def _biz():
+        try:
+            inv = await svc.create_invoice(
+                tenant_id,
+                body.billing_account_id,
+                [item.model_dump() for item in body.items],
+                currency=body.currency,
+                due_date=body.due_date,
+                membership_id=body.membership_id,
+                discount_code=body.discount_code,
+                discount_amount_minor=body.discount_amount_minor,
+                idempotency_key=idempotency_key,
+                issue=body.issue,
+            )
+            await db.flush()
+            await db.refresh(inv, attribute_names=["items"])
+            resp = _invoice_response(inv)
+            return resp, 200, resp.model_dump(mode="json")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+    if not idempotency_key:
+        result, _, _ = await _biz()
         await db.commit()
-        await db.refresh(inv, attribute_names=["items"])
-        return _invoice_response(inv)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        return result
+
+    out = await run_idempotent(
+        db,
+        tenant_id=tenant_id,
+        operation=FINANCE_INVOICE_CREATE,
+        key=idempotency_key,
+        request_payload=payload,
+        business=_biz,
+        resource_type="invoice",
+        resource_id_from_result=lambda r: r.id if hasattr(r, "id") else None,
+    )
+    return materialize_replay(out, response)
 
 
 @router.post("/invoices/{invoice_id}/issue", response_model=InvoiceResponse)
@@ -147,6 +176,7 @@ async def void_invoice(
 @router.post("/payments", response_model=PaymentResponse)
 async def create_payment(
     body: PaymentCreate,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -159,29 +189,46 @@ async def create_payment(
             detail="Idempotency-Key header is required for payments.",
         )
     svc = FinanceService(db)
-    try:
-        payment = await svc.record_payment(
-            tenant_id,
-            body.billing_account_id,
-            body.amount_minor,
-            body.method,
-            currency=body.currency,
-            allocations=[a.model_dump() for a in body.allocations],
-            provider=body.provider,
-            provider_ref=body.provider_ref,
-            idempotency_key=idempotency_key,
-        )
-        await db.commit()
-        await db.refresh(payment)
-        return payment
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    payload = body.model_dump(mode="json")
+
+    async def _biz():
+        try:
+            payment = await svc.record_payment(
+                tenant_id,
+                body.billing_account_id,
+                body.amount_minor,
+                body.method,
+                currency=body.currency,
+                allocations=[a.model_dump() for a in body.allocations],
+                provider=body.provider,
+                provider_ref=body.provider_ref,
+                idempotency_key=idempotency_key,
+            )
+            await db.flush()
+            await db.refresh(payment)
+            pr = PaymentResponse.model_validate(payment)
+            return payment, 200, pr.model_dump(mode="json")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+    out = await run_idempotent(
+        db,
+        tenant_id=tenant_id,
+        operation=FINANCE_PAYMENT_CREATE,
+        key=idempotency_key,
+        request_payload=payload,
+        business=_biz,
+        resource_type="payment",
+        resource_id_from_result=lambda p: p.id,
+    )
+    return materialize_replay(out, response)
 
 
 @router.post("/payments/{payment_id}/refunds", response_model=RefundResponse)
 async def refund_payment(
     payment_id: UUID,
     body: RefundCreate,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -194,25 +241,42 @@ async def refund_payment(
             detail="Idempotency-Key header is required for refunds.",
         )
     svc = FinanceService(db)
-    try:
-        refund = await svc.refund_payment(
-            tenant_id,
-            payment_id,
-            body.amount_minor,
-            idempotency_key,
-            reason=body.reason,
-            actor_id=current_user.id,
-        )
-        await db.commit()
-        await db.refresh(refund)
-        return refund
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    payload = {"payment_id": str(payment_id), **body.model_dump(mode="json")}
+
+    async def _biz():
+        try:
+            refund = await svc.refund_payment(
+                tenant_id,
+                payment_id,
+                body.amount_minor,
+                idempotency_key,
+                reason=body.reason,
+                actor_id=current_user.id,
+            )
+            await db.flush()
+            await db.refresh(refund)
+            rr = RefundResponse.model_validate(refund)
+            return refund, 200, rr.model_dump(mode="json")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+    out = await run_idempotent(
+        db,
+        tenant_id=tenant_id,
+        operation=FINANCE_REFUND_CREATE,
+        key=idempotency_key,
+        request_payload=payload,
+        business=_biz,
+        resource_type="refund",
+        resource_id_from_result=lambda r: r.id,
+    )
+    return materialize_replay(out, response)
 
 
 @router.post("/credits", response_model=CreditNoteResponse)
 async def issue_credit(
     body: CreditNoteCreate,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -225,21 +289,37 @@ async def issue_credit(
             detail="Idempotency-Key header is required for credits.",
         )
     svc = FinanceService(db)
-    try:
-        note = await svc.issue_credit(
-            tenant_id,
-            body.billing_account_id,
-            body.amount_minor,
-            idempotency_key,
-            currency=body.currency,
-            reason=body.reason,
-            actor_id=current_user.id,
-        )
-        await db.commit()
-        await db.refresh(note)
-        return note
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    payload = body.model_dump(mode="json")
+
+    async def _biz():
+        try:
+            note = await svc.issue_credit(
+                tenant_id,
+                body.billing_account_id,
+                body.amount_minor,
+                idempotency_key,
+                currency=body.currency,
+                reason=body.reason,
+                actor_id=current_user.id,
+            )
+            await db.flush()
+            await db.refresh(note)
+            nr = CreditNoteResponse.model_validate(note)
+            return note, 200, nr.model_dump(mode="json")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
+    out = await run_idempotent(
+        db,
+        tenant_id=tenant_id,
+        operation=FINANCE_CREDIT_ISSUE,
+        key=idempotency_key,
+        request_payload=payload,
+        business=_biz,
+        resource_type="credit_note",
+        resource_id_from_result=lambda n: n.id,
+    )
+    return materialize_replay(out, response)
 
 
 @router.post("/credits/{credit_id}/apply")
