@@ -37,7 +37,7 @@
 - [x] Phase 8: Membership Domain Correctness - 🟢 CI VERIFIED
 - [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
-- [x] Phase 11: Remove Money Floats - 🟠 FINAL CLOSURE (PR #17; CONTRACT = future new rev; pre-prod expand exception)
+- [x] Phase 11: Remove Money Floats - 🟢 CI VERIFIED / LOCKED (PR #17 merge `607b087`)
 - [ ] Phase 12: Real Idempotency Engine  ← only after Phase 11 LOCKED
 - [ ] Phase 13: Real QR & Access Engine
 - [ ] Phase 14: Member / Gym Core Completion
@@ -81,7 +81,8 @@
 - Partial Payments - 🟢 CI VERIFIED (Phase 10)
 - Refund, Credit & Discount Logic - 🟢 CI VERIFIED (Phase 10)
 - Reconciliation - 🟢 CI VERIFIED (Phase 10)
-- No money floats (amount_minor) - 🟠 IMPLEMENTED (Phase 11 / PR #17)
+- No money floats (amount_minor) - 🟢 CI VERIFIED (Phase 11)
+  - Note (P2): Legacy CRM Opportunity float backfill is best-effort (±1 minor possible); not financial ledger amounts.
 
 ### Wave 4 — Access
 - QR Credential Issuer & Key Rotation - 🟡 MODEL
