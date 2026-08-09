@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, StrictInt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
-from app.core.authorization import AuthorizationService, SecurityException
+from app.core.authorization import AuthorizationService
 from app.models.user import User
 from app.services.access import AccessService
 from app.services.member import MemberService
@@ -15,10 +15,8 @@ router = APIRouter()
 
 
 def _require(user: User, tenant_id: UUID, permission: str) -> None:
-    if not AuthorizationService.is_authorized(
-        user=user, permission=permission, resource_tenant_id=tenant_id
-    ):
-        raise SecurityException()
+    """Tenant-scoped staff permission check (non-:self)."""
+    AuthorizationService.require_tenant(user, permission, tenant_id)
 
 
 class IssueQrRequest(BaseModel):
@@ -119,8 +117,14 @@ async def issue_qr_self(
     """Member self-QR: requires access:issue:self; never accepts body.member_id.
 
     Resolves Member via members.user_id == current_user.id within tenant.
+    Ownership proof: resource_owner_id=current_user.id (required for *:self).
     """
-    _require(current_user, tenant_id, "access:issue:self")
+    AuthorizationService.require_self(
+        current_user,
+        "access:issue:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
     members = MemberService(db)
     member = await members.get_member_by_user_id(tenant_id, current_user.id)
     if member is None:

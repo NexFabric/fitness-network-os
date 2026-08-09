@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, StrictInt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
-from app.core.authorization import AuthorizationService, SecurityException
+from app.core.authorization import AuthorizationService
 from app.models.user import User
 from app.services.entitlement import EntitlementService
 from app.services.member import MemberService
@@ -36,13 +36,6 @@ class MeEntitlementAccessResponse(BaseModel):
     member_id: UUID
 
 
-def _require(user: User, tenant_id: UUID, permission: str) -> None:
-    if not AuthorizationService.is_authorized(
-        user=user, permission=permission, resource_tenant_id=tenant_id
-    ):
-        raise SecurityException()
-
-
 @router.post(
     "/entitlements/check",
     response_model=MeEntitlementAccessResponse,
@@ -53,8 +46,17 @@ async def check_my_entitlement(
     current_user: User = Depends(get_current_user),
     tenant_id: UUID = Depends(get_tenant_id),
 ):
-    """Self entitlement check: entitlements:check:self only; no path member_id."""
-    _require(current_user, tenant_id, "entitlements:check:self")
+    """Self entitlement check: entitlements:check:self only; no path member_id.
+
+    Ownership is proven via current_user.id (bound member resolved server-side).
+    """
+    # resource_owner_id = caller user id — required for *:self grants
+    AuthorizationService.require_self(
+        current_user,
+        "entitlements:check:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
     member = await MemberService(db).get_member_by_user_id(tenant_id, current_user.id)
     if member is None:
         raise HTTPException(

@@ -149,6 +149,178 @@ def test_authorization_member_is_authorized_negative_for_members_read():
     )
 
 
+# --- Phase 15.5D P1-B: real *:self ownership primitive ---
+
+
+def test_self_perm_without_owner_denied():
+    """MEMBER with entitlements:check:self + tenant match but no owner → DENY."""
+    tenant_id = uuid4()
+    user = _user_with_role(
+        "MEMBER", ["entitlements:check:self", "access:issue:self"], tenant_id
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="entitlements:check:self",
+            resource_tenant_id=tenant_id,
+        )
+        is False
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="access:issue:self",
+            resource_tenant_id=tenant_id,
+            resource_owner_id=None,
+        )
+        is False
+    )
+
+
+def test_self_perm_wrong_owner_denied():
+    """MEMBER with :self + same tenant + other user's id → DENY (BOLA)."""
+    tenant_id = uuid4()
+    user = _user_with_role(
+        "MEMBER", ["entitlements:check:self", "access:issue:self"], tenant_id
+    )
+    other_user_id = uuid4()
+    assert other_user_id != user.id
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="entitlements:check:self",
+            resource_tenant_id=tenant_id,
+            resource_owner_id=other_user_id,
+        )
+        is False
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="access:issue:self",
+            resource_tenant_id=tenant_id,
+            resource_owner_id=other_user_id,
+        )
+        is False
+    )
+
+
+def test_self_perm_correct_owner_allowed():
+    """MEMBER with :self + same tenant + resource_owner_id=self → ALLOW."""
+    tenant_id = uuid4()
+    user = _user_with_role(
+        "MEMBER", ["entitlements:check:self", "access:issue:self"], tenant_id
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="entitlements:check:self",
+            resource_tenant_id=tenant_id,
+            resource_owner_id=user.id,
+        )
+        is True
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="access:issue:self",
+            resource_tenant_id=tenant_id,
+            resource_owner_id=user.id,
+        )
+        is True
+    )
+
+
+def test_staff_tenant_perm_works_without_owner():
+    """GYM_ADMIN with entitlements:check (no :self) + tenant match → ALLOW w/o owner."""
+    tenant_id = uuid4()
+    data = _load_matrix()
+    admin_perms = list(data["roles"]["GYM_ADMIN"]["permissions"])
+    # Ensure staff grant is present
+    if "entitlements:check" not in admin_perms:
+        admin_perms.append("entitlements:check")
+    user = _user_with_role("GYM_ADMIN", admin_perms, tenant_id)
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="entitlements:check",
+            resource_tenant_id=tenant_id,
+        )
+        is True
+    )
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="access:issue",
+            resource_tenant_id=tenant_id,
+        )
+        is True
+    )
+
+
+def test_self_perm_cross_tenant_denied():
+    """MEMBER with :self + correct owner but wrong tenant → DENY."""
+    tenant_id = uuid4()
+    other_tenant = uuid4()
+    user = _user_with_role("MEMBER", ["entitlements:check:self"], tenant_id)
+    assert (
+        AuthorizationService.is_authorized(
+            user,
+            permission="entitlements:check:self",
+            resource_tenant_id=other_tenant,
+            resource_owner_id=user.id,
+        )
+        is False
+    )
+
+
+def test_require_self_and_require_tenant_helpers():
+    from app.core.authorization import SecurityException
+
+    tenant_id = uuid4()
+    member = _user_with_role("MEMBER", ["entitlements:check:self"], tenant_id)
+    admin = _user_with_role("GYM_ADMIN", ["entitlements:check"], tenant_id)
+
+    # require_self ALLOW
+    AuthorizationService.require_self(
+        member,
+        "entitlements:check:self",
+        tenant_id,
+        resource_owner_id=member.id,
+    )
+    # require_self wrong owner
+    try:
+        AuthorizationService.require_self(
+            member,
+            "entitlements:check:self",
+            tenant_id,
+            resource_owner_id=uuid4(),
+        )
+        assert False, "expected SecurityException"
+    except SecurityException:
+        pass
+
+    # require_self rejects non-self permission names
+    try:
+        AuthorizationService.require_self(
+            admin, "entitlements:check", tenant_id, resource_owner_id=admin.id
+        )
+        assert False, "expected SecurityException"
+    except SecurityException:
+        pass
+
+    # require_tenant ALLOW for staff
+    AuthorizationService.require_tenant(admin, "entitlements:check", tenant_id)
+    # require_tenant rejects :self misuse
+    try:
+        AuthorizationService.require_tenant(
+            member, "entitlements:check:self", tenant_id
+        )
+        assert False, "expected SecurityException"
+    except SecurityException:
+        pass
+
+
 def test_authorization_gym_owner_denied_outbox_dispatch():
     tenant_id = uuid4()
     data = _load_matrix()

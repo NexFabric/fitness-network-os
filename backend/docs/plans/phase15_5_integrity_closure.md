@@ -1,9 +1,9 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** IN REVIEW on PR #25 — **15.5C trust boundary delta applied**  
+**Status:** IN REVIEW on PR #25 — **15.5D hardening (3 P1) applied**  
 **Base:** main `af8f809` (Phase 8–15 LOCKED)  
 **Blocks:** Phase 16 Notifications / Reports  
-**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4`
+**Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (15.5D: code-only, no new revision)
 
 ## Goal
 
@@ -17,7 +17,9 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 | 1b | YAML↔DB parity | `check_permissions_db.py` checks missing **and** extra grants. |
 | 1c | **15.5C Event ingress** | Generic `POST /outbox/events` + `/outbox/inbox` **removed** from public API. GYM_* lack `outbox:*` / `inbox:*`. `OutboxService` in-process only. |
 | 1d | **15.5C MEMBER BOLA** | MEMBER lacks `entitlements:check` etc.; has `entitlements:check:self` + `POST /me/entitlements/check`. Cross-member path DENY tests. |
-| 1e | **15.5C event_type** | `domain.action.vN` pattern enforced on enqueue (`app.core.event_types`). |
+| 1e | **15.5C/D event_type** | Pattern **and** canonical registry on enqueue; unknown well-formed types DENY. |
+| 1f | **15.5D outbox max-attempts** | Claim filters `attempt_count < max`; stale exhausted PROCESSING → DEAD (`max_attempts_exceeded_on_claim`). |
+| 1g | **15.5D *:self scope** | `is_authorized` requires owner for `*:self`; helpers `require_self` / `require_tenant`. |
 | 2 | Idempotency atomic failure | Nested savepoint UoW; FAILED same-hash only. |
 | 3 | Outbox lease + fencing | CAS `mark_published`/`mark_failed` on `worker_id`; stale worker denied. |
 | 4 | Inbox retry + atomicity | Handler in nested savepoint; domain flushes roll back on failure. |
@@ -41,9 +43,9 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 
 ## Exit criteria
 
-- [x] Hostile PG tests (fencing, inbox atomicity, finance/entitlement, RBAC, BOLA, no public outbox)
+- [x] Hostile PG tests (fencing, crash-loop max-attempts, inbox atomicity, finance/entitlement, RBAC, BOLA, no public outbox, event registry)
 - [x] `alembic check` clean (local after migrate)
-- [ ] CI green after 15.5C push
+- [ ] CI green after 15.5D push
 - [ ] Independent human review/approve — **no protection bypass / no self-APPROVE as formal gate**
 - [ ] Merge + main CI → Phase 15.5 LOCKED → Phase 16 GO
 

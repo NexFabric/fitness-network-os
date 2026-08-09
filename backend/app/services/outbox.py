@@ -68,9 +68,7 @@ class OutboxService:
 
         if wrap_envelope:
             if is_envelope(payload):
-                validate_envelope(
-                    payload, tenant_id=tenant_id, event_type=event_type
-                )
+                validate_envelope(payload, tenant_id=tenant_id, event_type=event_type)
             else:
                 payload = build_event_envelope(
                     event_type=event_type,
@@ -131,26 +129,60 @@ class OutboxService:
         now: datetime | None = None,
         worker_id: str | None = None,
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
+        max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     ) -> list[OutboxEvent]:
-        """Claim PENDING/FAILED-due or stale PROCESSING (lease expired) with SKIP LOCKED."""
+        """Claim PENDING/FAILED-due or stale PROCESSING (lease expired) with SKIP LOCKED.
+
+        Rows with attempt_count >= max_attempts are never reclaimed. Stale
+        PROCESSING rows already at the cap are moved to DEAD so they cannot
+        sit forever after a worker crash without mark_failed.
+        """
         now = now or datetime.now(UTC)
         limit = max(1, min(limit, 200))
         worker_id = worker_id or uuid4().hex[:16]
         lease_until = now + timedelta(seconds=max(5, lease_seconds))
+        max_attempts = max(1, max_attempts)
 
-        claimable = or_(
-            and_(
-                OutboxEvent.status.in_(["PENDING", "FAILED"]),
-                or_(
-                    OutboxEvent.available_at.is_(None),
-                    OutboxEvent.available_at <= now,
-                ),
-            ),
-            and_(
+        lease_expired = or_(
+            OutboxEvent.lease_until.is_(None),
+            OutboxEvent.lease_until <= now,
+        )
+
+        # Exhausted stale PROCESSING: mark DEAD instead of infinite reclaim.
+        dead_stmt = (
+            update(OutboxEvent)
+            .where(
                 OutboxEvent.status == "PROCESSING",
-                or_(
-                    OutboxEvent.lease_until.is_(None),
-                    OutboxEvent.lease_until <= now,
+                lease_expired,
+                OutboxEvent.attempt_count >= max_attempts,
+            )
+            .values(
+                status="DEAD",
+                error_message="max_attempts_exceeded_on_claim",
+                lease_until=None,
+                worker_id=None,
+            )
+            # Keep identity-map rows consistent (sessions often use expire_on_commit=False).
+            .execution_options(synchronize_session="fetch")
+        )
+        if tenant_id is not None:
+            dead_stmt = dead_stmt.where(OutboxEvent.tenant_id == tenant_id)
+        await self.db.execute(dead_stmt)
+
+        under_max = OutboxEvent.attempt_count < max_attempts
+        claimable = and_(
+            under_max,
+            or_(
+                and_(
+                    OutboxEvent.status.in_(["PENDING", "FAILED"]),
+                    or_(
+                        OutboxEvent.available_at.is_(None),
+                        OutboxEvent.available_at <= now,
+                    ),
+                ),
+                and_(
+                    OutboxEvent.status == "PROCESSING",
+                    lease_expired,
                 ),
             ),
         )
@@ -167,13 +199,21 @@ class OutboxService:
         result = await self.db.execute(stmt)
         events = list(result.scalars().all())
         for ev in events:
+            # Defensive: never reclaim over-cap rows if filter races.
+            if (ev.attempt_count or 0) >= max_attempts:
+                ev.status = "DEAD"
+                ev.error_message = "max_attempts_exceeded_on_claim"
+                ev.lease_until = None
+                ev.worker_id = None
+                continue
             ev.status = "PROCESSING"
             ev.attempt_count = (ev.attempt_count or 0) + 1
             ev.worker_id = worker_id
             ev.lease_until = lease_until
+        claimed = [ev for ev in events if ev.status == "PROCESSING"]
         if events:
             await self.db.flush()
-        return events
+        return claimed
 
     async def mark_published(
         self, event: OutboxEvent, *, worker_id: str
