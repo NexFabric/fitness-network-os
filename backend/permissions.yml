@@ -55,6 +55,12 @@ roles:
       - "locations:write"
       - "staff:read"
       - "staff:write"
+      - "notifications:read"
+      - "notifications:write"
+      - "notifications:send"
+      - "reports:read"
+      - "reports:write"
+      - "reports:run"
       # outbox/inbox: internal/service only (15.5C) — no tenant role grants
   GYM_ADMIN:
     description: "Admin of a specific gym tenant"
@@ -86,6 +92,12 @@ roles:
       - "locations:write"
       - "staff:read"
       - "staff:write"
+      - "notifications:read"
+      - "notifications:write"
+      - "notifications:send"
+      - "reports:read"
+      - "reports:write"
+      - "reports:run"
   GYM_MANAGER:
     description: "Manager of a specific gym tenant"
     permissions:
@@ -106,6 +118,10 @@ roles:
       - "members:write"
       - "locations:read"
       - "staff:read"
+      - "notifications:read"
+      - "notifications:send"
+      - "reports:read"
+      - "reports:run"
   ACCOUNTANT:
     description: "Accountant for a gym"
     permissions:
@@ -118,6 +134,7 @@ roles:
       - "finance:credit"
       - "finance:manage"
       - "finance:reconcile"
+      - "reports:read"
   FRONT_DESK:
     description: "Front desk staff"
     permissions:
@@ -134,6 +151,8 @@ roles:
       - "members:read"
       - "members:write"
       - "locations:read"
+      - "notifications:read"
+      - "notifications:send"
   TRAINER:
     description: "Trainer in a gym"
     permissions:
@@ -244,5 +263,17 @@ permissions:
     description: "Receive inbox events (provider webhooks only; not tenant HTTP)"
   - id: "inbox:read"
     description: "Read inbox status (operational; no tenant grant in 15.5C)"
+  - id: "notifications:read"
+    description: "Read notification templates and delivery status (tenant staff)"
+  - id: "notifications:write"
+    description: "Create and manage notification templates (tenant staff)"
+  - id: "notifications:send"
+    description: "Schedule notification deliveries (tenant staff)"
+  - id: "reports:read"
+    description: "Read report definitions and run status (tenant staff)"
+  - id: "reports:write"
+    description: "Create and manage report definitions (tenant staff)"
+  - id: "reports:run"
+    description: "Request report runs (tenant staff)"
   - id: "*"
     description: "Superuser wildcard"

@@ -14,8 +14,8 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-# domain.action.vN — e.g. membership.renewed.v1, payment.received.v1
-EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\.v[1-9][0-9]*$")
+# domain(.segment)+.vN — e.g. membership.renewed.v1, report.run.requested.v1
+EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.v[1-9][0-9]*$")
 
 
 @dataclass(frozen=True)
@@ -36,6 +36,7 @@ MEMBER_CREATED_V1 = "member.created.v1"
 CHECKIN_CREATED_V1 = "checkin.created.v1"
 NOTIFICATION_REQUESTED_V1 = "notification.requested.v1"
 NOTIFICATION_EMAIL_V1 = "notification.email.v1"
+REPORT_RUN_REQUESTED_V1 = "report.run.requested.v1"
 TEST_JOB_V1 = "test.job.v1"
 TEST_EVENT_V1 = "test.event.v1"
 
@@ -51,6 +52,7 @@ _EVENT_TYPE_SPECS: Final[tuple[EventTypeSpec, ...]] = (
     EventTypeSpec(CHECKIN_CREATED_V1),
     EventTypeSpec(NOTIFICATION_REQUESTED_V1),
     EventTypeSpec(NOTIFICATION_EMAIL_V1),
+    EventTypeSpec(REPORT_RUN_REQUESTED_V1),
     EventTypeSpec(TEST_JOB_V1),
     EventTypeSpec(TEST_EVENT_V1),
 )
@@ -78,7 +80,8 @@ def validate_event_type(event_type: str) -> str:
         raise EventTypeValidationError("event_type_required")
     if not EVENT_TYPE_PATTERN.fullmatch(event_type):
         raise EventTypeValidationError(
-            f"event_type_must_match_domain.action.vN (got {event_type!r})"
+            f"event_type_must_match_domain.action.vN "
+            f"(multi-segment actions allowed; got {event_type!r})"
         )
     if event_type not in REGISTERED_EVENT_TYPES:
         raise EventTypeValidationError(
