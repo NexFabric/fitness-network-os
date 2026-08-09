@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.services.authorization import AuthorizationService
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db, get_tenant_id
 from app.models.user import User
 from app.services.entitlement import EntitlementService
-from app.services.authorization import AuthorizationService
 
 router = APIRouter()
 

@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from sqlalchemy import text, select
 
 from app.models.member import Member
 from app.models.membership import (
@@ -96,7 +96,7 @@ async def setup_base_data(db_session, setup_tenant):
     db_session.add(pv)
     await db_session.commit()
     
-    return member, plan, pv
+    return member, _plan, pv
 
 @pytest.mark.asyncio
 async def test_activate_scheduled_memberships(db_session, pg_session_maker, setup_tenant, setup_base_data):
@@ -184,7 +184,7 @@ async def test_process_expirations(db_session, pg_session_maker, setup_tenant, s
 @pytest.mark.asyncio
 async def test_process_renewals(db_session, pg_session_maker, setup_tenant, setup_base_data):
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     next_pv = PlanVersion(
@@ -331,7 +331,7 @@ async def test_two_tenant_isolation(db_session, pg_session_maker, setup_tenant, 
 async def test_renewal_error_isolation(db_session, pg_session_maker, setup_tenant, setup_base_data):
     """Test where 'first renewal fails, second succeeds' to prove the error isolation works."""
     tenant_id = setup_tenant.id
-    member, plan, pv = setup_base_data
+    member, _plan, pv = setup_base_data
     now = datetime.now(UTC)
     
     # First renewal with non-existent next_plan_version_id (will fail)

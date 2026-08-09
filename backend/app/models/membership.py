@@ -14,6 +14,7 @@ from sqlalchemy import (
     text,
 )
 
+
 class RenewalStatus(str, enum.Enum):
     PENDING = "PENDING"
     PROCESSING = "PROCESSING"

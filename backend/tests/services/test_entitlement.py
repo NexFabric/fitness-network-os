@@ -1,9 +1,15 @@
 import asyncio
 from uuid import uuid4
+
 import pytest
-from httpx import AsyncClient
+
+from app.models.entitlement import (
+    EntitlementDefinition,
+    EntitlementType,
+    EntitlementWallet,
+)
 from app.services.entitlement import EntitlementService
-from app.models.entitlement import EntitlementWallet, EntitlementDefinition, EntitlementType
+
 
 @pytest.mark.asyncio
 async def test_entitlement_zero_balance(db_session, rls_tenant, member):

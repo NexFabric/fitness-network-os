@@ -1,9 +1,15 @@
 from uuid import UUID
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from app.models.membership import Membership
-from app.models.entitlement import EntitlementWallet, EntitlementTransaction, EntitlementDefinition
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.entitlement import (
+    EntitlementDefinition,
+    EntitlementTransaction,
+    EntitlementWallet,
+)
+
 
 class EntitlementService:
     @staticmethod

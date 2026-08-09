@@ -6,6 +6,13 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
+from app.models.entitlement import (
+    EntitlementDefinition,
+    EntitlementTransaction,
+    EntitlementWallet,
+    MembershipEntitlement,
+    PlanEntitlement,
+)
 from app.models.federation import ComplianceRecord, NetworkAlert, PassportConfig
 from app.models.finance import (
     BillingAccount,
@@ -25,14 +32,6 @@ from app.models.membership import (
     MembershipStatusHistory,
     Plan,
     PlanVersion,
-)
-
-from app.models.entitlement import (
-    EntitlementDefinition,
-    PlanEntitlement,
-    MembershipEntitlement,
-    EntitlementWallet,
-    EntitlementTransaction,
 )
 from app.models.notification import NotificationDelivery, NotificationTemplate
 from app.models.organization import Organization
@@ -93,3 +92,52 @@ __all__ = [
     "UserSession"
 ]
 
+__all__ = [
+    "AuditLog",
+    "AuthCredential",
+    "ComplianceRecord",
+    "ConsentDefinition",
+    "ConsentRecord",
+    "ConsentVersion",
+    "CredentialType",
+    "EndpointStatus",
+    "EntitlementDefinition",
+    "EntitlementTransaction",
+    "EntitlementWallet",
+    "GymLocation",
+    "LocationStatus",
+    "Member",
+    "MemberStatus",
+    "Membership",
+    "MembershipEntitlement",
+    "MembershipPeriod",
+    "MembershipRenewal",
+    "MembershipStatus",
+    "MembershipTimeline",
+    "MfaChallenge",
+    "MfaStatus",
+    "NetworkAlert",
+    "PassportConfig",
+    "Permission",
+    "Plan",
+    "PlanEntitlement",
+    "PlanStatus",
+    "PlanVersion",
+    "RenewalStatus",
+    "Role",
+    "RolePermission",
+    "Scope",
+    "Session",
+    "Subscription",
+    "Tenant",
+    "TenantStatus",
+    "TimelineEventType",
+    "User",
+    "UserRole",
+    "UserRoleMapping",
+    "UserStatus",
+    "WebhookDelivery",
+    "WebhookEndpoint",
+    "WebhookEvent",
+    "WebhookEventPayload"
+]
