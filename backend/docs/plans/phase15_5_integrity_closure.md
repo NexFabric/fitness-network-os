@@ -1,7 +1,7 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** 🟢 **CI VERIFIED / LOCKED** on main merge `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25))  
-**Base at lock:** main `125a8c6`  
+**Status:** 🟢 **CI VERIFIED / LOCKED** on main merge `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25)); lock docs PR [#27](https://github.com/NexFabric/fitness-network-os/pull/27)  
+**Base at lock:** main `125a8c6` (docs lineage `f59f1f7`)  
 **Unblocks:** Phase 16 Notifications / Reports (branch PR #26 — not LOCKED)  
 **Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (head on main; 15.5D was code-only)
 
@@ -47,7 +47,8 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 - [x] `alembic check` clean (local after migrate)
 - [x] PR CI green after 15.5D (`ffba0a8` — Security, Lint, Unit/Integration, CodeQL)
 - [x] Independent human review/approve + merge to main
-- [x] Phase 15.5 **LOCKED** on main `125a8c6` · alembic head `p9c0d1e2f3a4` → Phase 16 GO (branch)
+- [x] Main post-merge CI green (run on `125a8c6`)
+- [x] Phase 15.5 **LOCKED** · alembic head `p9c0d1e2f3a4` → Phase 16 GO (branch)
 
 ## Terminology
 
@@ -60,6 +61,7 @@ Do not claim global exactly-once.
 |-------|--------|
 | PR | #25 |
 | Merge SHA | `125a8c6` |
+| Lock docs | PR #27 → `f59f1f7` |
 | Alembic head | `p9c0d1e2f3a4` |
 | Maturity | 🟢 CI VERIFIED / LOCKED |
-| Production-ready | **No** (Phase 16–26 remaining) |
+| Production-ready | **No** (Phase 16–26 remaining; Phase 26 NOT PASSED) |
