@@ -1,7 +1,8 @@
 # Phase 13 — Real QR & Access Engine
 
 **Status:** 🟢 LOCKED (PR #20 merge `babc33c`)  
-**Depends on:** Phase 12 LOCKED (Idempotency)
+**Depends on:** Phase 12 LOCKED (Idempotency)  
+**Migrations:** `i2b3c4d5e6f7` (QR/access expand) + `j3c4d5e6f7a8` (access permissions)
 
 ## Spec anchors (MASTER_SPEC)
 

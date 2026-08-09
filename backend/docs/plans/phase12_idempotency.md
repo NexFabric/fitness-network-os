@@ -1,6 +1,8 @@
 # Phase 12 — Real Idempotency Engine
 
-**Status:** 🟢 LOCKED (PR #19 merge `227f42e`)
+**Status:** 🟢 LOCKED (PR #19 merge `227f42e`)  
+**Main docs sync:** 2026-08-09 / HEAD includes through Phase 15 lock  
+**Migration:** `h1a2b3c4d5e6` (idempotency_records + legacy keys table)
 
 ## Design
 

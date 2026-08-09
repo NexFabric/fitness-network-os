@@ -1,5 +1,8 @@
 # FITNESS NETWORK OS — WAVE 5.5B CORE CORRECTNESS & EXECUTABLE MVP
 
+> **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.  
+> Live progress: `docs/PROGRESS_CHECKLIST.md` · next **Phase 16**. This file remains historical guidance for Wave 5.5B intent; do not use it as current phase status.
+
 This document supersedes previous rapid-development instructions. The goal is to harden the existing models into a true, executable MVP.
 
 ## CORE PRINCIPLE

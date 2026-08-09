@@ -1,7 +1,8 @@
 # Phase 15 — Outbox / Inbox / Job Engine
 
-**Status:** 🟢 LOCKED (PR #22 merge `67b8214`)  
-**Depends on:** Phase 14 LOCKED
+**Status:** 🟢 LOCKED (PR #22 merge `67b8214`; docs PR #23)  
+**Depends on:** Phase 14 LOCKED  
+**Migrations:** `l5e6f7a8b9c0` (expand) + `m6f7a8b9c0d1` (permissions) — **current alembic head**
 
 ## Design
 

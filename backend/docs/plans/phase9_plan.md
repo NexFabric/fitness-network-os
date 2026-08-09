@@ -1,7 +1,8 @@
 # Phase 9: Entitlement & Resolution Engine
 
-**Status: COMPLETED / CI VERIFIED (merged main via PR #14)**  
-**Supersedes:** earlier “terms_snapshot boolean only” draft narrative.
+**Status: 🟢 COMPLETED / CI VERIFIED / LOCKED (merged main via PR #14)**  
+**Supersedes:** earlier “terms_snapshot boolean only” draft narrative.  
+**Note (2026-08-09):** Phase 12–15 also LOCKED; global idempotency + QR access delivered.
 
 ## Goal
 
