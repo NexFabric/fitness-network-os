@@ -1,6 +1,6 @@
 # Phase 18 — Vertical Slice E2E (Access)
 
-**Status:** 🟡 PARTIAL (service-layer slice landed; HTTP/API orchestration deferred)  
+**Status:** 🟠 **IMPLEMENTED on branch** (service-layer slice; HTTP/API orchestration deferred) — **not LOCKED**  
 **Plan path:** `backend/docs/plans/phase18_vertical_slice_e2e.md`  
 **Test path:** `backend/tests/e2e/test_vertical_slice_access.py`  
 **Depends on:** Phase 13 QR access, Phase 14 member/gym core, Phase 15.5 trust boundaries, Phase 16 NotificationBridge helper  

@@ -19,7 +19,7 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then merge **16 Notifications & Reports** (already 🟠 IN PROGRESS on `feat/phase16-notifications-reports`).  
+**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then merge **16–20 stack** on `feat/phase16-notifications-reports` (16 residual + 17A + 18 e2e + 19/20 frontends **IMPLEMENTED on branch**, not LOCKED).  
 **Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE.
 
 ---
@@ -38,10 +38,10 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
 | 15.5 | Cross-cutting integrity closure | 🟡 **PR #25 CI GREEN** — not LOCKED until independent APPROVE + merge |
-| 16 | Notifications & reports API | 🟠 **PR #26** integrity CLEAN on branch — not LOCKED; merge after 15.5 LOCKED |
-| 17 | Real API V1 routers completion | ⬜ |
-| 18 | Vertical slice E2E | ⬜ |
-| 19–20 | Admin Web / Scanner PWA MVP | ⬜ |
+| 16 | Notifications & reports API | 🟠 **PR #26** IMPLEMENTED + integrity CLEAN on branch — not LOCKED; merge after 15.5 LOCKED |
+| 17 | Real API V1 routers completion | 🟠 **17A IMPLEMENTED on branch** (`/me/*`); 17B/C open — not LOCKED |
+| 18 | Vertical slice E2E | 🟠 **IMPLEMENTED on branch** (service-layer PG) — not LOCKED |
+| 19–20 | Admin Web / Scanner PWA MVP | 🟠 **IMPLEMENTED on branch** — not LOCKED |
 | 21–26 | CI V2, hardening, observability, exit gate | ⬜ |
 
 ---

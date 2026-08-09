@@ -1,8 +1,8 @@
 # Phase 17 — Real API V1 Completion
 
-**Status:** ⬜ PLAN OPENED (17A) — **not started** implementation-heavy work; **not LOCKED**  
+**Status:** 🟠 **IN PROGRESS / IMPLEMENTED on branch** (17A landed) — **not LOCKED**  
 **Plan path:** `backend/docs/plans/phase17_api_v1_completion.md`  
-**Opened:** 2026-08-10 (parallel to Phase 16 closeout; docs-first)  
+**Opened:** 2026-08-10 · **17A impl:** 2026-08-10 on `feat/phase16-notifications-reports`  
 **Do not claim:** production-ready (Phase 26 exit gate only)
 
 ---
@@ -73,24 +73,21 @@ Reference implementations:
 
 ## 17A — `/me/*` expansion (`require_self` only)
 
-**Status:** plan opened — **not started**  
-**Depends on:** 15.5 LOCKED; 16 merge preferred (no hard code dependency for `/me` reads)
+**Status:** 🟠 **IMPLEMENTED on branch** (2026-08-10) — **not LOCKED**  
+**Depends on:** 15.5 LOCKED for main merge; 16 merge preferred (no hard code dependency for `/me` reads)  
+**Code:** `backend/app/api/v1/endpoints/me.py` · tests `backend/tests/api/test_me_self_service.py`
 
-### Existing today
+### Existing / landed routes (17A)
 
-| Route | Perm | Notes |
-|-------|------|--------|
-| `POST /api/v1/me/entitlements/check` | `entitlements:check:self` | Bound member via `MemberService.get_member_by_user_id` |
-| `POST /api/v1/access/qr/issue-self` | `access:issue:self` (or equivalent) | Same bind pattern (not under `/me` prefix) |
-
-### Target routes (17A)
-
-| Method | Path | Permission | Behavior |
-|--------|------|------------|----------|
+| Method | Path | Perm | Notes |
+|--------|------|------|--------|
+| `GET` | `/api/v1/me/profile` | `profile:read` + owner | Thin self profile (user + bound member). No `profile:read:self` seed — authorize with `resource_owner_id=current_user.id` |
+| `GET` | `/api/v1/me/member` | `memberships:read:self` | Bound member card |
 | `GET` | `/api/v1/me/memberships` | `memberships:read:self` | List memberships for **bound** member only; no path `member_id` |
-| `GET` | `/api/v1/me/entitlements` | `entitlements:read:self` | Read entitlement/wallet snapshot for bound member (no consume) |
-| `GET` | `/api/v1/me/checkins` | `checkins:read:self` | List own check-ins **if** a checkin model/service already exists; otherwise **document defer** — do **not** build full check-in product in 17A |
-| `GET` | `/api/v1/me` (optional) | Prefer `profile:read` **only if** cleaned to self-safe pattern | Thin health/self stub: user id + bound member id + tenant; **skip** if `profile:read` remains non-`:self` / messy (see residual authz note) |
+| `GET` | `/api/v1/me/entitlements` | `entitlements:read:self` | Wallet snapshot (no consume) |
+| `GET` | `/api/v1/me/checkins` | `checkins:read:self` | List own `Checkin` rows (read-only; no write product) |
+| `POST` | `/api/v1/me/entitlements/check` | `entitlements:check:self` | Pre-existing; regression-tested |
+| `POST` | `/api/v1/access/qr/issue-self` | `access:issue:self` | Same bind pattern (not under `/me` prefix) |
 
 ### Explicit non-goals (17A)
 
@@ -118,9 +115,9 @@ query/list only where member_id == member.id AND tenant_id == tenant_id
 
 ### Exit criteria (17A)
 
-- [ ] Routes live under `me` router; no client `member_id`
-- [ ] All use `require_self` + seeded `*:self` perms
-- [ ] API + security tests green
+- [x] Routes live under `me` router; no client `member_id` (on branch)
+- [x] `*:self` routes use `require_self`; profile uses careful owner + tenant check
+- [x] API tests green on isolated PG (branch)
 - [ ] No LOCKED claim until main merge + CI
 
 ---
