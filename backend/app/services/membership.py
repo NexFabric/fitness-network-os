@@ -11,9 +11,11 @@ class MembershipService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_membership(self, membership_id: UUID) -> Membership | None:
+    async def get_membership(self, membership_id: UUID, for_update: bool = False) -> Membership | None:
         """Fetch a membership by ID."""
         stmt = select(Membership).where(Membership.id == membership_id)
+        if for_update:
+            stmt = stmt.with_for_update()
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -28,12 +30,15 @@ class MembershipService:
         """
         Freeze a membership. Changes its status to 'FROZEN'.
         """
-        membership = await self.get_membership(membership_id)
+        if expected_end_date <= start_date:
+            raise ValueError("expected_end_date must be after start_date")
+
+        membership = await self.get_membership(membership_id, for_update=True)
         if not membership:
             raise ValueError("Membership not found")
             
-        if membership.status == "FROZEN":
-            raise ValueError("Membership is already frozen")
+        if membership.status in ("FROZEN", "CANCELLED", "EXPIRED", "DRAFT"):
+            raise ValueError(f"Membership status '{membership.status}' cannot be frozen")
 
         # 1. Create Freeze Record
         freeze = MembershipFreeze(
@@ -56,11 +61,9 @@ class MembershipService:
         )
         self.session.add(history)
 
-        # 3. Update Membership
         membership.status = "FROZEN"
 
-        await self.session.commit()
-        await self.session.refresh(freeze)
+        await self.session.flush()
         return freeze
 
     async def unfreeze_membership(
@@ -72,7 +75,7 @@ class MembershipService:
         Unfreeze a membership manually. Changes status back to 'ACTIVE'
         and updates the freeze record's actual_end_date.
         """
-        membership = await self.get_membership(membership_id)
+        membership = await self.get_membership(membership_id, for_update=True)
         if not membership:
             raise ValueError("Membership not found")
 
@@ -83,18 +86,20 @@ class MembershipService:
         stmt = select(MembershipFreeze).where(
             MembershipFreeze.membership_id == membership_id,
             MembershipFreeze.actual_end_date.is_(None)
-        )
+        ).with_for_update()
         result = await self.session.execute(stmt)
         freeze = result.scalar_one_or_none()
 
-        if freeze:
-            now = datetime.now(UTC)
-            freeze.actual_end_date = now
-            
-            # Recalculate end_date logic would go here:
-            # delta = now - freeze.start_date
-            # if membership.end_date:
-            #     membership.end_date += delta
+        if not freeze:
+            raise ValueError("No active freeze record found")
+
+        now = datetime.now(UTC)
+        freeze.actual_end_date = now
+        
+        # Extend membership end_date by the duration of the freeze
+        if membership.end_date:
+            delta = now - freeze.start_date
+            membership.end_date += delta
         
         # Record Status History
         history = MembershipStatusHistory(
@@ -109,6 +114,5 @@ class MembershipService:
 
         membership.status = "ACTIVE"
         
-        await self.session.commit()
-        await self.session.refresh(membership)
+        await self.session.flush()
         return membership

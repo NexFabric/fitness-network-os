@@ -36,6 +36,8 @@ async def freeze_membership(
             reason=freeze_in.reason,
             changed_by_user_id=current_user.id
         )
+        await db.commit()
+        await db.refresh(freeze)
         return freeze
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -57,6 +59,8 @@ async def unfreeze_membership(
             membership_id=membership_id,
             changed_by_user_id=current_user.id
         )
+        await db.commit()
+        await db.refresh(membership)
         return membership
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -244,3 +244,65 @@ async def test_successful_freeze(api_client, setup_data):
     assert data["reason"] == "Going on vacation"
     assert data["tenant_id"] == str(setup_data['tenant_a'])
     assert data["membership_id"] == str(setup_data['membership_a_id'])
+
+@pytest.mark.asyncio
+async def test_non_privileged_user_cannot_freeze(api_client, setup_data, pg_engine):
+    # Create a user with FRONT_DESK role (which doesn't have memberships:write)
+    tenant_a = setup_data['tenant_a']
+    from app.models.user import User, UserSession
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    import hashlib
+    from datetime import UTC, datetime, timedelta
+    
+    token = f"token_front_{uuid4().hex[:6]}"
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    
+    async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as db:
+        user_fd = User(
+            email=f"frontdesk-{uuid4().hex[:6]}@example.com",
+            hashed_password="pw",
+            is_active=True
+        )
+        db.add(user_fd)
+        await db.flush()
+        
+        # Create FRONT_DESK role
+        role_fd = Role(name=f"front-desk-{uuid4().hex[:6]}", is_system=True)
+        db.add(role_fd)
+        await db.flush()
+        
+        # Assign to user
+        ur = UserRole(user_id=user_fd.id, tenant_id=tenant_a, role_id=role_fd.id)
+        db.add(ur)
+        
+        # Create session
+        sess = UserSession(
+            user_id=user_fd.id,
+            token_hash=token_hash,
+            expires_at=datetime.now(UTC) + timedelta(days=1)
+        )
+        db.add(sess)
+        await db.commit()
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant_a)
+    }
+    
+    start = datetime.now(UTC)
+    end = start + timedelta(days=30)
+    
+    response = await api_client.post(
+        f"/api/v1/memberships/{setup_data['membership_a_id']}/freeze",
+        headers=headers,
+        json={
+            "start_date": start.isoformat(),
+            "expected_end_date": end.isoformat(),
+            "reason": "Going on vacation"
+        }
+    )
+    
+    # 403 Forbidden because User lacks memberships:write
+    assert response.status_code == 403
+    assert "Not enough permissions" in response.json()["detail"]

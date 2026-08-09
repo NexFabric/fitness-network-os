@@ -68,7 +68,7 @@ class AccessAttempt(TenantMixin, Base):
         ForeignKeyConstraint(["tenant_id", "device_id"], ["devices.tenant_id", "devices.id"]),
     )
 
-    member = relationship("Member")
+    member = relationship("Member", overlaps="device")
     device = relationship("Device", overlaps="member")
 
 class Checkin(TenantMixin, Base):
@@ -86,9 +86,9 @@ class Checkin(TenantMixin, Base):
         ForeignKeyConstraint(["tenant_id", "device_id"], ["devices.tenant_id", "devices.id"]),
     )
 
-    member = relationship("Member")
-    location = relationship("Location", overlaps="member")
-    device = relationship("Device", overlaps="location,member")
+    member = relationship("Member", overlaps="location,device")
+    location = relationship("Location", overlaps="member,device")
+    device = relationship("Device", overlaps="member,location")
 
 class OfflineSnapshot(TenantMixin, Base):
     __tablename__ = "offline_snapshots"

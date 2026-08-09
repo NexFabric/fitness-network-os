@@ -5,23 +5,21 @@ Revises: 45e716039e1c
 Create Date: 2026-08-09 14:39:25.129415
 
 """
-from typing import Sequence, Union
-
-from collections.abc import Sequence
-import yaml
-from pathlib import Path
 import uuid
-from datetime import datetime, timezone
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from pathlib import Path
+
+import sqlalchemy as sa
+import yaml
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = '9d407d31b6cb'
-down_revision: Union[str, Sequence[str], None] = '45e716039e1c'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '45e716039e1c'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -43,8 +41,8 @@ def upgrade() -> None:
                 "id": str(uuid.uuid4()),
                 "name": p["id"],
                 "description": p.get("description", ""),
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(UTC),
+                "updated_at": datetime.now(UTC),
             })
             
         stmt = sa.text("""
@@ -67,8 +65,8 @@ def upgrade() -> None:
                 "name": role_name,
                 "description": role_data.get("description", ""),
                 "is_system": True,
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(UTC),
+                "updated_at": datetime.now(UTC),
             })
             
         stmt = sa.text("""
@@ -85,7 +83,7 @@ def upgrade() -> None:
     # 3. UPSERT Role-Permissions links
     if roles_dict:
         # Clear existing mappings for these roles to be safe
-        for role_name in roles_dict.keys():
+        for role_name in roles_dict:
             conn.execute(sa.text("""
                 DELETE FROM role_permissions 
                 WHERE role_id = (SELECT id FROM roles WHERE name = :name)
@@ -106,4 +104,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    pass
