@@ -68,6 +68,7 @@ async def test_finance_tenant_isolation(finance_session_maker):
             tenant_id=tenant_id,
             invoice_id=invoice.id,
             description="Monthly Membership",
+            unit_amount_minor=15000,
             amount_minor=15000,
             quantity=1
         )

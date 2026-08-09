@@ -40,6 +40,12 @@ class DefaultPermission(Enum):
     ENTITLEMENTS_CHECK = "entitlements:check"
     ENTITLEMENTS_CONSUME = "entitlements:consume"
     ENTITLEMENTS_MANAGE = "entitlements:manage"
+    FINANCE_READ = "finance:read"
+    FINANCE_WRITE = "finance:write"
+    FINANCE_REFUND = "finance:refund"
+    FINANCE_CREDIT = "finance:credit"
+    FINANCE_MANAGE = "finance:manage"
+    FINANCE_RECONCILE = "finance:reconcile"
     TENANT_READ = "tenant:read"
     TENANT_WRITE = "tenant:write"
 

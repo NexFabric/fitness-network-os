@@ -35,7 +35,7 @@
 
 ### Phase 8-17: Domain API & Services Implementation
 - [x] Phase 8: Membership Domain Correctness - 🟢 CI VERIFIED
-- [ ] Phase 9: Entitlement Engine
+- [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [ ] Phase 10: Finance Domain Completion
 - [ ] Phase 11: Remove Money Floats
 - [ ] Phase 12: Real Idempotency Engine
@@ -75,12 +75,12 @@
 - Access Policies - 🟡 MODEL
 
 ### Wave 3 — Finance
-- Billing Accounts - 🟡 MODEL
-- Invoices & Invoice Items - 🟡 MODEL
-- Payments & Allocations - 🟡 MODEL
-- Partial Payments - 🟡 MODEL
-- Refund, Credit & Discount Logic - 📝 PENDING
-- Reconciliation - 📝 PENDING
+- Billing Accounts - 🟢 SERVICE
+- Invoices & Invoice Items - 🟢 SERVICE
+- Payments & Allocations - 🟢 SERVICE
+- Partial Payments - 🟢 SERVICE
+- Refund, Credit & Discount Logic - 🟢 SERVICE
+- Reconciliation - 🟢 SERVICE
 
 ### Wave 4 — Access
 - QR Credential Issuer & Key Rotation - 🟡 MODEL
