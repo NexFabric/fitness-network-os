@@ -25,8 +25,8 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 10 | Finance domain | CI VERIFIED (P1 audit ledger) |
 | 11 | Remove money floats | 🟢 LOCKED (PR #17) |
 | 12 | Real idempotency engine | 🟢 LOCKED (PR #19 merge `227f42e`) |
-| 13 | QR & access engine | **IN PROGRESS** after Phase 12 |
-| 14 | Member / gym core | After 13 |
+| 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
+| 14 | Member / gym core | **IN PROGRESS** |
 | 15 | Outbox / inbox / jobs | After 14 |
 | 16 | Notifications & reports API | |
 | 17 | Real API V1 routers completion | |
@@ -53,13 +53,20 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Wired: finance invoice/payment/refund/credit + entitlement consume  
 - Details: `backend/docs/plans/phase12_idempotency.md`
 
-## Phase 13 (active)
+## Phase 13 — LOCKED
 
 - Short-lived signed QR (`exp`+`jti` required); HMAC local ref / future KMS  
 - Key lifecycle ACTIVE → VERIFY_ONLY → REVOKED  
 - `qr_jti_replays` tenant-scoped replay protection  
 - Validate → entitlement check → AccessAttempt (+ Checkin)  
-- Details: `backend/docs/plans/phase13_qr_access.md`  
+- Details: `backend/docs/plans/phase13_qr_access.md`
+
+## Phase 14 (active)
+
+- Member CRUD + status transitions, tags/notes, consent records  
+- Locations + Staff user linking (User ≠ Member)  
+- UNIQUE(tenant_id, member_number), UNIQUE(tenant_id, user_id) on staff  
+- Details: `backend/docs/plans/phase14_member_gym_core.md`  
 
 ## Non-negotiables
 

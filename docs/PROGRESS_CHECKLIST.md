@@ -39,8 +39,8 @@
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
 - [x] Phase 11: Remove Money Floats - 🟢 CI VERIFIED / LOCKED (PR #17 merge `607b087`)
 - [x] Phase 12: Real Idempotency Engine - 🟢 CI VERIFIED / LOCKED (PR #19 merge `227f42e`)
-- [ ] Phase 13: Real QR & Access Engine  🟠 IN PROGRESS (`feat/phase13-qr-access-engine`)
-- [ ] Phase 14: Member / Gym Core Completion
+- [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
+- [ ] Phase 14: Member / Gym Core Completion  🟠 IN PROGRESS (`feat/phase14-member-gym-core`)
 - [ ] Phase 15: Outbox / Inbox / Job Engine
 - [ ] Phase 16: Notifications & Reports API
 - [ ] Phase 17: Real API V1 Routers
@@ -59,11 +59,11 @@
 ## Domain Feature Tracking (Future Reference)
 
 ### Wave 1 — Gym Core
-- Locations & Facilities models - 🟡 MODEL
-- Staff / TenantUser linking model - 🟡 MODEL
-- Members Core (Profiles, PII classification) - 🟡 MODEL
-- Member 360 (Tags & Notes) - 🟡 MODEL
-- Consent Registry (ADR-016) - 🟡 MODEL
+- Locations & Facilities models - 🟠 SERVICE (Phase 14; facilities sub-resource deferred)
+- Staff / TenantUser linking model - 🟠 SERVICE (Phase 14)
+- Members Core (Profiles, PII classification) - 🟠 SERVICE (Phase 14; PII encryption deferred)
+- Member 360 (Tags & Notes) - 🟠 SERVICE (Phase 14)
+- Consent Registry (ADR-016) - 🟠 SERVICE (Phase 14 basic record)
 - Documents & Secure File Storage (ADR-034) - 📝 PENDING
 - Import Engine Basics - 📝 PENDING
 
@@ -85,8 +85,9 @@
   - Note (P2): Legacy CRM Opportunity float backfill is best-effort (±1 minor possible); not financial ledger amounts.
 
 ### Wave 4 — Access
-- QR Credential Issuer & Key Rotation - 🟠 SERVICE (Phase 13 in progress)
-- Access Decision Engine - 🟡 MODEL
+- QR Credential Issuer & Key Rotation - 🟢 CI VERIFIED (Phase 13)
+- Access Decision Engine - 🟢 SERVICE (Phase 13 validate path)
+
 - Device Heartbeats & Offline Gateway - 🟡 MODEL
 - Anti-passback & Attendance Logic - 🟡 MODEL
 

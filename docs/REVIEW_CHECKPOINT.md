@@ -12,16 +12,17 @@
 | Phase 10 Finance | [#15](https://github.com/NexFabric/fitness-network-os/pull/15) | yes | 🟢 LOCKED / CI VERIFIED |
 | Phase 11 Money floats | [#17](https://github.com/NexFabric/fitness-network-os/pull/17) | `607b087` | 🟢 LOCKED / CI VERIFIED |
 | Phase 12 Idempotency | [#19](https://github.com/NexFabric/fitness-network-os/pull/19) | `227f42e` | 🟢 LOCKED / CI VERIFIED |
+| Phase 13 QR & Access | [#20](https://github.com/NexFabric/fitness-network-os/pull/20) | `babc33c` | 🟢 LOCKED / CI VERIFIED |
 
-## Phase 13 — IN PROGRESS
+## Phase 14 — IN PROGRESS
 
-- Branch: `feat/phase13-qr-access-engine`
-- Short-lived HMAC QR, jti replay, key rotation, AccessAttempt/Checkin
-- Plan: `backend/docs/plans/phase13_qr_access.md`
+- Branch: `feat/phase14-member-gym-core`
+- Member/Location/Staff services + APIs
+- Plan: `backend/docs/plans/phase14_member_gym_core.md`
 
 ## Do not start yet
 
-- Phase 14+ (Member core, Outbox, etc.) until Phase 13 LOCKED
+- Phase 15+ (Outbox, etc.) until Phase 14 LOCKED
 
 ## Local verification notes
 
