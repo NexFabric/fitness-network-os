@@ -35,7 +35,7 @@ class Invoice(TenantMixin, Base):
 
     billing_account: Mapped["BillingAccount"] = relationship("BillingAccount", back_populates="invoices")
     items: Mapped[list["InvoiceItem"]] = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
-    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="invoice")
+    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="invoice", overlaps="payment")
 
 class InvoiceItem(TenantMixin, Base):
     __tablename__ = "invoice_items"
@@ -65,7 +65,7 @@ class Payment(TenantMixin, Base):
     )
 
     billing_account: Mapped["BillingAccount"] = relationship("BillingAccount", back_populates="payments")
-    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="payment")
+    allocations: Mapped[list["PaymentAllocation"]] = relationship("PaymentAllocation", back_populates="payment", overlaps="invoice,allocations")
 
 class PaymentAllocation(TenantMixin, Base):
     __tablename__ = "payment_allocations"
@@ -79,5 +79,5 @@ class PaymentAllocation(TenantMixin, Base):
         ForeignKeyConstraint(["tenant_id", "invoice_id"], ["invoices.tenant_id", "invoices.id"]),
     )
 
-    payment: Mapped["Payment"] = relationship("Payment", back_populates="allocations")
-    invoice: Mapped["Invoice"] = relationship("Invoice", back_populates="allocations")
+    payment: Mapped["Payment"] = relationship("Payment", back_populates="allocations", overlaps="allocations")
+    invoice: Mapped["Invoice"] = relationship("Invoice", back_populates="allocations", overlaps="allocations,payment")

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MembershipFreezeCreate(BaseModel):
@@ -19,8 +19,7 @@ class MembershipFreezeResponse(BaseModel):
     reason: str | None = None
     tenant_id: UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MembershipResponse(BaseModel):
     id: UUID
@@ -31,5 +30,4 @@ class MembershipResponse(BaseModel):
     start_date: datetime
     end_date: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

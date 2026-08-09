@@ -33,7 +33,7 @@ async def api_client(pg_session_maker):
 async def setup_data(pg_engine):
     tenant_a = uuid4()
     tenant_b = uuid4()
-    token_a = "token_a_123"
+    token_a = f"token_a_{uuid4().hex[:6]}"
     token_hash_a = hashlib.sha256(token_a.encode()).hexdigest()
 
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -41,31 +41,37 @@ async def setup_data(pg_engine):
 
     async with async_session() as db:
         # Create organization and tenants
-        org = Organization(name="Test Org", domain="test.com")
+        org = Organization(name="Test Org", domain=f"test-{uuid4()}.com")
         db.add(org)
         await db.flush()
 
-        tenant_a_obj = Tenant(id=tenant_a, name="Tenant A", location_code="TA", organization_id=org.id)
-        tenant_b_obj = Tenant(id=tenant_b, name="Tenant B", location_code="TB", organization_id=org.id)
+        tenant_a_obj = Tenant(id=tenant_a, name="Tenant A", location_code=f"TA-{uuid4().hex[:6]}", organization_id=org.id)
+        tenant_b_obj = Tenant(id=tenant_b, name="Tenant B", location_code=f"TB-{uuid4().hex[:6]}", organization_id=org.id)
         db.add(tenant_a_obj)
         db.add(tenant_b_obj)
         await db.flush()
 
         # Create user A in tenant A
         user_a = User(
-            email="usera@example.com",
+            email=f"usera-{uuid4().hex[:6]}@example.com",
             hashed_password="pw",
             is_active=True
         )
         db.add(user_a)
         await db.flush()
 
-        perm = Permission(name="memberships:write")
-        db.add(perm)
+        from sqlalchemy import select
+        perm_query = await db.execute(select(Permission).where(Permission.name == "memberships:write"))
+        perm = perm_query.scalar_one_or_none()
+        if not perm:
+            perm = Permission(name="memberships:write")
+            db.add(perm)
+            await db.flush()
         await db.flush()
 
-        role = Role(name="admin", permissions=[perm])
+        role = Role(name=f"admin-{uuid4().hex[:6]}", permissions=[perm])
         db.add(role)
+        await db.flush()
         await db.flush()
 
         role_a = UserRole(user_id=user_a.id, tenant_id=tenant_a, role_id=role.id)

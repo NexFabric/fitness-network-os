@@ -69,7 +69,7 @@ class AccessAttempt(TenantMixin, Base):
     )
 
     member = relationship("Member")
-    device = relationship("Device")
+    device = relationship("Device", overlaps="member")
 
 class Checkin(TenantMixin, Base):
     __tablename__ = "checkins"
@@ -87,8 +87,8 @@ class Checkin(TenantMixin, Base):
     )
 
     member = relationship("Member")
-    location = relationship("Location")
-    device = relationship("Device")
+    location = relationship("Location", overlaps="member")
+    device = relationship("Device", overlaps="location,member")
 
 class OfflineSnapshot(TenantMixin, Base):
     __tablename__ = "offline_snapshots"

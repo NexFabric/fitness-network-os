@@ -26,16 +26,15 @@ async def tenant_id(pg_engine) -> UUID:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as db:
-        org_id = uuid4()
-        org = Organization(id=org_id, name="Test Org")
+        # Create organization and tenants
+        org = Organization(name="Test Org", domain=f"test-{uuid4()}.com")
         db.add(org)
-
-    
+        await db.flush()
         t_id = uuid4()
         tenant = Tenant(
             id=t_id, 
             name="Test Tenant", 
-            organization_id=org_id,
+            organization_id=org.id,
             location_code=f"LOC-{t_id}"
         )
         db.add(tenant)
