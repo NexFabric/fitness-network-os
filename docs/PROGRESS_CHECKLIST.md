@@ -27,14 +27,14 @@
 - [x] Phase 0: Status Truth & CI Recovery - 🟢 PRODUCTION VERIFIED
 - [x] Phase 1: Main Branch Protection - 🟢 PRODUCTION VERIFIED
 - [x] Phase 2: Authentication & Session P0 - 🟢 PRODUCTION VERIFIED
-- [x] Phase 3: MFA & Privileged Auth - 🟢 PRODUCTION VERIFIED (Safe Expand Phase Done)
+- [x] Phase 3: MFA & Privileged Auth - 🟠 IMPLEMENTED (Foundation Done)
 - [x] Phase 4: Tenant Context & Real RLS Boundary - 🟢 PRODUCTION VERIFIED
 - [x] Phase 5: Tenancy Schema Linter V2 - 🟢 PRODUCTION VERIFIED
 - [x] Phase 6: Complete Composite FK Coverage - 🟢 PRODUCTION VERIFIED
 - [x] Phase 7: Authorization Engine (RBAC) - 🟢 PRODUCTION VERIFIED
 
 ### Phase 8-17: Domain API & Services Implementation
-- [x] Phase 8: Membership Domain Correctness - 🟢 PRODUCTION VERIFIED
+- [x] Phase 8: Membership Domain Correctness - 🟢 CI VERIFIED
 - [ ] Phase 9: Entitlement Engine
 - [ ] Phase 10: Finance Domain Completion
 - [ ] Phase 11: Remove Money Floats
@@ -68,9 +68,9 @@
 - Import Engine Basics - 📝 PENDING
 
 ### Wave 2 — Membership
-- Plans & Plan Versions - 🟢 PRODUCTION VERIFIED
-- Subscriptions / Periods - 🟢 PRODUCTION VERIFIED
-- Freeze / Renew / Cancel Lifecycle - 🟢 PRODUCTION VERIFIED
+- Plans & Plan Versions - 🟢 CI VERIFIED
+- Subscriptions / Periods - 🟢 CI VERIFIED
+- Freeze / Renew / Cancel Lifecycle - 🟢 CI VERIFIED
 - Usage Wallets & Entitlements - 🟡 MODEL
 - Access Policies - 🟡 MODEL
 

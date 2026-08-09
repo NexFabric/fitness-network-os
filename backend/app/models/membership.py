@@ -1,7 +1,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKeyConstraint, Integer, String, Uuid
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    String,
+    Uuid,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -24,6 +33,7 @@ class PlanVersion(TenantMixin, Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     price_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     billing_cycle_months: Mapped[int] = mapped_column(Integer, nullable=False)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -41,7 +51,9 @@ class Membership(TenantMixin, Base):
     status: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE")
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_cancellation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    price_snapshot_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
 
 class Entitlement(TenantMixin, Base):
@@ -77,10 +89,12 @@ class MembershipFreeze(TenantMixin, Base):
 
     _model_table_args = (
         ForeignKeyConstraint(["tenant_id", "membership_id"], ["memberships.tenant_id", "memberships.id"]),
+        Index("ix_membership_freezes_active", "tenant_id", "membership_id", unique=True, postgresql_where=text("actual_end_date IS NULL")),
     )
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expected_end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     actual_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    previous_status: Mapped[str | None] = mapped_column(String, nullable=True)
     reason: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
@@ -122,5 +136,6 @@ class MembershipRenewal(TenantMixin, Base):
     )
     renewal_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     price_snapshot: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    price_snapshot_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     terms_snapshot: Mapped[str | None] = mapped_column(String, nullable=True)
     changed_by_user_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)

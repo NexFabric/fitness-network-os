@@ -34,7 +34,7 @@ def session_maker(mock_engine):
     return maker
 
 @pytest.mark.asyncio
-async def test_membership_tenant_isolation(session_maker):
+async def test_membership_model_smoke(session_maker):
     tenant_id = uuid4()
     token = current_tenant_id_var.set(tenant_id)
     

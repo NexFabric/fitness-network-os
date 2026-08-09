@@ -8,10 +8,8 @@ Create Date: 2026-08-09 14:39:25.129415
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from pathlib import Path
 
 import sqlalchemy as sa
-import yaml
 
 from alembic import op
 
@@ -23,12 +21,71 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Read permissions.yml
-    root_dir = Path(__file__).resolve().parent.parent.parent
-    yaml_path = root_dir / "permissions.yml"
-    
-    with open(yaml_path, "r") as f:
-        data = yaml.safe_load(f)
+    from typing import Any
+    # Hardcoded permissions dictionary (snapshot of permissions.yml)
+    data: dict[str, Any] = {
+        "roles": {
+            "PLATFORM_SUPER_ADMIN": {
+                "description": "Full access to entire platform",
+                "permissions": ["*"]
+            },
+            "FEDERATION_ADMIN": {
+                "description": "Full access to a specific federation and its gyms",
+                "permissions": ["federation:read", "federation:write", "gym:read", "gym:write", "users:read", "users:write"]
+            },
+            "FEDERATION_ANALYST": {
+                "description": "Read-only access to federation analytics",
+                "permissions": ["federation:read", "gym:read"]
+            },
+            "FEDERATION_SUPPORT": {
+                "description": "Support access for federation",
+                "permissions": ["federation:read", "gym:read", "users:read"]
+            },
+            "GYM_OWNER": {
+                "description": "Owner of a specific gym tenant",
+                "permissions": ["gym:read", "gym:write", "memberships:read", "memberships:write", "checkins:read"]
+            },
+            "GYM_ADMIN": {
+                "description": "Admin of a specific gym tenant",
+                "permissions": ["gym:read", "gym:write", "memberships:read", "memberships:write", "checkins:read", "users:read", "users:write"]
+            },
+            "GYM_MANAGER": {
+                "description": "Manager of a specific gym tenant",
+                "permissions": ["gym:read", "memberships:read", "memberships:write", "checkins:read", "users:read"]
+            },
+            "ACCOUNTANT": {
+                "description": "Accountant for a gym",
+                "permissions": ["gym:read", "memberships:read"]
+            },
+            "FRONT_DESK": {
+                "description": "Front desk staff",
+                "permissions": ["gym:read", "memberships:read", "checkins:read", "checkins:write"]
+            },
+            "TRAINER": {
+                "description": "Trainer in a gym",
+                "permissions": ["gym:read", "memberships:read", "checkins:read"]
+            },
+            "MEMBER": {
+                "description": "A standard gym member",
+                "permissions": ["profile:read", "profile:write", "memberships:read", "checkins:read", "checkins:write"]
+            }
+        },
+        "permissions": [
+            {"id": "federation:read", "description": "Read federation details"},
+            {"id": "federation:write", "description": "Modify federation details"},
+            {"id": "gym:read", "description": "Read gym details"},
+            {"id": "gym:write", "description": "Modify gym details"},
+            {"id": "users:read", "description": "Read users in context"},
+            {"id": "users:write", "description": "Modify users in context"},
+            {"id": "memberships:read", "description": "Read memberships"},
+            {"id": "memberships:write", "description": "Modify memberships"},
+            {"id": "checkins:read", "description": "Read checkin history"},
+            {"id": "checkins:write", "description": "Create checkins"},
+            {"id": "profile:read", "description": "Read own profile"},
+            {"id": "profile:write", "description": "Update own profile"},
+            {"id": "*", "description": "Superuser wildcard"}
+        ]
+    }
 
     conn = op.get_bind()
     
