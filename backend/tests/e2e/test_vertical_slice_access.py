@@ -48,7 +48,6 @@ from app.services.member import MemberService
 from app.services.notification import NotificationService
 from app.services.notification_bridge import NotificationBridge
 
-
 # MEMBER self-service surface (aligned with phase15.5c / notifications RBAC tests).
 MEMBER_SELF_PERMS = [
     "profile:read",
