@@ -1,6 +1,27 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
+**Main HEAD:** `5046f10` (merge PR #26 — Phase 16–26 stack MVP)  
+**Also on main:** Phase 15.5 `125a8c6`, lock docs PR #27  
+
+**Truth:** **not production-ready** until Phase 26 exit gate fully satisfied.
+
+## Snapshot
+
+| Band | Status |
+|------|--------|
+| Phase 0–15.5 | 🟢 on `main` |
+| Phase 16–20 product MVP | 🟢 **merged main** via PR #26 |
+| Phase 21–24 hardening MVP | 🟢 **merged main** via PR #26 |
+| Phase 25–26 | 📄 docs/exit gate — **not production-ready** |
+| Overall | ⏳ CORE MVP progress high; **not production-ready** |
+
+
+---
+
+# FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
+
+**Last updated:** 2026-08-10  
 **Main HEAD (15.5 merge):** `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25)) · docs lock PR [#27](https://github.com/NexFabric/fitness-network-os/pull/27)  
 **Active branch work:** Phase **16–25 PARTIAL / IMPLEMENTED** on `feat/phase16-notifications-reports` (PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26)) — **not on main**  
 **Alembic head on main:** `p9c0d1e2f3a4` (15.5C trust boundaries; after `n7…` + `o8…`)  
