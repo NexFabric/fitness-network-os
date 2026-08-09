@@ -4,18 +4,23 @@ Pattern matches POST /access/qr/issue-self (Phase 15.5B/C):
 current_user.id → members.user_id binding → server-owned member_id.
 """
 
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, StrictInt
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
-from app.core.authorization import AuthorizationService
+from app.core.authorization import AuthorizationService, SecurityException
+from app.models.access import Checkin
 from app.models.user import User
+from app.schemas.membership import MembershipResponse
 from app.services.entitlement import EntitlementService
 from app.services.member import MemberService
+from app.services.membership import MembershipService
 
 router = APIRouter()
 
@@ -34,6 +39,210 @@ class MeEntitlementAccessResponse(BaseModel):
     reason: str | None = None
     remaining: int | None = None
     member_id: UUID
+
+
+class MeMemberResponse(BaseModel):
+    """Read-only member card for the bound login user (no staff-only fields)."""
+
+    id: UUID
+    tenant_id: UUID
+    member_number: str
+    first_name: str
+    last_name: str
+    email: str | None
+    phone: str | None
+    status: str
+    user_id: UUID | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeProfileResponse(BaseModel):
+    """Thin self profile: login user + bound member card (no client member_id)."""
+
+    user_id: UUID
+    email: str | None
+    tenant_id: UUID
+    member: MeMemberResponse
+
+
+class MeWalletSummary(BaseModel):
+    """Entitlement wallet row for the bound member (read-only snapshot)."""
+
+    wallet_id: UUID
+    membership_id: UUID
+    entitlement_id: UUID
+    entitlement_code: str | None = None
+    entitlement_name: str | None = None
+    allocated: int
+    reserved: int
+    consumed: int
+    remaining: int
+    expires_at: datetime | None = None
+
+
+class MeEntitlementsSummaryResponse(BaseModel):
+    member_id: UUID
+    wallets: list[MeWalletSummary]
+
+
+class MeCheckinResponse(BaseModel):
+    id: UUID
+    tenant_id: UUID
+    member_id: UUID
+    location_id: UUID
+    device_id: UUID | None = None
+    checkin_time: datetime
+    checkout_time: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID):
+    member = await MemberService(db).get_member_by_user_id(tenant_id, user_id)
+    if member is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="member_not_bound",
+        )
+    return member
+
+
+@router.get("/profile", response_model=MeProfileResponse)
+async def get_my_profile(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Self profile: user id + bound member card.
+
+    ``profile:read`` is not ``*:self`` (no profile:read:self seeded). Authorize
+    carefully with tenant + resource_owner_id=current_user.id so ownership is
+    always the caller. Member is resolved server-side only.
+    """
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    return MeProfileResponse(
+        user_id=current_user.id,
+        email=current_user.email,
+        tenant_id=tenant_id,
+        member=MeMemberResponse.model_validate(member),
+    )
+
+
+@router.get("/member", response_model=MeMemberResponse)
+async def get_my_member(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Bound member profile (read-only card) for the caller.
+
+    No ``members:read:self`` exists; gate with ``memberships:read:self``
+    (MEMBER self-service matrix) + require_self ownership. Binding is always
+    server-side via members.user_id (no client member_id).
+    """
+    AuthorizationService.require_self(
+        current_user,
+        "memberships:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    return MeMemberResponse.model_validate(member)
+
+
+@router.get("/memberships", response_model=list[MembershipResponse])
+async def list_my_memberships(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List memberships for the bound member only (no path/body member_id)."""
+    AuthorizationService.require_self(
+        current_user,
+        "memberships:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    rows = await MembershipService(db).list_memberships_for_member(
+        tenant_id, member.id
+    )
+    return rows
+
+
+@router.get("/entitlements", response_model=MeEntitlementsSummaryResponse)
+async def list_my_entitlements(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Wallet snapshot for the bound member (read-only; no consume)."""
+    AuthorizationService.require_self(
+        current_user,
+        "entitlements:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    wallets = await EntitlementService.list_wallets_for_member(
+        db, tenant_id, member.id
+    )
+    return MeEntitlementsSummaryResponse(
+        member_id=member.id,
+        wallets=[
+            MeWalletSummary(
+                wallet_id=w["wallet_id"],
+                membership_id=w["membership_id"],
+                entitlement_id=w["entitlement_id"],
+                entitlement_code=w.get("entitlement_code"),
+                entitlement_name=w.get("entitlement_name"),
+                allocated=w["allocated"],
+                reserved=w["reserved"],
+                consumed=w["consumed"],
+                remaining=w["remaining"],
+                expires_at=w.get("expires_at"),
+            )
+            for w in wallets
+        ],
+    )
+
+
+@router.get("/checkins", response_model=list[MeCheckinResponse])
+async def list_my_checkins(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+):
+    """List check-ins for the bound member only (Checkin model exists)."""
+    AuthorizationService.require_self(
+        current_user,
+        "checkins:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(Checkin)
+        .where(
+            Checkin.tenant_id == tenant_id,
+            Checkin.member_id == member.id,
+        )
+        .order_by(Checkin.checkin_time.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(result.scalars().all())
 
 
 @router.post(
@@ -57,12 +266,7 @@ async def check_my_entitlement(
         tenant_id,
         resource_owner_id=current_user.id,
     )
-    member = await MemberService(db).get_member_by_user_id(tenant_id, current_user.id)
-    if member is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="member_not_bound",
-        )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
     result = await EntitlementService.check_access(
         db, tenant_id, member.id, body.action, body.quantity
     )

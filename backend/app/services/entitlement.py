@@ -478,3 +478,42 @@ class EntitlementService:
             await db.flush()
 
         return wallet
+
+    @classmethod
+    async def list_wallets_for_member(
+        cls,
+        db: AsyncSession,
+        tenant_id: UUID,
+        member_id: UUID,
+    ) -> list[dict]:
+        """Read-only wallet summary for a member (self-service list; no consume)."""
+        result = await db.execute(
+            select(EntitlementWallet, EntitlementDefinition)
+            .outerjoin(
+                EntitlementDefinition,
+                (EntitlementDefinition.id == EntitlementWallet.entitlement_id)
+                & (EntitlementDefinition.tenant_id == EntitlementWallet.tenant_id),
+            )
+            .where(
+                EntitlementWallet.tenant_id == tenant_id,
+                EntitlementWallet.member_id == member_id,
+            )
+            .order_by(EntitlementWallet.id)
+        )
+        rows: list[dict] = []
+        for wallet, definition in result.all():
+            rows.append(
+                {
+                    "wallet_id": wallet.id,
+                    "membership_id": wallet.membership_id,
+                    "entitlement_id": wallet.entitlement_id,
+                    "entitlement_code": definition.code if definition else None,
+                    "entitlement_name": definition.name if definition else None,
+                    "allocated": wallet.allocated,
+                    "reserved": wallet.reserved,
+                    "consumed": wallet.consumed,
+                    "remaining": wallet.remaining,
+                    "expires_at": wallet.expires_at,
+                }
+            )
+        return rows

@@ -35,3 +35,10 @@ logs
 # Coverage
 htmlcov/
 .coverage
+
+# Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+frontend/**/dist/
+frontend/node_modules/

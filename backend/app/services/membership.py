@@ -29,6 +29,30 @@ class MembershipService:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def list_memberships_for_member(
+        self,
+        tenant_id: UUID,
+        member_id: UUID,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Membership]:
+        """List memberships for a single member within a tenant (self-service / staff)."""
+        limit = max(1, min(limit, 200))
+        offset = max(0, offset)
+        stmt = (
+            select(Membership)
+            .where(
+                Membership.tenant_id == tenant_id,
+                Membership.member_id == member_id,
+            )
+            .order_by(Membership.start_date.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def publish_plan_version(self, plan_version_id: UUID) -> PlanVersion:
         stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id).with_for_update()
         result = await self.session.execute(stmt)
