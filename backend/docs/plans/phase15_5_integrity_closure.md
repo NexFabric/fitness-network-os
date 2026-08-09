@@ -3,7 +3,7 @@
 **Status:** 🟢 **CI VERIFIED / LOCKED on main**  
 **Main merge:** PR #25 → `125a8c6` (2026-08-10)  
 **Alembic head:** `p9c0d1e2f3a4` (`n7…` + `o8…` + `p9…`)  
-**Unblocks:** Phase 16+ (PR #26 stack may merge after main CI green)
+**Unblocks:** Phase 16+ — **PR #26 merged to main** (`5046f10`); stack continues as mainline MVP
 
 ## Goal
 
