@@ -53,3 +53,37 @@ def assert_amount_minor(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError("amount_minor must be int (float not allowed)")
     return value
+
+
+def assert_quantity(value: object) -> int:
+    """Strict positive quantity (entitlements, line items)."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError("quantity must be int (float not allowed)")
+    if value <= 0:
+        raise ValueError("quantity must be > 0")
+    return value
+
+
+def legacy_major_string_to_minor(
+    major_str: str | None,
+    *,
+    minor_factor: int = DEFAULT_MINOR_FACTOR,
+) -> int | None:
+    """
+    Convert a decimal *string* representation of a legacy major amount to minor.
+
+    Used for Phase 11 backfill tests (never pass binary float).
+    ROUND_HALF_UP matches PostgreSQL ROUND(value * 100) for half cases on numeric.
+    """
+    if major_str is None:
+        return None
+    return major_to_minor(major_str, minor_factor=minor_factor)
+
+
+def legacy_probability_to_bps(prob_str: str | None) -> int | None:
+    """Convert probability decimal string in [0,1] to basis points 0..10000."""
+    if prob_str is None:
+        return None
+    d = Decimal(prob_str)
+    bps = int((d * Decimal(10000)).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+    return max(0, min(10000, bps))

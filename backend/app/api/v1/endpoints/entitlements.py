@@ -1,7 +1,8 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictInt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
@@ -11,15 +12,17 @@ from app.services.entitlement import EntitlementService
 
 router = APIRouter()
 
+StrictQty = Annotated[StrictInt, Field(ge=1)]
+
 
 class EntitlementCheckRequest(BaseModel):
     action: str
-    quantity: int = Field(default=1, ge=1)
+    quantity: StrictQty = 1
 
 
 class EntitlementConsumeRequest(BaseModel):
     action: str
-    quantity: int = Field(default=1, ge=1)
+    quantity: StrictQty = 1
 
 
 class EntitlementAccessResponse(BaseModel):
@@ -94,6 +97,7 @@ async def consume_entitlement(
         quantity=request.quantity,
         actor_id=current_user.id,
     )
+    await db.commit()
 
     response = EntitlementAccessResponse(
         granted=result["granted"],

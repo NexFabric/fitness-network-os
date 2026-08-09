@@ -3,9 +3,17 @@
 from decimal import Decimal
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
-from app.core.money import assert_amount_minor, major_to_minor, minor_to_major
+from app.core.money import (
+    assert_amount_minor,
+    legacy_major_string_to_minor,
+    legacy_probability_to_bps,
+    major_to_minor,
+    minor_to_major,
+)
 from app.models.growth import Opportunity, RetentionCockpit
+from app.schemas.finance import MoneyMinorPos
 
 
 def test_major_to_minor_decimal():
@@ -62,3 +70,48 @@ def test_fitness_script_passes():
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "major_str,expected",
+    [
+        ("19.99", 1999),
+        ("19.995", 2000),  # ROUND_HALF_UP
+        ("0", 0),
+        ("999999.99", 99999999),
+        ("1000.50", 100050),
+    ],
+)
+def test_legacy_major_string_conversion(major_str, expected):
+    assert legacy_major_string_to_minor(major_str) == expected
+
+
+def test_legacy_major_null():
+    assert legacy_major_string_to_minor(None) is None
+
+
+@pytest.mark.parametrize(
+    "prob_str,expected",
+    [
+        ("0", 0),
+        ("0.125", 1250),
+        ("1", 10000),
+        ("1.5", 10000),  # clamp
+        ("-0.1", 0),  # clamp
+    ],
+)
+def test_legacy_probability_bps(prob_str, expected):
+    assert legacy_probability_to_bps(prob_str) == expected
+
+
+def test_strict_money_minor_rejects_float_coercion():
+    ta = TypeAdapter(MoneyMinorPos)
+    assert ta.validate_python(100) == 100
+    with pytest.raises(ValidationError):
+        ta.validate_python(100.0)
+    with pytest.raises(ValidationError):
+        ta.validate_python(100.5)
+    with pytest.raises(ValidationError):
+        ta.validate_python(True)
+    with pytest.raises(ValidationError):
+        ta.validate_python("100")

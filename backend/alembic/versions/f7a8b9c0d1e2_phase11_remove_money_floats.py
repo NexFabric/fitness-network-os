@@ -1,9 +1,18 @@
-"""Phase 11 remove money floats
+"""Phase 11 EXPAND: money floats → amount_minor / bps (no DROP)
 
 Revision ID: f7a8b9c0d1e2
 Revises: e6f7a8b9c0d1
 Create Date: 2026-08-09 21:00:00.000000
 
+EXPAND / CONTRACT policy (PRODUCTION_READINESS):
+  This revision only ADDS new columns and BACKFILLs them.
+  Legacy float columns remain until a later CONTRACT migration:
+    - opportunities.value
+    - retention_cockpit.churn_probability
+
+Assumption:
+  Historical Opportunity.value values before Phase 11 are assumed TRY.
+  No multi-currency existed on Opportunity pre-Phase 11.
 """
 from collections.abc import Sequence
 
@@ -18,26 +27,33 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Opportunity money: float major → integer minor + currency
+    # --- opportunities: expand (keep value Float until contract) ---
     op.add_column(
         "opportunities",
         sa.Column("value_amount_minor", sa.Integer(), nullable=True),
     )
     op.add_column(
         "opportunities",
-        sa.Column("currency", sa.String(length=3), nullable=False, server_default="TRY"),
+        sa.Column(
+            "currency", sa.String(length=3), nullable=False, server_default="TRY"
+        ),
     )
-    # Convert existing float majors to minor (×100, half-up via ROUND)
+    # Backfill: major float → minor int (×100, half-up). Currency default TRY.
     op.execute(
         """
         UPDATE opportunities
-        SET value_amount_minor = ROUND(value * 100)::integer
+        SET value_amount_minor = ROUND(value * 100)::integer,
+            currency = COALESCE(currency, 'TRY')
         WHERE value IS NOT NULL
         """
     )
-    op.drop_column("opportunities", "value")
+    op.create_check_constraint(
+        "ck_opportunities_value_amount_minor_nonneg",
+        "opportunities",
+        "value_amount_minor IS NULL OR value_amount_minor >= 0",
+    )
 
-    # Retention analytics: float probability → integer basis points
+    # --- retention_cockpit: expand (keep churn_probability Float until contract) ---
     op.add_column(
         "retention_cockpit",
         sa.Column("churn_probability_bps", sa.Integer(), nullable=True),
@@ -52,13 +68,6 @@ def upgrade() -> None:
         WHERE churn_probability IS NOT NULL
         """
     )
-    op.drop_column("retention_cockpit", "churn_probability")
-
-    op.create_check_constraint(
-        "ck_opportunities_value_amount_minor_nonneg",
-        "opportunities",
-        "value_amount_minor IS NULL OR value_amount_minor >= 0",
-    )
     op.create_check_constraint(
         "ck_retention_churn_bps_range",
         "retention_cockpit",
@@ -66,34 +75,13 @@ def upgrade() -> None:
         "(churn_probability_bps >= 0 AND churn_probability_bps <= 10000)",
     )
 
+    # NOTE: Do NOT drop opportunities.value or retention_cockpit.churn_probability here.
+    # CONTRACT migration ships in a later release after app fully switched to new columns.
+
 
 def downgrade() -> None:
     op.drop_constraint("ck_retention_churn_bps_range", "retention_cockpit")
     op.drop_constraint("ck_opportunities_value_amount_minor_nonneg", "opportunities")
-
-    op.add_column(
-        "retention_cockpit",
-        sa.Column("churn_probability", sa.Float(), nullable=True),
-    )
-    op.execute(
-        """
-        UPDATE retention_cockpit
-        SET churn_probability = churn_probability_bps::float / 10000.0
-        WHERE churn_probability_bps IS NOT NULL
-        """
-    )
     op.drop_column("retention_cockpit", "churn_probability_bps")
-
-    op.add_column(
-        "opportunities",
-        sa.Column("value", sa.Float(), nullable=True),
-    )
-    op.execute(
-        """
-        UPDATE opportunities
-        SET value = value_amount_minor::float / 100.0
-        WHERE value_amount_minor IS NOT NULL
-        """
-    )
     op.drop_column("opportunities", "currency")
     op.drop_column("opportunities", "value_amount_minor")

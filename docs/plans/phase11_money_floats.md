@@ -1,49 +1,53 @@
 # Phase 11 — Remove Money Floats
 
+**Status:** CLOSING (PR #17)  
+**Expand revision:** `f7a8b9c0d1e2`  
+**Contract revision:** `g8b9c0d1e2f3` (deferred no-op until dual-column period ends)
+
 ## Goal
 
-Enforce MASTER_SPEC / AGENTS.md money rule:
+- No binary float for money  
+- `amount_minor` + `currency` (or integer bps for rates)  
+- EXPAND → BACKFILL → SWITCH → CONTRACT (no same-deploy DROP)
 
-- **No binary float for money**
-- Prefer `amount_minor` (int) + `currency`
-- Rates/probabilities that were float should use integer basis points where practical
+## Expand (this PR)
 
-## Audit summary (repo)
+| Table | Legacy (kept) | New |
+|-------|---------------|-----|
+| opportunities | `value` Float | `value_amount_minor`, `currency` (default TRY) |
+| retention_cockpit | `churn_probability` Float | `churn_probability_bps` 0..10000 |
 
-| Area | Status before Phase 11 | Action |
-|------|------------------------|--------|
-| Finance domain | `amount_minor` integers | None (already correct) |
-| Membership prices / snapshots | integer minor | None |
-| Entitlement wallet counters | integers | None |
-| `Opportunity.value` | **Float** | → `value_amount_minor` + `currency` |
-| `RetentionCockpit.churn_probability` | **Float** (analytics) | → `churn_probability_bps` (0–10000) |
-| Frontend | No money float paths found | N/A |
-| Conversion helpers | Missing | `app/core/money.py` (Decimal only) |
+Backfill:
 
-## Implementation
+- `value_amount_minor = ROUND(value * 100)::integer`  
+- **Assumption:** historical Opportunity values are **TRY**  
+- `churn_probability_bps = clamp(ROUND(prob * 10000), 0, 10000)`
 
-1. Migration `f7a8b9c0d1e2_phase11_remove_money_floats`
-2. Model updates in `app/models/growth.py`
-3. Fitness gate: `scripts/check_no_money_floats.py` (CI Lint job)
-4. Tests: `tests/test_money_no_floats.py`
+ORM maps **only new columns**. Alembic `include_object` ignores drop noise for legacy float columns until CONTRACT.
 
-## CI gate
+## Contract (later PR)
 
-Lint job runs:
+Drop:
 
-```bash
-uv run python scripts/check_no_money_floats.py
-```
+- `opportunities.value`  
+- `retention_cockpit.churn_probability`  
 
-Fails if any SQLAlchemy model column uses `Float` (ORM-level ban after Phase 11).
+Remove `LEGACY_EXPAND_COLUMNS` from `alembic/env.py`.
 
-## Completion criteria
+## Strict money boundary
 
-- [x] No money Float columns in models
-- [x] Conversion helpers reject float input
-- [x] Alembic constraints match models (no schema drift)
-- [ ] PR #17 CI green + merge + main CI green → **Phase 11 LOCKED**
+- Schemas: `StrictInt` money / quantity fields  
+- Services: `assert_amount_minor` / `assert_quantity` (no bare `int(float)`)  
+- Helpers: `app/core/money.py` rejects float input  
 
-## Stop point for review
+## Tests
 
-After Phase 11 merge readiness: **stop before Phase 12** (Idempotency Engine) for human review.
+- Conversion: `legacy_major_string_to_minor` / `legacy_probability_to_bps`  
+- Strict validation rejects `100.0`, `100.5`, `True`, `"100"`  
+- Fitness script: no ORM Float columns  
+
+## P1 follow-ups (not Phase 11 merge blockers)
+
+- `BigInteger` for amount_minor globally  
+- CONTRACT migration after one deploy cycle  
+- Broader non-ORM float scanners  

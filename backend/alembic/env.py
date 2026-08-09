@@ -39,6 +39,22 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# Phase 11 EXPAND: legacy float columns remain in DB until CONTRACT migration.
+# Models no longer map them; ignore "remove column" drift for these only.
+LEGACY_EXPAND_COLUMNS: set[tuple[str, str]] = {
+    ("opportunities", "value"),
+    ("retention_cockpit", "churn_probability"),
+}
+
+
+def include_object(object, name, type_, reflected, compare_to) -> bool:
+    """Filter alembic autogenerate/check noise during Phase 11 dual-column window."""
+    if type_ == "column" and reflected and compare_to is None:
+        table = getattr(getattr(object, "table", None), "name", None)
+        if table and name and (table, name) in LEGACY_EXPAND_COLUMNS:
+            return False
+    return True
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -58,6 +74,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -65,7 +82,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

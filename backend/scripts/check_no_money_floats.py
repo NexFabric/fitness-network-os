@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Architecture fitness: No payment / money fields may use binary float.
+"""Architecture fitness: No ORM Float columns in app models.
 
-Scans SQLAlchemy models for Float columns with money-like names and for
-Mapped[float] annotations on money fields. Non-money analytics floats should
-be converted to integer basis points (or similar) when possible.
+Phase 11 gate: ban SQLAlchemy Float mapped columns entirely (money uses
+amount_minor int; rates use integer basis points). This does NOT prove
+schemas/services/API coercion are float-free — pair with MoneyMinor/StrictInt
+and assert_amount_minor at service boundaries.
 
-Exit code 1 if any violation is found.
+Exit code 1 if any Float ORM column is found.
 """
 from __future__ import annotations
 
@@ -120,7 +121,7 @@ def main() -> int:
         )
         return 1
 
-    print("Money float fitness check passed: no Float money columns in models.")
+    print("ORM Float fitness check passed: no Float columns in app models.")
     return 0
 
 

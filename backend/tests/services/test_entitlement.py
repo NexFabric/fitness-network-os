@@ -168,6 +168,7 @@ async def test_entitlement_zero_balance(db_session, setup_tenant):
     res = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "PT_SESSION", "idem-zero"
     )
+    await db_session.commit()
     assert res["granted"] is False
     assert res["reason"] == "ZERO_BALANCE"
 
@@ -195,6 +196,7 @@ async def test_entitlement_consume_success(db_session, setup_tenant):
     res = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "PT_SESSION", "idem-ok"
     )
+    await db_session.commit()
     assert res["granted"] is True
     assert res["remaining"] == 1
 
@@ -224,9 +226,11 @@ async def test_entitlement_idempotent_replay(db_session, setup_tenant):
     r1 = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "PT_SESSION", "same-key"
     )
+    await db_session.commit()
     r2 = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "PT_SESSION", "same-key"
     )
+    await db_session.commit()
     assert r1["granted"] is True
     assert r2["granted"] is True
     assert r2["reason"] == "IDEMPOTENT"
@@ -259,9 +263,11 @@ async def test_entitlement_concurrent_double_consume(pg_engine, setup_tenant, db
 
     async def consume(key: str) -> dict:
         async with maker() as session:
-            return await EntitlementService.consume_access(
+            res = await EntitlementService.consume_access(
                 session, tenant_id, member_id, "PT_SESSION", key
             )
+            await session.commit()
+            return res
 
     import asyncio
 
@@ -311,6 +317,7 @@ async def test_boolean_entitlement_grant(db_session, setup_tenant):
     res = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "GYM_ACCESS", "bool-1"
     )
+    await db_session.commit()
     assert res["granted"] is True
     # BOOLEAN does not decrement remaining
     assert res["remaining"] == 1
@@ -342,6 +349,7 @@ async def test_no_active_membership_denied(db_session, setup_tenant):
     res = await EntitlementService.consume_access(
         db_session, setup_tenant.id, member.id, "PT_SESSION", "no-mem"
     )
+    await db_session.commit()
     assert res["granted"] is False
     assert res["reason"] == "NO_ACTIVE_MEMBERSHIP"
 

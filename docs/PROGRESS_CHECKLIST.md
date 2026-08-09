@@ -37,8 +37,8 @@
 - [x] Phase 8: Membership Domain Correctness - 🟢 CI VERIFIED
 - [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
-- [x] Phase 11: Remove Money Floats - 🟠 IMPLEMENTED (PR #17 — review/merge pending)
-- [ ] Phase 12: Real Idempotency Engine  ← **STOP / REVIEW GATE before starting**
+- [x] Phase 11: Remove Money Floats - 🟠 CLOSING (PR #17 expand/strict-money; CONTRACT deferred)
+- [ ] Phase 12: Real Idempotency Engine  ← only after Phase 11 LOCKED
 - [ ] Phase 13: Real QR & Access Engine
 - [ ] Phase 14: Member / Gym Core Completion
 - [ ] Phase 15: Outbox / Inbox / Job Engine
