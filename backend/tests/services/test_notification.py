@@ -34,7 +34,10 @@ from app.services.outbox import OutboxService
 async def db_session(pg_engine) -> AsyncGenerator[AsyncSession, None]:
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.rollback()
 
 
 @pytest_asyncio.fixture
@@ -348,3 +351,214 @@ async def test_process_due_failed_retries_and_sends(db_session, tenant):
         )
     ).scalar_one()
     assert row.status == DELIVERY_SENT
+
+
+@pytest.mark.asyncio
+async def test_recipient_user_id_must_belong_to_tenant(db_session, tenant):
+    """Foreign users (no UserRole for tenant) are rejected at schedule."""
+    from app.models.rbac import Role, UserRole
+    from app.models.user import User
+
+    svc = NotificationService(db_session)
+    await svc.create_template(
+        tenant.id,
+        code="rcpt-bind",
+        name="Rcpt Bind",
+        channel="EMAIL",
+        body_template="hi",
+    )
+    await db_session.commit()
+
+    foreign = User(
+        email=f"foreign-{uuid4().hex[:8]}@example.com",
+        hashed_password="x",
+        is_active=True,
+    )
+    local = User(
+        email=f"local-{uuid4().hex[:8]}@example.com",
+        hashed_password="x",
+        is_active=True,
+    )
+    db_session.add_all([foreign, local])
+    await db_session.flush()
+    role = Role(name=f"member-{uuid4().hex[:8]}", description="t", is_system=False)
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(UserRole(user_id=local.id, role_id=role.id, tenant_id=tenant.id))
+    await db_session.commit()
+
+    with pytest.raises(ValueError, match="recipient_not_in_tenant"):
+        await svc.schedule_delivery(
+            tenant.id,
+            channel="EMAIL",
+            recipient_user_id=foreign.id,
+            body="hello",
+            enqueue_outbox=False,
+        )
+
+    ok = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_user_id=local.id,
+        body="hello",
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+    assert ok.created is True
+    assert ok.delivery.recipient_user_id == local.id
+
+
+@pytest.mark.asyncio
+async def test_recipient_address_empty_or_whitespace_rejected(db_session, tenant):
+    svc = NotificationService(db_session)
+    with pytest.raises(ValueError, match="recipient_address_empty"):
+        await svc.schedule_delivery(
+            tenant.id,
+            channel="EMAIL",
+            recipient_address="   ",
+            body="x",
+            enqueue_outbox=False,
+        )
+    with pytest.raises(ValueError, match="recipient_required"):
+        await svc.schedule_delivery(
+            tenant.id,
+            channel="EMAIL",
+            body="x",
+            enqueue_outbox=False,
+        )
+
+
+@pytest.mark.asyncio
+async def test_outbox_handler_raises_on_failed_delivery_marks_outbox_failed(
+    db_session, tenant, monkeypatch
+):
+    """Provider fail → handler raises → dispatch_claimed mark_failed (retry path)."""
+    fail = FailingNotificationProvider()
+
+    def _failing_providers():
+        return {"EMAIL": fail, "SMS": fail, "WHATSAPP": fail, "PUSH": fail}
+
+    monkeypatch.setattr(
+        "app.services.notification.default_providers", _failing_providers
+    )
+
+    svc = NotificationService(db_session, providers=_failing_providers())
+    await svc.create_template(
+        tenant.id,
+        code="outbox-fail",
+        name="Outbox Fail",
+        channel="EMAIL",
+        body_template="fail",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="fail-outbox@example.com",
+        template_code="outbox-fail",
+        enqueue_outbox=True,
+    )
+    await db_session.commit()
+    delivery_id = scheduled.delivery.id
+    outbox_id = scheduled.outbox_event_id
+    assert outbox_id is not None
+
+    outbox = OutboxService(db_session)
+    claimed = await outbox.claim_pending(tenant_id=tenant.id, worker_id="w-notif-fail")
+    await db_session.commit()
+    assert len(claimed) == 1
+
+    async def publisher(ev: OutboxEvent) -> None:
+        await outbox_notification_requested_handler(db_session, ev)
+
+    stats = await outbox.dispatch_claimed(claimed, publisher, worker_id="w-notif-fail")
+    await db_session.commit()
+    assert stats["failed"] == 1
+    assert stats["published"] == 0
+
+    delivery = (
+        await db_session.execute(
+            select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
+        )
+    ).scalar_one()
+    assert delivery.status == DELIVERY_FAILED
+
+    ob = (
+        await db_session.execute(select(OutboxEvent).where(OutboxEvent.id == outbox_id))
+    ).scalar_one()
+    assert ob.status == "FAILED"
+    assert ob.error_message is not None
+    assert "notification_delivery_not_sent" in ob.error_message
+
+
+@pytest.mark.asyncio
+async def test_fail_then_process_due_failed_until_dead(db_session, tenant):
+    """Failing provider → FAILED → process_due_failed retries → DEAD at max_attempts."""
+    from datetime import UTC, datetime, timedelta
+
+    fail = FailingNotificationProvider()
+    svc = NotificationService(
+        db_session,
+        providers={"EMAIL": fail, "SMS": fail, "WHATSAPP": fail, "PUSH": fail},
+    )
+    await svc.create_template(
+        tenant.id,
+        code="fail-due-dead",
+        name="Fail Due Dead",
+        channel="EMAIL",
+        body_template="x",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="due-dead@example.com",
+        template_code="fail-due-dead",
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+
+    max_attempts = 3
+    first = await svc.dispatch_delivery(
+        tenant.id, scheduled.delivery.id, max_attempts=max_attempts
+    )
+    await db_session.commit()
+    assert first.status == DELIVERY_FAILED
+    assert first.attempt_count == 1
+
+    dead_seen = False
+    # Remaining attempts go through process_due_failed (not direct dispatch loop)
+    for _ in range(max_attempts):
+        row = (
+            await db_session.execute(
+                select(NotificationDelivery).where(
+                    NotificationDelivery.id == scheduled.delivery.id
+                )
+            )
+        ).scalar_one()
+        if row.status == DELIVERY_DEAD:
+            dead_seen = True
+            break
+        if row.status == DELIVERY_FAILED:
+            row.available_at = datetime.now(UTC) - timedelta(seconds=1)
+            await db_session.flush()
+            await db_session.commit()
+        stats = await svc.process_due_failed(tenant.id, max_attempts=max_attempts)
+        await db_session.commit()
+        if stats.get("dead", 0) >= 1:
+            dead_seen = True
+            break
+
+    final = (
+        await db_session.execute(
+            select(NotificationDelivery).where(
+                NotificationDelivery.id == scheduled.delivery.id
+            )
+        )
+    ).scalar_one()
+    assert dead_seen or final.status == DELIVERY_DEAD
+    assert final.status == DELIVERY_DEAD
+    assert final.attempt_count == max_attempts
+    assert final.error_message == "provider_forced_failure"

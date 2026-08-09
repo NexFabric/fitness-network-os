@@ -25,7 +25,10 @@ from app.services.report import ReportService, outbox_report_run_requested_handl
 async def db_session(pg_engine) -> AsyncGenerator[AsyncSession, None]:
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.rollback()
 
 
 @pytest_asyncio.fixture

@@ -62,7 +62,6 @@ class DeliveryScheduleRequest(BaseModel):
     correlation_id: str | None = Field(default=None, max_length=255)
     source_event_type: str | None = Field(default=None, max_length=255)
     source_event_id: str | None = Field(default=None, max_length=255)
-    enqueue_outbox: bool = True
 
 
 class DeliveryResponse(BaseModel):
@@ -187,7 +186,7 @@ async def schedule_delivery(
             correlation_id=body.correlation_id,
             source_event_type=body.source_event_type,
             source_event_id=body.source_event_id,
-            enqueue_outbox=body.enqueue_outbox,
+            enqueue_outbox=True,
         )
         await db.commit()
         await db.refresh(result.delivery)

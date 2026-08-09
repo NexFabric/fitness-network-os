@@ -3,8 +3,9 @@
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
 **Main HEAD (docs sync base):** `af8f809`  
-**PR #25 head (15.5):** `ffba0a8`  
-**Alembic head (15.5 branch):** `p9c0d1e2f3a4`
+**PR #25 (15.5):** open · CI green · await independent APPROVE  
+**PR #26 (16):** open · stacked on 15.5 · integrity CLEAN · not LOCKED  
+**Alembic:** 15.5 `p9…` · 16 `q0…`
 
 **Hierarchy (agents must follow):**
 
@@ -36,8 +37,8 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
-| 15.5 | Cross-cutting integrity closure | 🟡 **PR CI GREEN** (`ffba0a8`) — not LOCKED until merge |
-| 16 | Notifications & reports API | 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (merge after 15.5 LOCKED) |
+| 15.5 | Cross-cutting integrity closure | 🟡 **PR #25 CI GREEN** — not LOCKED until independent APPROVE + merge |
+| 16 | Notifications & reports API | 🟠 **PR #26** integrity CLEAN on branch — not LOCKED; merge after 15.5 LOCKED |
 | 17 | Real API V1 routers completion | ⬜ |
 | 18 | Vertical slice E2E | ⬜ |
 | 19–20 | Admin Web / Scanner PWA MVP | ⬜ |
@@ -106,18 +107,19 @@ Details: `backend/docs/plans/phase15_5_integrity_closure.md`
 
 ### Phase 16 — 🟠 IN PROGRESS (merge after 15.5 LOCKED)
 
-**Branch:** `feat/phase16-notifications-reports` · stacked on 15.5; **merge order: 15.5 first, then 16**.
+**PR #26** · branch `feat/phase16-notifications-reports` · stacked on 15.5 · migration `q0d1e2f3a4b5`  
+**Integrity closeout:** **CLEAN** (`backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md`) — not CI VERIFIED / not LOCKED.
 
-Waves:
+Delivered on branch:
 
-- **16A** Contracts/models (templates, deliveries, report definitions/runs; event registry; permissions)  
-- **16B** Service schedule + outbox (`notification.requested.v1` consumer)  
-- **16C** Adapters — **log provider only** (no real WhatsApp/SMS/Email SDK)  
-- **16D** Reports — definitions + async runs via outbox; MVP export metadata  
-- **16E** Tests/CI (dedupe, retry/DEAD, RLS, RBAC, no public generic inbox)
+- **16A** Expand models + event registry (`report.run.requested.v1`) + permissions seed  
+- **16B** Schedule + outbox; HTTP always enqueues; non-SENT raises for outbox `mark_failed`  
+- **16C** Log provider adapters only  
+- **16D** Report definitions/runs MVP export metadata  
+- **16E** fail→DEAD, recipient tenant bind, API MEMBER 403, cross-tenant isolation, Membership↛providers  
 
 Architecture: **Domain → Outbox → Notification consumer → Adapter**.  
-No generic public `/inbox`; provider webhooks later only.
+Merge order: **15.5 first, then 16**.
 
 Details: `backend/docs/plans/phase16_notifications_reports.md`
 

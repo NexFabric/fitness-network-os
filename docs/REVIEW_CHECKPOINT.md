@@ -3,8 +3,9 @@
 **Date:** 2026-08-10  
 **Purpose:** Single human-facing status of sequential locks; next lock is Phase 15.5 then Phase 16+.  
 **Main HEAD (docs sync base):** `af8f809`  
-**PR #25 head (15.5):** `ffba0a8`  
-**Alembic head on 15.5 branch:** `p9c0d1e2f3a4` · on main still ends Phase 15 track until merge
+**PR #25 (15.5):** open · CI green · **REVIEW_REQUIRED** (no self-APPROVE)  
+**PR #26 (16):** open · base `feat/phase15-5-integrity-closure` · integrity **CLEAN** on branch · **not merge-ahead of 15.5**  
+**Alembic:** 15.5 `p9c0d1e2f3a4` · 16 branch `q0d1e2f3a4b5`
 
 ## Locked / CI verified on `main`
 
@@ -26,18 +27,28 @@
 | Item | Status |
 |------|--------|
 | PR | [#25](https://github.com/NexFabric/fitness-network-os/pull/25) · branch `feat/phase15-5-integrity-closure` |
-| Head | `ffba0a8` (15.5 + B + C + D) |
+| Head | includes 15.5B/C/D + docs truth sync |
 | Code | P0 event ingress + MEMBER BOLA closed; P1 max-attempts / `*:self` / event registry closed |
-| PR CI | 🟢 green (Security, Lint+mypy, Unit/Integration incl. tenancy + RBAC parity, CodeQL) |
-| Independent human APPROVE | ❌ still required |
+| PR CI | 🟢 green |
+| Independent human APPROVE | ❌ still required (GitHub blocks self-APPROVE) |
 | Merged to main | ❌ |
 | Phase 15.5 LOCKED | ❌ until merge + main CI green |
+
+## Phase 16 — stacked WIP (not LOCKED)
+
+| Item | Status |
+|------|--------|
+| PR | [#26](https://github.com/NexFabric/fitness-network-os/pull/26) |
+| Integrity review | **CLEAN** (`backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md`) |
+| Local focused suite | 78 passed (notifications/reports/tenancy/API/arch/event/rbac) |
+| Merge | Only **after** 15.5 LOCKED on `main` (then rebase/retarget if needed) |
 
 ## Current position
 
 - **Completed domain track on main:** Phase 8 → 15  
-- **Active formal gate:** Phase **15.5** integrity closure — code complete on PR #25; **await APPROVE → merge → main CI → LOCKED docs**  
-- **Then:** Phase **16** Notifications & Reports → 17 routers → 18 E2E → 19–26  
+- **Formal gate #1:** Phase **15.5** PR #25 — APPROVE → merge → main CI → LOCKED  
+- **Parallel code track:** Phase **16** PR #26 prepared (stacked); do not merge before 15.5  
+- **Then:** Phase 17 routers → 18 E2E → 19–26  
 
 ## Explicitly not production-ready
 
@@ -59,5 +70,7 @@
 | 11 | `docs/plans/phase11_money_floats.md` |
 | 12–15 | `backend/docs/plans/phase12_idempotency.md` … `phase15_outbox_inbox.md` |
 | 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
+| 16 | `backend/docs/plans/phase16_notifications_reports.md` |
+| 16 integrity | `backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md` |
 | Checklist | `docs/PROGRESS_CHECKLIST.md` |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |

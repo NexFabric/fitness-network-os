@@ -33,6 +33,7 @@ from app.models.notification import (
     NotificationTemplate,
 )
 from app.models.outbox import InboxEvent
+from app.models.rbac import UserRole
 from app.services.notification_providers import (
     NotificationProvider,
     default_providers,
@@ -40,6 +41,7 @@ from app.services.notification_providers import (
 from app.services.outbox import OutboxService
 
 DEFAULT_MAX_ATTEMPTS = 5
+MAX_RECIPIENT_ADDRESS_LEN = 512
 
 
 @dataclass
@@ -150,7 +152,28 @@ class NotificationService:
         channel = channel.strip().upper()
         if channel not in ALLOWED_CHANNELS:
             raise ValueError(f"invalid_channel:{channel}")
-        if not recipient_address and not recipient_user_id:
+
+        # Free-form address allowed for staff/internal send; require non-empty + length.
+        if recipient_address is not None:
+            recipient_address = recipient_address.strip()
+            if not recipient_address:
+                raise ValueError("recipient_address_empty")
+            if len(recipient_address) > MAX_RECIPIENT_ADDRESS_LEN:
+                raise ValueError("recipient_address_too_long")
+
+        if recipient_user_id is not None:
+            role_result = await self.db.execute(
+                select(UserRole.id)
+                .where(
+                    UserRole.user_id == recipient_user_id,
+                    UserRole.tenant_id == tenant_id,
+                )
+                .limit(1)
+            )
+            if role_result.scalar_one_or_none() is None:
+                raise ValueError("recipient_not_in_tenant")
+
+        if not recipient_address and recipient_user_id is None:
             raise ValueError("recipient_required")
 
         ctx = dict(context or {})
@@ -298,7 +321,10 @@ class NotificationService:
     async def handle_notification_requested(
         self, _db: AsyncSession, event: InboxEvent | Any
     ) -> None:
-        """Outbox/inbox-style handler: payload must include delivery_id."""
+        """Outbox/inbox-style handler: payload must include delivery_id.
+
+        Raises when the delivery is not SENT so Outbox mark_failed can retry.
+        """
         payload = event.payload if hasattr(event, "payload") else event
         if isinstance(payload, dict) and is_envelope(payload):
             data = payload["data"]
@@ -312,7 +338,12 @@ class NotificationService:
         if not delivery_id:
             raise ValueError("delivery_id_required")
         tenant_id = event.tenant_id
-        await self.dispatch_delivery(tenant_id, UUID(str(delivery_id)))
+        delivery = await self.dispatch_delivery(tenant_id, UUID(str(delivery_id)))
+        if delivery.status != DELIVERY_SENT:
+            raise RuntimeError(
+                f"notification_delivery_not_sent:"
+                f"{delivery.status}:{delivery.error_message or ''}"
+            )
 
     async def process_due_failed(
         self,
@@ -357,6 +388,7 @@ async def outbox_notification_requested_handler(db: AsyncSession, event: Any) ->
     """Adapter for OutboxService.dispatch publisher-style or inbox handlers.
 
     When used as outbox *publisher*, ``event`` is OutboxEvent; when inbox, InboxEvent.
+    Raises on non-SENT so OutboxService.mark_failed / retry backoff runs.
     """
     svc = NotificationService(db)
     payload = event.payload
@@ -371,4 +403,9 @@ async def outbox_notification_requested_handler(db: AsyncSession, event: Any) ->
     delivery_id = data.get("delivery_id")
     if not delivery_id:
         raise ValueError("delivery_id_required")
-    await svc.dispatch_delivery(event.tenant_id, UUID(str(delivery_id)))
+    delivery = await svc.dispatch_delivery(event.tenant_id, UUID(str(delivery_id)))
+    if delivery.status != DELIVERY_SENT:
+        raise RuntimeError(
+            f"notification_delivery_not_sent:{delivery.status}:"
+            f"{delivery.error_message or 'unknown'}"
+        )

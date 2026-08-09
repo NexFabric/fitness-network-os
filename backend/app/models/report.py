@@ -58,8 +58,10 @@ class ReportRun(Base, TenantMixin):
     __tablename__ = "report_runs"
 
     definition_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    # Index via _model_table_args (ix_report_runs_status on tenant_id, status).
+    # Do not set index=True here — same auto name collides with the composite Index.
     status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=REPORT_STATUS_PENDING, index=True
+        String(50), nullable=False, default=REPORT_STATUS_PENDING
     )
     result_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     export_format: Mapped[str | None] = mapped_column(String(32), nullable=True)

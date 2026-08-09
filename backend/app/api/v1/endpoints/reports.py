@@ -51,7 +51,6 @@ class RunRequest(BaseModel):
     parameters: dict[str, Any] | None = None
     export_format: str = Field(default="JSON", max_length=32)
     dedupe_key: str | None = Field(default=None, max_length=255)
-    enqueue_outbox: bool = True
 
 
 class RunResponse(BaseModel):
@@ -153,7 +152,7 @@ async def request_run(
             export_format=body.export_format,
             dedupe_key=body.dedupe_key,
             requested_by_user_id=current_user.id,
-            enqueue_outbox=body.enqueue_outbox,
+            enqueue_outbox=True,
         )
         await db.commit()
         await db.refresh(result.run)

@@ -1,10 +1,11 @@
 # Phase 16 — Notifications & Reports API
 
-**Status:** 🟠 IN PROGRESS on `feat/phase16-notifications-reports`  
-**Depends on:** Phase 15.5 integrity closure **LOCKED on main** (merge order: **15.5 first, then 16**)  
+**Status:** 🟠 IN PROGRESS on `feat/phase16-notifications-reports` — **not LOCKED**; not production-ready  
+**Depends on:** Phase 15.5 integrity closure **LOCKED on main** (merge order: **15.5 first, then 16**; 15.5 still **not LOCKED**)  
 **Stacked on:** Phase 15.5 branch work (outbox fencing, event registry, no public generic inbox)  
 **Plan path:** `backend/docs/plans/phase16_notifications_reports.md`  
-**Do not claim:** production-ready (Phase 26 exit gate only)
+**Do not claim:** production-ready (Phase 26 exit gate only)  
+**Residual (2026-08-10):** P1 harden path CLOSED on branch (HTTP always enqueues outbox; outbox handler raises `notification_delivery_not_sent`; `recipient_not_in_tenant` for `recipient_user_id`). Formal CI green + 15.5 merge-first still required.
 
 ## Goal
 
@@ -103,22 +104,22 @@ Register (and keep versioned) at least:
 |----------|-------------|----------|
 | `NOTIFICATION_REQUESTED_V1` | `notification.requested.v1` | Notification schedule |
 | `NOTIFICATION_EMAIL_V1` | `notification.email.v1` | Optional narrow channel event (if used) |
-| `REPORT_RUN_REQUESTED_V1` | `report.run_requested.v1` | Report run request |
+| `REPORT_RUN_REQUESTED_V1` | `report.run.requested.v1` | Report run request (multi-segment action; registry source of truth) |
 
 Unknown well-formed types remain **DENY** on enqueue (15.5D invariant).
 
 ### Permissions (seed + YAML parity)
 
-Introduce least-privilege grants (names illustrative; align with `permissions.yml` + DB seed):
+**Source of truth (implemented):** coarse permissions in `permissions.yml` + seed in `q0d1e2f3a4b5` (not the finer names below as original sketch):
 
 | Permission | Typical roles | Surface |
 |------------|---------------|---------|
-| `notifications:templates:write` | GYM_OWNER / GYM_MANAGER | create/list templates |
-| `notifications:deliveries:read` | GYM_OWNER / GYM_MANAGER | list/get deliveries |
-| `notifications:deliveries:write` | GYM_OWNER / GYM_MANAGER (ops) | manual schedule (if exposed) |
-| `reports:definitions:write` | GYM_OWNER / GYM_MANAGER | create/list definitions |
-| `reports:runs:write` | GYM_OWNER / GYM_MANAGER | request run |
-| `reports:runs:read` | GYM_OWNER / GYM_MANAGER | get run status |
+| `notifications:read` | GYM_OWNER / ADMIN / MANAGER / FRONT_DESK | list/get templates & deliveries |
+| `notifications:write` | GYM_OWNER / ADMIN | create/manage templates |
+| `notifications:send` | GYM_OWNER / ADMIN / MANAGER / FRONT_DESK | schedule deliveries |
+| `reports:read` | GYM_OWNER / ADMIN / MANAGER / ACCOUNTANT | list definitions / get runs |
+| `reports:write` | GYM_OWNER / ADMIN | create/manage definitions |
+| `reports:run` | GYM_OWNER / ADMIN / MANAGER | request runs |
 
 MEMBER: **no** tenant-wide notification dump / report run of other members without `*:self` design (defer self-facing product until needed).  
 GYM_* must **not** regain generic `outbox:*` / `inbox:*` write from 15.5C removal.
@@ -138,10 +139,10 @@ GYM_* must **not** regain generic `outbox:*` / `inbox:*` write from 15.5C remova
 | Operation | Behavior |
 |-----------|----------|
 | `create_template` / `get` / `list` | Tenant-scoped CRUD lite |
-| `schedule_delivery` | Validate channel + recipient; optional template render (`string.Template` safe substitute); insert delivery; optional **same-TX** `OutboxService.enqueue(notification.requested.v1, {delivery_id, channel}, dedupe_key=notif-req:{id})` |
-| `dispatch_delivery` | `FOR UPDATE` row; SENDING + attempt++; call provider; SENT or FAILED/DEAD |
+| `schedule_delivery` | Validate channel + recipient (`recipient_user_id` must have tenant `UserRole` else `recipient_not_in_tenant`); optional template render; insert delivery; **same-TX** outbox enqueue when `enqueue_outbox=True` (HTTP always True; flag service/test-only) |
+| `dispatch_delivery` | `FOR UPDATE` row; SENDING + attempt++; call provider; SENT or FAILED/DEAD (`no_provider` included) |
 | `process_due_failed` | Claim FAILED due rows (`SKIP LOCKED`); re-dispatch without re-injecting public inbox |
-| Outbox handler | Resolve `delivery_id` from envelope `data`; call `dispatch_delivery` |
+| Outbox handler | Resolve `delivery_id` from envelope `data`; `dispatch_delivery`; **raise** `notification_delivery_not_sent` if status ≠ SENT so outbox retry stays alive |
 
 **Dedupe:** `UNIQUE(tenant_id, dedupe_key)` + IntegrityError → return existing (`created=False`).
 
@@ -202,7 +203,7 @@ NotificationProvider
 | Operation | Behavior |
 |-----------|----------|
 | `create_definition` / `get_by_code` / `list` | Tenant-scoped definition catalog |
-| `request_run` | Resolve active definition; create `ReportRun` PENDING; enqueue `report.run_requested.v1` with `{run_id, definition_code}`; dedupe via `dedupe_key` |
+| `request_run` | Resolve active definition; create `ReportRun` PENDING; enqueue `report.run.requested.v1` with `{run_id, definition_code}`; dedupe via `dedupe_key` |
 | `execute_run` | Transition RUNNING → SUCCEEDED with **placeholder** `result_url` (e.g. `memory://…`) and `row_count=0` MVP; or FAILED on error |
 | Outbox handler | Load run_id → `execute_run` |
 
@@ -232,7 +233,7 @@ NotificationProvider
 | Outbox path | Schedule → enqueue registered type → handler → SENT via log provider |
 | Retry / DEAD | Forced fail provider → FAILED → process_due → DEAD after max attempts |
 | Reports | Definition + request_run → outbox → execute_run SUCCEEDED; duplicate dedupe |
-| Event registry | Unregistered type cannot enqueue; `report.run_requested.v1` registered |
+| Event registry | Unregistered type cannot enqueue; `report.run.requested.v1` registered |
 | RBAC | Permission matrix grants; MEMBER cannot list tenant deliveries if not granted |
 | RLS / tenancy | Cross-tenant isolation on templates, deliveries, definitions, runs |
 | Ingress safety | No generic public inbox/outbox inject routes reappear |
@@ -248,12 +249,15 @@ NotificationProvider
 
 ### Exit criteria
 
-- [ ] 16A–16D implemented behind routers + services  
-- [ ] Expand migration(s) + permission seed applied; `alembic check` clean  
-- [ ] Tests above green on real PG  
-- [ ] PR CI green  
-- [ ] Independent review; merge **only after** Phase 15.5 is LOCKED on main  
-- [ ] Docs: checklist + master plan → Phase 16 CI VERIFIED / LOCKED (post-merge only)
+Honest status on `feat/phase16-notifications-reports` (2026-08-10). **Not LOCKED. Not production-ready.**
+
+- [x] 16A–16D implemented behind routers + services (templates/deliveries, log providers, report definitions/runs, outbox types)
+- [x] Expand migration + permission seed (`q0d1e2f3a4b5`); keep `alembic check` / permissions parity green on PR
+- [x] 16E **MVP** tests on real PG path: service outbox/dedupe/fail→DEAD/`process_due_failed`; API schedule/run; MEMBER 403 RBAC; handler raises `notification_delivery_not_sent`; no client `enqueue_outbox`; `recipient_not_in_tenant`
+- [ ] Full 16E table optional residual: deep RLS isolation suite + Membership↛providers architecture fitness test
+- [ ] PR CI fully green (do not self-claim CI VERIFIED until required checks pass)
+- [ ] Independent review residual closed; merge **only after** Phase 15.5 is LOCKED on main (**15.5 still not LOCKED**)
+- [ ] Docs: checklist + master plan → Phase 16 CI VERIFIED / LOCKED (**post-merge only** — do not mark LOCKED now)
 
 ---
 

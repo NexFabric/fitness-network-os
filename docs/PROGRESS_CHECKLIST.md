@@ -2,8 +2,10 @@
 
 **Last updated:** 2026-08-10  
 **Main HEAD (docs sync base):** `af8f809` (Phase 8–15 LOCKED)  
-**Active branch work:** Phase **15.5** on PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) head `ffba0a8`; Phase **16** 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (stacked; merge **after** 15.5 LOCKED)  
-**Alembic head (15.5 branch):** `p9c0d1e2f3a4` (after `n7…` + `o8…`)
+**Active branch work:**  
+- Phase **15.5** PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) (`feat/phase15-5-integrity-closure`, docs head `aec1b5f`) — **not LOCKED**  
+- Phase **16** PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) (`feat/phase16-notifications-reports`, stacked on 15.5) — 🟠 **IN PROGRESS**, integrity **CLEAN** on branch — **not LOCKED**  
+**Alembic:** 15.5 head `p9c0d1e2f3a4` · Phase 16 branch adds `q0d1e2f3a4b5`
 
 **Maturity Levels:**
 - IMPLEMENTED
@@ -24,8 +26,8 @@
 |------|--------|
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
-| Phase 15.5 integrity closure | 🟡 **CODE + PR CI GREEN** (`ffba0a8`) — **not LOCKED** (await human APPROVE + merge + main CI) |
-| Phase 16 Notifications & Reports | 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (merge after 15.5 LOCKED) |
+| Phase 15.5 integrity closure | 🟡 **PR #25 CI GREEN** — **not LOCKED** (human APPROVE + merge + main CI still open) |
+| Phase 16 Notifications & Reports | 🟠 **PR #26 stacked** — code + tests + integrity CLEAN on branch; **not LOCKED**; merge **after** 15.5 LOCKED |
 | Phase 17–26 | ⬜ NOT STARTED |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
@@ -67,17 +69,17 @@
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
 - [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`; docs #23)
-- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟡 **PR #25** head `ffba0a8` (15.5B/C/D applied; PR CI green; **await independent APPROVE + merge** → then LOCKED)
+- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟡 **PR #25** (15.5B/C/D; PR CI green; **await independent APPROVE + merge** → LOCKED)
   - 15.5B: RBAC least-priv, fencing, inbox atomicity, finance/ledger DoD
   - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
   - Alembic: `p9c0d1e2f3a4`
-- [ ] Phase 16: Notifications & Reports API — 🟠 **IN PROGRESS** on `feat/phase16-notifications-reports` (plan: `backend/docs/plans/phase16_notifications_reports.md`; **merge only after 15.5 LOCKED on main**)
-  - 16A: contracts/models + event registry + permissions
-  - 16B: schedule + outbox consumer (Domain → Outbox → Notification → Adapter)
-  - 16C: log provider adapters only (no real WhatsApp/SMS SDK)
-  - 16D: report definitions/runs (MVP export metadata)
-  - 16E: tests/CI — no generic public `/inbox`; provider webhooks later
+- [ ] Phase 16: Notifications & Reports API — 🟠 **PR #26** stacked on 15.5 — **IN PROGRESS / integrity CLEAN** (**not LOCKED**; merge only after 15.5 LOCKED)
+  - Plan: `backend/docs/plans/phase16_notifications_reports.md`
+  - Integrity closeout: `backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md` → **CLEAN**
+  - 16A–D: models, services, log adapters, HTTP `/notifications` + `/reports`, migration `q0d1e2f3a4b5` + RBAC seed
+  - 16E tests: fail→DEAD, outbox non-SENT → mark_failed, recipient tenant bind, API MEMBER 403, cross-tenant isolation, architecture Membership↛providers
+  - Residual P2 only (free-form staff address, unscheduled `process_due_failed` worker, 201-on-dedupe)
 - [ ] Phase 17: Real API V1 Routers (completion / gaps)
 
 ### Phase 18-26: Executable MVP & Verification
