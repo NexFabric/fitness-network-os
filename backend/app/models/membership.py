@@ -69,6 +69,12 @@ class Membership(TenantMixin, Base):
     terms_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 class Entitlement(TenantMixin, Base):
+    """DEPRECATED (Phase 9+): use EntitlementDefinition / Wallet / Transaction.
+
+    Legacy table retained until a future CONTRACT migration (Phase 15.5 plan).
+    Do not add new writers. Prefer ``app.models.entitlement`` package.
+    """
+
     __tablename__ = "entitlements"
 
     member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)

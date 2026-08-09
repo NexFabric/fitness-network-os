@@ -234,6 +234,8 @@ class Payment(TenantMixin, Base):
 
 
 class PaymentAllocation(TenantMixin, Base):
+    """Immutable payment→invoice allocation. Never mutate amount; reverse via reversals."""
+
     __tablename__ = "payment_allocations"
 
     payment_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
@@ -255,6 +257,42 @@ class PaymentAllocation(TenantMixin, Base):
     )
     invoice: Mapped["Invoice"] = relationship(
         "Invoice", back_populates="allocations", overlaps="allocations,payment"
+    )
+    reversals: Mapped[list["PaymentAllocationReversal"]] = relationship(
+        "PaymentAllocationReversal",
+        back_populates="allocation",
+        overlaps="allocation",
+    )
+
+
+class PaymentAllocationReversal(TenantMixin, Base):
+    """Append-only reversal of a payment allocation (refund unwind)."""
+
+    __tablename__ = "payment_allocation_reversals"
+
+    allocation_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    refund_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    _model_table_args = (
+        ForeignKeyConstraint(
+            ["tenant_id", "allocation_id"],
+            ["payment_allocations.tenant_id", "payment_allocations.id"],
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "refund_id"],
+            ["refunds.tenant_id", "refunds.id"],
+        ),
+        CheckConstraint(
+            "amount_minor > 0", name="ck_payment_allocation_reversals_amount_pos"
+        ),
+    )
+
+    allocation: Mapped["PaymentAllocation"] = relationship(
+        "PaymentAllocation",
+        back_populates="reversals",
+        overlaps="reversals",
     )
 
 

@@ -1,8 +1,9 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-09  
-**Main HEAD (docs sync):** `233f0ae` (includes Phase 15 lock docs PR #23)  
-**Alembic head:** `m6f7a8b9c0d1` (seed outbox permissions; after Phase 15 expand `l5e6f7a8b9c0`)
+**Main HEAD (docs sync base):** `af8f809`  
+**Active branch work:** Phase **15.5** Cross-Cutting Integrity Closure  
+**Alembic head (15.5):** `n7a8b9c0d1e2`
 
 **Maturity Levels:**
 - IMPLEMENTED
@@ -23,7 +24,8 @@
 |------|--------|
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
-| Phase 16–26 | ⬜ NOT STARTED |
+| Phase 15.5 integrity closure | 🟠 IN PROGRESS (RBAC/idempotency/outbox/finance ledger) |
+| Phase 16–26 | ⬜ NOT STARTED (16 after 15.5) |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -64,7 +66,8 @@
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
 - [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`; docs #23)
-- [ ] Phase 16: Notifications & Reports API — **NEXT**
+- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟠 IN PROGRESS (`feat/phase15-5-integrity-closure`)
+- [ ] Phase 16: Notifications & Reports API — after 15.5
 - [ ] Phase 17: Real API V1 Routers (completion / gaps)
 
 ### Phase 18-26: Executable MVP & Verification

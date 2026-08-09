@@ -17,7 +17,7 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next active phase:** **16 — Notifications & Reports API**  
+**Next active phase:** **15.5 — Cross-Cutting Integrity Closure** → then **16 Notifications & Reports**  
 **Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE.
 
 ---
@@ -35,7 +35,8 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
-| 16 | Notifications & reports API | ⬜ **NEXT** |
+| 15.5 | Cross-cutting integrity closure | 🟠 **ACTIVE** (before Phase 16) |
+| 16 | Notifications & reports API | ⬜ after 15.5 |
 | 17 | Real API V1 routers completion | ⬜ |
 | 18 | Vertical slice E2E | ⬜ |
 | 19–20 | Admin Web / Scanner PWA MVP | ⬜ |
@@ -83,7 +84,15 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Expand: attempt_count, available_at, dedupe_key; UNIQUE(tenant_id, event_id)  
 - Details: `backend/docs/plans/phase15_outbox_inbox.md`
 
-### Phase 16 — NEXT (not started)
+### Phase 15.5 — ACTIVE (integrity closure)
+
+- RBAC `permissions.yml` ↔ DB parity CI  
+- Idempotency business savepoint + FAILED same-hash only  
+- Outbox lease reclaim; inbox FAILED retry  
+- Event envelope v1; finance allocation reversals; ledger RESTRICT/triggers  
+- Details: `backend/docs/plans/phase15_5_integrity_closure.md`
+
+### Phase 16 — AFTER 15.5 (not started)
 
 - Notification templates / deliveries service + API  
 - Report definitions / runs (export hooks)  

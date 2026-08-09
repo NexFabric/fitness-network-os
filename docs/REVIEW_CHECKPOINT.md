@@ -23,8 +23,9 @@
 ## Current position
 
 - **Completed domain track:** Phase 8 → 15  
-- **Next:** Phase **16** Notifications & Reports API  
-- **Then:** 17 routers completion → 18 vertical slice E2E → 19–26 MVP exit  
+- **Active:** Phase **15.5** Cross-Cutting Integrity Closure (RBAC drift, idempotency atomicity, outbox lease, finance reversals, ledger append-only)  
+- **Then:** Phase **16** Notifications & Reports → 17 routers → 18 E2E → 19–26  
+
 
 ## Explicitly not production-ready
 

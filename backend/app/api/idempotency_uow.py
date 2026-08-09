@@ -1,4 +1,8 @@
-"""Thin unit-of-work helper for idempotent API handlers."""
+"""Thin unit-of-work helper for idempotent API handlers.
+
+Business work runs inside a nested savepoint so partial flushes roll back on
+failure while the idempotency FAILED marker can still be committed.
+"""
 
 from __future__ import annotations
 
@@ -28,11 +32,10 @@ async def run_idempotent[T](
 ) -> T:
     """
     business() must return (result, http_status_for_cache, response_body_dict).
-    On REPLAY, raises HTTPException with stored status/body OR returns via special path.
 
-    For REPLAY of successful responses, raises HTTPException is not ideal for 200 —
-    we return a special approach: business returns value; for REPLAY we reconstruct
-    by raising ReplayResult.
+    Invariants:
+    - Success: business mutations + SUCCEEDED commit together.
+    - Failure: business mutations rollback (savepoint); FAILED record may commit.
     """
     request_hash = IdempotencyService.canonical_request_hash(request_payload)
     owner = uuid4().hex
@@ -64,7 +67,6 @@ async def run_idempotent[T](
             headers={"Retry-After": str(begin.retry_after_seconds or 1)},
         )
     if begin.outcome == IdempotencyOutcome.REPLAY:
-        # Prefer returning body via HTTPException for non-2xx, else use ReplayEnvelope
         body = begin.response_body or {}
         code = begin.response_status or 200
         if code >= 400:
@@ -73,25 +75,26 @@ async def run_idempotent[T](
 
     assert begin.record is not None
     try:
-        result, http_status, response_body = await business()
-        rid = None
-        if resource_id_from_result is not None:
-            rid = resource_id_from_result(result)
-        await IdempotencyService.complete(
-            db,
-            begin.record,
-            owner_token=owner,
-            response_status=http_status,
-            response_body=response_body,
-            resource_type=resource_type,
-            resource_id=rid,
-        )
+        # Nested savepoint: any flush inside business rolls back on exception.
+        async with db.begin_nested():
+            result, http_status, response_body = await business()
+            rid = None
+            if resource_id_from_result is not None:
+                rid = resource_id_from_result(result)
+            await IdempotencyService.complete(
+                db,
+                begin.record,
+                owner_token=owner,
+                response_status=http_status,
+                response_body=response_body,
+                resource_type=resource_type,
+                resource_id=rid,
+            )
         await db.commit()
         return result
     except HTTPException as he:
-        # Cache client/business HTTP errors as FAILED? Prefer not to lock out retries for 400.
-        # Mark failed only for unexpected; re-raise 4xx without FAILED to allow retry.
-        if he.status_code >= 500 and begin.record is not None:
+        # Savepoint already rolled back business flushes.
+        if begin.record is not None:
             await IdempotencyService.fail(
                 db,
                 begin.record,
@@ -102,19 +105,6 @@ async def run_idempotent[T](
                 else he.detail,
             )
             await db.commit()
-        else:
-            # release lease by failing softly so retries work for validation errors
-            if begin.record is not None:
-                await IdempotencyService.fail(
-                    db,
-                    begin.record,
-                    owner_token=owner,
-                    response_status=he.status_code,
-                    response_body={"detail": he.detail}
-                    if not isinstance(he.detail, dict)
-                    else he.detail,
-                )
-                await db.commit()
         raise
     except Exception as e:
         if begin.record is not None:
