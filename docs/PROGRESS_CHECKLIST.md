@@ -37,8 +37,8 @@
 - [x] Phase 8: Membership Domain Correctness - 🟢 CI VERIFIED
 - [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
-- [ ] Phase 11: Remove Money Floats
-- [ ] Phase 12: Real Idempotency Engine
+- [x] Phase 11: Remove Money Floats - 🟠 IMPLEMENTED (PR #17 — review/merge pending)
+- [ ] Phase 12: Real Idempotency Engine  ← **STOP / REVIEW GATE before starting**
 - [ ] Phase 13: Real QR & Access Engine
 - [ ] Phase 14: Member / Gym Core Completion
 - [ ] Phase 15: Outbox / Inbox / Job Engine
@@ -71,16 +71,17 @@
 - Plans & Plan Versions - 🟢 CI VERIFIED
 - Subscriptions / Periods - 🟢 CI VERIFIED
 - Freeze / Renew / Cancel Lifecycle - 🟢 CI VERIFIED
-- Usage Wallets & Entitlements - 🟡 MODEL
+- Usage Wallets & Entitlements - 🟢 SERVICE (Phase 9)
 - Access Policies - 🟡 MODEL
 
 ### Wave 3 — Finance
-- Billing Accounts - 🟢 SERVICE
-- Invoices & Invoice Items - 🟢 SERVICE
-- Payments & Allocations - 🟢 SERVICE
-- Partial Payments - 🟢 SERVICE
-- Refund, Credit & Discount Logic - 🟢 SERVICE
-- Reconciliation - 🟢 SERVICE
+- Billing Accounts - 🟢 CI VERIFIED (Phase 10)
+- Invoices & Invoice Items - 🟢 CI VERIFIED (Phase 10)
+- Payments & Allocations - 🟢 CI VERIFIED (Phase 10)
+- Partial Payments - 🟢 CI VERIFIED (Phase 10)
+- Refund, Credit & Discount Logic - 🟢 CI VERIFIED (Phase 10)
+- Reconciliation - 🟢 CI VERIFIED (Phase 10)
+- No money floats (amount_minor) - 🟠 IMPLEMENTED (Phase 11 / PR #17)
 
 ### Wave 4 — Access
 - QR Credential Issuer & Key Rotation - 🟡 MODEL
@@ -94,9 +95,9 @@
 - Scheduled Jobs (Outbox/Inbox) - 🟡 MODEL
 
 ### Wave 6 — Growth
-- Lead CRM & Opportunities - 🟡 MODEL
+- Lead CRM & Opportunities - 🟡 MODEL (`value_amount_minor` + currency after Phase 11)
 - Renewal Pipeline & Revenue Recovery - 🟡 MODEL
-- Member Health & Retention Cockpit - 🟡 MODEL
+- Member Health & Retention Cockpit - 🟡 MODEL (`churn_probability_bps` after Phase 11)
 - Tasks & Automations - 🟡 MODEL
 
 ### Wave 7 — Federation

@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
+    CheckConstraint,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -35,6 +36,10 @@ class Opportunity(TenantMixin, Base):
         ForeignKeyConstraint(["tenant_id", "lead_id"], ["leads.tenant_id", "leads.id"]),
         ForeignKeyConstraint(
             ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
+        CheckConstraint(
+            "value_amount_minor IS NULL OR value_amount_minor >= 0",
+            name="ck_opportunities_value_amount_minor_nonneg",
         ),
     )
     member_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
@@ -76,6 +81,11 @@ class RetentionCockpit(TenantMixin, Base):
     _model_table_args = (
         ForeignKeyConstraint(
             ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
+        CheckConstraint(
+            "churn_probability_bps IS NULL OR "
+            "(churn_probability_bps >= 0 AND churn_probability_bps <= 10000)",
+            name="ck_retention_churn_bps_range",
         ),
     )
     health_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
