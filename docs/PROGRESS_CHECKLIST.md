@@ -1,9 +1,9 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-09  
-**Main HEAD (docs sync base):** `af8f809`  
-**Active branch work:** Phase **15.5** Cross-Cutting Integrity Closure  
-**Alembic head (15.5):** `n7a8b9c0d1e2`
+**Last updated:** 2026-08-10  
+**Main HEAD (docs sync base):** `af8f809` (Phase 8–15 LOCKED)  
+**Active branch work:** Phase **15.5** on PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) head `ffba0a8`  
+**Alembic head (15.5 branch):** `p9c0d1e2f3a4` (after `n7…` + `o8…`)
 
 **Maturity Levels:**
 - IMPLEMENTED
@@ -24,8 +24,8 @@
 |------|--------|
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
-| Phase 15.5 integrity closure | 🟠 IN PROGRESS (RBAC/idempotency/outbox/finance ledger) |
-| Phase 16–26 | ⬜ NOT STARTED (16 after 15.5) |
+| Phase 15.5 integrity closure | 🟡 **CODE + PR CI GREEN** (`ffba0a8`) — **not LOCKED** (await human APPROVE + merge + main CI) |
+| Phase 16–26 | ⬜ NOT STARTED (16 after 15.5 LOCKED) |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -66,8 +66,12 @@
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
 - [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`; docs #23)
-- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟠 IN PROGRESS (`feat/phase15-5-integrity-closure`)
-- [ ] Phase 16: Notifications & Reports API — after 15.5
+- [ ] Phase 15.5: Cross-Cutting Integrity Closure — 🟡 **PR #25** head `ffba0a8` (15.5B/C/D applied; PR CI green; **await independent APPROVE + merge** → then LOCKED)
+  - 15.5B: RBAC least-priv, fencing, inbox atomicity, finance/ledger DoD
+  - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
+  - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
+  - Alembic: `p9c0d1e2f3a4`
+- [ ] Phase 16: Notifications & Reports API — **only after 15.5 LOCKED on main**
 - [ ] Phase 17: Real API V1 Routers (completion / gaps)
 
 ### Phase 18-26: Executable MVP & Verification

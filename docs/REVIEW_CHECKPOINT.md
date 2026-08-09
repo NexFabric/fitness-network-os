@@ -1,9 +1,10 @@
-# Review Checkpoint — Phase 8–15 LOCKED on main
+# Review Checkpoint — Phase 8–15 LOCKED on main · 15.5 merge gate open
 
-**Date:** 2026-08-09  
-**Purpose:** Single human-facing status of sequential locks; next work is Phase 16+.  
-**Main HEAD (docs sync):** `233f0ae`  
-**Alembic head:** `m6f7a8b9c0d1`
+**Date:** 2026-08-10  
+**Purpose:** Single human-facing status of sequential locks; next lock is Phase 15.5 then Phase 16+.  
+**Main HEAD (docs sync base):** `af8f809`  
+**PR #25 head (15.5):** `ffba0a8`  
+**Alembic head on 15.5 branch:** `p9c0d1e2f3a4` · on main still ends Phase 15 track until merge
 
 ## Locked / CI verified on `main`
 
@@ -18,14 +19,25 @@
 | Phase 13 QR & Access | [#20](https://github.com/NexFabric/fitness-network-os/pull/20) | `babc33c` | 🟢 LOCKED / CI VERIFIED |
 | Phase 14 Member/Gym | [#21](https://github.com/NexFabric/fitness-network-os/pull/21) | `e332cf5` | 🟢 LOCKED / CI VERIFIED |
 | Phase 15 Outbox/Inbox | [#22](https://github.com/NexFabric/fitness-network-os/pull/22) | `67b8214` | 🟢 LOCKED / CI VERIFIED |
-| Phase 15 lock docs | [#23](https://github.com/NexFabric/fitness-network-os/pull/23) | `233f0ae` | 🟢 docs |
+| Phase 15 lock docs | [#23](https://github.com/NexFabric/fitness-network-os/pull/23) | `af8f809` lineage | 🟢 docs |
+
+## Phase 15.5 — open merge gate (not LOCKED)
+
+| Item | Status |
+|------|--------|
+| PR | [#25](https://github.com/NexFabric/fitness-network-os/pull/25) · branch `feat/phase15-5-integrity-closure` |
+| Head | `ffba0a8` (15.5 + B + C + D) |
+| Code | P0 event ingress + MEMBER BOLA closed; P1 max-attempts / `*:self` / event registry closed |
+| PR CI | 🟢 green (Security, Lint+mypy, Unit/Integration incl. tenancy + RBAC parity, CodeQL) |
+| Independent human APPROVE | ❌ still required |
+| Merged to main | ❌ |
+| Phase 15.5 LOCKED | ❌ until merge + main CI green |
 
 ## Current position
 
-- **Completed domain track:** Phase 8 → 15  
-- **Active:** Phase **15.5** Cross-Cutting Integrity Closure (RBAC drift, idempotency atomicity, outbox lease, finance reversals, ledger append-only)  
+- **Completed domain track on main:** Phase 8 → 15  
+- **Active formal gate:** Phase **15.5** integrity closure — code complete on PR #25; **await APPROVE → merge → main CI → LOCKED docs**  
 - **Then:** Phase **16** Notifications & Reports → 17 routers → 18 E2E → 19–26  
-
 
 ## Explicitly not production-ready
 
@@ -37,7 +49,7 @@
 ## Local verification notes
 
 - Postgres test DB often on Docker port **5433** (`TEST_DATABASE_URL`)  
-- Full suite scale after Phase 15: ~113 unit/integration tests (e2e ignored)  
+- Full suite scale after 15.5D: ~187 unit/integration tests (e2e ignored)  
 
 ## Plan index
 
@@ -46,5 +58,6 @@
 | 9 | `backend/docs/plans/phase9_plan.md` |
 | 11 | `docs/plans/phase11_money_floats.md` |
 | 12–15 | `backend/docs/plans/phase12_idempotency.md` … `phase15_outbox_inbox.md` |
+| 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
 | Checklist | `docs/PROGRESS_CHECKLIST.md` |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |

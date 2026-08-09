@@ -1,9 +1,10 @@
 # FITNESS NETWORK OS — IMPLEMENTATION MASTER PLAN
 
 **Status:** Living roadmap (Phase 0–26)  
-**Last updated:** 2026-08-09  
-**Main HEAD (docs sync):** `233f0ae`  
-**Alembic head:** `m6f7a8b9c0d1`
+**Last updated:** 2026-08-10  
+**Main HEAD (docs sync base):** `af8f809`  
+**PR #25 head (15.5):** `ffba0a8`  
+**Alembic head (15.5 branch):** `p9c0d1e2f3a4`
 
 **Hierarchy (agents must follow):**
 
@@ -17,7 +18,7 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next active phase:** **15.5 — Cross-Cutting Integrity Closure** → then **16 Notifications & Reports**  
+**Next formal step:** Phase **15.5** PR #25 → independent APPROVE → merge → main CI → **LOCKED** → then **16 Notifications & Reports**  
 **Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE.
 
 ---
@@ -35,8 +36,8 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | 13 | QR & access engine | 🟢 LOCKED (PR #20 merge `babc33c`) |
 | 14 | Member / gym core | 🟢 LOCKED (PR #21 merge `e332cf5`) |
 | 15 | Outbox / inbox / jobs | 🟢 LOCKED (PR #22 merge `67b8214`) |
-| 15.5 | Cross-cutting integrity closure | 🟠 **ACTIVE** (before Phase 16) |
-| 16 | Notifications & reports API | ⬜ after 15.5 |
+| 15.5 | Cross-cutting integrity closure | 🟡 **PR CI GREEN** (`ffba0a8`) — not LOCKED until merge |
+| 16 | Notifications & reports API | ⬜ after 15.5 LOCKED |
 | 17 | Real API V1 routers completion | ⬜ |
 | 18 | Vertical slice E2E | ⬜ |
 | 19–20 | Admin Web / Scanner PWA MVP | ⬜ |
@@ -84,19 +85,31 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 - Expand: attempt_count, available_at, dedupe_key; UNIQUE(tenant_id, event_id)  
 - Details: `backend/docs/plans/phase15_outbox_inbox.md`
 
-### Phase 15.5 — ACTIVE (integrity closure)
+### Phase 15.5 — MERGE GATE OPEN (not LOCKED)
 
-- RBAC `permissions.yml` ↔ DB parity CI  
+**PR #25** head `ffba0a8` · alembic `p9c0d1e2f3a4` · PR CI green as of 2026-08-10.
+
+Delivered on branch (do not treat as main LOCKED yet):
+
+- RBAC `permissions.yml` ↔ DB parity (missing + extra grants)  
 - Idempotency business savepoint + FAILED same-hash only  
-- Outbox lease reclaim; inbox FAILED retry  
-- Event envelope v1; finance allocation reversals; ledger RESTRICT/triggers  
-- Details: `backend/docs/plans/phase15_5_integrity_closure.md`
+- Outbox lease reclaim + worker CAS fencing + max-attempt crash-loop → DEAD  
+- Inbox savepoint + FAILED retry  
+- Event envelope v1 + **canonical event_type registry** on enqueue  
+- Finance allocation reversals + immutable triggers; ledger RESTRICT  
+- No public generic `/outbox` HTTP inject; GYM_* lack outbox/inbox write  
+- MEMBER BOLA closed: `*:self` + `/me` + authz owner proof for self perms  
 
-### Phase 16 — AFTER 15.5 (not started)
+**Remaining formal gates:** independent human APPROVE → merge → main CI green → docs LOCKED.
+
+Details: `backend/docs/plans/phase15_5_integrity_closure.md`
+
+### Phase 16 — AFTER 15.5 LOCKED (not started)
 
 - Notification templates / deliveries service + API  
 - Report definitions / runs (export hooks)  
-- Prefer Outbox for async delivery; domain → Event → Notification (no WhatsApp shortcuts)
+- Prefer Outbox for async delivery; domain → Event → Notification (no WhatsApp shortcuts)  
+- No generic public `/inbox` reintroduction; provider webhooks only  
 
 ---
 

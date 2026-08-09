@@ -1,6 +1,6 @@
 # Phase 15.5 — Cross-Cutting Integrity Closure
 
-**Status:** IN REVIEW on PR #25 — **15.5D hardening (3 P1) applied**  
+**Status:** PR #25 head `ffba0a8` — **15.5D applied · PR CI GREEN · not LOCKED**  
 **Base:** main `af8f809` (Phase 8–15 LOCKED)  
 **Blocks:** Phase 16 Notifications / Reports  
 **Migrations:** `n7a8b9c0d1e2` + `o8b9c0d1e2f3` + `p9c0d1e2f3a4` (15.5D: code-only, no new revision)
@@ -45,7 +45,7 @@ Close cross-phase integrity gaps **without reopening** Phase 8–15 product scop
 
 - [x] Hostile PG tests (fencing, crash-loop max-attempts, inbox atomicity, finance/entitlement, RBAC, BOLA, no public outbox, event registry)
 - [x] `alembic check` clean (local after migrate)
-- [ ] CI green after 15.5D push
+- [x] PR CI green after 15.5D (`ffba0a8` — Security, Lint, Unit/Integration, CodeQL)
 - [ ] Independent human review/approve — **no protection bypass / no self-APPROVE as formal gate**
 - [ ] Merge + main CI → Phase 15.5 LOCKED → Phase 16 GO
 
