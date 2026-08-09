@@ -3,7 +3,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     DateTime,
-    Float,
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
@@ -26,6 +25,7 @@ class Lead(TenantMixin, Base):
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="NEW")
 
+
 class Opportunity(TenantMixin, Base):
     __tablename__ = "opportunities"
 
@@ -33,12 +33,17 @@ class Opportunity(TenantMixin, Base):
 
     _model_table_args = (
         ForeignKeyConstraint(["tenant_id", "lead_id"], ["leads.tenant_id", "leads.id"]),
-        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+        ForeignKeyConstraint(
+            ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
     )
     member_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
     stage: Mapped[str] = mapped_column(String, nullable=False, default="PROSPECTING")
-    value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Money: integer minor units only (no float)
+    value_amount_minor: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     probability: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
 
 class Task(TenantMixin, Base):
     __tablename__ = "tasks"
@@ -46,15 +51,22 @@ class Task(TenantMixin, Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False, default="PENDING")
-    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    assigned_to: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    due_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    assigned_to: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
     lead_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
 
     _model_table_args = (
         ForeignKeyConstraint(["tenant_id", "lead_id"], ["leads.tenant_id", "leads.id"]),
-        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+        ForeignKeyConstraint(
+            ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
     )
     member_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+
 
 class RetentionCockpit(TenantMixin, Base):
     __tablename__ = "retention_cockpit"
@@ -62,9 +74,14 @@ class RetentionCockpit(TenantMixin, Base):
     member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, unique=True)
 
     _model_table_args = (
-        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+        ForeignKeyConstraint(
+            ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
     )
     health_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    churn_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
-    last_calculated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Non-money analytics: store basis points 0..10000 (e.g. 1250 = 12.50%)
+    churn_probability_bps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_calculated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     risk_level: Mapped[str | None] = mapped_column(String, nullable=True)
