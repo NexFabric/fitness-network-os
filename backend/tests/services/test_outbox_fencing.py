@@ -41,7 +41,7 @@ async def tenant(db_session: AsyncSession) -> Tenant:
 @pytest.mark.asyncio
 async def test_stale_worker_cannot_publish_or_fail(db_session, tenant):
     svc = OutboxService(db_session)
-    await svc.enqueue(tenant.id, "job.v1", {"n": 1}, wrap_envelope=False)
+    await svc.enqueue(tenant.id, "test.job.v1", {"n": 1}, wrap_envelope=False)
     await db_session.commit()
 
     c1 = await svc.claim_pending(tenant_id=tenant.id, worker_id="w1")

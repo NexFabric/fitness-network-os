@@ -30,7 +30,7 @@ def test_build_envelope():
 def test_validate_rejects_type_mismatch():
     tid = uuid4()
     env = build_event_envelope(
-        event_type="a.v1", tenant_id=tid, data={}
+        event_type="test.a.v1", tenant_id=tid, data={}
     )
     with pytest.raises(EnvelopeValidationError, match="type_mismatch"):
-        validate_envelope(env, tenant_id=tid, event_type="b.v1")
+        validate_envelope(env, tenant_id=tid, event_type="test.b.v1")

@@ -21,9 +21,17 @@ def test_yaml_member_lacks_staff_directory_and_staff_issue():
     assert "members:read" not in member_perms
     assert "access:issue" not in member_perms
     assert "access:issue:self" in member_perms
-    assert "memberships:read" in member_perms
-    assert "entitlements:read" in member_perms
-    assert "entitlements:check" in member_perms
+    # Phase 15.5C: no tenant-wide self-domain grants (BOLA)
+    assert "memberships:read" not in member_perms
+    assert "checkins:read" not in member_perms
+    assert "checkins:write" not in member_perms
+    assert "entitlements:read" not in member_perms
+    assert "entitlements:check" not in member_perms
+    assert "memberships:read:self" in member_perms
+    assert "entitlements:read:self" in member_perms
+    assert "entitlements:check:self" in member_perms
+    assert "checkins:read:self" in member_perms
+    assert "checkins:write:self" in member_perms
     assert "profile:read" in member_perms
 
 
@@ -51,10 +59,15 @@ def test_yaml_tenant_roles_lack_outbox_dispatch():
     for role in tenant_roles:
         perms = set(data["roles"][role]["permissions"])
         assert "outbox:dispatch" not in perms, role
-    # Permission still defined for platform/worker use
+        # Phase 15.5C: no tenant generic event ingress
+        assert "outbox:write" not in perms, role
+        assert "inbox:write" not in perms, role
+    # Permission still defined for platform/worker / future service principals
     perm_ids = {p["id"] for p in data["permissions"]}
     assert "outbox:dispatch" in perm_ids
+    assert "outbox:write" in perm_ids
     assert "access:issue:self" in perm_ids
+    assert "entitlements:check:self" in perm_ids
 
 
 def _user_with_role(role_name: str, perm_names: list[str], tenant_id):
@@ -106,6 +119,18 @@ def test_authorization_member_denied_members_read_and_access_issue():
         AuthorizationService.evaluate_permissions(
             user, ["memberships:read"], tenant_id=tenant_id
         )
+        is False
+    )
+    assert (
+        AuthorizationService.evaluate_permissions(
+            user, ["entitlements:check"], tenant_id=tenant_id
+        )
+        is False
+    )
+    assert (
+        AuthorizationService.evaluate_permissions(
+            user, ["entitlements:check:self"], tenant_id=tenant_id
+        )
         is True
     )
 
@@ -140,7 +165,13 @@ def test_authorization_gym_owner_denied_outbox_dispatch():
         AuthorizationService.evaluate_permissions(
             user, ["outbox:write"], tenant_id=tenant_id
         )
-        is True
+        is False
+    )
+    assert (
+        AuthorizationService.evaluate_permissions(
+            user, ["inbox:write"], tenant_id=tenant_id
+        )
+        is False
     )
 
 

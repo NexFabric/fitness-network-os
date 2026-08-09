@@ -64,8 +64,13 @@ def test_member_yaml_least_privilege():
     assert "members:read" not in member_perms
     assert "access:issue" not in member_perms
     assert "access:issue:self" in member_perms
+    assert "entitlements:check" not in member_perms
+    assert "entitlements:check:self" in member_perms
     for role in ("GYM_OWNER", "GYM_ADMIN", "GYM_MANAGER"):
-        assert "outbox:dispatch" not in set(data["roles"][role]["permissions"])
+        role_perms = set(data["roles"][role]["permissions"])
+        assert "outbox:dispatch" not in role_perms
+        assert "outbox:write" not in role_perms
+        assert "inbox:write" not in role_perms
 
 
 def test_member_not_authorized_members_read():
@@ -91,16 +96,16 @@ def test_envelope_mismatch_rejected():
         "specversion": "1.0",
         "id": "x",
         "source": "s",
-        "type": "payment.v1",
+        "type": "payment.received.v1",
         "time": "t",
         "tenantid": str(uuid4()),
         "data": {},
     }
     with pytest.raises(EnvelopeValidationError, match="tenantid_mismatch"):
-        validate_envelope(env, tenant_id=tid, event_type="payment.v1")
+        validate_envelope(env, tenant_id=tid, event_type="payment.received.v1")
     env["tenantid"] = str(tid)
     with pytest.raises(EnvelopeValidationError, match="type_mismatch"):
-        validate_envelope(env, tenant_id=tid, event_type="other.v1")
+        validate_envelope(env, tenant_id=tid, event_type="other.event.v1")
 
 
 @pytest.mark.asyncio
@@ -110,13 +115,23 @@ async def test_enqueue_rejects_bad_envelope(db_session, tenant):
         "specversion": "1.0",
         "id": "1",
         "source": "s",
-        "type": "a.v1",
+        "type": "test.event.v1",
         "time": "t",
         "tenantid": str(uuid4()),
         "data": {},
     }
     with pytest.raises(EnvelopeValidationError, match="tenantid_mismatch"):
-        await svc.enqueue(tenant.id, "a.v1", bad, wrap_envelope=True)
+        await svc.enqueue(tenant.id, "test.event.v1", bad, wrap_envelope=True)
+    await db_session.rollback()
+
+
+@pytest.mark.asyncio
+async def test_enqueue_rejects_unversioned_event_type(db_session, tenant):
+    from app.core.event_types import EventTypeValidationError
+
+    svc = OutboxService(db_session)
+    with pytest.raises(EventTypeValidationError):
+        await svc.enqueue(tenant.id, "membership.renewed", {"m": "1"})
     await db_session.rollback()
 
 

@@ -42,7 +42,7 @@ async def tenant(db_session: AsyncSession) -> Tenant:
 async def test_stale_processing_reclaim(db_session, tenant):
     svc = OutboxService(db_session)
     await svc.enqueue(
-        tenant.id, "job.v1", {"n": 1}, wrap_envelope=False, dedupe_key="d1"
+        tenant.id, "test.job.v1", {"n": 1}, wrap_envelope=False, dedupe_key="d1"
     )
     await db_session.commit()
 

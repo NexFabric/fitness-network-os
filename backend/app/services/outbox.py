@@ -1,6 +1,10 @@
 """Phase 15/15.5 transactional outbox / inbox engine (flush-only).
 
 At-least-once delivery + idempotent handlers → effectively-once effects.
+
+Phase 15.5C: no generic tenant HTTP ingress. Domain services call enqueue()
+in the same DB transaction. Provider webhooks (Phase 16+) will call
+receive_inbox() after signature verification and tenant resolution.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.event_types import validate_event_type
 from app.core.events import build_event_envelope, is_envelope, validate_envelope
 from app.models.outbox import InboxEvent, OutboxEvent
 
@@ -56,8 +61,8 @@ class OutboxService:
         actor_id: UUID | None = None,
         correlation_id: str | None = None,
     ) -> EnqueueResult:
-        if not event_type:
-            raise ValueError("event_type_required")
+        # Versioned contract: domain.action.vN (Phase 15.5C)
+        event_type = validate_event_type(event_type)
         if not isinstance(payload, dict):
             raise TypeError("payload_must_be_object")
 
