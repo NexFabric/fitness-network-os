@@ -1,8 +1,10 @@
 from app.models.access import (
     AccessAttempt,
+    AccessMethod,
     Checkin,
     Device,
     OfflineSnapshot,
+    QrJtiReplay,
     SigningKey,
 )
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
@@ -55,6 +57,7 @@ from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 
 __all__ = [
     "AccessAttempt",
+    "AccessMethod",
     "BillingAccount",
     "Checkin",
     "ComplianceRecord",
@@ -101,6 +104,7 @@ __all__ = [
     "Plan",
     "PlanEntitlement",
     "PlanVersion",
+    "QrJtiReplay",
     "ReconciliationItem",
     "ReconciliationRun",
     "Refund",

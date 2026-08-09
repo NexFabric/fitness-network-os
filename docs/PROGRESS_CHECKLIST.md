@@ -38,8 +38,8 @@
 - [x] Phase 9: Entitlement Engine - 🟢 CI VERIFIED
 - [x] Phase 10: Finance Domain Completion - 🟢 CI VERIFIED
 - [x] Phase 11: Remove Money Floats - 🟢 CI VERIFIED / LOCKED (PR #17 merge `607b087`)
-- [ ] Phase 12: Real Idempotency Engine  🟠 IN PROGRESS (`feat/phase12-idempotency-engine`)
-- [ ] Phase 13: Real QR & Access Engine
+- [x] Phase 12: Real Idempotency Engine - 🟢 CI VERIFIED / LOCKED (PR #19 merge `227f42e`)
+- [ ] Phase 13: Real QR & Access Engine  🟠 IN PROGRESS (`feat/phase13-qr-access-engine`)
 - [ ] Phase 14: Member / Gym Core Completion
 - [ ] Phase 15: Outbox / Inbox / Job Engine
 - [ ] Phase 16: Notifications & Reports API
@@ -85,7 +85,7 @@
   - Note (P2): Legacy CRM Opportunity float backfill is best-effort (±1 minor possible); not financial ledger amounts.
 
 ### Wave 4 — Access
-- QR Credential Issuer & Key Rotation - 🟡 MODEL
+- QR Credential Issuer & Key Rotation - 🟠 SERVICE (Phase 13 in progress)
 - Access Decision Engine - 🟡 MODEL
 - Device Heartbeats & Offline Gateway - 🟡 MODEL
 - Anti-passback & Attendance Logic - 🟡 MODEL

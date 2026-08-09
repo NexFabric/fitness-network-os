@@ -47,6 +47,48 @@ def test_core_does_not_import_api_endpoints():
             
     assert not strict_violations, f"Architecture boundary violation found: {strict_violations}"
 
+def test_qr_payload_requires_exp_and_jti():
+    """MASTER_SPEC fitness: No QR token without exp/jti."""
+    from datetime import UTC, datetime, timedelta
+    from uuid import uuid4
+
+    import pytest
+
+    from app.core.qr_crypto import (
+        QrCryptoError,
+        build_payload,
+        new_local_hmac_ref,
+        sign_payload,
+    )
+
+    now = datetime.now(UTC)
+    good = build_payload(
+        kid="k",
+        credential_id="c",
+        jti="jti-required",
+        iat=now,
+        exp=now + timedelta(seconds=30),
+        aud="access",
+        tenant_id=uuid4(),
+        member_id=uuid4(),
+    )
+    token = sign_payload(good, new_local_hmac_ref())
+    assert "jti" in good and good["exp"]
+    assert token.count(".") == 1
+
+    with pytest.raises(QrCryptoError):
+        build_payload(
+            kid="k",
+            credential_id="c",
+            jti="",
+            iat=now,
+            exp=now + timedelta(seconds=30),
+            aud="access",
+            tenant_id=uuid4(),
+            member_id=uuid4(),
+        )
+
+
 def test_models_do_not_import_api_or_core():
     """
     Models should be independent and not depend on core or api layers.
