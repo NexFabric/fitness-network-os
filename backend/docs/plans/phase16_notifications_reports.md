@@ -290,6 +290,21 @@ backend/tests/services/test_report.py
 
 ---
 
+## Ops requirement — `process_due_failed` (Phase 15.6)
+
+Before any **production** claim of notification delivery reliability, operators **must** schedule a per-tenant (or looped multi-tenant) job that calls:
+
+`NotificationService.process_due_failed(tenant_id, limit=…)`
+
+| Why | Details |
+|-----|---------|
+| Role | Reclaims `FAILED` deliveries due for retry (`SKIP LOCKED`) and re-dispatches |
+| Complements | Outbox handler raise → `mark_failed` keeps outbox retry alive for the enqueue path |
+| MVP surface | Service method + tests only — no public HTTP / no product cron |
+| Topology | Tenant-scoped worker is correct for current indexes; platform-wide claim is later |
+
+See `backend/docs/plans/phase15_6_residual_closeout.md`.
+
 ## Deferred beyond Phase 16
 
 - Real multi-channel provider SDKs and delivery webhooks  
@@ -297,7 +312,8 @@ backend/tests/services/test_report.py
 - Scheduled reports / job scheduler productization  
 - Full `/me` member-facing notification preferences  
 - Kafka/SQS bus adapters  
-- Standalone worker process (in-process / test harness acceptable for MVP)
+- Standalone worker process (in-process / test harness acceptable for MVP)  
+- Product cron wiring for `process_due_failed` (ops-required; surface deferred)
 
 ---
 

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -135,9 +135,10 @@ async def list_definitions(
 # ----- runs -----
 
 
-@router.post("/runs", response_model=RunResponse, status_code=201)
+@router.post("/runs", response_model=RunResponse)
 async def request_run(
     body: RunRequest,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -156,6 +157,8 @@ async def request_run(
         )
         await db.commit()
         await db.refresh(result.run)
+        # 201 Created on first insert; 200 OK on dedupe hit (created=False)
+        response.status_code = 201 if result.created else 200
         return _run_response(result.run, created=result.created)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

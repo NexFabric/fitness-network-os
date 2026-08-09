@@ -60,11 +60,11 @@ Phase 16 remains safe to document as **IN PROGRESS on branch only** — **not LO
 
 | ID | Sev | Issue | Notes |
 |----|-----|-------|-------|
-| IR-001 | **P2** | HTTP returns **201** even when dedupe returns `created=False` | Weak REST/idempotency signal; `created` flag present in body. Prefer 200 when not created. |
+| IR-001 | **P2** **CLOSED (15.6)** | HTTP returns **201** even when dedupe returns `created=False` | **CLOSED:** `POST /deliveries` and `POST /runs` set 201 if created else 200; API test `test_delivery_and_run_dedupe_returns_200`. |
 | IR-002 | **P2** | Report outbox handler does **not** raise on `FAILED` | `execute_run` swallows exceptions → FAILED; outbox still `mark_published`. Report retry depends on re-drive policy not implemented. Acceptable for MVP placeholder export. |
 | IR-003 | **P2** | `execute_run` can re-drive terminal **FAILED** | Early-return for SUCCEEDED/CANCELLED only; FAILED can become RUNNING again on redelivery. |
 | IR-004 | **P2** | Free-form `recipient_address` allowed for staff with `notifications:send` | By design for MVP; `recipient_user_id` is tenant-bound. Production harden: bind address to member/contact or restrict free-form to higher roles / internal callers. |
-| IR-005 | **P2** | `process_due_failed` has no cron/worker/HTTP surface | Mitigated for outbox path: handler raise keeps outbox retry alive. Dual path still needs ops wiring before production. |
+| IR-005 | **P2** **DOCUMENTED (15.6)** | `process_due_failed` has no cron/worker/HTTP surface | Mitigated for outbox path: handler raise keeps outbox retry alive. **15.6:** documented as **required ops job** before production reliability claims (`phase15_6_residual_closeout.md`). Product cron still deferred. |
 | IR-006 | **P2** | Dual notification handlers (`handle_notification_requested` + module `outbox_notification_requested_handler`) | Both raise on non-SENT; still duplicated parse logic — keep one path long-term. |
 | IR-007 | **P2** | After delivery **DEAD**, handler still raises → outbox burns remaining attempts | Correct eventual DEAD on outbox; slightly wasteful. Optional: treat delivery DEAD as handler success or short-circuit. |
 | IR-008 | **Process** | Formal PR CI green + Phase 15.5 human APPROVE/merge not part of this review | Checklist docs still show 15.5 awaiting APPROVE; Phase 16 merge **after** 15.5 LOCKED only. |

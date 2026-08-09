@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -163,9 +163,10 @@ async def list_templates(
 # ----- deliveries -----
 
 
-@router.post("/deliveries", response_model=DeliveryResponse, status_code=201)
+@router.post("/deliveries", response_model=DeliveryResponse)
 async def schedule_delivery(
     body: DeliveryScheduleRequest,
+    response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -190,6 +191,8 @@ async def schedule_delivery(
         )
         await db.commit()
         await db.refresh(result.delivery)
+        # 201 Created on first insert; 200 OK on dedupe hit (created=False)
+        response.status_code = 201 if result.created else 200
         return _delivery_response(result.delivery, created=result.created)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

@@ -298,3 +298,122 @@ async def test_delivery_schedule_body_does_not_require_enqueue_outbox(
     assert data["status"] in ("QUEUED", "PENDING", "SENT")
     assert data["channel"] == "EMAIL"
     assert data["recipient_address"] == "member@example.com"
+
+
+@pytest.mark.asyncio
+async def test_delivery_and_run_dedupe_returns_200(api_client, pg_engine):
+    """First create → 201; same dedupe_key → 200 with created=false (IR-001 / 15.6)."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(
+            name="P16 Dedupe Org", domain=f"p16-dedupe-{uuid4().hex[:6]}.com"
+        )
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="P16 Dedupe T",
+            organization_id=org.id,
+            location_code=f"DD-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        _user, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="FRONT_DESK",
+            perm_names=[
+                "notifications:write",
+                "notifications:send",
+                "reports:write",
+                "reports:run",
+            ],
+            email_prefix="p16-dd",
+        )
+        await db.commit()
+        tenant_id = tenant.id
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant_id),
+    }
+
+    tmpl_code = f"dd-tpl-{uuid4().hex[:6]}"
+    tmpl = await api_client.post(
+        "/api/v1/notifications/templates",
+        headers=headers,
+        json={
+            "code": tmpl_code,
+            "name": "Dedupe tpl",
+            "channel": "EMAIL",
+            "body_template": "hello",
+        },
+    )
+    assert tmpl.status_code == 201, tmpl.text
+
+    dedupe = f"notify:{uuid4().hex}"
+    first = await api_client.post(
+        "/api/v1/notifications/deliveries",
+        headers=headers,
+        json={
+            "channel": "EMAIL",
+            "recipient_address": "member@example.com",
+            "template_code": tmpl_code,
+            "dedupe_key": dedupe,
+        },
+    )
+    assert first.status_code == 201, first.text
+    assert first.json()["created"] is True
+    first_id = first.json()["id"]
+
+    second = await api_client.post(
+        "/api/v1/notifications/deliveries",
+        headers=headers,
+        json={
+            "channel": "EMAIL",
+            "recipient_address": "member@example.com",
+            "template_code": tmpl_code,
+            "dedupe_key": dedupe,
+        },
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["created"] is False
+    assert second.json()["id"] == first_id
+
+    defn_code = f"dd-rpt-{uuid4().hex[:6]}"
+    defn = await api_client.post(
+        "/api/v1/reports/definitions",
+        headers=headers,
+        json={
+            "code": defn_code,
+            "name": "Dedupe report",
+            "report_type": "GENERIC",
+        },
+    )
+    assert defn.status_code == 201, defn.text
+
+    run_dedupe = f"run:{uuid4().hex}"
+    run1 = await api_client.post(
+        "/api/v1/reports/runs",
+        headers=headers,
+        json={
+            "definition_code": defn_code,
+            "dedupe_key": run_dedupe,
+        },
+    )
+    assert run1.status_code == 201, run1.text
+    assert run1.json()["created"] is True
+    run_id = run1.json()["id"]
+
+    run2 = await api_client.post(
+        "/api/v1/reports/runs",
+        headers=headers,
+        json={
+            "definition_code": defn_code,
+            "dedupe_key": run_dedupe,
+        },
+    )
+    assert run2.status_code == 200, run2.text
+    assert run2.json()["created"] is False
+    assert run2.json()["id"] == run_id

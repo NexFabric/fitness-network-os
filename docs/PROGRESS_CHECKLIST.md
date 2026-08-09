@@ -3,7 +3,8 @@
 **Last updated:** 2026-08-10  
 **Main HEAD (docs sync base):** `af8f809` (Phase 8–15 LOCKED)  
 **Active branch work:**  
-- Phase **15.5** PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) (`feat/phase15-5-integrity-closure`, docs head `aec1b5f`) — **not LOCKED**  
+- Phase **15.5** PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) (`feat/phase15-5-integrity-closure`, docs head `aec1b5f`) — **not LOCKED** (CI green; formal APPROVE + merge open)  
+- Phase **15.6** residual closeout — 🟢 **DONE on branch** (carried on Phase 16 stack) — **not LOCKED**  
 - Phase **16** PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) (`feat/phase16-notifications-reports`, stacked on 15.5) — 🟠 **IN PROGRESS**, integrity **CLEAN** on branch — **not LOCKED**  
 **Alembic:** 15.5 head `p9c0d1e2f3a4` · Phase 16 branch adds `q0d1e2f3a4b5`
 
@@ -27,6 +28,7 @@
 | Phase 0–7 core gate | 🟢 COMPLETED |
 | Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
 | Phase 15.5 integrity closure | 🟡 **PR #25 CI GREEN** — **not LOCKED** (human APPROVE + merge + main CI still open) |
+| Phase 15.6 residual closeout | 🟢 **DONE on branch** (ops docs + dedupe 200/201) — **not LOCKED** (ships with 16 stack after 15.5) |
 | Phase 16 Notifications & Reports | 🟠 **PR #26 stacked** — code + tests + integrity CLEAN on branch; **not LOCKED**; merge **after** 15.5 LOCKED |
 | Phase 17–26 | ⬜ NOT STARTED |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
@@ -74,12 +76,16 @@
   - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
   - Alembic: `p9c0d1e2f3a4`
+- [x] Phase 15.6: Residual closeout / post-integrity ops polish — 🟢 **DONE on branch** (**not LOCKED**; plan `backend/docs/plans/phase15_6_residual_closeout.md`)
+  - Ops: `process_due_failed` documented as **required** production job (no HTTP/cron product yet)
+  - API: notification/report dedupe → **200** when `created=False`, **201** when created
+  - Does **not** unlock 15.5 or 16; formal merge order unchanged
 - [ ] Phase 16: Notifications & Reports API — 🟠 **PR #26** stacked on 15.5 — **IN PROGRESS / integrity CLEAN** (**not LOCKED**; merge only after 15.5 LOCKED)
   - Plan: `backend/docs/plans/phase16_notifications_reports.md`
   - Integrity closeout: `backend/docs/plans/INTEGRITY_REVIEW_phase16_closeout.md` → **CLEAN**
   - 16A–D: models, services, log adapters, HTTP `/notifications` + `/reports`, migration `q0d1e2f3a4b5` + RBAC seed
   - 16E tests: fail→DEAD, outbox non-SENT → mark_failed, recipient tenant bind, API MEMBER 403, cross-tenant isolation, architecture Membership↛providers
-  - Residual P2 only (free-form staff address, unscheduled `process_due_failed` worker, 201-on-dedupe)
+  - Residual P2 (post-15.6): free-form staff address; dual handlers; report FAILED redrive; standalone worker productization
 - [ ] Phase 17: Real API V1 Routers (completion / gaps)
 
 ### Phase 18-26: Executable MVP & Verification
@@ -166,6 +172,7 @@
 | 14 | `backend/docs/plans/phase14_member_gym_core.md` |
 | 15 | `backend/docs/plans/phase15_outbox_inbox.md` |
 | 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
+| 15.6 | `backend/docs/plans/phase15_6_residual_closeout.md` |
 | 16 | `backend/docs/plans/phase16_notifications_reports.md` |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |
 | Review stop | `docs/REVIEW_CHECKPOINT.md` |
