@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from sqlalchemy import text
 
 from app.db.base import Base, TenantMixin
-from app.db.session import engine
 from app.models import *  # ensure all models are loaded in Base.metadata
 
 
 async def check_db_rls(errors, table_name):
+    from app.db.session import engine
     async with engine.connect() as conn:
         # Check pg_class
         query = f"""

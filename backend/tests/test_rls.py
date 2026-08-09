@@ -18,8 +18,9 @@ async def test_tenant_context_isolation(pg_engine, pg_session_maker):
     Verifies that the current_tenant_id_var correctly isolates the tenant context
     across simulated requests using real PostgreSQL RLS.
     """
-    # 1. Enable RLS on the table
+    # 1. Create table and enable RLS on the table
     async with pg_engine.begin() as conn:
+        await conn.run_sync(DummyTenantItem.__table__.create, checkfirst=True)
         await conn.execute(text("ALTER TABLE dummy_tenant_items ENABLE ROW LEVEL SECURITY;"))
         await conn.execute(text("DROP POLICY IF EXISTS tenant_isolation_policy ON dummy_tenant_items;"))
         await conn.execute(text(

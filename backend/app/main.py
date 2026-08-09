@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.v1.api import api_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -34,6 +36,8 @@ def create_app() -> FastAPI:
             status_code=500,
             content={"detail": "Internal server error"}
         )
+
+    app.include_router(api_router, prefix="/api/v1")
 
     return app
 

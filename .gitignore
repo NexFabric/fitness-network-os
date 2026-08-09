@@ -28,6 +28,10 @@ venv.bak/
 # uncomment if needed
 # uv.lock
 
+# Logs
+logs
+*.log
+
 # Coverage
 htmlcov/
 .coverage

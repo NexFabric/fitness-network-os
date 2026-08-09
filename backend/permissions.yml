@@ -12,6 +12,17 @@ roles:
       - "gym:write"
       - "users:read"
       - "users:write"
+  FEDERATION_ANALYST:
+    description: "Read-only access to federation analytics"
+    permissions:
+      - "federation:read"
+      - "gym:read"
+  FEDERATION_SUPPORT:
+    description: "Support access for federation"
+    permissions:
+      - "federation:read"
+      - "gym:read"
+      - "users:read"
   GYM_OWNER:
     description: "Owner of a specific gym tenant"
     permissions:
@@ -19,6 +30,42 @@ roles:
       - "gym:write"
       - "memberships:read"
       - "memberships:write"
+      - "checkins:read"
+  GYM_ADMIN:
+    description: "Admin of a specific gym tenant"
+    permissions:
+      - "gym:read"
+      - "gym:write"
+      - "memberships:read"
+      - "memberships:write"
+      - "checkins:read"
+      - "users:read"
+      - "users:write"
+  GYM_MANAGER:
+    description: "Manager of a specific gym tenant"
+    permissions:
+      - "gym:read"
+      - "memberships:read"
+      - "memberships:write"
+      - "checkins:read"
+      - "users:read"
+  ACCOUNTANT:
+    description: "Accountant for a gym"
+    permissions:
+      - "gym:read"
+      - "memberships:read"
+  FRONT_DESK:
+    description: "Front desk staff"
+    permissions:
+      - "gym:read"
+      - "memberships:read"
+      - "checkins:read"
+      - "checkins:write"
+  TRAINER:
+    description: "Trainer in a gym"
+    permissions:
+      - "gym:read"
+      - "memberships:read"
       - "checkins:read"
   MEMBER:
     description: "A standard gym member"

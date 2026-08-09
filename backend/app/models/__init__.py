@@ -17,7 +17,15 @@ from app.models.finance import (
 from app.models.growth import Lead, Opportunity, RetentionCockpit, Task
 from app.models.location import Location
 from app.models.member import Member, Note, Tag
-from app.models.membership import Entitlement, Membership, Plan, PlanVersion
+from app.models.membership import (
+    Entitlement,
+    Membership,
+    MembershipFreeze,
+    MembershipPeriod,
+    MembershipStatusHistory,
+    Plan,
+    PlanVersion,
+)
 from app.models.notification import NotificationDelivery, NotificationTemplate
 from app.models.organization import Organization
 from app.models.outbox import InboxEvent, OutboxEvent
@@ -44,6 +52,9 @@ __all__ = [
     "Location",
     "Member",
     "Membership",
+    "MembershipFreeze",
+    "MembershipPeriod",
+    "MembershipStatusHistory",
     "NetworkAlert",
     "Note",
     "NotificationDelivery",
