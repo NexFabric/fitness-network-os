@@ -2,9 +2,9 @@
 
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
-**Main HEAD:** `f59f1f7` (Phase 15.5 LOCKED docs) · code `125a8c6`  
+**Main HEAD:** `125a8c6` (Phase 15.5 MERGED / CI VERIFIED)  
 **Alembic head on main:** `p9c0d1e2f3a4`  
-**Active stack:** PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) Phase 16–26 open — **not LOCKED**
+**Active stack:** Phase 16–25 on PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26) — **IMPLEMENTED / PARTIAL on branch; not on main**
 
 **Hierarchy (agents must follow):**
 
@@ -18,8 +18,11 @@ MASTER_SPEC
 
 Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRESS_CHECKLIST.md` for maturity.
 
-**Next formal step:** Review/merge Phase **16+** stack (PR #26) when CI green → continue Phase **21–26** locks individually.  
-**Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE is **explicitly passed**.
+**Next formal step:** Merge Phase **16+** stack (PR #26 after review + green CI) → deepen 21–24 as needed → re-score Phase **26**.  
+**Do not claim production-ready** until Phase 26 CORE MVP EXIT GATE is **PASS**.
+
+Truth model: `backend/docs/plans/phase25_checklist_truth.md`  
+Exit gate: `backend/docs/plans/phase26_core_mvp_exit_gate.md` — **FAIL / NOT PASSED**
 
 ---
 
@@ -28,45 +31,100 @@ Do **not** infer progress from obsolete foundation-only notes. Use `docs/PROGRES
 | Phases | Theme | Status (see checklist) |
 |--------|--------|-------------------------|
 | 0–7 | Core gate / security / RLS / RBAC | 🟢 COMPLETED (gate closure) |
-| 8–15 | Domain services | 🟢 CI VERIFIED / LOCKED on main |
-| 15.5 | Cross-cutting integrity closure | 🟢 **CI VERIFIED / LOCKED** (`125a8c6`) |
-| 16 | Notifications & reports API | 🟡 branch (PR #26) — not LOCKED |
-| 17 | Real API V1 routers completion | 🟡 branch — not LOCKED |
-| 18 | Vertical slice E2E | 🟡 branch — not LOCKED |
-| 19–20 | Admin Web / Scanner PWA MVP | 🟡 branch — not LOCKED |
-| 21–24 | CI V2, containers, HTTP security, observability | 🟠 started on branch — not LOCKED |
-| 25–26 | Checklist truth + CORE MVP EXIT GATE | ⬜ criteria; **26 NOT PASSED** |
+| 8 | Membership domain | 🟢 MERGED / CI VERIFIED (PR #13) |
+| 9 | Entitlement engine | 🟢 MERGED / CI VERIFIED (PR #14) |
+| 10 | Finance domain | 🟢 MERGED / CI VERIFIED (PR #15) |
+| 11 | Remove money floats | 🟢 MERGED (PR #17 merge `607b087`) |
+| 12 | Real idempotency engine | 🟢 MERGED (PR #19 merge `227f42e`) |
+| 13 | QR & access engine | 🟢 MERGED (PR #20 merge `babc33c`) |
+| 14 | Member / gym core | 🟢 MERGED (PR #21 merge `e332cf5`) |
+| 15 | Outbox / inbox / jobs | 🟢 MERGED (PR #22 merge `67b8214`) |
+| 15.5 | Cross-cutting integrity closure | 🟢 **MERGED / CI VERIFIED** (PR #25 merge `125a8c6`) |
+| 16 | Notifications & reports API | 🟡 **IMPLEMENTED on PR #26** — not on main |
+| 17 | Real API V1 routers completion | 🟡 **PARTIAL on PR #26** (17A done; 17B/17C open) |
+| 18 | Vertical slice E2E | 🟡 **PARTIAL on PR #26** (service e2e; HTTP deferred) |
+| 19–20 | Admin Web / Scanner PWA MVP | 🟡 **IMPLEMENTED scaffold on PR #26** |
+| 21–24 | CI V2, container, HTTP, observability | 🟡 **PARTIAL light MVP on PR #26** |
+| 25 | Checklist truth model | 🟡 **IMPLEMENTED on branch** (docs) |
+| 26 | CORE MVP EXIT GATE | 🔴 **FAIL / NOT PASSED** — **not production-ready** |
 
 ---
 
-## Locked phase notes (summary)
+## Locked / merged phase notes (summary)
 
-### Phase 11–15 — LOCKED
+### Phase 11 — MERGED
 
-See prior lock notes in git history and per-phase plans under `backend/docs/plans/` / `docs/plans/`.
+- Expand-only migration head: `f7a8b9c0d1e2` (add + backfill; **no DROP**)  
+- CONTRACT: create a **new** revision later — never edit applied expand body  
+- Pre-production exception: no concurrent old/new app writers claimed  
+- Historical Opportunity currency: **TRY**  
+- Strict API money + BasisPoints; service `assert_amount_minor`  
+- Details: `docs/plans/phase11_money_floats.md`
 
-### Phase 15.5 — LOCKED (main `125a8c6`)
+### Phase 12 — MERGED
 
-- PR #25 merge `125a8c6` · lock docs PR #27 · alembic head `p9c0d1e2f3a4`
-- No public generic `/outbox` HTTP inject; MEMBER BOLA closed; event registry; outbox max-attempts → DEAD
-- Details: `backend/docs/plans/phase15_5_integrity_closure.md`
+- `IdempotencyRecord` UNIQUE(tenant_id, operation, key) + request_hash + lease  
+- Flush-only service + `run_idempotent` UoW  
+- Wired: finance invoice/payment/refund/credit + entitlement consume  
+- Details: `backend/docs/plans/phase12_idempotency.md`
 
-### Phase 16–20 — ACTIVE ON BRANCH (not LOCKED)
+### Phase 13 — MERGED
 
-- Notifications/reports domain + API, self-service `/me`, vertical slice E2E, admin-web, scanner-pwa
-- Prefer Outbox for async delivery; domain → Event → Notification (no WhatsApp shortcuts)
-- **Do not mark LOCKED** until merge to main + green required CI
+- Short-lived signed QR (`exp`+`jti` required); HMAC local ref / future KMS  
+- Key lifecycle ACTIVE → VERIFY_ONLY → REVOKED  
+- `qr_jti_replays` tenant-scoped replay protection  
+- Validate → entitlement check → AccessAttempt (+ Checkin)  
+- Details: `backend/docs/plans/phase13_qr_access.md`
 
-### Phase 21–26 — hardening open (not LOCKED)
+### Phase 14 — MERGED
 
-| Phase | Plan | Branch status |
-|-------|------|---------------|
-| 21 | `phase21_ci_v2.md` | FE Admin Web + Scanner PWA build jobs |
-| 22 | `phase22_container_hardening.md` | `Dockerfile.prod` multi-stage non-root |
-| 23 | `phase23_http_security.md` | ENVIRONMENT + CORS_ORIGINS + security headers |
-| 24 | `phase24_observability.md` | request-id + structured access log stub |
-| 25 | `phase25_checklist_truth.md` | maturity truth model |
-| 26 | `phase26_core_mvp_exit_gate.md` | exit criteria — **NOT PASSED** |
+- Member CRUD + status transitions, tags/notes, consent records  
+- Locations + Staff user linking (User ≠ Member)  
+- UNIQUE(tenant_id, member_number), UNIQUE(tenant_id, user_id) on staff  
+- Details: `backend/docs/plans/phase14_member_gym_core.md`
+
+### Phase 15 — MERGED
+
+- Transactional outbox enqueue/claim/publish with `FOR UPDATE SKIP LOCKED`  
+- Inbox exactly-once receive + handler dispatch  
+- Expand: attempt_count, available_at, dedupe_key; UNIQUE(tenant_id, event_id)  
+- Details: `backend/docs/plans/phase15_outbox_inbox.md`
+
+### Phase 15.5 — MERGED (main `125a8c6`)
+
+**PR #25** merged as `125a8c6` · alembic head `p9c0d1e2f3a4` · 🟢 CI VERIFIED / MERGED.
+
+Delivered and on main:
+
+- RBAC `permissions.yml` ↔ DB parity (missing + extra grants)  
+- Idempotency business savepoint + FAILED same-hash only  
+- Outbox lease reclaim + worker CAS fencing + max-attempt crash-loop → DEAD  
+- Inbox savepoint + FAILED retry  
+- Event envelope v1 + **canonical event_type registry** on enqueue  
+- Finance allocation reversals + immutable triggers; ledger RESTRICT  
+- No public generic `/outbox` HTTP inject; GYM_* lack outbox/inbox write  
+- MEMBER BOLA closed: `*:self` + `/me` + authz owner proof for self perms  
+
+Details: `backend/docs/plans/phase15_5_integrity_closure.md`
+
+### Phase 16–20 — ACTIVE ON BRANCH (not on main)
+
+- **16:** Notification templates/deliveries + report definitions/runs; log provider; outbox path (PR #26)  
+- **17:** 17A `/me/*` self-service expansion; 17B/17C still open  
+- **18:** Service-layer vertical slice e2e (HTTP E2E deferred)  
+- **19–20:** Admin-web + scanner-pwa MVP scaffolds  
+- **Do not mark MERGED** until merge to main + green required CI  
+
+### Phase 21–26 — hardening / truth / exit (branch)
+
+| Phase | Honest status |
+|-------|----------------|
+| 21 CI V2 | PARTIAL — frontend `admin-web` + `scanner-pwa` build jobs |
+| 22 Containers | PARTIAL — `backend/Dockerfile.prod` multi-stage non-root |
+| 23 HTTP security | PARTIAL — prod CORS allowlist + basic headers |
+| 24 Observability | PARTIAL stub — request/correlation id + access log |
+| 25 Checklist truth | IMPLEMENTED on branch — `phase25_checklist_truth.md` |
+| 26 Exit gate | **FAIL / NOT PASSED** — `phase26_core_mvp_exit_gate.md` |
 
 ---
 
@@ -78,6 +136,7 @@ See prior lock notes in git history and per-phase plans under `backend/docs/plan
 - Domain boundaries (no Membership → WhatsApp shortcuts)  
 - Transactional outbox + idempotency on money/entitlement mutations  
 - No public generic outbox/inbox HTTP reintroduction  
+- **Not production-ready** until Phase 26 PASS  
 
 ## Foundation archive (COMPLETED)
 

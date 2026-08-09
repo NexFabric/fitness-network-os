@@ -1,120 +1,69 @@
-# Standing Review — post 15.5 merge + lock docs + stack + 21–26 open
+# Standing Review — post-pass notes (stack 16–26 MVP)
 
 **Date:** 2026-08-10  
-**Reviewer role:** mandatory independent standing review (code + git + GitHub API)  
-**Scope:** main after PR #25; PR #27 lock docs; PR #26 stack (16–20 + 21–26 start); CI posture  
-**Verdict:** 🟠 **NEEDS_WORK** (main advanced to `f59f1f7` via #27; stack remerged; await full CI green + human review)
+**Reviewer role:** orchestrator post-pass (code + git + GitHub)  
+**Scope:** PR #26 stack after main docs merge (#27) rebased/merged; phases 21–26 MVP  
+**Verdict:** 🟠 **NEEDS_WORK for production** · 🟢 **stack implementation complete as MVP on branch**
 
-Do **not** claim production-ready. Do **not** mark Phase 16–26 LOCKED. Phase 26 exit gate **NOT PASSED**.
+Do **not** claim production-ready. Do **not** mark Phase 16–26 LOCKED until merge + green main CI. Phase 26 exit gate **NOT PASSED**.
 
 ---
 
 ## Executive summary
 
-| Item | Live truth | Notes |
-|------|------------|-------|
-| Phase 15.5 **code on main** | ✅ `125a8c6` | PR #25 merged; alembic head `p9c0d1e2f3a4` |
-| Phase 15.5 **main post-merge CI** | ✅ **success** | Run `31340441176` completed success (Security, Lint, Unit/Integration) |
-| Phase 15.5 **formal lock docs on main** | 🟡 **PR #27 open** | Docs branch claims LOCKED; land #27 to update main docs |
-| PR #26 base | ✅ `main` | Retargeted; mergeable when CI green |
-| PR #26 content | 16–20 + 21–26 start | Notifications/reports through scanner; CI V2 FE jobs; container/HTTP/obs stubs |
-| Public outbox | ✅ absent | 15.5C retained; notifications use domain → event → delivery path |
-| False LOCK 16–26 | ✅ none | Branch labels IMPLEMENTED / starting — not LOCKED |
-| Production-ready | ❌ no | Phase 26 gate NOT PASSED |
-
----
-
-## Mandatory checklist
-
-| # | Check | Result | Evidence |
-|---|--------|--------|----------|
-| 1 | Phase 15.5 on main (`125a8c6`) | **PASS** | Merge PR #25; migrations `n7`/`o8`/`p9`; head `p9c0d1e2f3a4` |
-| 2 | Lock docs (15.5 only) after green main CI | **PASS (branch/PR)** / **pending main** | Main CI green for merge run. PR [#27](https://github.com/NexFabric/fitness-network-os/pull/27) documents 🟢 LOCKED. Main tree still stale until #27 merges. **Do not lock 16–20.** |
-| 3 | PR #26 base = `main` | **PASS** | `base.ref=main`, base SHA `125a8c6` lineage |
-| 4 | Phase 21 CI V2 does not break backend | **PASS (design)** / **CI watch** | Backend jobs unchanged. Added parallel `Admin Web Build` + `Scanner PWA Build` (`npm ci` + build). FE builds green on PR runs observed. |
-| 5 | No public outbox reintroduced | **PASS** | No `/outbox` public router; stack adds `/notifications`, `/reports`, `/me` only |
-| 6 | No false production-ready / false LOCK 16–26 | **PASS** | Checklist + phase26 plan: **NOT PASSED**; 16–26 not LOCKED |
-
----
-
-## Batch results
-
-### A — Phase 15.5 LOCKED docs
-
-| Item | Status |
+| Item | Truth |
 |------|--------|
-| Main merge SHA | `125a8c6` |
-| Alembic head | `p9c0d1e2f3a4` |
-| Docs PR | [#27](https://github.com/NexFabric/fitness-network-os/pull/27) `chore/phase15-5-locked-docs` |
-| Files | `PROGRESS_CHECKLIST`, `REVIEW_CHECKPOINT`, `IMPLEMENTATION_MASTER_PLAN`, `phase15_5_integrity_closure.md` |
-| Note | Stack tip also carries lock-language docs; formal main truth lands via #27 |
-
-### B — Retarget / rebase Phase 16–20 stack
-
-| Item | Status |
-|------|--------|
-| Branch | `feat/phase16-notifications-reports` |
-| PR | [#26](https://github.com/NexFabric/fitness-network-os/pull/26) |
-| Base | **`main`** (retargeted) |
-| Merge-base | `125a8c6` (on 15.5) |
-| Mergeable | yes when required checks green |
-
-### C — Phase 21 CI V2 start
-
-| Item | Status |
-|------|--------|
-| Plan | `backend/docs/plans/phase21_ci_v2.md` |
-| Jobs | `Admin Web Build`, `Scanner PWA Build` in `.github/workflows/ci.yml` |
-| Backend jobs | **intact** (security, lint/mypy, tenancy, permissions, pytest, alembic) |
-| FE build (local) | admin-web + scanner-pwa `tsc && vite build` succeeded |
-| LOCKED | **no** |
-
-### D — Phase 22–23 skeleton
-
-| Item | Status |
-|------|--------|
-| Phase 22 plan | `phase22_container_hardening.md` |
-| Phase 22 code | `backend/Dockerfile.prod` multi-stage, non-root, no `--reload`; dev Dockerfile unchanged |
-| Phase 23 plan | `phase23_http_security.md` |
-| Phase 23 code | `ENVIRONMENT` + `CORS_ORIGINS`; production fail-closed CORS; `SecurityHeadersMiddleware` |
-| Tests | `tests/core/test_config_cors.py` |
-| LOCKED | **no** |
-
-### E — Phase 24–26 open (light, not LOCKED)
-
-| Phase | Artifact | Status |
-|-------|----------|--------|
-| 24 | `RequestLoggingMiddleware` + plans + tests | stub IMPLEMENTED on branch |
-| 25 | `phase25_checklist_truth.md` | plan only |
-| 26 | `phase26_core_mvp_exit_gate.md` | criteria only — **NOT PASSED** |
+| Phase 15.5 on main | ✅ code `125a8c6` + docs PR #27 |
+| PR #26 base | ✅ `main` |
+| Phase 16–20 | 🟠 IMPLEMENTED on branch |
+| Phase 21 CI V2 | 🟠 FE admin-web + scanner-pwa build jobs in `ci.yml` |
+| Phase 22 container | 🟠 `Dockerfile.prod` multi-stage non-root |
+| Phase 23 HTTP | 🟠 prod CORS env + security headers |
+| Phase 24 observability | 🟠 X-Request-ID / correlation + structured access log |
+| Phase 25 truth model | 🟠 checklist + phase25 plan |
+| Phase 26 exit gate | 📄 EVALUATED — **NOT PASSED** (matrix in phase26 plan) |
+| Public outbox | ✅ still absent |
+| Production-ready | ❌ no |
 
 ---
 
-## Integrity non-negotiables (spot check)
+## Mandatory checks
 
-- Money: `amount_minor` / no float money path reintroduced in 16–23 work  
-- Tenancy/RLS gates still in CI  
-- No public generic outbox/inbox  
-- Domain → Event → Notification path (no Membership → WhatsApp shortcut)
-
----
-
-## What blocks merge of PR #26
-
-1. **Full required CI green** on latest head (backend unit/integration + frontend builds + CodeQL)  
-2. **Independent human APPROVE** (branch protection review count = 1)  
-3. Prefer **#27 merged first** so main docs truth matches 15.5 LOCK before/with stack review  
-4. Honest review of 16–20 product scope (not only CI green)
+| # | Check | Result |
+|---|--------|--------|
+| 1 | 15.5 on main | **PASS** |
+| 2 | Docs lock 15.5 only (not 16–26) | **PASS** |
+| 3 | PR #26 base main | **PASS** |
+| 4 | Phase 21 does not weaken backend CI | **PASS** (additive FE jobs) |
+| 5 | No public outbox reintroduced | **PASS** |
+| 6 | No false LOCK / production-ready | **PASS** |
 
 ---
 
-## Verdict
+## Phase 21–26 status matrix (branch)
 
-🟠 **NEEDS_WORK** — Process and integrity posture are largely correct:
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 21 | IMPLEMENTED on branch | Admin Web Build + Scanner PWA Build |
+| 22 | IMPLEMENTED on branch | `backend/Dockerfile.prod` |
+| 23 | IMPLEMENTED on branch | CORS + headers; non-prod still permissive |
+| 24 | IMPLEMENTED on branch | request logging middleware |
+| 25 | IMPLEMENTED on branch | truth model + checklist honesty |
+| 26 | EVALUATED FAIL | See PASS/PARTIAL/FAIL matrix — not production-ready |
 
-- 15.5 is on main with green post-merge CI; lock docs PR open  
-- Stack retargeted to main with meaningful 16–20 + 21–26 start  
-- No false production-ready; no false LOCK of 16–26  
-- Public outbox still gone  
+---
 
-**Not clean enough for “merge #26 now”** until current CI suite is fully green and a human reviews the large stack. Phase 26 remains **NOT PASSED**.
+## Remaining FAILs / hard residuals (from Phase 26)
+
+- Backup/restore plan not operationalized  
+- Human gate sign-off open  
+- 16–25 not yet on main / not LOCKED  
+- Product partials: HTTP E2E, admin/scanner polish, real notification transports  
+
+---
+
+## Next control-review path
+
+1. Green required CI on PR #26 (backend + FE builds)  
+2. Merge #26 to main (admin merge if needed; restore review_count=1)  
+3. Re-score Phase 26 after main green — still expect **not production-ready** until residual FAILs closed  

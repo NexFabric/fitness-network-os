@@ -1,23 +1,26 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `f59f1f7` (Phase 15.5 lock docs PR #27 on top of merge `125a8c6`)  
-**15.5 code merge:** `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25))  
-**Active stack:** Phase **16–26 open** on `feat/phase16-notifications-reports` (PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26)) — **not LOCKED**  
-**Alembic head on main:** `p9c0d1e2f3a4`
+**Main HEAD (15.5 merge):** `125a8c6` (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25)) · docs lock PR [#27](https://github.com/NexFabric/fitness-network-os/pull/27)  
+**Active branch work:** Phase **16–25 PARTIAL / IMPLEMENTED** on `feat/phase16-notifications-reports` (PR [#26](https://github.com/NexFabric/fitness-network-os/pull/26)) — **not on main**  
+**Alembic head on main:** `p9c0d1e2f3a4` (15.5C trust boundaries; after `n7…` + `o8…`)  
+**Branch alembic (PR #26):** includes `q0d1e2f3a4b5` (Phase 16)
 
 **Maturity Levels:**
-- IMPLEMENTED
+- IMPLEMENTED / PARTIAL (prefer for branch work)
+- MERGED (on `main`)
 - INTEGRATION VERIFIED
 - CI VERIFIED
-- PRODUCTION VERIFIED
+- PRODUCTION VERIFIED (reserved — **not claimed**)
 
 **Truth rules:**
-- Only mark **CI VERIFIED / LOCKED** after merge to `main` + green required CI.
-- Do **not** claim PRODUCTION VERIFIED / production-ready until Phase 26 exit gate is **explicitly passed** (see `backend/docs/plans/phase26_core_mvp_exit_gate.md` — currently **NOT PASSED**).
+- Only mark **MERGED / CI VERIFIED** after merge to `main` + green required CI.
+- Prefer **MERGED / IMPLEMENTED / PARTIAL** over marketing “done”; historical “LOCKED” ≈ MERGED + CI VERIFIED on main.
+- Do **not** claim PRODUCTION VERIFIED / production-ready until Phase 26 exit gate is **PASS**.
 - Domain “MODEL” rows may lag service work until checklist is intentionally promoted.
-- Do **not** lock Phase 16–26 until their own merge + main CI.
-- Full maturity model: `backend/docs/plans/phase25_checklist_truth.md`.
+- Do **not** mark Phase 16–26 MERGED solely because code exists on PR #26.
+- Truth model: `backend/docs/plans/phase25_checklist_truth.md`  
+- Exit gate: `backend/docs/plans/phase26_core_mvp_exit_gate.md` — **currently FAIL / NOT PASSED**
 
 ---
 
@@ -25,11 +28,13 @@
 
 | Band | Status |
 |------|--------|
-| Phase 0–7 core gate | 🟢 COMPLETED |
-| Phase 8–15 domain services/API | 🟢 CI VERIFIED / LOCKED on `main` |
-| Phase 15.5 integrity closure | 🟢 **CI VERIFIED / LOCKED** on `main` (`125a8c6` + docs `f59f1f7`) |
-| Phase 16–20 (branch) | 🟡 **IMPLEMENTED on feature branch** — not LOCKED |
-| Phase 21–26 | ⬜ / 🟠 **OPENING on branch** — none LOCKED; Phase 26 **NOT PASSED** |
+| Phase 0–7 core gate | 🟢 COMPLETED / MERGED |
+| Phase 8–15 domain services/API | 🟢 MERGED / CI VERIFIED on `main` |
+| Phase 15.5 integrity closure | 🟢 **MERGED / CI VERIFIED** on `main` merge `125a8c6` |
+| Phase 16–20 (branch) | 🟡 **IMPLEMENTED / PARTIAL on PR #26** — not on main |
+| Phase 21–24 (branch) | 🟡 **PARTIAL light MVP on PR #26** (CI jobs, Dockerfile.prod, CORS/headers, request-id) |
+| Phase 25 Checklist truth | 🟡 **IN PROGRESS / IMPLEMENTED on branch** (docs truth model) |
+| Phase 26 CORE MVP EXIT GATE | 🔴 **OPEN / FAIL** — **not production-ready** |
 | Overall CORE MVP | ⏳ IN PROGRESS — **not production-ready** |
 
 ---
@@ -70,24 +75,24 @@
 - [x] Phase 13: Real QR & Access Engine - 🟢 CI VERIFIED / LOCKED (PR #20 merge `babc33c`)
 - [x] Phase 14: Member / Gym Core Completion - 🟢 CI VERIFIED / LOCKED (PR #21 merge `e332cf5`)
 - [x] Phase 15: Outbox / Inbox / Job Engine - 🟢 CI VERIFIED / LOCKED (PR #22 merge `67b8214`; docs #23)
-- [x] Phase 15.5: Cross-Cutting Integrity Closure — 🟢 **CI VERIFIED / LOCKED** (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) merge `125a8c6`; lock docs [#27](https://github.com/NexFabric/fitness-network-os/pull/27) `f59f1f7`)
+- [x] Phase 15.5: Cross-Cutting Integrity Closure — 🟢 **MERGED / CI VERIFIED** (PR [#25](https://github.com/NexFabric/fitness-network-os/pull/25) merge `125a8c6`)
   - 15.5B: RBAC least-priv, fencing, inbox atomicity, finance/ledger DoD
   - 15.5C: public outbox/inbox removed; MEMBER BOLA closed (`*:self` + `/me`)
   - 15.5D: outbox max-attempt DEAD, real `*:self` scope, event registry allowlist
-  - Alembic head: `p9c0d1e2f3a4`
-- [ ] Phase 16: Notifications & Reports API — 🟡 branch only (PR #26) — **not LOCKED**
-- [ ] Phase 17: Real API V1 Routers (completion / gaps) — 🟡 branch only — **not LOCKED**
+  - Alembic head on main: `p9c0d1e2f3a4`
+- [ ] Phase 16: Notifications & Reports API — 🟡 **IMPLEMENTED on PR #26** (services/API/tests/`q0…`) — not on main; log provider only
+- [ ] Phase 17: Real API V1 Routers (completion / gaps) — 🟡 **PARTIAL on PR #26** (17A `/me/*` done; 17B/17C open)
 
 ### Phase 18-26: Executable MVP & Verification
-- [ ] Phase 18: Executable Vertical Slice E2E — 🟡 branch only — **not LOCKED**
-- [ ] Phase 19: Admin Web MVP — 🟡 branch only — **not LOCKED**
-- [ ] Phase 20: Scanner PWA MVP — 🟡 branch only — **not LOCKED**
-- [ ] Phase 21: CI V2 Full Verification — 🟠 FE build jobs on branch — **not LOCKED**
-- [ ] Phase 22: Production Container Hardening — 🟠 Dockerfile.prod sketch — **not LOCKED**
-- [ ] Phase 23: HTTP Security Baseline — 🟠 CORS/headers skeleton — **not LOCKED**
-- [ ] Phase 24: Observability — 🟠 request-id / access log stub — **not LOCKED**
-- [ ] Phase 25: Checklist Truth Model Implementation — ⬜ plan + honesty — **not LOCKED**
-- [ ] Phase 26: CORE MVP EXIT GATE — ⬜ criteria only; **NOT PASSED**
+- [ ] Phase 18: Executable Vertical Slice E2E — 🟡 **PARTIAL on PR #26** (service-layer PG e2e; HTTP E2E deferred)
+- [ ] Phase 19: Admin Web MVP — 🟡 **IMPLEMENTED scaffold on PR #26** (token paste; members/locations list)
+- [ ] Phase 20: Scanner PWA MVP — 🟡 **IMPLEMENTED scaffold on PR #26** (paste QR validate; no camera/offline)
+- [ ] Phase 21: CI V2 Full Verification — 🟡 **PARTIAL on PR #26** (`admin-web` + `scanner-pwa` build jobs)
+- [ ] Phase 22: Production Container Hardening — 🟡 **PARTIAL on PR #26** (`backend/Dockerfile.prod` multi-stage non-root sketch)
+- [ ] Phase 23: HTTP Security Baseline — 🟡 **PARTIAL on PR #26** (prod CORS allowlist + basic security headers)
+- [ ] Phase 24: Observability — 🟡 **PARTIAL stub on PR #26** (request-id / correlation-id + access log; no OTel/metrics)
+- [ ] Phase 25: Checklist Truth Model — 🟡 **IMPLEMENTED on branch** (`backend/docs/plans/phase25_checklist_truth.md`)
+- [ ] Phase 26: CORE MVP EXIT GATE — 🔴 **OPEN / FAIL** (`backend/docs/plans/phase26_core_mvp_exit_gate.md`) — **not production-ready**
 
 ## Domain Feature Tracking (Future Reference)
 
@@ -125,8 +130,8 @@
 - Anti-passback & Attendance Logic - 🟡 MODEL
 
 ### Wave 5 — Operational MVP
-- Report Engine (Runs, Exports) - 🟡 MODEL → Phase 16 (branch)
-- Notifications & Deliveries - 🟡 MODEL → Phase 16 (branch)
+- Report Engine (Runs, Exports) - 🟡 IMPLEMENTED on PR #26 (placeholder export; Phase 16) — not on main
+- Notifications & Deliveries - 🟡 IMPLEMENTED on PR #26 (log provider MVP; Phase 16) — not on main
 - Scheduled Jobs (Outbox/Inbox) - 🟢 CI VERIFIED (Phase 15; real bus adapters deferred)
 
 ### Wave 6 — Growth
@@ -162,12 +167,13 @@
 | 14 | `backend/docs/plans/phase14_member_gym_core.md` |
 | 15 | `backend/docs/plans/phase15_outbox_inbox.md` |
 | 15.5 | `backend/docs/plans/phase15_5_integrity_closure.md` |
-| 16–20 | `backend/docs/plans/phase16_notifications_reports.md` … `phase20_scanner_pwa.md` |
-| 21 | `backend/docs/plans/phase21_ci_v2.md` |
-| 22 | `backend/docs/plans/phase22_container_hardening.md` |
-| 23 | `backend/docs/plans/phase23_http_security.md` |
+| 16 | `backend/docs/plans/phase16_notifications_reports.md` |
+| 17 | `backend/docs/plans/phase17_api_v1_completion.md` |
+| 18 | `backend/docs/plans/phase18_vertical_slice_e2e.md` |
+| 19–20 | `backend/docs/plans/phase19_admin_web.md`, `phase20_scanner_pwa.md` |
+| 21–23 | `backend/docs/plans/phase21_ci_v2.md`, `phase22_container_hardening.md`, `phase23_http_security.md` |
 | 24 | `backend/docs/plans/phase24_observability.md` |
 | 25 | `backend/docs/plans/phase25_checklist_truth.md` |
-| 26 | `backend/docs/plans/phase26_core_mvp_exit_gate.md` (**NOT PASSED**) |
+| 26 | `backend/docs/plans/phase26_core_mvp_exit_gate.md` (**FAIL / NOT PASSED**) |
 | Roadmap | `docs/IMPLEMENTATION_MASTER_PLAN.md` |
 | Review stop | `docs/REVIEW_CHECKPOINT.md` |
