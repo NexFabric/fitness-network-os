@@ -17,8 +17,6 @@ PR phase11-contract (or pre-phase12).
 """
 from collections.abc import Sequence
 
-from alembic import op
-
 revision: str = "g8b9c0d1e2f3"
 down_revision: str | Sequence[str] | None = "f7a8b9c0d1e2"
 branch_labels: str | Sequence[str] | None = None
