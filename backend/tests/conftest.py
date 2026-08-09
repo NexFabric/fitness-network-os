@@ -1,6 +1,5 @@
 import os
 import subprocess
-
 from urllib.parse import urlparse
 
 import pytest
