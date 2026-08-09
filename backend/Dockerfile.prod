@@ -1,0 +1,45 @@
+# Production-oriented multi-stage image (Phase 22).
+# Dev compose continues to use Dockerfile (reload + volume mount).
+# Build: docker build -f Dockerfile.prod -t fitness-os-backend:prod ./backend
+
+# ---------------------------------------------------------------------------
+# Stage 1: dependency install
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+RUN pip install --no-cache-dir uv
+
+COPY pyproject.toml .python-version ./
+# Install runtime deps into system site-packages (no venv, no dev group)
+RUN uv pip install --system --no-cache -r pyproject.toml
+
+# ---------------------------------------------------------------------------
+# Stage 2: runtime (non-root, no --reload)
+# ---------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Non-root user (uid/gid 1000)
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid appuser --shell /usr/sbin/nologin --create-home appuser
+
+# Copy installed Python packages and console scripts from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Application source only (no secrets; env injected at runtime)
+COPY --chown=appuser:appuser . .
+
+USER appuser
+
+ENV ENVIRONMENT=production \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8000
+
+# No --reload in production
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
