@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     # e.g. "api.example.com,localhost"
     ALLOWED_HOSTS: str = ""
 
+    # EMAIL notification adapter: log | console (default console).
+    # No real SMTP here — network providers stay deferred / env-gated later.
+    # Read by default_providers() via env (NOTIFICATION_EMAIL_PROVIDER).
+    NOTIFICATION_EMAIL_PROVIDER: str = "console"
+
     DATABASE_URL: PostgresDsn
     MIGRATOR_DATABASE_URL: PostgresDsn
     REDIS_URL: RedisDsn
