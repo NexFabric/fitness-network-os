@@ -27,8 +27,10 @@ from app.services.notification import (
     outbox_notification_requested_handler,
 )
 from app.services.notification_providers import (
+    ConsoleEmailNotificationProvider,
     FailingNotificationProvider,
     LogNotificationProvider,
+    default_providers,
 )
 from app.services.outbox import OutboxService
 
@@ -252,8 +254,10 @@ async def test_outbox_publisher_handler_dispatches_delivery(db_session, tenant):
         )
     ).scalar_one()
     assert delivery.status == DELIVERY_SENT
-    assert delivery.provider == "log"
+    # default_providers() wires EMAIL → console_email (P1-8)
+    assert delivery.provider == "console_email"
     assert delivery.provider_message_id is not None
+    assert delivery.provider_message_id.startswith("console-email-")
     assert "Phase16" in (delivery.body or "")
 
     ob = (
@@ -776,3 +780,93 @@ async def test_handle_notification_requested_shares_parse_and_raise_policy(
         )
     ).scalar_one()
     assert delivery.status == DELIVERY_FAILED
+
+
+# ----- P1-8 console email adapter (unit; no network) -----
+
+
+@pytest.mark.asyncio
+async def test_console_email_provider_success_and_no_body_log(caplog):
+    """Console adapter succeeds with console-email-* id; never logs body."""
+    import logging
+    from types import SimpleNamespace
+    from uuid import uuid4
+
+    delivery_id = uuid4()
+    secret_body = "OTP-9999 secret body must never appear in logs"
+    delivery = SimpleNamespace(
+        id=delivery_id,
+        channel="EMAIL",
+        recipient_address="member@example.com",
+        template_id=uuid4(),
+        subject="Welcome",
+        body=secret_body,
+        context={"otp": "9999"},
+    )
+    provider = ConsoleEmailNotificationProvider()
+    with caplog.at_level(logging.INFO, logger="app.services.notification_providers"):
+        res = await provider.send(delivery)  # type: ignore[arg-type]
+
+    assert res.success is True
+    assert res.provider == "console_email"
+    assert res.provider_message_id is not None
+    assert res.provider_message_id.startswith("console-email-")
+    assert res.error is None
+    assert secret_body not in caplog.text
+    assert "OTP-9999" not in caplog.text
+    assert str(delivery_id) in caplog.text
+    assert "member@example.com" in caplog.text
+    assert "channel=EMAIL" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_dispatch_delivery_console_email_provider_sent(db_session, tenant):
+    """Integration: EMAIL console provider marks delivery SENT."""
+    console = ConsoleEmailNotificationProvider()
+    svc = NotificationService(
+        db_session,
+        providers={"EMAIL": console, "SMS": LogNotificationProvider()},
+    )
+    await svc.create_template(
+        tenant.id,
+        code="console-ping",
+        name="Console Ping",
+        channel="EMAIL",
+        subject_template="Ping $name",
+        body_template="Body $name",
+    )
+    await db_session.commit()
+
+    scheduled = await svc.schedule_delivery(
+        tenant.id,
+        channel="EMAIL",
+        recipient_address="console@example.com",
+        template_code="console-ping",
+        context={"name": "Ada"},
+        enqueue_outbox=False,
+    )
+    await db_session.commit()
+
+    out = await svc.dispatch_delivery(tenant.id, scheduled.delivery.id)
+    await db_session.commit()
+
+    assert out.status == DELIVERY_SENT
+    assert out.provider == "console_email"
+    assert out.provider_message_id is not None
+    assert out.provider_message_id.startswith("console-email-")
+    assert out.sent_at is not None
+
+
+def test_default_providers_email_is_console_by_default(monkeypatch):
+    monkeypatch.delenv("NOTIFICATION_EMAIL_PROVIDER", raising=False)
+    providers = default_providers()
+    assert providers["EMAIL"].name == "console_email"
+    assert providers["SMS"].name == "log"
+    assert providers["WHATSAPP"].name == "log"
+    assert providers["PUSH"].name == "log"
+
+
+def test_default_providers_email_log_override(monkeypatch):
+    monkeypatch.setenv("NOTIFICATION_EMAIL_PROVIDER", "log")
+    providers = default_providers()
+    assert providers["EMAIL"].name == "log"
