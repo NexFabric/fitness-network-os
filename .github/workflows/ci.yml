@@ -225,3 +225,11 @@ jobs:
         env:
           NEXT_PUBLIC_ADMIN_URL: http://localhost:5173
         run: npm run build
+
+  all-green:
+    name: All Required Checks Passed
+    runs-on: ubuntu-latest
+    needs: [test, admin-web, scanner-pwa, public-site]
+    steps:
+      - name: Ready to merge
+        run: echo "All required checks passed!"

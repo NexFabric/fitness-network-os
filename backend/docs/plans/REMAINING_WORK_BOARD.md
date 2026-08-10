@@ -45,6 +45,8 @@
 | P2-1 | /live, /ready (503), /metrics stub |
 | P1-4 | MFA: refuse login without code if MFA enrolled |
 | P1-10/11 | Honest UNVERIFIED status docs under `docs/ops/` |
+| P1-12 | FE builds as **required** branch checks (via `all-green` job) |
+| SEC-1 | Dependabot high alert triage (npm audit fix vite/esbuild) |
 
 ---
 
@@ -59,7 +61,6 @@
 | P1-7 | Playwright browser E2E suite | A-FE |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
-| P1-12 | FE builds as **required** branch checks | ORCH |
 | P2-2 | Redis distributed rate limit | A-CFG |
 | P2-3 | KMS QR secrets | A-QR |
 
