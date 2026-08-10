@@ -1,39 +1,38 @@
 # Morning status
 
 **Date:** 2026-08-10  
-**Orchestrator:** remaining-work board + demo seed light close — **no heavy CI**
+**Orchestrator:** docs truth + checklist sync after remaining-MVP + UI brand
 
 ## Equality
 
 | | |
 |--|--|
-| **local main** | `e19d9355ac8c444a269797e4936ffd4e3d401758` |
-| **origin/main** | `e19d9355ac8c444a269797e4936ffd4e3d401758` |
-| **local == origin/main** | **YES** (at status write; board branch may be ahead after commit) |
+| **local main** | `325d93d` |
+| **origin/main** | `325d93d` |
+| **local == origin/main** | **YES** (verify after pull) |
 | **Alembic head** | `q0d1e2f3a4b5` |
 
 ## Open PRs
 
 | PR | Status |
 |----|--------|
-| *(none)* | **0 open** — #32 merged; #31/#33 closed superseded |
+| *(none)* | **0 open** |
 
-## What was done (light close)
+## What is on main (high signal)
 
-1. Inventory: main at `e19d935` (includes #32 phase26 rescore); open PR count **0**
-2. Demo seed: `backend/scripts/seed_demo.py` → `seed_demo_tenant.py`  
-   - Org + Tenant + **GYM_OWNER** + session token + sample member + location  
-   - Prefer `MIGRATOR_DATABASE_URL`; verified API `GET /api/v1/members` + `/locations`
-3. Docs: `READY_TO_RUN.md` (exact URLs + seed), `REMAINING_WORK_BOARD.md` (P0/P1/P2)
-4. Branch protection `required_approving_review_count` = **1** (unchanged)
-5. Did **not** run full multi-minute pytest suite
+1. Auth: `POST /api/v1/auth/login|logout` + Admin email/password login  
+2. Seed: `scripts/seed_demo.py` → `demo.admin@demo.local` / `DemoAdmin123!`  
+3. Admin: create member + create location; **teal brand system** (#45)  
+4. Scanner: camera QR + paste; **Access brand** (#44)  
+5. HTTP/ASGI e2e (#39); HSTS/CSP baseline (#41); console email (#42)  
+6. Branch protection review_count **1**
 
 ## % complete
 
 | | |
 |--|--|
-| **MVP roadmap (Phase 0–26 surface)** | **~75–80%** delivered on main |
-| **Production polish remaining** | **~20–25%** |
+| **MVP roadmap (Phase 0–26 surface)** | **~82–87%** delivered on main |
+| **Production polish remaining** | **~13–18%** |
 | **Production-ready?** | **NO** |
 
 ## Production-ready?
@@ -42,11 +41,11 @@
 
 ## First thing next session
 
-1. `git checkout main && git pull` — expect `e19d935` or newer if `chore/remaining-board` merged  
+1. `git checkout main && git pull` — expect `325d93d` or newer  
 2. `docker compose up -d` + `alembic upgrade head`  
-3. `uv run python scripts/seed_demo.py` → paste into http://localhost:5173/login  
-4. Pick a **P1** slice from `backend/docs/plans/REMAINING_WORK_BOARD.md` (login API or admin CRUD recommended)
+3. `uv run python scripts/seed_demo.py` → http://localhost:5173/login  
+4. Pick a **P1** from `REMAINING_WORK_BOARD.md` (cookie session, day-1 ops, SMTP, observability)
 
 ## Verdict
 
-**local == GitHub main · MVP stack on main · demo seed ready · no open PRs · not production-ready**
+**local == GitHub main · branded admin+scanner · demo login ready · no open PRs · not production-ready**

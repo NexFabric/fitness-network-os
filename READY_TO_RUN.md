@@ -1,9 +1,10 @@
 # Uygulama hazır — çalıştırma özeti
 
 **Tarih:** 2026-08-10  
-**main equality:** `5451a28` — verify `git rev-parse HEAD` == `origin/main` after pull  
+**main equality:** `325d93d` — verify `git rev-parse HEAD` == `origin/main` after pull  
 **Alembic head:** `q0d1e2f3a4b5`  
-**Production-ready?** **NO** — Phase 26 CORE MVP EXIT GATE not passed.
+**Production-ready?** **NO** — Phase 26 CORE MVP EXIT GATE not passed.  
+**UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
 ## Servis URL’leri
 
@@ -11,8 +12,8 @@
 |--------|-----|-----|
 | API health | http://localhost:8000/health | docker `backend` |
 | API Swagger | http://localhost:8000/docs | OpenAPI |
-| Admin Web | http://localhost:5173/ | Vite; login: http://localhost:5173/login |
-| Scanner PWA | http://localhost:5174/ | camera QR (or paste) → validate |
+| Admin Web | http://localhost:5173/ | Vite; login: http://localhost:5173/login (branded) |
+| Scanner PWA | http://localhost:5174/ | camera QR or paste → GRANT/DENY (Access brand) |
 | Postgres | localhost:**5433** | mapped from container 5432 |
 | Redis | localhost:6379 | docker |
 
@@ -117,7 +118,9 @@ npm run dev -- --port 5174
 
 ## Production-ready?
 
-**Hayır.** MVP dev stack on main (~80–85% roadmap surface). Remaining production bar is tracked in:
+**Hayır.** MVP dev stack on main (~82–87% roadmap surface). Remaining production bar is tracked in:
 
+- `docs/PROGRESS_CHECKLIST.md`
 - `backend/docs/plans/REMAINING_WORK_BOARD.md`
 - `backend/docs/plans/phase26_core_mvp_exit_gate.md`
+- `frontend/UI_BRAND_SYSTEM.md`

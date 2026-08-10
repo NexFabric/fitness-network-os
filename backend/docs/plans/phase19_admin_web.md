@@ -1,35 +1,36 @@
 # Phase 19 — Admin Web MVP
 
-**Status:** 🟠 **IMPLEMENTED on branch** — **not LOCKED**  
+**Status:** 🟠 **MERGED on main** — **not LOCKED**  
 **Path:** `frontend/admin-web/`  
-**Branch:** `feat/phase16-notifications-reports`  
+**Main evidence:** PRs #26 stack + #37/#38 create flows + #45 brand  
 **Do not claim:** production-ready
 
 ---
 
 ## Goal
 
-Ship a minimal staff admin shell that can talk to the real API V1 surface with tenant context.
+Staff admin shell that talks to real API V1 with tenant context.
 
-## Landed
+## Landed (main)
 
 | Item | Detail |
 |------|--------|
 | Stack | Vite + React + TypeScript + Tailwind + React Router |
-| Login | Paste session Bearer + Tenant UUID → `localStorage` (`fnos_access_token`, `fnos_tenant_id`) |
-| Shell | Dashboard, Layout nav, RequireAuth gate |
-| Members | `GET /api/v1/members` via `VITE_API_URL` |
-| Locations | `GET /api/v1/locations` |
-| API client | `Authorization: Bearer` + `X-Tenant-ID` |
+| Login | **Email/password** → `POST /api/v1/auth/login`; stores Bearer + tenant in localStorage |
+| Brand | GymClubNex teal system (`UI_BRAND_SYSTEM.md`); DM Sans; branded login/shell/dashboard |
+| Shell | Layout nav (Dashboard / Members / Locations), RequireAuth, tenant chip |
+| Members | List + **create** (`POST /api/v1/members`) |
+| Locations | List + **create** (`POST /api/v1/locations`) |
+| Dashboard | Operations welcome + live list counts |
+| API client | Bearer + `X-Tenant-ID` + `credentials: 'include'` |
 | Docker | `Dockerfile` (node build → nginx) |
-| README | `frontend/admin-web/README.md` |
+| CI | Admin Web Build job in `.github/workflows/ci.yml` |
 
 ## Gaps / next
 
-- No public login API / cookie session UI yet (deps token paste)
-- No create/edit flows, finance, memberships lifecycle UI
-- Lint script references eslint without package (use `build` as gate)
-- No CI job for frontend build yet (Phase 21)
+- Cookie-only session (drop localStorage token)  
+- Edit member / location; membership lifecycle; finance UI  
+- Not LOCKED; not production-ready  
 
 ## Verify
 
@@ -37,5 +38,5 @@ Ship a minimal staff admin shell that can talk to the real API V1 surface with t
 cd frontend/admin-web
 npm install
 VITE_API_URL=http://localhost:8000 npm run build
-npm run dev
+npm run dev -- --port 5173
 ```

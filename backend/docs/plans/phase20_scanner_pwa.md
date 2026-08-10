@@ -1,34 +1,35 @@
 # Phase 20 — Scanner PWA MVP
 
-**Status:** 🟠 **IMPLEMENTED on branch** — **not LOCKED**  
+**Status:** 🟠 **MERGED on main** — **not LOCKED**  
 **Path:** `frontend/scanner-pwa/`  
-**Branch:** `feat/phase16-notifications-reports`  
+**Main evidence:** PR #26 scaffold + #40 camera + #44 Access brand  
 **Do not claim:** production-ready
 
 ---
 
 ## Goal
 
-Minimal door-scanner UI: paste or enter QR token → call access validate → show GRANTED/DENIED.
+Door-scanner UI: camera or paste QR → `POST /api/v1/access/qr/validate` → GRANT/DENY.
 
-## Landed
+## Landed (main)
 
 | Item | Detail |
 |------|--------|
 | Stack | Vite + React + TypeScript + Tailwind |
 | Validate | `POST /api/v1/access/qr/validate` (`access:validate`) |
 | Auth | Staff session token + tenant in localStorage |
-| UI | Token textarea, optional location_id, consume flag, GRANTED/DENIED panel |
-| PWA | `manifest.json`, shell `service-worker.js`, icons 192/512 |
+| Camera | `CameraQrScanner` — getUserMedia + BarcodeDetector / jsQR; paste fallback |
+| Brand | GymClubNex · Access; dark door-device UI; no raw API path as hero copy |
+| Result UX | Large GRANT/DENY with icon + text |
+| PWA | `manifest.json`, shell service worker, icons |
 | Docker | `Dockerfile` |
-| README | `frontend/scanner-pwa/README.md` |
+| CI | Scanner PWA Build job |
 
 ## Gaps / next
 
-- No camera barcode decoder (paste/token only)
-- No offline validate / device heartbeat
-- Service worker caches shell only (no API offline)
-- Needs staff `access:validate` credential provisioning path
+- Device auth / offline validate / heartbeat  
+- Service worker caches shell only  
+- Not LOCKED; not production-ready  
 
 ## Verify
 
@@ -36,5 +37,5 @@ Minimal door-scanner UI: paste or enter QR token → call access validate → sh
 cd frontend/scanner-pwa
 npm install
 VITE_API_URL=http://localhost:8000 npm run build
-npm run dev
+npm run dev -- --port 5174
 ```

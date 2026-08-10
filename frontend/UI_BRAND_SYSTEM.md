@@ -1,21 +1,22 @@
 # GymClubNex — UI Brand System (MVP surface)
 
 **Date:** 2026-08-10  
-**Status:** ACTIVE design contract for Admin Web + Scanner PWA  
+**Status:** ACTIVE design contract — **implemented on main** (Admin #45, Scanner #44)  
+**Main SHA (when merged):** `325d93d`  
 **Not:** full marketing site / multi-tenant white-label (MASTER_SPEC “tenant branding” later)  
 **Production-ready claim:** NO
 
 ---
 
-## Reality check (pre-wave)
+## Reality check
 
-| Surface | What we had | Gap |
-|---------|-------------|-----|
-| Admin Web | Generic indigo/gray Tailwind shell | Looks like default SaaS template |
-| Scanner PWA | Dark slate + emerald (better) | API paths shown in UI; not family-aligned with admin |
-| Landing / public site | **None** | Out of MVP admin scope |
-| Formal Figma / design system | **None** | Only Phase 19/20 “MVP shell” plans |
-| MASTER_SPEC | Mentions future `tenant branding` + a11y | Not implemented as product white-label |
+| Surface | On main now | Still open |
+|---------|-------------|------------|
+| Admin Web | Teal brand system, login/shell/dashboard/CRUD create | Cookie-only session, edit/ops depth |
+| Scanner PWA | Access brand, camera + paste, GRANT/DENY UX | Device auth / offline |
+| Landing / public site | **None** | Out of admin MVP scope |
+| Formal Figma | **None** — this markdown is the contract | Optional later |
+| MASTER_SPEC tenant branding | Not product white-label | Per-gym themes later |
 
 ---
 

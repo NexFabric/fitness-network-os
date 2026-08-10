@@ -1,9 +1,9 @@
 # Remaining Work Board
 
 **Date:** 2026-08-10  
-**Main SHA (equality):** `5451a28` (local == `origin/main` after remaining-MVP wave)  
+**Main SHA (equality):** `325d93d` (local == `origin/main` after UI brand + remaining-MVP)  
 **Alembic head:** `q0d1e2f3a4b5`  
-**Open PRs:** none for feature wave (docs close may be open briefly)  
+**Open PRs:** **0**  
 **Branch protection:** `required_approving_review_count` = **1**  
 **Production-ready?** **NO** — Phase 26 exit gate **NOT PASSED**
 
@@ -20,13 +20,13 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | 16 notifications/reports | YES | Console email + log MVP | Real SMTP/SMS/WA (P1/P2) |
 | 17 API V1 | YES | 17A `/me/*` + auth login; 17B/C thin | Staff gaps + OpenAPI (P1) |
 | 18 vertical E2E | YES | Service-layer PG **+ HTTP/ASGI** | Expand money path depth (P1) |
-| 19 Admin Web | YES | Login + create member + create location | Cookie path, edit, day-1 ops (P1) |
-| 20 Scanner PWA | YES | Camera QR + paste fallback | Device auth / offline (P1) |
+| 19 Admin Web | YES | Login + create member/location + **brand** | Cookie path, edit, day-1 ops (P1) |
+| 20 Scanner PWA | YES | Camera QR + paste + **Access brand** | Device auth / offline (P1) |
 | 21–24 hardening | YES | HSTS/CSP baseline + light RL | Deepen + LOCK (P1–P2) |
 | 25 truth docs | YES | Docs | Keep in sync (P2) |
 | 26 exit gate | Docs only | **FAIL** | Close criteria honestly |
 
-**MVP surface ~80–85% · production polish ~15–20% open**
+**MVP surface ~82–87% · production polish ~13–18% open**
 
 ---
 
@@ -34,12 +34,12 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 | ID | Item | Owner hint | Notes / acceptance |
 |----|------|------------|--------------------|
-| P0-1 | **Demo seed usable** | DevEx | ✅ **CLOSED:** `backend/scripts/seed_demo.py` → `seed_demo_tenant.py` prints `bearer_token` + `tenant_id`; seeds GYM_OWNER + location + member. |
-| P0-2 | **READY_TO_RUN exact URLs** | Docs | ✅ **CLOSED:** root `READY_TO_RUN.md` with ports 8000/5173/5174/5433 + seed + login. |
-| P0-3 | **Admin login works end-to-end** | FE + BE | ✅ **CLOSED:** email/password via POST /api/v1/auth/login + Admin Login form; tenant_id from response. |
-| P0-4 | **`fitness_app` role on long-lived volumes** | DevOps | Compose expects `fitness_app`; old volumes may only have `app_user`. Documented in READY_TO_RUN; consider one-shot bootstrap script or compose note. |
-| P0-5 | **No open stale docs PRs** | Orchestrator | Keep open feature PR count at 0 after wave; close docs PR promptly. |
-| P0-6 | **Docs SHA lag** | Docs | ✅ **CLOSED this wave:** PROGRESS / standing review / board bumped to `5451a28`. |
+| P0-1 | **Demo seed usable** | DevEx | ✅ **CLOSED:** `seed_demo.py` / `seed_demo_tenant.py` |
+| P0-2 | **READY_TO_RUN exact URLs** | Docs | ✅ **CLOSED:** root `READY_TO_RUN.md` |
+| P0-3 | **Admin login works end-to-end** | FE + BE | ✅ **CLOSED:** email/password login |
+| P0-4 | **`fitness_app` role on long-lived volumes** | DevOps | Still open on old volumes; documented in READY_TO_RUN |
+| P0-5 | **No open stale PRs** | Orchestrator | ✅ **CLOSED:** open count **0** after #44/#45 |
+| P0-6 | **Docs SHA lag** | Docs | ✅ **CLOSED this pass:** bump to `325d93d` |
 
 ---
 
@@ -47,18 +47,20 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 | ID | Item | Phase | Notes |
 |----|------|-------|-------|
-| P1-1 | Public **login API** (email/password → session cookie or token) | 17/19 | ✅ **CLOSED:** POST /api/v1/auth/login + logout; argon2 + hashed sessions + HttpOnly cookie. |
-| P1-2 | Admin Web: create/edit member, create location | 19 | ✅ **CLOSED (create paths):** create member + create location forms. Still open: edit flows, membership/finance ops UI. |
-| P1-3 | Admin Web: cookie/session path (HttpOnly) | 19/C4 | Align with `deps.get_session_token_from_cookie`; FE still stores token in localStorage for MVP. |
-| P1-4 | Scanner: camera QR capture (not paste-only) | 20 | ✅ **CLOSED:** CameraQrScanner (BarcodeDetector / jsQR) + paste fallback. Device auth / offline still open. |
-| P1-5 | HTTP/ASGI vertical e2e (member → QR → validate) | 18 | ✅ **CLOSED (baseline):** `backend/tests/e2e/test_http_vertical_slice.py` login/lists/QR via ASGI. Money-path depth still open. |
-| P1-6 | Staff API gaps (17B) used by admin day-1 | 17 | Inventory OpenAPI vs UI needs. |
-| P1-7 | OpenAPI completeness pass (17C) | 17 | Tags, examples, error models. |
-| P1-8 | Notification adapters beyond log (email first) | 16/B10 | ✅ **partial CLOSED:** console email adapter (`NOTIFICATION_EMAIL_PROVIDER=console\|log`). Real SMTP deferred. |
-| P1-9 | Report export real artifact (not placeholder metadata) | 16/B11 | Still MVP stub. |
-| P1-10 | Phase 21: frontend build jobs as **required** checks | 21 | Branch protection currently: Security / Lint / Unit only. |
-| P1-11 | Phase 23: HSTS + CSP + rate limit baseline | 23 | ✅ **CLOSED (baseline):** HSTS + API CSP in production env; TrustedHost if `ALLOWED_HOSTS`; nosniff/DENY/Referrer-Policy; login rate limit. Still not LOCKED / no CSRF / not multi-worker RL. |
-| P1-12 | Phase 24: health/deps + metrics beyond request-id stub | 24 | No PII in logs. |
+| P1-1 | Public **login API** | 17/19 | ✅ **CLOSED** |
+| P1-2 | Admin Web: create member/location | 19 | ✅ **CLOSED (create)**; edit still open |
+| P1-2b | Admin Web **brand system** | 19 | ✅ **CLOSED:** #45 + `frontend/UI_BRAND_SYSTEM.md` |
+| P1-3 | Admin Web: cookie/session path (HttpOnly) | 19/C4 | FE still localStorage token MVP |
+| P1-4 | Scanner camera QR | 20 | ✅ **CLOSED** (#40) |
+| P1-4b | Scanner Access brand polish | 20 | ✅ **CLOSED** (#44) |
+| P1-5 | HTTP/ASGI vertical e2e | 18 | ✅ **CLOSED (baseline)** (#39) |
+| P1-6 | Staff API gaps (17B) used by admin day-1 | 17 | Open |
+| P1-7 | OpenAPI completeness pass (17C) | 17 | Open |
+| P1-8 | Notification adapters beyond log | 16/B10 | ✅ **partial:** console email; real SMTP open |
+| P1-9 | Report export real artifact | 16/B11 | Open |
+| P1-10 | FE builds as **required** checks | 21 | Protection still Security/Lint/Unit only |
+| P1-11 | HSTS + CSP + rate limit baseline | 23 | ✅ **CLOSED (baseline)** (#41); not LOCKED |
+| P1-12 | Health/deps + metrics | 24 | Open |
 
 ---
 
@@ -66,16 +68,16 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 | ID | Item | Phase | Notes |
 |----|------|-------|-------|
-| P2-1 | `Dockerfile.prod` digest pins, HEALTHCHECK, SBOM | 22 | Multi-stage non-root sketch exists. |
-| P2-2 | Prod compose profile / secrets injection story | 22/C12 | No secrets in images. |
-| P2-3 | Privileged MFA enforcement claim for owner/admin | C5 | Foundation only. |
-| P2-4 | Formal threat models for membership/finance/access | C9 | Tests ≠ threat models. |
-| P2-5 | Expand/contract: schedule CONTRACT DROP of legacy floats | 11/C10 | Intentional deferral. |
-| P2-6 | Real WhatsApp/SMS providers + webhook inbox | 16 | Keep Membership → Event → Notification path. Real email/SMTP too. |
-| P2-7 | Backup/restore runbook + drill evidence | 26 | Exit gate. |
-| P2-8 | ASVS / pentest evidence + independent APPROVE | 26/D5 | Required for production-ready claim. |
-| P2-9 | Phase 16–24 **LOCKED** docs after depth CI VERIFIED | 25 | MVP MERGED ≠ LOCKED. |
-| P2-10 | Branch protection: add Admin Web + Scanner build required | 21 | Optional until FE is critical path. |
+| P2-1 | `Dockerfile.prod` digest pins, HEALTHCHECK, SBOM | 22 | Sketch exists |
+| P2-2 | Prod compose / secrets injection | 22/C12 | Open |
+| P2-3 | Privileged MFA enforcement | C5 | Foundation only |
+| P2-4 | Formal threat models | C9 | Open |
+| P2-5 | CONTRACT DROP legacy floats | 11/C10 | Deferred |
+| P2-6 | Real WhatsApp/SMS + webhook inbox | 16 | Open |
+| P2-7 | Backup/restore drill evidence | 26 | Exit gate |
+| P2-8 | ASVS / pentest + independent APPROVE | 26/D5 | Exit gate |
+| P2-9 | Phase 16–24 **LOCKED** after depth CI | 25 | MVP ≠ LOCKED |
+| P2-10 | Require Admin + Scanner build checks | 21 | Optional |
 
 ---
 
@@ -93,30 +95,27 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 ## Suggested agent slices (next sessions)
 
-1. **Admin cookie session:** stop localStorage token; rely on HttpOnly cookie from login.  
-2. **Admin edit + day-1 ops:** member edit, membership freeze/renew surfaces, finance list.  
-3. **Real email transport:** SMTP adapter behind same provider interface; env-gated.  
-4. **Report export artifact:** non-placeholder file/bytes with tenant isolation tests.  
-5. **Observability:** `/health` deps (db/redis) + basic metrics; no PII.  
-6. **Branch protection FE builds:** require Admin Web + Scanner PWA build checks.
+1. **Admin cookie session** — stop localStorage token; rely on HttpOnly cookie.  
+2. **Admin day-1 ops** — member edit, membership freeze/renew, finance lists.  
+3. **Real email SMTP** — env-gated behind NotificationProvider.  
+4. **Report export artifact** — non-placeholder bytes + tenancy tests.  
+5. **Observability** — `/health` deps + metrics; no PII.  
+6. **Branch protection** — require Admin Web + Scanner PWA builds.
 
 ---
 
-## Closed this orchestration session (remaining-MVP wave)
+## Closed this session (UI brand + docs truth)
 
 | Item | Evidence |
 |------|----------|
-| PR #38 admin create location | `frontend/admin-web/src/pages/Locations.tsx` form → POST `/api/v1/locations` |
-| PR #39 HTTP/ASGI e2e | `backend/tests/e2e/test_http_vertical_slice.py` |
-| PR #40 scanner camera QR | `frontend/scanner-pwa/src/components/CameraQrScanner.tsx` |
-| PR #41 HSTS/CSP baseline | `backend/app/main.py` + `backend/tests/core/test_security_headers.py` |
-| PR #42 console email adapter | `NOTIFICATION_EMAIL_PROVIDER` + `notification_providers.py` |
-| Prior #37 auth login + create member | POST `/api/v1/auth/login`, Members create form |
-| Inventory open feature PRs | `gh pr list --state open` → **0** (after wave) |
-| Equality main | `5451a28` local == origin/main |
-| Branch protection | review_count **1** restored after admin merges |
-| Full pytest CI spam | **Not run** locally (CI only) |
-| Phase 26 PASS claim | **Not claimed** — production-ready **NO** |
+| PR #44 Scanner brand | GymClubNex · Access, GRANT/DENY UX |
+| PR #45 Admin brand | Teal brand tokens, login/shell/dashboard |
+| UI brand contract | `frontend/UI_BRAND_SYSTEM.md` |
+| Prior remaining-MVP #37–#42 | Auth, CRUD create, camera, e2e, HSTS, console email |
+| Docs SHA | `325d93d` |
+| Open PRs | **0** |
+| Branch protection | review_count **1** |
+| Phase 26 PASS | **Not claimed** |
 
 ---
 
@@ -126,4 +125,5 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 - `docs/PROGRESS_CHECKLIST.md`, `docs/IMPLEMENTATION_MASTER_PLAN.md`
 - `backend/docs/plans/phase26_core_mvp_exit_gate.md`
 - `backend/docs/plans/MORNING_STATUS.md`
+- `frontend/UI_BRAND_SYSTEM.md`
 - `READY_TO_RUN.md`
