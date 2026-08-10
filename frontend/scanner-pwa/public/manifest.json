@@ -1,7 +1,7 @@
 {
-  "short_name": "Scanner",
-  "name": "GymClubNex Access Scanner",
-  "description": "Validate member QR credentials for gym entry",
+  "short_name": "Access",
+  "name": "GymClubNex · Access",
+  "description": "Scan member QR codes to grant gym entry",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -20,7 +20,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#064e3b",
+  "theme_color": "#020617",
   "background_color": "#020617",
   "categories": ["fitness", "utilities"]
 }

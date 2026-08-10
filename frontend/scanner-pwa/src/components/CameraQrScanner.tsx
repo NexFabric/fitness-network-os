@@ -226,7 +226,7 @@ export function CameraQrScanner({
   if (!active) return null
 
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-slate-700 bg-black">
+    <div className="overflow-hidden rounded-xl border border-teal-800/40 bg-black shadow-lg shadow-black/40">
       <div className="relative aspect-[4/3] w-full bg-slate-950">
         <video
           ref={videoRef}
@@ -243,7 +243,7 @@ export function CameraQrScanner({
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
           aria-hidden
         >
-          <div className="h-48 w-48 rounded-lg border-2 border-emerald-400/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+          <div className="h-48 w-48 rounded-xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
         </div>
         {starting && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 text-sm text-slate-300">
@@ -259,14 +259,14 @@ export function CameraQrScanner({
           {cameraError}
         </div>
       )}
-      <div className="flex items-center justify-between gap-2 border-t border-slate-800 bg-slate-900 px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-t border-slate-800 bg-slate-900/95 px-3 py-2.5">
         <p className="text-xs text-slate-400">
-          Point the back camera at the member QR code
+          Point the back camera at the member QR
         </p>
         <button
           type="button"
           onClick={handleStop}
-          className="shrink-0 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+          className="shrink-0 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
         >
           Stop camera
         </button>
