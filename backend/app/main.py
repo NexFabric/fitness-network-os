@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from app.api.middleware.rate_limit import SimpleRateLimitMiddleware
 from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -52,6 +53,8 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     # Phase 24 stub: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
     app.add_middleware(RequestLoggingMiddleware)
+    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
+    app.add_middleware(SimpleRateLimitMiddleware)
 
     @app.get("/health")
     async def health_check():

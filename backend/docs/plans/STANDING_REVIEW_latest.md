@@ -16,6 +16,14 @@
 
 **Do not claim production-ready.**
 
+## Session update (orchestrator — remaining MVP slice)
+
+**Branch:** `feat/complete-remaining-mvp` (not main until merged)  
+**Delta:** public auth login/logout, seed_demo path, Admin password login + create member form, light login rate limit.  
+**Production-ready?** **NO** — Phase 26 still **NOT PASSED**.  
+**Branch protection:** restore `review_count=1` after any emergency merge.
+
+
 ---
 
 ## 1. App runnable (live check)
@@ -68,7 +76,7 @@ Docs are **mostly consistent on product truth** (merged MVP, not prod). Residual
 ## Remaining backlog (top 10)
 
 1. **Real notification providers** (email/SMS/WhatsApp) behind adapters — log-only today  
-2. **Admin Web depth** — cookie/session auth, create/edit, finance/membership ops (beyond token paste + lists)  
+2. **Admin Web depth** — password login + create member landed on branch; still need edit, locations create, finance/membership ops  
 3. **Scanner PWA depth** — camera scan, offline/gateway story, device auth (beyond paste → validate)  
 4. **Phase 17B/C** — staff API gaps + OpenAPI completeness for day-1 admin  
 5. **HTTP/ASGI vertical E2E** (access + money path); service-layer e2e alone is not product E2E  

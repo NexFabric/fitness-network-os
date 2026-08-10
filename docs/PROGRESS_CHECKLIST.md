@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `e19d935` (PR #26 stack + docs #28/#30/#32; demo seed on follow-up branch)  
+**Main HEAD:** `e19d935` baseline; open: auth login + seed_demo + admin create-member (feat/complete-remaining-mvp — not production-ready)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
@@ -55,6 +55,13 @@
 - [ ] Phase 26 CORE MVP EXIT GATE — **FAIL / NOT PASSED** (real providers, full security/ops, pentest, etc.)
 
 ---
+
+## Session delta (not on main until PR merges)
+
+- [ ] `POST /api/v1/auth/login` + logout (argon2 session) — on feature branch  
+- [ ] `scripts/seed_demo.py` + READY_TO_RUN  
+- [ ] Admin create-member form  
+- [ ] Light login rate limit  
 
 ## Remaining to “complete” production bar
 

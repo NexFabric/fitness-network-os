@@ -37,7 +37,7 @@ Prints on stdout (copy into Admin login at http://localhost:5173/login)::
     Authorization:  Bearer <raw>
     X-Tenant-ID:    <uuid>
 
-Admin Web login only needs **Session token** + **Tenant ID**.
+Admin Web: preferred **email/password** via POST /api/v1/auth/login; or paste **Session token** + **Tenant ID**.
 Not production-ready — local/dev credentials only.
 """
 
@@ -323,7 +323,7 @@ def _print_result(result: dict[str, str | None]) -> None:
     print(f"organization_id:{result['organization_id']}")
     print(f"user_id:        {result['user_id']}")
     print(f"email:          {result['email']}")
-    print(f"password:       {result['password']}  (hashed; Admin uses token paste)")
+    print(f"password:       {result['password']}  (use with POST /api/v1/auth/login)")
     print(f"role:           {result['role']} ({result['role_permission_count']} perms)")
     print(f"bearer_token:   {token}")
     print(f"member_id:      {result['member_id'] or '(none)'}")
@@ -332,8 +332,8 @@ def _print_result(result: dict[str, str | None]) -> None:
     print(f"X-Tenant-ID:    {tenant_id}")
     print()
     print("Admin Web → http://localhost:5173/login")
-    print("  Session token  = bearer_token (no 'Bearer ' prefix)")
-    print("  Tenant ID      = tenant_id")
+    print("  Preferred: email + password → POST /api/v1/auth/login")
+    print("  Fallback:  Session token paste = bearer_token; Tenant ID = tenant_id")
     print()
     print(
         f'curl -sS -H "Authorization: Bearer {token}" '

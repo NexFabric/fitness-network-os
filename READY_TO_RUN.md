@@ -45,7 +45,7 @@ PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d fitness_os -f ../po
 
 ## 2) Demo seed (Admin login credentials)
 
-There is **no public email/password login API** yet. Admin Web pastes a **session Bearer token** + **X-Tenant-ID**.
+Admin Web uses **email/password** via `POST /api/v1/auth/login` (returns `token`, `user_id`, `expires_at`, `tenant_id`). Seed still prints a bearer token for API curl fallback.
 
 ```bash
 cd backend
@@ -61,7 +61,7 @@ Script prints (example fields):
 |-------|-----|
 | `bearer_token` | Admin → **Session token** (no `Bearer ` prefix) |
 | `tenant_id` | Admin → **Tenant ID** |
-| `email` / `password` | stored hashed; **not** used by Admin UI yet |
+| `email` / `password` | Admin login form → `POST /api/v1/auth/login` |
 
 Default demo:
 
@@ -71,6 +71,16 @@ Default demo:
 - sample member `DEMO-001` + location `Demo Main Floor`
 
 Re-run rotates the session token (prior sessions revoked).
+
+### Password login (preferred)
+
+```bash
+curl -sS -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"demo.admin@demo.local","password":"DemoAdmin123!"}'
+```
+
+Use returned `token` as Bearer and `tenant_id` as `X-Tenant-ID`.
 
 Quick API check after seed:
 
