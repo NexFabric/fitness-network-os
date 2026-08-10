@@ -1,5 +1,7 @@
-const TOKEN_KEY = 'fnos_access_token'
 const TENANT_KEY = 'fnos_tenant_id'
+
+/** In-memory CSRF (API origin cookie is not readable cross-origin from :5173). */
+let csrfToken: string | null = null
 
 export function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL
@@ -13,12 +15,14 @@ export function getTenantId(): string | null {
   return localStorage.getItem(TENANT_KEY)
 }
 
+/** Persist tenant id only — never store session secrets in localStorage. */
 export function setAuth(tenantId: string): void {
   localStorage.setItem(TENANT_KEY, tenantId)
 }
 
 export function clearAuth(): void {
   localStorage.removeItem(TENANT_KEY)
+  csrfToken = null
 }
 
 export function isAuthenticated(): boolean {
@@ -41,20 +45,51 @@ export type ApiOptions = {
   method?: string
   body?: unknown
   headers?: Record<string, string>
-  /** Skip Authorization / X-Tenant-ID (unused on public routes). */
+  /** Skip X-Tenant-ID (public routes). */
   skipAuth?: boolean
+  /** Skip CSRF header (e.g. bootstrap). */
+  skipCsrf?: boolean
+}
+
+/**
+ * Bootstrap CSRF for cross-origin admin → API.
+ * GET /api/v1/auth/csrf sets cookie on API origin and returns token JSON.
+ */
+export async function ensureCsrf(): Promise<string> {
+  if (csrfToken) return csrfToken
+  const base = getBaseUrl()
+  const res = await fetch(`${base}/api/v1/auth/csrf`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, 'CSRF bootstrap failed')
+  }
+  const data = (await res.json()) as { csrf_token?: string }
+  if (!data.csrf_token) {
+    throw new ApiError(500, 'CSRF bootstrap missing token')
+  }
+  csrfToken = data.csrf_token
+  return csrfToken
 }
 
 /**
  * Fetch wrapper for GymClubNex API.
- * Sends Authorization: Bearer <token> and X-Tenant-ID from localStorage.
+ * Auth: HttpOnly session cookie (credentials: include) + X-Tenant-ID.
+ * CSRF: in-memory token from ensureCsrf() for unsafe methods.
  */
 export async function api<T = unknown>(
   path: string,
   options: ApiOptions = {},
 ): Promise<T> {
   const base = getBaseUrl()
-  const url = path.startsWith('http') ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`
+  const url = path.startsWith('http')
+    ? path
+    : `${base}${path.startsWith('/') ? '' : '/'}${path}`
+
+  const method =
+    options.method ?? (options.body !== undefined ? 'POST' : 'GET')
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -72,22 +107,24 @@ export async function api<T = unknown>(
     }
   }
 
-  // Parse CSRF cookie if available and method is unsafe
-  const method = options.method ?? (options.body !== undefined ? 'POST' : 'GET')
-  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
-    const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
-    if (match) {
-      headers['x-csrf-token'] = match[1]
-    }
+  const unsafe =
+    method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS'
+  if (unsafe && !options.skipCsrf) {
+    const token = await ensureCsrf()
+    headers['x-csrf-token'] = token
   }
 
   const res = await fetch(url, {
-    method: options.method ?? (options.body !== undefined ? 'POST' : 'GET'),
+    method,
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    // Include cookies so HttpOnly session auth works alongside Bearer/localStorage.
     credentials: 'include',
   })
+
+  // Capture refreshed CSRF from JSON error body not available; re-bootstrap on 403
+  if (res.status === 403 && unsafe && !options.skipCsrf) {
+    csrfToken = null
+  }
 
   const text = await res.text()
   let data: unknown = null
@@ -100,6 +137,18 @@ export async function api<T = unknown>(
   }
 
   if (!res.ok) {
+    if (res.status === 401 && !options.skipAuth) {
+      clearAuth()
+      if (
+        typeof window !== 'undefined' &&
+        !window.location.pathname.startsWith('/login')
+      ) {
+        const next = `${window.location.pathname}${window.location.search}`
+        window.location.assign(
+          `/login?reason=session&from=${encodeURIComponent(next)}`,
+        )
+      }
+    }
     const detail =
       typeof data === 'object' && data !== null && 'detail' in data
         ? String((data as { detail: unknown }).detail)

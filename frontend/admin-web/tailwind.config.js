@@ -12,8 +12,15 @@ export default {
           deep: '#0F766E',
           light: '#14B8A6',
         },
-        ink: '#f8fafc',
-        surface: '#020617',
+        ink: {
+          DEFAULT: '#F8FAFC',
+          muted: '#94A3B8',
+        },
+        surface: {
+          DEFAULT: '#020617',
+          raised: '#0B1220',
+          panel: '#0F172A',
+        },
         accent: {
           DEFAULT: '#34D399',
           warn: '#F59E0B',

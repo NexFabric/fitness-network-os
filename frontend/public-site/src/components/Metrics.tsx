@@ -1,86 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const defaultStats = [
-  { id: 1, name: "Uptime", value: "99.9%" },
-  { id: 2, name: "Veri Kaybı", value: "Sıfır" },
-  { id: 3, name: "Günlük Geçiş", value: "10K+" },
+/** Honest design targets — not live production measurements. */
+const stats = [
+  { name: "Uptime hedefi", value: "99.9%" },
+  { name: "Veri kaybı hedefi", value: "Sıfır" },
+  { name: "Ölçek hedefi", value: "Yüksek hacim" },
 ];
 
 export function Metrics() {
-  const [stats, setStats] = useState(defaultStats);
-
-  useEffect(() => {
-    fetch(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1/telemetry/public")
-      .then(res => res.json())
-      .then(data => {
-        setStats([
-          { id: 1, name: "Uptime", value: data.uptime || "99.99%" },
-          { id: 2, name: "Veri Kaybı", value: data.data_loss_status || "Sıfır" },
-          { id: 3, name: "Günlük Geçiş", value: data.daily_transitions || "12.4K+" },
-        ]);
-      })
-      .catch(err => console.error("Telemetry fetch error:", err));
-  }, []);
-
   return (
-    <section className="bg-background py-24 sm:py-32 relative overflow-hidden border-t border-border">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-brand/10 blur-[100px] rounded-full pointer-events-none"></div>
-      
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-        <div className="mx-auto max-w-2xl lg:max-w-none text-center">
+    <section className="relative overflow-hidden border-t border-border bg-background py-20 sm:py-28">
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/10 blur-[100px]"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded border border-brand/20 bg-brand/5 px-3 py-1 text-sm font-medium text-brand mb-6"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-sm font-medium text-brand-light"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-            </span>
-            Sistem Durumu
+            Tasarım hedefleri
           </motion.div>
 
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+            transition={{ delay: 0.05 }}
+            className="text-3xl font-bold tracking-tight sm:text-4xl"
           >
-            Kanıtlanmış Performans
+            Operasyon için tasarlandı
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-4 text-lg text-foreground/60"
+            transition={{ delay: 0.1 }}
+            className="mt-4 text-lg text-ink-muted"
           >
-            Sayılar yalan söylemez. Operasyonlarınızı kesintisiz sürdürün.
+            Aşağıdaki rakamlar canlı ölçüm değil; platformun hedeflediği
+            mühendislik çıtalarıdır. Canlı telemetri ayrı bir gözlemlenebilirlik
+            hattı ile gelir.
           </motion.p>
-          
-          <dl className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {stats.map((stat, index) => (
-              <motion.div 
-                key={stat.id} 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col bg-background/50 backdrop-blur-md border border-brand/20 hover:border-brand/50 p-8 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(13,148,136,0.05)] hover:shadow-[0_0_30px_rgba(13,148,136,0.15)] group relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <dt className="text-sm font-mono leading-6 text-foreground/60 uppercase tracking-wider relative z-10">{stat.name}</dt>
-                <dd className="order-first text-4xl font-bold tracking-tight text-foreground group-hover:text-brand transition-colors sm:text-5xl mb-4 relative z-10">{stat.value}</dd>
-              </motion.div>
-            ))}
-          </dl>
         </div>
+
+        <dl className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-3">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={stat.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.06 }}
+              className="group relative overflow-hidden rounded-xl border border-brand/20 bg-background/60 p-8 text-center backdrop-blur-sm transition-all hover:border-brand/45"
+            >
+              <dt className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+                {stat.name}
+              </dt>
+              <dd className="mt-3 text-3xl font-bold tracking-tight text-foreground transition-colors group-hover:text-brand sm:text-4xl">
+                {stat.value}
+              </dd>
+            </motion.div>
+          ))}
+        </dl>
       </div>
     </section>
   );

@@ -1,4 +1,3 @@
-const TOKEN_KEY = 'fnos_scanner_token'
 const TENANT_KEY = 'fnos_scanner_tenant_id'
 
 export function getBaseUrl(): string {
@@ -75,9 +74,23 @@ export async function validateQr(
     payload.location_id = body.location_id
   }
 
-  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
-  if (match) {
-    headers['x-csrf-token'] = match[1]
+  // Cross-origin: bootstrap CSRF from API (cookie not readable via document.cookie)
+  let csrf: string | null = null
+  try {
+    const boot = await fetch(`${base}/api/v1/auth/csrf`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+    if (boot.ok) {
+      const j = (await boot.json()) as { csrf_token?: string }
+      csrf = j.csrf_token ?? null
+    }
+  } catch {
+    // continue; server may return 403
+  }
+  if (csrf) {
+    headers['x-csrf-token'] = csrf
   }
 
   const res = await fetch(`${base}/api/v1/access/qr/validate`, {

@@ -1,53 +1,75 @@
+"""Double-submit CSRF: cookie + X-CSRF-Token header on unsafe methods.
+
+Cross-origin admin (e.g. :5173 → :8000) cannot read the API cookie via
+document.cookie. Clients must bootstrap via GET /api/v1/auth/csrf which
+returns the token in JSON (same value as cookie on API origin).
+"""
+
+from __future__ import annotations
+
+import hmac
 import secrets
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
-    """Simple Double-Submit Cookie CSRF Middleware.
-    
-    Checks that a valid CSRF token is sent in both a cookie and a custom header
-    for all state-changing requests (POST, PUT, PATCH, DELETE).
-    """
-
     SAFE_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
-    EXEMPT_PATHS: frozenset[str] = frozenset({"/api/v1/auth/login", "/api/v1/auth/logout"})
+    EXEMPT_PATHS: frozenset[str] = frozenset(
+        {
+            "/api/v1/auth/login",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/csrf",
+        }
+    )
     COOKIE_NAME = "csrf_token"
     HEADER_NAME = "x-csrf-token"
 
     async def dispatch(self, request: Request, call_next) -> Response:
         from app.core.config import settings
 
-        # Bypass CSRF for tests
-        if settings.ENVIRONMENT == "test":
+        # Test suite uses Bearer + ASGI; opt-in real CSRF with X-Test-CSRF: enforce
+        if (
+            settings.ENVIRONMENT == "test"
+            and request.headers.get("x-test-csrf") != "enforce"
+        ):
             return await call_next(request)
 
         csrf_cookie = request.cookies.get(self.COOKIE_NAME)
-        
-        # Ensure every request gets a CSRF cookie if it doesn't have one
         if not csrf_cookie:
             csrf_cookie = secrets.token_urlsafe(32)
+        # Single source of truth for this request (auth/csrf endpoint reads it)
+        request.state.csrf_token = csrf_cookie
 
-        # For unsafe methods, validate the header against the cookie
-        if request.method not in self.SAFE_METHODS and request.url.path not in self.EXEMPT_PATHS:
+        if (
+            request.method not in self.SAFE_METHODS
+            and request.url.path not in self.EXEMPT_PATHS
+        ):
             csrf_header = request.headers.get(self.HEADER_NAME)
-            
-            # Simple constant-time comparison is recommended for tokens, 
-            # but string equality works for basic double-submit where the secret 
-            # is just the random value itself.
-            if not csrf_header or csrf_header != csrf_cookie:
-                return Response(content="CSRF token validation failed", status_code=403)
+            if (
+                not csrf_header
+                or not hmac.compare_digest(str(csrf_header), str(csrf_cookie))
+            ):
+                resp = JSONResponse(
+                    status_code=403,
+                    content={"detail": "CSRF token validation failed"},
+                )
+                self._set_csrf_cookie(resp, csrf_cookie, settings)
+                return resp
 
         response = await call_next(request)
-        
-        # Always set/refresh the cookie
+        self._set_csrf_cookie(response, csrf_cookie, settings)
+        return response
+
+    def _set_csrf_cookie(self, response: Response, value: str, settings) -> None:
         response.set_cookie(
             key=self.COOKIE_NAME,
-            value=csrf_cookie,
-            httponly=False,  # Must be readable by JavaScript
+            value=value,
+            httponly=False,
             samesite="lax",
+            secure=settings.is_production,
             path="/",
+            max_age=7 * 24 * 3600,
         )
-        
-        return response

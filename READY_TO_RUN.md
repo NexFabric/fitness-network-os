@@ -3,7 +3,7 @@
 **Tarih:** 2026-08-10  
 **main equality:** `541c496` — verify `git rev-parse HEAD` == `origin/main` after pull  
 **Alembic head:** `q0d1e2f3a4b5`  
-**Production-ready?** **YES** — Phase 26 CORE MVP EXIT GATE PASSED.
+**Production-ready?** **NO** — Phase 27 production closure in progress (architecture strong; launch gates open).
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
 ## Servis URL’leri

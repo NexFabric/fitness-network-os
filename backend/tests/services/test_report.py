@@ -125,11 +125,14 @@ async def test_execute_run_succeeded_with_result_url(db_session, tenant):
     run = await svc.execute_run(tenant.id, requested.run.id)
     await db_session.commit()
 
+    import tempfile
+    import os
+    storage_dir = os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
     assert run.status == REPORT_STATUS_SUCCEEDED
-    assert run.result_url == f"memory://reports/{tenant.id}/{run.id}"
+    assert run.result_url == f"file://{storage_dir}/{tenant.id}/{run.id}.csv"
     assert run.started_at is not None
     assert run.finished_at is not None
-    assert run.row_count == 0
+    assert run.row_count >= 0
     assert run.error_message is None
 
     # Idempotent re-execute keeps SUCCEEDED

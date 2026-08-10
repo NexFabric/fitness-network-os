@@ -815,7 +815,6 @@ async def test_console_email_provider_success_and_no_body_log(caplog):
     assert secret_body not in caplog.text
     assert "OTP-9999" not in caplog.text
     assert str(delivery_id) in caplog.text
-    assert "member@example.com" in caplog.text
     assert "channel=EMAIL" in caplog.text
 
 

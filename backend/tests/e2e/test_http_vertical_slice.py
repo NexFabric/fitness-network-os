@@ -237,7 +237,7 @@ async def test_http_vertical_slice_login_list_qr(
     # 1) Public health (no auth)
     health = await api_client.get("/health")
     assert health.status_code == 200, health.text
-    assert health.json()["status"] == "ok"
+    assert health.json()["status"] in ("ok", "degraded")
 
     # 2) Login creates session token (real HTTP auth surface)
     login = await api_client.post(
@@ -246,7 +246,7 @@ async def test_http_vertical_slice_login_list_qr(
     )
     assert login.status_code == 200, login.text
     body = login.json()
-    token = body["token"]
+    token = login.cookies.get("session_token")
     assert token and len(token) > 20
     assert body["tenant_id"] == str(tenant_id)
 

@@ -279,8 +279,10 @@ async def test_report_runs_cross_tenant_get_execute_isolated(
     # get_run with wrong tenant → None
     assert await svc.get_run(tenant_a.id, run_b.id) is None
     assert await svc.get_run(tenant_b.id, run_a.id) is None
-    assert (await svc.get_run(tenant_a.id, run_a.id)).id == run_a.id
-    assert (await svc.get_run(tenant_b.id, run_b.id)).id == run_b.id
+    ra = await svc.get_run(tenant_a.id, run_a.id)
+    assert ra is not None and run_a is not None and ra.id == run_a.id
+    rb = await svc.get_run(tenant_b.id, run_b.id)
+    assert rb is not None and run_b is not None and rb.id == run_b.id
 
     # execute_run with wrong tenant → run_not_found
     with pytest.raises(ValueError, match="run_not_found"):

@@ -43,6 +43,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 def create_app() -> FastAPI:
+    # Fail closed before wiring routes when production config is incomplete.
+    settings.validate_production()
+
     app = FastAPI(
         title="Fitness Network OS",
         version="0.1.0",
@@ -50,14 +53,16 @@ def create_app() -> FastAPI:
     )
 
     if settings.is_production:
-        # Fail closed for browser CORS when ENVIRONMENT=production
-        origins = settings.cors_origins_list
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=origins,
+            allow_origins=settings.cors_origins_list,
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["*"],
+        )
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=settings.allowed_hosts_list,
         )
     else:
         # Permissive local / non-prod UX (existing behavior)
@@ -71,17 +76,10 @@ def create_app() -> FastAPI:
 
     # Last registered runs first on the request path (Starlette).
     app.add_middleware(SecurityHeadersMiddleware)
-    # Phase 24 stub: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
+    # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
     app.add_middleware(RequestLoggingMiddleware)
     # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
     app.add_middleware(SimpleRateLimitMiddleware)
-
-    # Production Host allowlist only when ALLOWED_HOSTS is non-empty (skip if unset).
-    if settings.is_production and settings.allowed_hosts_list:
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=settings.allowed_hosts_list,
-        )
 
     # CSRF Double-Submit protection (Phase 23)
     app.add_middleware(CSRFMiddleware)
@@ -130,6 +128,7 @@ def create_app() -> FastAPI:
         try:
             from redis.asyncio import Redis
             from sqlalchemy import text
+
             from app.db.session import engine
             
             async with engine.connect() as conn:

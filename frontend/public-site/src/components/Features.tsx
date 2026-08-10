@@ -1,91 +1,116 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { QrCode, MonitorSmartphone, CreditCard } from "lucide-react";
+import {
+  QrCode,
+  MonitorSmartphone,
+  CreditCard,
+  Shield,
+  Bell,
+  BarChart3,
+} from "lucide-react";
 
 const features = [
   {
-    name: "Dinamik QR Geçiş",
-    description: "Saniyeden kısa sürede doğrulama. Kopyalanamaz, paylaşılamaz, tamamen güvenli erişim.",
+    name: "Dinamik QR geçiş",
+    description:
+      "Kısa ömürlü imzalı kodlar. Kopyalanamaz, paylaşılamaz — saniyeler içinde güvenli kapı erişimi.",
     icon: QrCode,
-    color: "text-amber-400",
-    bg: "bg-amber-400/10",
-    border: "border-amber-400/20"
   },
   {
-    name: "Merkezi Yönetim",
-    description: "Tüm şubeler, tek ekran. Tam izolasyon. Üye, personel ve yetki yönetimi avucunuzun içinde.",
+    name: "Merkezi yönetim",
+    description:
+      "Tüm şubeler tek ekranda. Üye, personel ve yetki yönetimi operasyon panelinizde.",
     icon: MonitorSmartphone,
-    color: "text-brand",
-    bg: "bg-brand/10",
-    border: "border-brand/20"
   },
   {
-    name: "Kesintisiz Ödemeler",
-    description: "Sıfır hata, anında mutabakat. Karmaşık finansal operasyonları otomatiğe bağlayın.",
+    name: "Kesintisiz ödemeler",
+    description:
+      "Kuruluş para birimi ve minor unit ile faturalama. Mutabakat hatalarını azaltın.",
     icon: CreditCard,
-    color: "text-accent",
-    bg: "bg-accent/10",
-    border: "border-accent/20"
+  },
+  {
+    name: "Tam izolasyon",
+    description:
+      "Her kulüp kendi tenant alanında. PostgreSQL RLS ile satır düzeyinde veri ayrımı.",
+    icon: Shield,
+  },
+  {
+    name: "Bildirimler",
+    description:
+      "Olay tabanlı bildirim hattı. Üyelik ve operasyon sinyallerini doğru kanala iletin.",
+    icon: Bell,
+  },
+  {
+    name: "Raporlar",
+    description:
+      "Günlük operasyon özetleri ve finans görünürlüğü. Karar için net sayılar.",
+    icon: BarChart3,
   },
 ];
 
 export function Features() {
   return (
-    <section id="features" className="relative py-24 sm:py-32 bg-background border-t border-border">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section
+      id="features"
+      className="relative scroll-mt-20 border-t border-border bg-background py-20 sm:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-base font-semibold leading-7 text-brand"
+            transition={{ duration: 0.4 }}
+            className="text-sm font-semibold uppercase tracking-wider text-brand"
           >
-            Core Specs
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-          >
-            Telemetri ve Donanım
+            Çekirdek yetenekler
           </motion.p>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-lg leading-8 text-foreground/70"
+            transition={{ duration: 0.4, delay: 0.05 }}
+            className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
           >
-            Klasik yazılımları unutun. Kulübünüzün her donanımı ve verisi, kusursuz bir uyumla çalışan bu çekirdek sistemde birleşiyor.
+            Telemetri ve donanım bir arada
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="mt-4 text-lg leading-relaxed text-ink-muted"
+          >
+            Klasik yazılımları unutun. Kulübünüzün her verisi ve erişim noktası
+            aynı çekirdek sistemde birleşir.
           </motion.p>
         </div>
-        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <motion.div 
-                key={feature.name} 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col rounded-2xl bg-card p-8 border border-border hover:border-brand/50 transition-colors shadow-sm"
-              >
-                <dt className="flex items-center gap-x-3 text-lg font-semibold leading-7 text-foreground">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${feature.bg} ${feature.border} border`}>
-                    <feature.icon className={`h-6 w-6 ${feature.color}`} aria-hidden="true" />
-                  </div>
-                  {feature.name}
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-foreground/70">
-                  <p className="flex-auto">{feature.description}</p>
-                </dd>
-              </motion.div>
-            ))}
-          </dl>
+
+        <div className="mx-auto mt-14 grid max-w-2xl grid-cols-1 gap-5 sm:mt-16 sm:grid-cols-2 lg:max-w-none lg:grid-cols-3">
+          {features.map((feature, index) => (
+            <motion.div
+              key={feature.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              className="flex flex-col rounded-xl border border-border bg-card p-6 transition-colors hover:border-brand/40"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand/20 bg-brand/10">
+                <feature.icon
+                  className="h-5 w-5 text-brand-light"
+                  aria-hidden="true"
+                />
+              </div>
+              <h3 className="mt-4 text-base font-semibold text-foreground">
+                {feature.name}
+              </h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-muted">
+                {feature.description}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

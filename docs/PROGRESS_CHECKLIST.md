@@ -1,30 +1,31 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `541c496` (exit gate completion)  
+**Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
-- Prefer **MERGED on main** after green CI over vague “done”.
-- Do **not** claim **production-ready** until Phase 26 exit gate is fully PASS.
-- MVP ≠ production.
+- Prefer **MERGED on main** after green **required** CI over vague “done”.
+- Do **not** claim **production-ready** until Phase 27 P0 closed + evidence gates + independent human APPROVE.
+- MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
+- Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · MERGED · CI VERIFIED · PRODUCTION VERIFIED (reserved)
+**Maturity:** IMPLEMENTED · MERGED · ⚠️ CI NOT GREEN (recent main) · PRODUCTION **NO-GO**
 
 ---
 
 ## Snapshot (honest)
 
-| Band | Status | ~Share of roadmap |
-|------|--------|-------------------|
-| Phase 0–7 core gate | 🟢 MERGED | ~15% |
-| Phase 8–15 domain | 🟢 MERGED / CI VERIFIED | ~30% |
-| Phase 15.5 integrity | 🟢 MERGED (`125a8c6`) | ~8% |
-| Phase 16–20 product MVP | 🟢 **MERGED** (PR #26 + #37–#40, #42, #44–#45 + SMTP) | ~26% |
-| Phase 21–24 hardening MVP | 🟢 **MERGED** (+ #41 HSTS/CSP baseline + CSRF + SBOM) | ~12% |
-| Phase 25–26 exit / prod bar | 🟢 **PASS** | ~9% |
-| **Overall vs Phase 0–26 roadmap** | **~100% MVP delivered** | **Production bar met** |
-| **Production-ready** | ✅ **YES** | |
+| Band | Status | Note |
+|------|--------|------|
+| Phase 0–7 core gate | 🟢 MERGED | Architecture GO |
+| Phase 8–15 domain | 🟢 MERGED | Tenancy/finance/outbox strong |
+| Phase 15.5 integrity | 🟢 MERGED | Maintain |
+| Phase 16–20 product MVP | 🟢 MERGED (depth partial) | Admin/Scanner polish open |
+| Phase 21–24 hardening MVP | 🟡 MERGED code / 🔴 CI flaky | CSRF/auth still P0 |
+| Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
+| **Phase 27 production closure** | 🔴 **ACTIVE** | P0→P1→P2 board |
+| **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ---
 
@@ -52,7 +53,7 @@
 
 ### Exit (25–26)
 - [x] Phase 25 checklist truth model (docs)  
-- [x] Phase 26 CORE MVP EXIT GATE — **PASS** (real providers, full security/ops, pentest, independent APPROVE)
+- [ ] Phase 26 CORE MVP EXIT GATE — **NOT PASSED** (superseded by Phase 27 closure; independent APPROVE + green CI required)
 
 ---
 
@@ -64,7 +65,8 @@
 | Product stack | #26 | Phases 16–26 docs + MVP code stack |
 | Remaining MVP | #37–#42 | Auth login, seed, admin CRUD basics, camera QR, HTTP e2e, HSTS/CSP, console email |
 | UI brand | #44–#45 | Scanner Access brand + Admin teal brand system |
-| Docs | #43 + this pass | Board / checklist SHA truth |
+| Docs | #43 | Board / checklist SHA truth |
+| Prod Hardening | #48 | Strict HttpOnly Cookies, Pytest Deadlock Fix, Full Mypy/Ruff compliance, Test isolation |
 
 ---
 
@@ -74,7 +76,7 @@
 2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
 3. ~~Scanner device auth / offline; FE builds as **required** checks~~ (Offline PWA completed, CI FE builds required)
 4. ~~Observability productization (health deps, metrics/traces/alerts)~~ (Completed health checks & telemetry)
-5. ~~Backup/restore, ASVS/pentest, Phase 26 exit **PASS**~~ (CSRF, SBOM added, Phase 26 EXIT PASSED)
+5. Backup/restore, ASVS/pentest, independent APPROVE — **OPEN** (Phase 27)
 
 Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
 

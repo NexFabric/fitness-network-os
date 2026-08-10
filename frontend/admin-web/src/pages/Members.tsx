@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
 import MemberMemberships from '../components/MemberMemberships'
+import {
+  Alert,
+  EmptyState,
+  LoadingSkeleton,
+  PageHeader,
+  StatusBadge,
+} from '../components/ui'
 
 type Member = {
   id: string
@@ -40,24 +47,12 @@ function formatApiError(e: unknown, fallback: string): string {
   return fallback
 }
 
-function statusBadgeClass(status: string): string {
-  const s = status.toLowerCase()
-  if (s === 'active') {
-    return 'bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20'
-  }
-  if (s === 'inactive' || s === 'cancelled' || s === 'canceled') {
-    return 'bg-slate-800 text-slate-400 ring-1 ring-inset ring-slate-700'
-  }
-  if (s === 'suspended') {
-    return 'bg-amber-500/10 text-amber-400 ring-1 ring-inset ring-amber-500/20'
-  }
-  return 'bg-slate-800 text-slate-400 ring-1 ring-inset ring-slate-700'
-}
-
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
 
   const [form, setForm] = useState<CreateMemberForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
@@ -89,6 +84,15 @@ export default function Members() {
   useEffect(() => {
     void loadMembers()
   }, [loadMembers])
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return members
+    return members.filter((m) => {
+      const hay = `${m.member_number} ${m.first_name} ${m.last_name} ${m.email ?? ''}`.toLowerCase()
+      return hay.includes(q)
+    })
+  }, [members, query])
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
@@ -179,18 +183,42 @@ export default function Members() {
 
   return (
     <div>
-      <h1 className="page-title">Üyeler</h1>
-      <p className="page-subtitle">
-        Bu salonun üye listesi — üye oluşturun ve inceleyin
-      </p>
+      <PageHeader
+        title="Üyeler"
+        subtitle="Bu salonun üye listesi — oluşturun, arayın ve düzenleyin"
+        actions={
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setShowCreate((v) => !v)}
+          >
+            {showCreate ? 'Formu gizle' : 'Üye oluştur'}
+          </button>
+        }
+      />
 
+      <div className="mt-6">
+        <label htmlFor="member-search" className="sr-only">
+          Üye ara
+        </label>
+        <input
+          id="member-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="İsim, numara veya e-posta ara…"
+          className="input-field !mt-0 max-w-md"
+        />
+      </div>
+
+      {showCreate && (
       <section className="card mt-6" aria-labelledby="create-member-heading">
         <div className="card-header">
           <h2
             id="create-member-heading"
             className="text-base font-semibold text-slate-100"
           >
-            Üye Oluştur
+            Üye oluştur
           </h2>
         </div>
         <form
@@ -257,7 +285,7 @@ export default function Members() {
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
             <button type="submit" disabled={submitting} className="btn-primary">
-              {submitting ? 'Oluşturuluyor…' : 'Üye Oluştur'}
+              {submitting ? 'Oluşturuluyor…' : 'Üye oluştur'}
             </button>
             {formError && (
               <p className="text-sm text-rose-400" role="alert">
@@ -272,19 +300,17 @@ export default function Members() {
           </div>
         </form>
       </section>
+      )}
 
       {loading && (
-        <p className="mt-6 text-sm text-slate-400" role="status">
-          Üyeler yükleniyor…
-        </p>
+        <div className="table-shell mt-6">
+          <LoadingSkeleton rows={5} />
+        </div>
       )}
 
       {error && (
-        <div
-          className="mt-6 rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300"
-          role="alert"
-        >
-          {error}
+        <div className="mt-6">
+          <Alert onRetry={() => void loadMembers()}>{error}</Alert>
         </div>
       )}
 
@@ -301,20 +327,27 @@ export default function Members() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {members.length === 0 ? (
+              {filtered.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-12 text-center text-sm text-slate-500"
-                  >
-                    <p className="font-medium text-slate-300">Henüz üye yok</p>
-                    <p className="mt-1">
-                      Yukarıdaki formu kullanarak ilk üyeyi oluşturun.
-                    </p>
+                  <td colSpan={5}>
+                    <EmptyState
+                      title={members.length === 0 ? 'Henüz üye yok' : 'Sonuç bulunamadı'}
+                      description={
+                        members.length === 0
+                          ? 'İlk üyeyi oluşturarak başlayın.'
+                          : 'Arama kriterlerinizi değiştirin.'
+                      }
+                      actionLabel={members.length === 0 ? 'Üye oluştur' : undefined}
+                      onAction={
+                        members.length === 0
+                          ? () => setShowCreate(true)
+                          : undefined
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
-                members.map((m) => (
+                filtered.map((m) => (
                   <tr key={m.id} className="transition-colors hover:bg-slate-800/50">
                     <td className="table-td font-mono text-xs text-slate-400">
                       {m.member_number}
@@ -326,16 +359,13 @@ export default function Members() {
                       {m.email ?? '—'}
                     </td>
                     <td className="table-td">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(m.status)}`}
-                      >
-                        {m.status}
-                      </span>
+                      <StatusBadge status={m.status} kind="member" />
                     </td>
                     <td className="table-td text-right">
-                      <button 
+                      <button
+                        type="button"
                         onClick={() => openEditModal(m)}
-                        className="text-brand hover:text-brand-deep text-sm font-medium transition-colors"
+                        className="text-sm font-medium text-brand transition-colors hover:text-brand-light"
                       >
                         Düzenle
                       </button>

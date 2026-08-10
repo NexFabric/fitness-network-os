@@ -96,8 +96,15 @@ export default function App() {
         setError('QR kod gereklidir.')
         return
       }
+      // Offline policy: deny-by-default — no offline GRANT path.
+      if (!navigator.onLine) {
+        setError(
+          'Çevrimdışı: QR doğrulama sunucu gerektirir. Ağ yokken geçiş verilmez (deny-by-default).',
+        )
+        return
+      }
       if (!getTenantId()) {
-        setError('Önce giriş yapın ve tenant ID kaydedin.')
+        setError('Önce personel oturumu açın (e-posta/şifre + tenant).')
         setCredsOpen(true)
         return
       }
@@ -110,10 +117,8 @@ export default function App() {
         })
         setResult(res)
       } catch (err) {
-        console.error("Doğrulama hatası:", err)
+        console.error('Doğrulama hatası:', err)
         setError('Sunucu bağlantı hatası veya doğrulama başarısız.')
-      } finally {
-        // ...
       }
     },
     [tenantId],
@@ -151,31 +156,36 @@ export default function App() {
   const hasSavedCreds = Boolean(getTenantId())
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 font-sans text-slate-50 selection:bg-teal-500/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-screen flex flex-col bg-surface font-sans text-ink selection:bg-brand/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {!isOnline && (
-        <div className="bg-rose-600 px-4 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider sticky top-0 z-50">
-          İnternet Bağlantısı Yok — Çevrimdışı
+        <div className="sticky top-0 z-50 bg-accent-danger px-4 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white">
+          İnternet bağlantısı yok — çevrimdışı
         </div>
       )}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/50 bg-slate-950/80 px-6 py-4 backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/50 bg-surface/80 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-400 shadow-lg shadow-teal-900/20">
-            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-            </svg>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-brand to-accent shadow-lg shadow-brand/20">
+            <span className="text-sm font-bold text-white" aria-hidden="true">
+              G
+            </span>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Kapı Okuyucu</h1>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">GymClubNex Ops</p>
+            <h1 className="text-lg font-bold tracking-tight text-ink">Kapı okuyucu</h1>
+            <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+              GymClubNex Access
+            </p>
           </div>
         </div>
         {deferredPrompt && (
           <button
             onClick={handleInstallClick}
-            onTouchEnd={(e) => { e.preventDefault(); handleInstallClick(); }}
-            className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-teal-500"
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              handleInstallClick()
+            }}
+            className="rounded-control bg-brand px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-brand-deep"
           >
-            Uygulamayı Yükle
+            Uygulamayı yükle
           </button>
         )}
       </header>
@@ -228,8 +238,19 @@ export default function App() {
                 <input id="tenant" type="text" value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="rounded-lg bg-teal-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-500">Kaydet</button>
-                <button type="button" onClick={logout} className="rounded-lg border border-slate-800 px-4 py-1.5 text-sm text-slate-400 hover:text-slate-300">Temizle</button>
+                <button
+                  type="submit"
+                  className="rounded-control bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-deep"
+                >
+                  Kaydet
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded-control border border-slate-800 px-4 py-1.5 text-sm text-ink-muted hover:text-ink"
+                >
+                  Temizle
+                </button>
               </div>
             </form>
           )}
@@ -238,13 +259,51 @@ export default function App() {
         <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
           {!scanning && !manualMode ? (
             <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => setScanning(true)} onTouchEnd={(e) => { e.preventDefault(); setScanning(true) }} className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 hover:bg-slate-700 transition-colors">
-                <svg className="h-8 w-8 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
-                <span className="font-medium text-sm">Kamera ile Tara</span>
+              <button
+                onClick={() => setScanning(true)}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  setScanning(true)
+                }}
+                className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
+              >
+                <svg
+                  className="h-8 w-8 text-brand-light"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                </svg>
+                <span className="text-sm font-medium">Kamera ile tara</span>
               </button>
-              <button onClick={() => setManualMode(true)} onTouchEnd={(e) => { e.preventDefault(); setManualMode(true) }} className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 hover:bg-slate-700 transition-colors">
-                <svg className="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                <span className="font-medium text-sm">Klavyeden Gir</span>
+              <button
+                onClick={() => setManualMode(true)}
+                onTouchEnd={(e) => {
+                  e.preventDefault()
+                  setManualMode(true)
+                }}
+                className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
+              >
+                <svg
+                  className="h-8 w-8 text-accent"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span className="text-sm font-medium">Klavyeden gir</span>
               </button>
             </div>
           ) : scanning ? (
@@ -252,13 +311,31 @@ export default function App() {
               <CameraQrScanner active={scanning} onDecode={onCameraDecode} onStop={() => setScanning(false)} />
             </ErrorBoundary>
           ) : (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950 p-6">
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface p-6">
               <form onSubmit={onValidate} className="w-full">
-                <label className="block text-sm font-medium text-slate-400 mb-2">QR Token</label>
-                <input autoFocus value={qrToken} onChange={(e) => setQrToken(e.target.value)} className="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-white mb-4" />
+                <label className="mb-2 block text-sm font-medium text-ink-muted">
+                  QR token
+                </label>
+                <input
+                  autoFocus
+                  value={qrToken}
+                  onChange={(e) => setQrToken(e.target.value)}
+                  className="mb-4 w-full rounded-control border border-slate-700 bg-slate-900 px-4 py-3 text-ink"
+                />
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setManualMode(false)} className="flex-1 rounded-xl border border-slate-700 py-3 text-slate-300">İptal</button>
-                  <button type="submit" className="flex-1 rounded-xl bg-teal-600 py-3 text-white">Doğrula</button>
+                  <button
+                    type="button"
+                    onClick={() => setManualMode(false)}
+                    className="flex-1 rounded-xl border border-slate-700 py-3 text-ink-muted"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-xl bg-brand py-3 font-medium text-white hover:bg-brand-deep"
+                  >
+                    Doğrula
+                  </button>
                 </div>
               </form>
             </div>
@@ -271,13 +348,26 @@ export default function App() {
           <div className="mt-6 flex flex-col items-center animate-in zoom-in-95 duration-300">
             {granted ? (
               <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden">
-                <div className="flex flex-col items-center bg-emerald-500 py-8 text-white">
-                  <div className="mb-4 rounded-full bg-white/20 p-3"><svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg></div>
+                <div className="flex flex-col items-center bg-accent py-8 text-surface">
+                  <div className="mb-4 rounded-full bg-white/20 p-3">
+                    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                   <h2 className="text-2xl font-bold">Onaylandı</h2>
                 </div>
-                <div className="p-6 text-slate-900 text-center">
+                <div className="p-6 text-center text-slate-900">
                   <p className="text-lg font-semibold">Geçiş yetkisi tanımlandı</p>
-                  <button onClick={() => setResult(null)} onTouchEnd={(e) => { e.preventDefault(); setResult(null) }} className="mt-6 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white">Tamam</button>
+                  <button
+                    onClick={() => setResult(null)}
+                    onTouchEnd={(e) => {
+                      e.preventDefault()
+                      setResult(null)
+                    }}
+                    className="mt-6 w-full rounded-xl bg-accent py-3 font-bold text-surface"
+                  >
+                    Tamam
+                  </button>
                 </div>
               </div>
             ) : (

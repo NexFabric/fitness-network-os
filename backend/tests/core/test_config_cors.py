@@ -17,7 +17,7 @@ def _settings(**overrides: str) -> Settings:
 
 
 def test_cors_origins_empty_default():
-    s = _settings()
+    s = _settings(CORS_ORIGINS="", ENVIRONMENT="local")
     assert s.cors_origins_list == []
     assert s.ENVIRONMENT == "local"
     assert s.is_production is False
@@ -57,3 +57,18 @@ def test_environment_normalized_case():
 def test_is_production_matrix(env: str, expected: bool):
     s = _settings(ENVIRONMENT=env)
     assert s.is_production is expected
+
+
+def test_production_fail_closed_missing_cors_and_hosts():
+    s = _settings(ENVIRONMENT="production", CORS_ORIGINS="", ALLOWED_HOSTS="")
+    with pytest.raises(RuntimeError, match="CORS_ORIGINS"):
+        s.validate_production()
+
+
+def test_production_ok_with_cors_and_hosts():
+    s = _settings(
+        ENVIRONMENT="production",
+        CORS_ORIGINS="https://admin.example.com",
+        ALLOWED_HOSTS="api.example.com",
+    )
+    s.validate_production()  # does not raise

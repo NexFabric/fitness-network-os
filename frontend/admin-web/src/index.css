@@ -9,28 +9,38 @@
 
   body {
     @apply bg-surface font-sans text-ink;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand ring-offset-2;
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-surface;
   }
 }
 
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-control bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition
-      hover:bg-brand-deep focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2
+      hover:bg-brand-deep
+      focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface
       disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-control border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-300 shadow-sm transition
-      hover:bg-slate-700 hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-control border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-sm font-medium text-slate-200 shadow-sm transition
+      hover:bg-slate-700 hover:text-white
+      focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition
+      hover:bg-slate-800 hover:text-ink
+      focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
   }
 
   .input-field {
-    @apply mt-1 w-full rounded-control border border-slate-800 bg-slate-900/80 px-3 py-2 text-sm text-slate-200 shadow-sm transition
+    @apply mt-1 w-full rounded-control border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 shadow-sm transition
       placeholder:text-slate-500
       focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand
       disabled:cursor-not-allowed disabled:bg-slate-900 disabled:opacity-50;
@@ -49,11 +59,11 @@
   }
 
   .page-subtitle {
-    @apply mt-1 text-sm text-slate-600;
+    @apply mt-1 text-sm text-ink-muted;
   }
 
   .label-text {
-    @apply block text-sm font-medium text-slate-700;
+    @apply block text-sm font-medium text-slate-300;
   }
 
   .table-shell {
@@ -61,20 +71,60 @@
   }
 
   .table-th {
-    @apply px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+    @apply px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted;
   }
 
   .table-td {
     @apply px-4 py-2.5 text-sm text-ink;
   }
+
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-control px-3 py-2 text-sm font-medium transition;
+  }
+
+  .nav-item-active {
+    @apply bg-brand/15 text-brand-light;
+  }
+
+  .nav-item-idle {
+    @apply text-ink-muted hover:bg-slate-800/80 hover:text-ink;
+  }
+
+  .alert-error {
+    @apply rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300;
+  }
+
+  .alert-success {
+    @apply rounded-control border border-emerald-800/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-inset ring-emerald-500/20;
+  }
+
+  .badge-warn {
+    @apply inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400 ring-1 ring-inset ring-amber-500/20;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-inset ring-rose-500/20;
+  }
+
+  .badge-neutral {
+    @apply inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-400 ring-1 ring-inset ring-slate-700;
+  }
 }
 
-/* Login mesh background — CSS only */
+/* Login mesh background */
 .login-mesh {
   background-color: #0b1220;
   background-image:
     radial-gradient(ellipse 80% 60% at 20% 10%, rgb(13 148 136 / 0.35), transparent 55%),
     radial-gradient(ellipse 70% 50% at 85% 20%, rgb(52 211 153 / 0.18), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 50% 90%, rgb(15 118 110 / 0.28), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 70% 70%, rgb(13 148 136 / 0.12), transparent 45%);
+    radial-gradient(ellipse 60% 40% at 50% 90%, rgb(15 118 110 / 0.28), transparent 55%);
+}
+
+/* Skeleton pulse */
+.skeleton {
+  @apply animate-pulse rounded bg-slate-800/80;
 }

@@ -12,13 +12,12 @@ class Settings(BaseSettings):
     # e.g. "https://admin.example.com,https://scanner.example.com"
     CORS_ORIGINS: str = ""
     # Comma-separated Host values for Starlette TrustedHostMiddleware when production.
-    # Empty → TrustedHostMiddleware is not installed (document and set for real prod).
+    # Production requires non-empty (fail-closed at boot).
     # e.g. "api.example.com,localhost"
     ALLOWED_HOSTS: str = ""
 
-    # EMAIL notification adapter: log | console (default console).
-    # No real SMTP here — network providers stay deferred / env-gated later.
-    # Read by default_providers() via env (NOTIFICATION_EMAIL_PROVIDER).
+    # EMAIL notification adapter: log | console | smtp | disabled
+    # Production requires smtp or disabled (or ALLOW_MOCK_EMAIL=true).
     NOTIFICATION_EMAIL_PROVIDER: str = "console"
 
     DATABASE_URL: PostgresDsn
@@ -58,5 +57,25 @@ class Settings(BaseSettings):
             part.strip() for part in str(self.ALLOWED_HOSTS).split(",") if part.strip()
         ]
 
+    def validate_production(self) -> None:
+        """Fail closed when ENVIRONMENT=production and critical security config is missing."""
+        if not self.is_production:
+            return
+        errors: list[str] = []
+        if not self.cors_origins_list:
+            errors.append(
+                "CORS_ORIGINS must be a non-empty comma-separated list in production"
+            )
+        if not self.allowed_hosts_list:
+            errors.append(
+                "ALLOWED_HOSTS must be a non-empty comma-separated list in production"
+            )
+        # Cookie Secure is enforced via is_production in auth/csrf setters.
+        if errors:
+            raise RuntimeError(
+                "Production configuration invalid: " + "; ".join(errors)
+            )
+
 
 settings = Settings()  # type: ignore[call-arg]
+settings.validate_production()

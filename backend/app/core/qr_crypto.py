@@ -14,12 +14,12 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import secrets
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
-import os
 LOCAL_HMAC_PREFIX = "local:hmac:"
 KMS_PREFIX = "kms:alias/"
 DEFAULT_ALGORITHM = "HMAC_SHA256"
