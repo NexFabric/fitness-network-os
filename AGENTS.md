@@ -2,7 +2,7 @@
 
 Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için source of truth'tur. Bütün geliştirme adımlarında bu belgelere uygunluk esastır.
 
-**Progress truth (2026-08-10):** Phase **0–15.5** on `main` is CI VERIFIED / LOCKED at merge `125a8c6` (alembic head `p9c0d1e2f3a4`; formal lock docs PR #27). **Active = Phase 16–20 stack** on PR #26 + Phase **21–26** hardening open (not LOCKED). Do **not** claim production-ready (Phase 26 exit gate NOT PASSED).
+**Progress truth (2026-08-10):** Phase **0–15.5** on `main` is CI VERIFIED / LOCKED at merge `125a8c6` (formal lock docs PR #27). Phase **16–24 MVP** MERGED via PR #26 (`5046f10`; alembic head `q0d1e2f3a4b5`). Phase **25–26** docs/exit open — **not LOCKED**, **not production-ready**. Backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`.
 
 ## Temel Kurallar ve Mimari Kararlar
 
