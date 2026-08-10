@@ -92,33 +92,28 @@ export default function Locations() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
-      <p className="mt-1 text-sm text-gray-600">
-        List and create locations — Branch = Location (locations:read /
-        locations:write)
+      <h1 className="page-title">Locations</h1>
+      <p className="page-subtitle">
+        Branches for this gym — Branch = Location
       </p>
 
-      <section
-        className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-        aria-labelledby="create-location-heading"
-      >
-        <h2
-          id="create-location-heading"
-          className="text-lg font-semibold text-gray-900"
-        >
-          Create location
-        </h2>
+      <section className="card mt-6" aria-labelledby="create-location-heading">
+        <div className="card-header">
+          <h2
+            id="create-location-heading"
+            className="text-base font-semibold text-ink"
+          >
+            Create location
+          </h2>
+        </div>
         <form
           className="mt-4 grid gap-4 sm:grid-cols-3"
           onSubmit={handleCreate}
           noValidate
         >
           <div>
-            <label
-              htmlFor="location_name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Name <span className="text-red-600">*</span>
+            <label htmlFor="location_name" className="label-text">
+              Name <span className="text-accent-danger">*</span>
             </label>
             <input
               id="location_name"
@@ -131,15 +126,12 @@ export default function Locations() {
               onChange={(ev) =>
                 setForm((f) => ({ ...f, name: ev.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               disabled={submitting}
             />
           </div>
           <div>
-            <label
-              htmlFor="location_timezone"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="location_timezone" className="label-text">
               Timezone
             </label>
             <input
@@ -153,15 +145,12 @@ export default function Locations() {
               onChange={(ev) =>
                 setForm((f) => ({ ...f, timezone: ev.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               disabled={submitting}
             />
           </div>
           <div>
-            <label
-              htmlFor="location_address"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="location_address" className="label-text">
               Address
             </label>
             <input
@@ -174,16 +163,12 @@ export default function Locations() {
               onChange={(ev) =>
                 setForm((f) => ({ ...f, address: ev.target.value }))
               }
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               disabled={submitting}
             />
           </div>
-          <div className="sm:col-span-3 flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
+            <button type="submit" disabled={submitting} className="btn-primary">
               {submitting ? 'Creating…' : 'Create location'}
             </button>
             {formError && (
@@ -192,7 +177,7 @@ export default function Locations() {
               </p>
             )}
             {formSuccess && (
-              <p className="text-sm text-green-700" role="status">
+              <p className="text-sm font-medium text-emerald-700" role="status">
                 {formSuccess}
               </p>
             )}
@@ -201,14 +186,14 @@ export default function Locations() {
       </section>
 
       {loading && (
-        <p className="mt-6 text-gray-500" role="status">
-          Loading…
+        <p className="mt-6 text-sm text-slate-500" role="status">
+          Loading locations…
         </p>
       )}
 
       {error && (
         <div
-          className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
           role="alert"
         >
           {error}
@@ -216,35 +201,38 @@ export default function Locations() {
       )}
 
       {!loading && !error && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-            <thead className="bg-gray-50">
+        <div className="table-shell mt-6">
+          <table className="min-w-full divide-y divide-slate-100 text-left">
+            <thead className="bg-surface/80">
               <tr>
-                <th className="px-4 py-3 font-medium text-gray-700">Name</th>
-                <th className="px-4 py-3 font-medium text-gray-700">Timezone</th>
-                <th className="px-4 py-3 font-medium text-gray-700">Address</th>
+                <th className="table-th">Name</th>
+                <th className="table-th">Timezone</th>
+                <th className="table-th">Address</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-100">
               {locations.length === 0 ? (
                 <tr>
                   <td
                     colSpan={3}
-                    className="px-4 py-8 text-center text-gray-500"
+                    className="px-4 py-12 text-center text-sm text-slate-500"
                   >
-                    No locations found.
+                    <p className="font-medium text-slate-700">
+                      No locations yet
+                    </p>
+                    <p className="mt-1">
+                      Add a branch location using the form above.
+                    </p>
                   </td>
                 </tr>
               ) : (
                 locations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {loc.name}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">
+                  <tr key={loc.id} className="hover:bg-surface/60">
+                    <td className="table-td font-medium">{loc.name}</td>
+                    <td className="table-td font-mono text-xs text-slate-700">
                       {loc.timezone}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="table-td text-slate-600">
                       {loc.address ?? '—'}
                     </td>
                   </tr>
