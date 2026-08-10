@@ -43,6 +43,13 @@ jobs:
         working-directory: ./backend
         run: safety check
 
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: spdx-json
+          output-file: sbom.spdx.json
+
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest

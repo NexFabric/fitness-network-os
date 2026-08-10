@@ -9,6 +9,7 @@
 
   body {
     @apply bg-surface font-sans text-ink;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   :focus-visible {
@@ -24,23 +25,23 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-control border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-sm transition
-      hover:bg-surface focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-control border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-300 shadow-sm transition
+      hover:bg-slate-700 hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
   }
 
   .input-field {
-    @apply mt-1 w-full rounded-control border border-slate-200 bg-white px-3 py-2 text-sm text-ink shadow-sm transition
-      placeholder:text-slate-400
+    @apply mt-1 w-full rounded-control border border-slate-800 bg-slate-900/80 px-3 py-2 text-sm text-slate-200 shadow-sm transition
+      placeholder:text-slate-500
       focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand
-      disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70;
+      disabled:cursor-not-allowed disabled:bg-slate-900 disabled:opacity-50;
   }
 
   .card {
-    @apply rounded-card border border-slate-200/80 bg-white p-5 shadow-card;
+    @apply rounded-card border border-slate-800/80 bg-slate-900/50 p-5 shadow-card backdrop-blur-md;
   }
 
   .card-header {
-    @apply border-b border-slate-100 pb-3;
+    @apply border-b border-slate-800/80 pb-3;
   }
 
   .page-title {
@@ -56,7 +57,7 @@
   }
 
   .table-shell {
-    @apply overflow-x-auto rounded-card border border-slate-200/80 bg-white shadow-card;
+    @apply overflow-x-auto rounded-card border border-slate-800/80 bg-slate-900/50 shadow-card backdrop-blur-md;
   }
 
   .table-th {

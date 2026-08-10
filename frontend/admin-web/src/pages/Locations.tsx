@@ -49,7 +49,7 @@ export default function Locations() {
       setLocations(data)
       if (silent) setError(null)
     } catch (e) {
-      setError(formatApiError(e, 'Failed to load locations'))
+      setError(formatApiError(e, 'Şubeler yüklenemedi'))
     } finally {
       if (!silent) setLoading(false)
     }
@@ -70,7 +70,7 @@ export default function Locations() {
     const address = addressTrimmed.length > 0 ? addressTrimmed : null
 
     if (!name) {
-      setFormError('Name is required.')
+      setFormError('Şube adı gereklidir.')
       return
     }
 
@@ -81,10 +81,10 @@ export default function Locations() {
         body: { name, timezone, address },
       })
       setForm(emptyForm)
-      setFormSuccess('Location created successfully.')
+      setFormSuccess('Şube başarıyla oluşturuldu.')
       await loadLocations({ silent: true })
     } catch (err) {
-      setFormError(formatApiError(err, 'Failed to create location'))
+      setFormError(formatApiError(err, 'Şube oluşturulamadı'))
     } finally {
       setSubmitting(false)
     }
@@ -92,18 +92,18 @@ export default function Locations() {
 
   return (
     <div>
-      <h1 className="page-title">Locations</h1>
+      <h1 className="page-title">Şubeler</h1>
       <p className="page-subtitle">
-        Branches for this gym — Branch = Location
+        Bu salonun şubeleri — Şube = Lokasyon
       </p>
 
       <section className="card mt-6" aria-labelledby="create-location-heading">
         <div className="card-header">
           <h2
             id="create-location-heading"
-            className="text-base font-semibold text-ink"
+            className="text-base font-semibold text-slate-100"
           >
-            Create location
+            Şube Oluştur
           </h2>
         </div>
         <form
@@ -113,7 +113,7 @@ export default function Locations() {
         >
           <div>
             <label htmlFor="location_name" className="label-text">
-              Name <span className="text-accent-danger">*</span>
+              İsim <span className="text-teal-500">*</span>
             </label>
             <input
               id="location_name"
@@ -132,7 +132,7 @@ export default function Locations() {
           </div>
           <div>
             <label htmlFor="location_timezone" className="label-text">
-              Timezone
+              Zaman Dilimi
             </label>
             <input
               id="location_timezone"
@@ -151,7 +151,7 @@ export default function Locations() {
           </div>
           <div>
             <label htmlFor="location_address" className="label-text">
-              Address
+              Adres
             </label>
             <input
               id="location_address"
@@ -169,15 +169,15 @@ export default function Locations() {
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
             <button type="submit" disabled={submitting} className="btn-primary">
-              {submitting ? 'Creating…' : 'Create location'}
+              {submitting ? 'Oluşturuluyor…' : 'Şube Oluştur'}
             </button>
             {formError && (
-              <p className="text-sm text-red-700" role="alert">
+              <p className="text-sm text-rose-400" role="alert">
                 {formError}
               </p>
             )}
             {formSuccess && (
-              <p className="text-sm font-medium text-emerald-700" role="status">
+              <p className="text-sm font-medium text-emerald-400" role="status">
                 {formSuccess}
               </p>
             )}
@@ -186,14 +186,14 @@ export default function Locations() {
       </section>
 
       {loading && (
-        <p className="mt-6 text-sm text-slate-500" role="status">
-          Loading locations…
+        <p className="mt-6 text-sm text-slate-400" role="status">
+          Şubeler yükleniyor…
         </p>
       )}
 
       {error && (
         <div
-          className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="mt-6 rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300"
           role="alert"
         >
           {error}
@@ -202,37 +202,37 @@ export default function Locations() {
 
       {!loading && !error && (
         <div className="table-shell mt-6">
-          <table className="min-w-full divide-y divide-slate-100 text-left">
-            <thead className="bg-surface/80">
+          <table className="min-w-full divide-y divide-slate-800 text-left">
+            <thead className="bg-slate-900/80 backdrop-blur-md">
               <tr>
-                <th className="table-th">Name</th>
-                <th className="table-th">Timezone</th>
-                <th className="table-th">Address</th>
+                <th className="table-th">İsim</th>
+                <th className="table-th">Zaman Dilimi</th>
+                <th className="table-th">Adres</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-800">
               {locations.length === 0 ? (
                 <tr>
                   <td
                     colSpan={3}
                     className="px-4 py-12 text-center text-sm text-slate-500"
                   >
-                    <p className="font-medium text-slate-700">
-                      No locations yet
+                    <p className="font-medium text-slate-300">
+                      Henüz şube yok
                     </p>
                     <p className="mt-1">
-                      Add a branch location using the form above.
+                      Yukarıdaki formu kullanarak ilk şubeyi oluşturun.
                     </p>
                   </td>
                 </tr>
               ) : (
                 locations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-surface/60">
-                    <td className="table-td font-medium">{loc.name}</td>
-                    <td className="table-td font-mono text-xs text-slate-700">
+                  <tr key={loc.id} className="transition-colors hover:bg-slate-800/50">
+                    <td className="table-td font-medium text-slate-200">{loc.name}</td>
+                    <td className="table-td font-mono text-xs text-slate-400">
                       {loc.timezone}
                     </td>
-                    <td className="table-td text-slate-600">
+                    <td className="table-td text-slate-400">
                       {loc.address ?? '—'}
                     </td>
                   </tr>

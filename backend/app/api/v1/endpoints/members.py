@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db, get_tenant_id
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
+from app.schemas.membership import MembershipResponse
 from app.services.member import MemberService
+from app.services.membership import MembershipService
 
 router = APIRouter()
 
@@ -292,3 +294,18 @@ async def record_consent(
     except ValueError as e:
         code = 404 if str(e) == "member_not_found" else 400
         raise HTTPException(status_code=code, detail=str(e)) from e
+
+
+@router.get(
+    "/{member_id}/memberships", response_model=list[MembershipResponse]
+)
+async def list_member_memberships(
+    member_id: UUID,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    _require(current_user, tenant_id, "members:read")
+    svc = MembershipService(db)
+    return await svc.list_memberships_for_member(tenant_id, member_id)
+

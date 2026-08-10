@@ -16,8 +16,10 @@ from app.schemas.finance import (
     DiscountCreate,
     DiscountResponse,
     InvoiceCreate,
+    InvoiceListResponse,
     InvoiceResponse,
     PaymentCreate,
+    PaymentListResponse,
     PaymentResponse,
     ReconciliationMatchRequest,
     ReconciliationRunResponse,
@@ -438,3 +440,43 @@ async def complete_reconciliation(
         return run
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/invoices", response_model=InvoiceListResponse)
+async def list_invoices(
+    skip: int = 0,
+    limit: int = 100,
+    member_id: UUID | None = None,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    _require(current_user, tenant_id, "finance:read")
+    svc = FinanceService(db)
+    items, total = await svc.list_invoices(
+        tenant_id, skip=skip, limit=limit, member_id=member_id
+    )
+    return InvoiceListResponse(
+        items=[_invoice_response(inv) for inv in items],
+        total=total,
+    )
+
+
+@router.get("/payments", response_model=PaymentListResponse)
+async def list_payments(
+    skip: int = 0,
+    limit: int = 100,
+    member_id: UUID | None = None,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    _require(current_user, tenant_id, "finance:read")
+    svc = FinanceService(db)
+    items, total = await svc.list_payments(
+        tenant_id, skip=skip, limit=limit, member_id=member_id
+    )
+    return PaymentListResponse(
+        items=[PaymentResponse.model_validate(p) for p in items],
+        total=total,
+    )

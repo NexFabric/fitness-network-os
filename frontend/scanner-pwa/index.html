@@ -2,11 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' http://localhost:* ws://localhost:* http://192.168.* ws://192.168.*">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#020617" />
-    <meta name="description" content="GymClubNex · Access — scan member QR for door entry" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="GymClubNex · Access — Üye karekod okuma ve kapı kontrol" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Scanner | Athletic Ops Console" />
+    <meta property="og:description" content="Access control scanner for GymClubNex" />
+    <meta property="og:type" content="website" />
+
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>GymClubNex · Access</title>
   </head>
   <body>

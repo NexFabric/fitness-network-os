@@ -50,9 +50,9 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="page-title">Operations</h1>
+          <h1 className="page-title">Operasyonlar</h1>
           <p className="page-subtitle">
-            Welcome back. Manage members and branch locations for this gym.
+            Tekrar hoş geldiniz. Bu spor salonuna ait üyeleri ve şubeleri yönetin.
           </p>
         </div>
       </div>
@@ -60,22 +60,22 @@ export default function Dashboard() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Link
           to="/members"
-          className="card group transition hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
+          className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Members
+                Üyeler
               </p>
               <p className="mt-2 text-3xl font-bold tracking-tight text-ink tabular-nums">
                 {formatCount(memberCount)}
               </p>
-              <p className="mt-1 text-sm text-slate-600">
-                Active roster for this tenant
+              <p className="mt-1 text-sm text-slate-400">
+                Aktif üye listesi
               </p>
             </div>
             <span
-              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-50 text-brand transition group-hover:bg-brand group-hover:text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
               aria-hidden="true"
             >
               <svg
@@ -94,28 +94,28 @@ export default function Dashboard() {
             </span>
           </div>
           <p className="mt-4 text-sm font-medium text-brand">
-            Open members →
+            Üyeleri Görüntüle →
           </p>
         </Link>
 
         <Link
           to="/locations"
-          className="card group transition hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
+          className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Locations
+                Şubeler
               </p>
               <p className="mt-2 text-3xl font-bold tracking-tight text-ink tabular-nums">
                 {formatCount(locationCount)}
               </p>
-              <p className="mt-1 text-sm text-slate-600">
-                Branches under this gym
+              <p className="mt-1 text-sm text-slate-400">
+                Bu salona bağlı şubeler
               </p>
             </div>
             <span
-              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-50 text-brand transition group-hover:bg-brand group-hover:text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
               aria-hidden="true"
             >
               <svg
@@ -139,7 +139,7 @@ export default function Dashboard() {
             </span>
           </div>
           <p className="mt-4 text-sm font-medium text-brand">
-            Open locations →
+            Şubeleri Görüntüle →
           </p>
         </Link>
       </div>
@@ -149,17 +149,17 @@ export default function Dashboard() {
           id="session-heading"
           className="text-sm font-semibold uppercase tracking-wide text-slate-500"
         >
-          Session
+          Oturum Bilgileri
         </h2>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
-            <dt className="text-xs font-medium text-slate-500">API base</dt>
+            <dt className="text-xs font-medium text-slate-500">API Adresi</dt>
             <dd className="mt-0.5 font-mono text-sm text-ink break-all">
               {apiUrl}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-slate-500">Tenant</dt>
+            <dt className="text-xs font-medium text-slate-500">Kiracı (Tenant)</dt>
             <dd className="mt-0.5 font-mono text-sm text-ink break-all">
               {tenantId ?? '—'}
             </dd>

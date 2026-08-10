@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     notifications,
     reports,
     staff,
+    telemetry,
 )
 
 api_router = APIRouter()
@@ -29,5 +30,6 @@ api_router.include_router(
     notifications.router, prefix="/notifications", tags=["notifications"]
 )
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
+api_router.include_router(telemetry.router, prefix="/telemetry", tags=["telemetry"])
 # Phase 15.5C: generic /outbox HTTP ingress removed — OutboxService is in-process only.
 api_router.include_router(me.router, prefix="/me", tags=["me"])

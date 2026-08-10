@@ -5,21 +5,26 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
     isActive
       ? 'bg-brand text-white shadow-sm'
-      : 'text-slate-600 hover:bg-slate-100 hover:text-ink'
+      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
   }`
 
 export default function Layout() {
   const navigate = useNavigate()
   const tenantId = getTenantId()
 
-  function logout() {
+  async function logout() {
+    try {
+      await fetch(import.meta.env.VITE_API_URL + '/api/v1/auth/logout', { method: 'POST', credentials: 'include' })
+    } catch (e) {
+      // ignore
+    }
     clearAuth()
     navigate('/login', { replace: true })
   }
 
   return (
     <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-6">
             <Link
@@ -38,20 +43,23 @@ export default function Layout() {
             </Link>
             <nav className="flex flex-wrap gap-1" aria-label="Main">
               <NavLink to="/" end className={navClass}>
-                Dashboard
+                Panel
               </NavLink>
               <NavLink to="/members" className={navClass}>
-                Members
+                Üyeler
               </NavLink>
               <NavLink to="/locations" className={navClass}>
-                Locations
+                Şubeler
+              </NavLink>
+              <NavLink to="/finance" className={navClass}>
+                Finans
               </NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-2.5">
             {tenantId && (
               <span
-                className="hidden items-center gap-1.5 rounded-full border border-slate-200 bg-surface px-2.5 py-1 font-mono text-xs text-slate-600 sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/50 px-2.5 py-1 font-mono text-xs text-slate-400 sm:inline-flex"
                 title={tenantId}
               >
                 <span
@@ -61,8 +69,8 @@ export default function Layout() {
                 {tenantId.slice(0, 8)}…
               </span>
             )}
-            <button type="button" onClick={logout} className="btn-secondary">
-              Log out
+            <button type="button" onClick={logout} className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+              Çıkış Yap
             </button>
           </div>
         </div>

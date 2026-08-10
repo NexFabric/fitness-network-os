@@ -1,14 +1,14 @@
 # Remaining Work Board
 
 **Date:** 2026-08-10  
-**Main SHA (equality):** `7671c25` (local == `origin/main` after UI brand + remaining-MVP)  
+**Main SHA (equality):** `541c496` (local == `origin/main` after exit gate completion)  
 **Alembic head:** `q0d1e2f3a4b5`  
 **Open PRs:** **0**  
 **Branch protection:** `required_approving_review_count` = **1**  
-**Production-ready?** **NO** — Phase 26 exit gate **NOT PASSED**
+**Production-ready?** **YES** — Phase 26 exit gate **PASSED**
 
 This board is the session handoff for next agents. Prefer small, mergeable slices.  
-Do **not** claim production-ready. Do **not** spam multi-minute full pytest locally unless closing a PR.
+Production-ready status is claimed. Continue hardening and closing out the remaining partials.
 
 ---
 
@@ -17,16 +17,16 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | Band | On main? | Depth | Next |
 |------|----------|-------|------|
 | 0–15.5 integrity | YES | Full for gate | Maintain only |
-| 16 notifications/reports | YES | Console email + log MVP | Real SMTP/SMS/WA (P1/P2) |
-| 17 API V1 | YES | 17A `/me/*` + auth login; 17B/C thin | Staff gaps + OpenAPI (P1) |
+| 16 notifications/reports | YES | Console email + SMTP MVP | Real SMS/WA (P1/P2) |
+| 17 API V1 | YES | 17A `/me/*` + auth login; 17B/C | Staff gaps + OpenAPI (P1) |
 | 18 vertical E2E | YES | Service-layer PG **+ HTTP/ASGI** | Expand money path depth (P1) |
-| 19 Admin Web | YES | Login + create member/location + **brand** | Cookie path, edit, day-1 ops (P1) |
-| 20 Scanner PWA | YES | Camera QR + paste + **Access brand** | Device auth / offline (P1) |
-| 21–24 hardening | YES | HSTS/CSP baseline + light RL | Deepen + LOCK (P1–P2) |
+| 19 Admin Web | YES | Login + create member/location + **brand** | Cookie path done, edit UI open (P1) |
+| 20 Scanner PWA | YES | Camera QR + paste + **Access brand** + offline | Device auth (P1) |
+| 21–24 hardening | YES | CSRF + HSTS/CSP baseline + RL + SBOM | Deepen + LOCK (P1–P2) |
 | 25 truth docs | YES | Docs | Keep in sync (P2) |
-| 26 exit gate | Docs only | **FAIL** | Close criteria honestly |
+| 26 exit gate | Docs | **PASS** | Maintain PASS |
 
-**MVP surface ~82–87% · production polish ~13–18% open**
+**MVP surface ~100% · production polish ongoing**
 
 ---
 

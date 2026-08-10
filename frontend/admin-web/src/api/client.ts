@@ -72,13 +72,18 @@ export async function api<T = unknown>(
   }
 
   if (!options.skipAuth) {
-    const token = getToken()
     const tenantId = getTenantId()
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
     if (tenantId) {
       headers['X-Tenant-ID'] = tenantId
+    }
+  }
+
+  // Parse CSRF cookie if available and method is unsafe
+  const method = options.method ?? (options.body !== undefined ? 'POST' : 'GET')
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
+    if (match) {
+      headers['x-csrf-token'] = match[1]
     }
   }
 
