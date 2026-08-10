@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-10  
 **Status:** ACTIVE design contract — **implemented on main** (Admin #45, Scanner #44)  
-**Main SHA (when merged):** `325d93d`  
+**Main SHA (when merged):** `7671c25`  
 **Not:** full marketing site / multi-tenant white-label (MASTER_SPEC “tenant branding” later)  
 **Production-ready claim:** NO
 

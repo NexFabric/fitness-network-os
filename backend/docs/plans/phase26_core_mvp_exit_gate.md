@@ -2,7 +2,7 @@
 
 **Status:** 🔴 **OPEN — overall FAIL for production-ready**  
 **Date:** 2026-08-10  
-**Scored against:** main tip `325d93d` (PR #26 stack + remaining-MVP #37–#42 + UI brand #44–#45)  
+**Scored against:** main tip `7671c25` (PR #26 stack + remaining-MVP #37–#42 + UI brand #44–#45)  
 **Truth model:** `backend/docs/plans/phase25_checklist_truth.md` + `docs/PROGRESS_CHECKLIST.md`  
 **Do not claim production-ready** until this gate is **PASS**.
 

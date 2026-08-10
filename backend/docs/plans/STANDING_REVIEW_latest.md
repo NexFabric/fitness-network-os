@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-10  
 **Reviewer mode:** light (no long pytest)  
-**Main HEAD:** `325d93d` (local == `origin/main`)  
+**Main HEAD:** `7671c25` (local == `origin/main`)  
 **Alembic head:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 ## Verdict: **HEALTHY_MVP**
@@ -69,7 +69,7 @@
 
 | Claim | Truth |
 |-------|--------|
-| Feature PRs #37–#45 | **MERGED** on `325d93d` |
+| Feature PRs #37–#45 | **MERGED** on `7671c25` |
 | Alembic head | **`q0d1e2f3a4b5`** |
 | Phase 26 production-ready | **NO** |
 | Checklist / board SHA | Aligned this pass |

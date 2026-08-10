@@ -1,7 +1,7 @@
 # Remaining Work Board
 
 **Date:** 2026-08-10  
-**Main SHA (equality):** `325d93d` (local == `origin/main` after UI brand + remaining-MVP)  
+**Main SHA (equality):** `7671c25` (local == `origin/main` after UI brand + remaining-MVP)  
 **Alembic head:** `q0d1e2f3a4b5`  
 **Open PRs:** **0**  
 **Branch protection:** `required_approving_review_count` = **1**  
@@ -39,7 +39,7 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | P0-3 | **Admin login works end-to-end** | FE + BE | ✅ **CLOSED:** email/password login |
 | P0-4 | **`fitness_app` role on long-lived volumes** | DevOps | Still open on old volumes; documented in READY_TO_RUN |
 | P0-5 | **No open stale PRs** | Orchestrator | ✅ **CLOSED:** open count **0** after #44/#45 |
-| P0-6 | **Docs SHA lag** | Docs | ✅ **CLOSED this pass:** bump to `325d93d` |
+| P0-6 | **Docs SHA lag** | Docs | ✅ **CLOSED this pass:** bump to `7671c25` |
 
 ---
 
@@ -112,7 +112,7 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | PR #45 Admin brand | Teal brand tokens, login/shell/dashboard |
 | UI brand contract | `frontend/UI_BRAND_SYSTEM.md` |
 | Prior remaining-MVP #37–#42 | Auth, CRUD create, camera, e2e, HSTS, console email |
-| Docs SHA | `325d93d` |
+| Docs SHA | `7671c25` |
 | Open PRs | **0** |
 | Branch protection | review_count **1** |
 | Phase 26 PASS | **Not claimed** |

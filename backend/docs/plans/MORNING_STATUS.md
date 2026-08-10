@@ -7,8 +7,8 @@
 
 | | |
 |--|--|
-| **local main** | `325d93d` |
-| **origin/main** | `325d93d` |
+| **local main** | `7671c25` |
+| **origin/main** | `7671c25` |
 | **local == origin/main** | **YES** (verify after pull) |
 | **Alembic head** | `q0d1e2f3a4b5` |
 
@@ -41,7 +41,7 @@
 
 ## First thing next session
 
-1. `git checkout main && git pull` — expect `325d93d` or newer  
+1. `git checkout main && git pull` — expect `7671c25` or newer  
 2. `docker compose up -d` + `alembic upgrade head`  
 3. `uv run python scripts/seed_demo.py` → http://localhost:5173/login  
 4. Pick a **P1** from `REMAINING_WORK_BOARD.md` (cookie session, day-1 ops, SMTP, observability)

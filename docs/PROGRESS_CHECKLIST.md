@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `325d93d` (remaining-MVP + UI brand wave #37–#45 — not production-ready)  
+**Main HEAD:** `7671c25` (remaining-MVP + UI brand #37–#45 + docs truth #46 — not production-ready)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
