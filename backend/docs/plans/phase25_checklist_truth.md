@@ -72,26 +72,25 @@ Prefer **MERGED / IMPLEMENTED / PARTIAL** in new writing. Historical “LOCKED�
 |-------|---------------|--------|
 | 0–15 | 🟢 MERGED / CI VERIFIED on `main` | Domain track |
 | 15.5 | 🟢 MERGED / CI VERIFIED on `main` | Merge `125a8c6` (PR #25); docs PR #27 |
-| 16 | 🟠 **IMPLEMENTED on branch** | Notifications/reports; log provider; not on main |
-| 17 | 🟡 **PARTIAL on branch** | 17A `/me/*` done; 17B/17C open |
-| 18 | 🟡 **PARTIAL on branch** | Service-layer e2e; HTTP E2E deferred |
-| 19–20 | 🟠 **IMPLEMENTED scaffold on branch** | Admin + scanner MVP shells |
-| 21 CI V2 | 🟡 **PARTIAL on branch** | Frontend build jobs in `ci.yml` |
-| 22 Container | 🟡 **PARTIAL on branch** | `Dockerfile.prod` multi-stage non-root |
-| 23 HTTP security | 🟡 **PARTIAL on branch** | Prod CORS + basic headers |
-| 24 Observability | 🟡 **PARTIAL stub on branch** | Request/correlation id + access log; no OTel |
-| 25 Checklist truth | 🟠 **IMPLEMENTED on branch** | This doc + checklist/master plan sync |
+| 16 | 🟢 **MERGED on main** (MVP) | #26 + console email #42; real SMTP still open |
+| 17 | 🟢 **MERGED partial** | 17A + public login #37; 17B/C open |
+| 18 | 🟢 **MERGED** | Service e2e + HTTP/ASGI #39 |
+| 19–20 | 🟢 **MERGED MVP** | Login/CRUD create, camera QR, brand #44–#45; not LOCKED |
+| 21 CI V2 | 🟢 **MERGED** | FE build jobs exist; not required on protection |
+| 22 Container | 🟢 **MERGED MVP** | `Dockerfile.prod` multi-stage non-root |
+| 23 HTTP security | 🟢 **MERGED baseline** | CORS + HSTS/CSP #41 + light RL; not LOCKED |
+| 24 Observability | 🟡 **PARTIAL stub on main** | Request/correlation id + access log; no OTel |
+| 25 Checklist truth | 🟢 **docs on main** | Keep SHA aligned (`325d93d`) |
 | 26 Exit gate | 🔴 **FAIL / NOT PASSED** | See phase26 scorecard |
 
-### Main vs PR #26
+### Main equality (docs truth pass)
 
 | Ref | Value |
 |-----|--------|
-| Main HEAD (15.5) | `125a8c6` |
-| Alembic on main | `p9c0d1e2f3a4` |
-| Stack branch | `feat/phase16-notifications-reports` |
-| PR | [#26](https://github.com/NexFabric/fitness-network-os/pull/26) |
-| Stack alembic | includes `q0d1e2f3a4b5` (Phase 16) |
+| Main HEAD | `325d93d` |
+| Alembic on main | `q0d1e2f3a4b5` |
+| Product stack | PR #26 + remaining-MVP #37–#42 + brand #44–#45 |
+| Production-ready | **NO** |
 
 ---
 
