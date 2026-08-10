@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `e19d935` baseline; open: auth login + seed_demo + admin create-member (feat/complete-remaining-mvp — not production-ready)  
+**Main HEAD:** `5451a28` (remaining-MVP wave #37–#42 merged — not production-ready)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
@@ -20,10 +20,10 @@
 | Phase 0–7 core gate | 🟢 MERGED | ~15% |
 | Phase 8–15 domain | 🟢 MERGED / CI VERIFIED | ~30% |
 | Phase 15.5 integrity | 🟢 MERGED (`125a8c6`) | ~8% |
-| Phase 16–20 product MVP | 🟢 **MERGED** (PR #26 → `5046f10`) | ~25% |
-| Phase 21–24 hardening MVP | 🟢 **MERGED** (same stack) | ~12% |
+| Phase 16–20 product MVP | 🟢 **MERGED** (PR #26 + #37–#40, #42) | ~25% |
+| Phase 21–24 hardening MVP | 🟢 **MERGED** (+ #41 HSTS/CSP baseline) | ~12% |
 | Phase 25–26 exit / prod bar | 🟡 docs + PARTIAL criteria | ~10% open |
-| **Overall vs Phase 0–26 roadmap** | **~75–80% MVP delivered** | **~20–25% prod polish open** |
+| **Overall vs Phase 0–26 roadmap** | **~80–85% MVP delivered** | **~15–20% prod polish open** |
 | **Production-ready** | ❌ **NO** | |
 
 ---
