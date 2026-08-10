@@ -81,90 +81,104 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
-        <h1 className="text-2xl font-bold text-gray-900">Admin sign-in</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Use credentials from{' '}
-          <code className="rounded bg-gray-100 px-1">
-            uv run python scripts/seed_demo.py
-          </code>
-          . Default:{' '}
-          <code className="rounded bg-gray-100 px-1">demo.admin@demo.local</code> /{' '}
-          <code className="rounded bg-gray-100 px-1">DemoAdmin123!</code>
-        </p>
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={submitting}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="demo.admin@demo.local"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={submitting}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="••••••••"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="tenant"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Tenant ID override{' '}
-              <span className="font-normal text-gray-400">(optional)</span>
-            </label>
-            <input
-              id="tenant"
-              type="text"
-              autoComplete="off"
-              value={tenantOverride}
-              onChange={(e) => setTenantOverride(e.target.value)}
-              disabled={submitting}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="Uses tenant from login response if empty"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+    <div className="login-mesh flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
+        {/* Brand mark */}
+        <div className="mb-8 text-center">
+          <div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-card bg-brand shadow-elevated"
+            aria-hidden="true"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+            <span className="text-lg font-bold tracking-tight text-white">G</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            GymClubNex
+          </h1>
+          <p className="mt-1.5 text-sm font-medium text-teal-200/80">
+            Staff console · Fitness Network OS
+          </p>
+        </div>
+
+        <div className="rounded-card border border-white/10 bg-white p-8 shadow-elevated">
+          <h2 className="text-lg font-semibold text-ink">Sign in</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Staff access for gym operations. Demo credentials from{' '}
+            <code className="rounded bg-surface px-1 py-0.5 text-xs text-slate-700">
+              seed_demo
+            </code>
+            .
+          </p>
+
+          <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
+            <div>
+              <label htmlFor="email" className="label-text">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={submitting}
+                className="input-field"
+                placeholder="demo.admin@demo.local"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="label-text">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={submitting}
+                className="input-field"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label htmlFor="tenant" className="label-text">
+                Tenant ID override{' '}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <input
+                id="tenant"
+                type="text"
+                autoComplete="off"
+                value={tenantOverride}
+                onChange={(e) => setTenantOverride(e.target.value)}
+                disabled={submitting}
+                className="input-field font-mono text-xs"
+                placeholder="Uses tenant from login response if empty"
+              />
+            </div>
+
+            {error && (
+              <p
+                className="rounded-control border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                role="alert"
+              >
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full py-2.5"
+            >
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-slate-400">
+          Not a consumer app — ops console only
+        </p>
       </div>
     </div>
   )
