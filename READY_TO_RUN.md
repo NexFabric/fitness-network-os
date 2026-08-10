@@ -1,7 +1,7 @@
 # Uygulama hazır — çalıştırma özeti
 
 **Tarih:** 2026-08-10  
-**main equality:** `git rev-parse HEAD` == `origin/main` (verify after pull)  
+**main equality:** `5451a28` — verify `git rev-parse HEAD` == `origin/main` after pull  
 **Alembic head:** `q0d1e2f3a4b5`  
 **Production-ready?** **NO** — Phase 26 CORE MVP EXIT GATE not passed.
 
@@ -12,7 +12,7 @@
 | API health | http://localhost:8000/health | docker `backend` |
 | API Swagger | http://localhost:8000/docs | OpenAPI |
 | Admin Web | http://localhost:5173/ | Vite; login: http://localhost:5173/login |
-| Scanner PWA | http://localhost:5174/ | paste QR → validate |
+| Scanner PWA | http://localhost:5174/ | camera QR (or paste) → validate |
 | Postgres | localhost:**5433** | mapped from container 5432 |
 | Redis | localhost:6379 | docker |
 
@@ -66,9 +66,11 @@ Script prints (example fields):
 Default demo:
 
 - email: `demo.admin@demo.local`
-- password: `DemoAdmin123!` (for future login API)
+- password: `DemoAdmin123!`
 - role: `GYM_OWNER`
 - sample member `DEMO-001` + location `Demo Main Floor`
+
+After login: Admin → **Members** (create member) and **Locations** (create location) against live APIs.
 
 Re-run rotates the session token (prior sessions revoked).
 
@@ -111,10 +113,11 @@ npm run dev -- --port 5174
 - Self: `/api/v1/me/*`, `/api/v1/access/qr/issue-self`
 - Staff: members, locations, notifications, reports, finance, access, …
 - Auth: HttpOnly cookie preferred; Bearer header accepted for local/admin MVP.
+- Email notifications: `NOTIFICATION_EMAIL_PROVIDER=console` (default) or `log` — no real SMTP yet.
 
 ## Production-ready?
 
-**Hayır.** MVP dev stack on main (~75–80% roadmap surface). Remaining production bar is tracked in:
+**Hayır.** MVP dev stack on main (~80–85% roadmap surface). Remaining production bar is tracked in:
 
 - `backend/docs/plans/REMAINING_WORK_BOARD.md`
 - `backend/docs/plans/phase26_core_mvp_exit_gate.md`
