@@ -86,6 +86,8 @@ export async function api<T = unknown>(
     method: options.method ?? (options.body !== undefined ? 'POST' : 'GET'),
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    // Include cookies so HttpOnly session auth works alongside Bearer/localStorage.
+    credentials: 'include',
   })
 
   const text = await res.text()
