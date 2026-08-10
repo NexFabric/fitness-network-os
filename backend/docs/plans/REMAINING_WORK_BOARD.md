@@ -57,7 +57,7 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | P1-8 | Notification adapters beyond log (email first) | 16/B10 | Domain → Event → Outbox → Adapter only. |
 | P1-9 | Report export real artifact (not placeholder metadata) | 16/B11 | Still MVP stub. |
 | P1-10 | Phase 21: frontend build jobs as **required** checks | 21 | Branch protection currently: Security / Lint / Unit only. |
-| P1-11 | Phase 23: HSTS + CSP + rate limit baseline | 23 | ✅ **partial:** in-memory rate limit on /auth/login; HSTS/CSP still open. |
+| P1-11 | Phase 23: HSTS + CSP + rate limit baseline | 23 | ✅ **partial (deeper):** login rate limit + always-on nosniff/DENY/Referrer-Policy; prod HSTS+API CSP; TrustedHost if `ALLOWED_HOSTS` set. Still not LOCKED / no CSRF / not multi-worker RL. |
 | P1-12 | Phase 24: health/deps + metrics beyond request-id stub | 24 | No PII in logs. |
 
 ---
