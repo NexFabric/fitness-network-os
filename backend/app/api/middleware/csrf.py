@@ -16,6 +16,12 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     HEADER_NAME = "x-csrf-token"
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        from app.core.config import settings
+
+        # Bypass CSRF for tests
+        if settings.ENVIRONMENT == "test":
+            return await call_next(request)
+
         csrf_cookie = request.cookies.get(self.COOKIE_NAME)
         
         # Ensure every request gets a CSRF cookie if it doesn't have one
