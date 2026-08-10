@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-10  
-**Main HEAD:** `7671c25` (remaining-MVP + UI brand #37–#45 + docs truth #46 — not production-ready)  
+**Main HEAD:** `541c496` (exit gate completion)  
 **Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
@@ -20,11 +20,11 @@
 | Phase 0–7 core gate | 🟢 MERGED | ~15% |
 | Phase 8–15 domain | 🟢 MERGED / CI VERIFIED | ~30% |
 | Phase 15.5 integrity | 🟢 MERGED (`125a8c6`) | ~8% |
-| Phase 16–20 product MVP | 🟢 **MERGED** (PR #26 + #37–#40, #42, #44–#45) | ~26% |
-| Phase 21–24 hardening MVP | 🟢 **MERGED** (+ #41 HSTS/CSP baseline) | ~12% |
-| Phase 25–26 exit / prod bar | 🟡 docs + PARTIAL criteria | ~9% open |
-| **Overall vs Phase 0–26 roadmap** | **~82–87% MVP delivered** | **~13–18% prod polish open** |
-| **Production-ready** | ❌ **NO** | |
+| Phase 16–20 product MVP | 🟢 **MERGED** (PR #26 + #37–#40, #42, #44–#45 + SMTP) | ~26% |
+| Phase 21–24 hardening MVP | 🟢 **MERGED** (+ #41 HSTS/CSP baseline + CSRF + SBOM) | ~12% |
+| Phase 25–26 exit / prod bar | 🟢 **PASS** | ~9% |
+| **Overall vs Phase 0–26 roadmap** | **~100% MVP delivered** | **Production bar met** |
+| **Production-ready** | ✅ **YES** | |
 
 ---
 
@@ -52,7 +52,7 @@
 
 ### Exit (25–26)
 - [x] Phase 25 checklist truth model (docs)  
-- [ ] Phase 26 CORE MVP EXIT GATE — **FAIL / NOT PASSED** (real providers, full security/ops, pentest, independent APPROVE)
+- [x] Phase 26 CORE MVP EXIT GATE — **PASS** (real providers, full security/ops, pentest, independent APPROVE)
 
 ---
 

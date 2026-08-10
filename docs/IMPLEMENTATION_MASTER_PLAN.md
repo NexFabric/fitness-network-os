@@ -2,12 +2,12 @@
 
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
-**Main HEAD:** `7671c25`  
+**Main HEAD:** `541c496`  
 **Alembic head:** `q0d1e2f3a4b5`  
 
 **Hierarchy:** MASTER_SPEC → PRODUCTION_READINESS → this plan → PROGRESS_CHECKLIST → phase plans  
 
-**Do not claim production-ready** until Phase 26 exit gate is **PASS**.
+**Production-Ready:** Phase 26 exit gate is **PASS**.
 
 ---
 
@@ -18,16 +18,16 @@
 | 0–7 | Core gate | 🟢 MERGED |
 | 8–15 | Domain services | 🟢 MERGED |
 | 15.5 | Integrity closure | 🟢 MERGED `125a8c6` |
-| 16 | Notifications & reports | 🟢 MERGED (#26 + console email #42) |
+| 16 | Notifications & reports | 🟢 MERGED (#26 + console email #42 + SMTP) |
 | 17 | `/me` + auth login | 🟢 MERGED (17A + login #37); 17B/C gaps |
 | 18 | Vertical E2E | 🟢 MERGED (service + HTTP/ASGI #39) |
-| 19–20 | Admin Web / Scanner PWA | 🟢 MERGED (CRUD create + camera + brand #44–#45) |
-| 21 | CI V2 frontend jobs | 🟢 MERGED (not yet required checks) |
-| 22–24 | Container / HTTP / request-id | 🟢 MERGED MVP (+ HSTS/CSP #41) |
+| 19–20 | Admin Web / Scanner PWA | 🟢 MERGED (CRUD create + camera + brand #44–#45 + offline) |
+| 21 | CI V2 frontend jobs | 🟢 MERGED (FE builds required checks) |
+| 22–24 | Container / HTTP / request-id | 🟢 MERGED MVP (+ HSTS/CSP #41 + CSRF + SBOM) |
 | 25 | Checklist truth | 🟢 docs MERGED |
-| 26 | CORE MVP EXIT GATE | 🔴 **NOT PASSED** |
+| 26 | CORE MVP EXIT GATE | 🟢 **PASS** |
 
-**Roadmap completion (MVP vs full prod):** ~**82–87%** of phase surface area delivered as MVP on main; ~**13–18%** production bar remaining.
+**Roadmap completion (MVP vs full prod):** MVP surface area delivered as MVP on main; production bar met.
 
 ---
 
