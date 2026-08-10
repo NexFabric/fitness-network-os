@@ -19,7 +19,7 @@ _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-from scripts.seed_demo_tenant import main  # noqa: E402
+from scripts.seed_demo_tenant import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

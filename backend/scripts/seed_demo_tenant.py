@@ -110,7 +110,11 @@ async def seed_demo(
 ) -> dict[str, str | None]:
     """Create or update demo tenant + owner user; return printable credentials."""
     from sqlalchemy import select
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    from sqlalchemy.ext.asyncio import (
+        AsyncSession,
+        async_sessionmaker,
+        create_async_engine,
+    )
     from sqlalchemy.orm import selectinload
 
     from app.core.security import generate_session_token, get_password_hash
