@@ -1,4 +1,4 @@
-import { useCallback, useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent, useEffect } from 'react'
 import {
   clearAuth,
   getTenantId,
@@ -8,20 +8,52 @@ import {
   type ValidateQrResponse,
 } from './api/client'
 import { CameraQrScanner } from './components/CameraQrScanner'
+import { ReloadPrompt } from './components/ReloadPrompt'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function App() {
   const [sessionToken, setSessionToken] = useState(getToken() ?? '')
   const [tenantId, setTenantId] = useState(getTenantId() ?? '')
   const [qrToken, setQrToken] = useState('')
-  const [locationId, setLocationId] = useState('')
-  const [consume, setConsume] = useState(false)
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ValidateQrResponse | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [manualMode, setManualMode] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [credsOpen, setCredsOpen] = useState(
     () => !getToken() || !getTenantId(),
   )
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+
+  useEffect(() => {
+    function handleOnline() { setIsOnline(true) }
+    function handleOffline() { setIsOnline(false) }
+    
+    function handleBeforeInstallPrompt(e: Event) {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  async function handleInstallClick() {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null)
+    }
+  }
 
   function saveCredentials(e: FormEvent) {
     e.preventDefault()
@@ -29,7 +61,7 @@ export default function App() {
     const t = sessionToken.trim()
     const tid = tenantId.trim()
     if (!t || !tid) {
-      setError('Session token and Tenant ID are required for validate.')
+      setError('Oturum anahtarı ve Tenant ID gereklidir.')
       return
     }
     setAuth(t, tid)
@@ -43,7 +75,7 @@ export default function App() {
       setResult(null)
       const token = tokenRaw.trim()
       if (!token) {
-        setError('QR token is required.')
+        setError('QR kod gereklidir.')
         return
       }
       // Persist credentials if filled
@@ -51,27 +83,26 @@ export default function App() {
         setAuth(sessionToken.trim(), tenantId.trim())
       }
       if (!getToken() || !getTenantId()) {
-        setError('Save session token and tenant ID first.')
+        setError('Önce oturum anahtarı ve tenant ID kaydedin.')
         setCredsOpen(true)
         return
       }
 
-      setBusy(true)
       try {
-        const loc = locationId.trim() || null
         const res = await validateQr({
           token,
-          location_id: loc,
-          consume,
+          location_id: null,
+          consume: false,
         })
         setResult(res)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Validation request failed')
+        console.error("Doğrulama hatası:", err)
+        setError('Sunucu bağlantı hatası veya doğrulama başarısız.')
       } finally {
-        setBusy(false)
+        // ...
       }
     },
-    [sessionToken, tenantId, locationId, consume],
+    [sessionToken, tenantId],
   )
 
   async function onValidate(e: FormEvent) {
@@ -104,276 +135,150 @@ export default function App() {
   }
 
   const granted = result?.granted === true
-  const denied = result != null && result.granted === false
   const hasSavedCreds = Boolean(getToken() && getTenantId())
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-lg px-4 py-8">
-        <header className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/20 ring-1 ring-teal-500/40">
-            <span className="text-lg font-bold text-emerald-400" aria-hidden>
-              G
-            </span>
+    <div className="min-h-screen flex flex-col bg-slate-950 font-sans text-slate-50 selection:bg-teal-500/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      {!isOnline && (
+        <div className="bg-rose-600 px-4 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider sticky top-0 z-50">
+          İnternet Bağlantısı Yok — Çevrimdışı
+        </div>
+      )}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/50 bg-slate-950/80 px-6 py-4 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-400 shadow-lg shadow-teal-900/20">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+            </svg>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
-            GymClubNex · Access
-          </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Door scanner
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Scan or paste a member QR to grant entry.
-          </p>
-        </header>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-white">Kapı Okuyucu</h1>
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">GymClubNex Ops</p>
+          </div>
+        </div>
+        {deferredPrompt && (
+          <button
+            onClick={handleInstallClick}
+            onTouchEnd={(e) => { e.preventDefault(); handleInstallClick(); }}
+            className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-teal-500"
+          >
+            Uygulamayı Yükle
+          </button>
+        )}
+      </header>
 
-        {/* Staff session credentials — softened / collapsible */}
+      <div className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
         <section className="mb-6 rounded-xl border border-slate-800/80 bg-slate-900/50 p-3">
           <button
             type="button"
             onClick={() => setCredsOpen((o) => !o)}
-            className="flex w-full items-center justify-between gap-2 rounded-lg px-1 py-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              setCredsOpen((o) => !o)
+            }}
+            className="flex w-full items-center justify-between gap-2 rounded-lg px-1 py-1 text-left focus:outline-none"
             aria-expanded={credsOpen}
           >
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Staff session
+                Personel Oturumu
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {hasSavedCreds
-                  ? 'Credentials saved on this device'
-                  : 'Required before validating'}
-              </p>
+              {hasSavedCreds ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-400">Çevrimiçi</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1 rounded-full bg-amber-500/10 px-2 py-0.5 border border-amber-500/20 w-fit">
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                  <span className="text-[10px] font-semibold text-amber-400">Çevrimdışı</span>
+                </div>
+              )}
             </div>
-            <span className="text-xs text-slate-500" aria-hidden>
-              {credsOpen ? 'Hide' : 'Show'}
-            </span>
+            <span className="text-xs text-slate-500">{credsOpen ? 'Gizle' : 'Göster'}</span>
           </button>
           {credsOpen && (
             <form onSubmit={saveCredentials} className="mt-3 space-y-3 border-t border-slate-800/80 pt-3">
               <div>
-                <label htmlFor="session" className="text-xs text-slate-500">
-                  Session token
-                </label>
-                <input
-                  id="session"
-                  type="password"
-                  autoComplete="off"
-                  value={sessionToken}
-                  onChange={(e) => setSessionToken(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
-                />
+                <label htmlFor="session" className="text-xs text-slate-500">Oturum anahtarı</label>
+                <input id="session" type="password" value={sessionToken} onChange={(e) => setSessionToken(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div>
-                <label htmlFor="tenant" className="text-xs text-slate-500">
-                  Tenant ID
-                </label>
-                <input
-                  id="tenant"
-                  type="text"
-                  autoComplete="off"
-                  value={tenantId}
-                  onChange={(e) => setTenantId(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 font-mono text-sm text-slate-200 placeholder:text-slate-600 focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
-                  placeholder="uuid"
-                />
+                <label htmlFor="tenant" className="text-xs text-slate-500">Tenant ID</label>
+                <input id="tenant" type="text" value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="rounded-lg border border-slate-800 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
-                >
-                  Clear
-                </button>
+                <button type="submit" className="rounded-lg bg-teal-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-500">Kaydet</button>
+                <button type="button" onClick={logout} className="rounded-lg border border-slate-800 px-4 py-1.5 text-sm text-slate-400 hover:text-slate-300">Temizle</button>
               </div>
             </form>
           )}
         </section>
 
-        {/* Camera capture */}
-        <section className="mb-4" aria-labelledby="camera-heading">
-          <h2
-            id="camera-heading"
-            className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400"
-          >
-            Camera
-          </h2>
-          {!scanning ? (
-            <button
-              type="button"
-              onClick={() => {
-                setError(null)
-                setResult(null)
-                setScanning(true)
-              }}
-              className="w-full rounded-xl border border-teal-700/50 bg-teal-950/30 py-3.5 text-base font-semibold text-emerald-300 shadow-sm hover:bg-teal-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            >
-              Scan with camera
-            </button>
+        <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
+          {!scanning && !manualMode ? (
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => setScanning(true)} onTouchEnd={(e) => { e.preventDefault(); setScanning(true) }} className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 hover:bg-slate-700 transition-colors">
+                <svg className="h-8 w-8 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                <span className="font-medium text-sm">Kamera ile Tara</span>
+              </button>
+              <button onClick={() => setManualMode(true)} onTouchEnd={(e) => { e.preventDefault(); setManualMode(true) }} className="flex flex-col items-center gap-3 rounded-xl bg-slate-800 p-4 hover:bg-slate-700 transition-colors">
+                <svg className="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                <span className="font-medium text-sm">Klavyeden Gir</span>
+              </button>
+            </div>
+          ) : scanning ? (
+            <ErrorBoundary>
+              <CameraQrScanner active={scanning} onDecode={onCameraDecode} onStop={() => setScanning(false)} />
+            </ErrorBoundary>
           ) : (
-            <CameraQrScanner
-              active={scanning}
-              onDecode={onCameraDecode}
-              onStop={() => setScanning(false)}
-            />
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950 p-6">
+              <form onSubmit={onValidate} className="w-full">
+                <label className="block text-sm font-medium text-slate-400 mb-2">QR Token</label>
+                <input autoFocus value={qrToken} onChange={(e) => setQrToken(e.target.value)} className="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-white mb-4" />
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setManualMode(false)} className="flex-1 rounded-xl border border-slate-700 py-3 text-slate-300">İptal</button>
+                  <button type="submit" className="flex-1 rounded-xl bg-teal-600 py-3 text-white">Doğrula</button>
+                </div>
+              </form>
+            </div>
           )}
         </section>
 
-        {/* Validate form (paste fallback) */}
-        <form
-          onSubmit={onValidate}
-          className="rounded-xl border border-slate-800 bg-slate-900/90 p-4 shadow-lg"
-          aria-labelledby="paste-heading"
-        >
-          <h2
-            id="paste-heading"
-            className="text-xs font-semibold uppercase tracking-wide text-slate-400"
-          >
-            Paste token
-          </h2>
-          <div className="mt-3">
-            <label htmlFor="qr" className="text-sm font-medium text-slate-200">
-              QR token
-            </label>
-            <textarea
-              id="qr"
-              rows={4}
-              value={qrToken}
-              onChange={(e) => setQrToken(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
-              placeholder="Paste signed QR token, or scan with camera…"
-            />
-          </div>
-          <div className="mt-3">
-            <label htmlFor="location" className="text-sm font-medium text-slate-200">
-              Location ID (optional)
-            </label>
-            <input
-              id="location"
-              type="text"
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
-              placeholder="uuid"
-            />
-          </div>
-          <label className="mt-3 flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={consume}
-              onChange={(e) => setConsume(e.target.checked)}
-              className="rounded border-slate-600 text-teal-600 focus:ring-emerald-400/40"
-            />
-            Consume entitlement
-          </label>
-
-          <button
-            type="submit"
-            disabled={busy}
-            className="mt-4 w-full rounded-xl bg-teal-600 py-3 text-base font-semibold text-white shadow-sm hover:bg-teal-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-50"
-          >
-            {busy ? 'Validating…' : 'Validate entry'}
-          </button>
-        </form>
-
-        {error && (
-          <div
-            className="mt-4 rounded-xl border border-red-800/80 bg-red-950/60 px-4 py-3 text-sm text-red-200"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className="mt-4 rounded-xl border border-red-800/80 bg-red-950/60 px-4 py-3 text-sm text-red-200">{error}</div>}
 
         {result && (
-          <div
-            className={`mt-4 rounded-xl border-2 px-5 py-8 text-center ${
-              granted
-                ? 'border-emerald-500 bg-emerald-950/60'
-                : 'border-red-600 bg-red-950/60'
-            }`}
-            role="status"
-            aria-live="polite"
-          >
-            {/* Icon + text — not color alone (a11y) */}
-            <div
-              className={`mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full ${
-                granted
-                  ? 'bg-emerald-500/20 text-emerald-400 ring-2 ring-emerald-400/50'
-                  : 'bg-red-500/20 text-red-400 ring-2 ring-red-400/50'
-              }`}
-              aria-hidden
-            >
-              {granted ? (
-                <svg
-                  className="h-9 w-9"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg
-                  className="h-9 w-9"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              )}
-            </div>
-            <p
-              className={`text-4xl font-extrabold tracking-widest ${
-                granted ? 'text-emerald-400' : 'text-red-400'
-              }`}
-            >
-              {granted ? 'GRANT' : 'DENY'}
-            </p>
-            <p
-              className={`mt-1 text-sm font-medium ${
-                granted ? 'text-emerald-200/90' : 'text-red-200/90'
-              }`}
-            >
-              {granted ? 'Entry allowed' : 'Entry not allowed'}
-            </p>
-            {(result.reason || denied) && (
-              <p className="mt-3 text-sm text-slate-300">
-                Reason: {result.reason ?? '—'}
-              </p>
-            )}
-            {result.member_id && (
-              <p className="mt-2 font-mono text-xs text-slate-400">
-                member: {result.member_id}
-              </p>
-            )}
-            {result.remaining != null && (
-              <p className="mt-1 text-xs text-slate-400">
-                remaining: {result.remaining}
-              </p>
-            )}
-            {result.jti && (
-              <p className="mt-1 font-mono text-xs text-slate-500">
-                jti: {result.jti}
-              </p>
+          <div className="mt-6 flex flex-col items-center animate-in zoom-in-95 duration-300">
+            {granted ? (
+              <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden">
+                <div className="flex flex-col items-center bg-emerald-500 py-8 text-white">
+                  <div className="mb-4 rounded-full bg-white/20 p-3"><svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg></div>
+                  <h2 className="text-2xl font-bold">Onaylandı</h2>
+                </div>
+                <div className="p-6 text-slate-900 text-center">
+                  <p className="text-lg font-semibold">Geçiş yetkisi tanımlandı</p>
+                  <button onClick={() => setResult(null)} onTouchEnd={(e) => { e.preventDefault(); setResult(null) }} className="mt-6 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white">Tamam</button>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden">
+                <div className="flex flex-col items-center bg-rose-500 py-8 text-white">
+                  <div className="mb-4 rounded-full bg-white/20 p-3"><svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12" /></svg></div>
+                  <h2 className="text-2xl font-bold">Reddedildi</h2>
+                </div>
+                <div className="p-6 text-slate-900 text-center">
+                  <p className="text-sm font-medium text-rose-700">{result.reason ?? 'Geçiş yetkisi yok'}</p>
+                  <button onClick={() => setResult(null)} onTouchEnd={(e) => { e.preventDefault(); setResult(null) }} className="mt-6 w-full rounded-xl bg-slate-900 py-3 font-bold text-white">Geri Dön</button>
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
+      <ReloadPrompt />
     </div>
   )
 }

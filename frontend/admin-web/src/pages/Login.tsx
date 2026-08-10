@@ -30,7 +30,7 @@ export default function Login() {
     setError(null)
     const em = email.trim()
     if (!em || !password) {
-      setError('Email and password are required.')
+      setError('E-posta ve şifre gereklidir.')
       return
     }
 
@@ -41,7 +41,7 @@ export default function Login() {
         override,
       )
     ) {
-      setError('Tenant override must be a UUID when provided.')
+      setError('Tenant ID (İsteğe bağlı) geçerli bir UUID olmalıdır.')
       return
     }
 
@@ -56,7 +56,7 @@ export default function Login() {
       const tenantId = override || data.tenant_id
       if (!tenantId) {
         setError(
-          'Login succeeded but no tenant is linked to this user. Set a tenant override or re-run seed_demo.',
+          "Giriş başarılı ancak kullanıcıya atanmış bir tenant bulunamadı. Tenant ID girin veya seed_demo'yu tekrar çalıştırın.",
         )
         return
       }
@@ -67,13 +67,13 @@ export default function Login() {
       if (err instanceof ApiError) {
         setError(
           err.status === 401
-            ? 'Invalid email or password.'
+            ? 'Geçersiz e-posta veya şifre.'
             : `${err.status}: ${err.message}`,
         )
       } else if (err instanceof Error) {
         setError(err.message)
       } else {
-        setError('Login failed.')
+        setError('Giriş başarısız oldu.')
       }
     } finally {
       setSubmitting(false)
@@ -94,25 +94,24 @@ export default function Login() {
           <h1 className="text-2xl font-bold tracking-tight text-white">
             GymClubNex
           </h1>
-          <p className="mt-1.5 text-sm font-medium text-teal-200/80">
-            Staff console · Fitness Network OS
+          <p className="mt-1.5 text-sm font-medium text-teal-400/80">
+            Operasyon Konsolu · Fitness Network OS
           </p>
         </div>
 
-        <div className="rounded-card border border-white/10 bg-white p-8 shadow-elevated">
-          <h2 className="text-lg font-semibold text-ink">Sign in</h2>
+        <div className="rounded-card border border-slate-800/80 bg-slate-900/50 p-8 shadow-elevated backdrop-blur-md">
+          <h2 className="text-lg font-semibold text-ink">Giriş Yap</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Staff access for gym operations. Demo credentials from{' '}
-            <code className="rounded bg-surface px-1 py-0.5 text-xs text-slate-700">
+            Operasyon personeli erişimi. 
+            <code className="rounded bg-slate-800 ml-1 px-1 py-0.5 text-xs text-slate-300">
               seed_demo
             </code>
-            .
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
             <div>
               <label htmlFor="email" className="label-text">
-                Email
+                E-posta
               </label>
               <input
                 id="email"
@@ -127,7 +126,7 @@ export default function Login() {
             </div>
             <div>
               <label htmlFor="password" className="label-text">
-                Password
+                Şifre
               </label>
               <input
                 id="password"
@@ -142,8 +141,8 @@ export default function Login() {
             </div>
             <div>
               <label htmlFor="tenant" className="label-text">
-                Tenant ID override{' '}
-                <span className="font-normal text-slate-400">(optional)</span>
+                Tenant ID{' '}
+                <span className="font-normal text-slate-500">(İsteğe bağlı)</span>
               </label>
               <input
                 id="tenant"
@@ -153,13 +152,13 @@ export default function Login() {
                 onChange={(e) => setTenantOverride(e.target.value)}
                 disabled={submitting}
                 className="input-field font-mono text-xs"
-                placeholder="Uses tenant from login response if empty"
+                placeholder="Boş bırakılırsa varsayılan tenant kullanılır"
               />
             </div>
 
             {error && (
               <p
-                className="rounded-control border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                className="rounded-control border border-rose-800 bg-rose-950/30 px-3 py-2 text-sm text-rose-400"
                 role="alert"
               >
                 {error}
@@ -171,13 +170,13 @@ export default function Login() {
               disabled={submitting}
               className="btn-primary w-full py-2.5"
             >
-              {submitting ? 'Signing in…' : 'Sign in'}
+              {submitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
             </button>
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Not a consumer app — ops console only
+        <p className="mt-6 text-center text-xs text-slate-500">
+          Tüketici uygulaması değildir — yalnızca operasyon konsolu
         </p>
       </div>
     </div>

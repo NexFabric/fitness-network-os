@@ -782,6 +782,58 @@ class FinanceService:
             return InvoiceStatus.PAID.value
         return InvoiceStatus.PARTIALLY_PAID.value
 
+    async def list_invoices(
+        self,
+        tenant_id: UUID,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        member_id: UUID | None = None,
+    ) -> tuple[list[Invoice], int]:
+        from sqlalchemy import func
+        from sqlalchemy.orm import selectinload
+        
+        stmt = select(Invoice).where(Invoice.tenant_id == tenant_id)
+        if member_id:
+            stmt = stmt.join(
+                BillingAccount, Invoice.billing_account_id == BillingAccount.id
+            ).where(BillingAccount.member_id == member_id)
+            
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self.session.execute(count_stmt)).scalar_one()
+
+        stmt = (
+            stmt.options(selectinload(Invoice.items))
+            .order_by(Invoice.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        items = (await self.session.execute(stmt)).scalars().all()
+        return list(items), total
+
+    async def list_payments(
+        self,
+        tenant_id: UUID,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        member_id: UUID | None = None,
+    ) -> tuple[list[Payment], int]:
+        from sqlalchemy import func
+        
+        stmt = select(Payment).where(Payment.tenant_id == tenant_id)
+        if member_id:
+            stmt = stmt.join(
+                BillingAccount, Payment.billing_account_id == BillingAccount.id
+            ).where(BillingAccount.member_id == member_id)
+            
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = (await self.session.execute(count_stmt)).scalar_one()
+
+        stmt = stmt.order_by(Payment.created_at.desc()).offset(skip).limit(limit)
+        items = (await self.session.execute(stmt)).scalars().all()
+        return list(items), total
+
     async def _get_billing_account(
         self, tenant_id: UUID, account_id: UUID, *, for_update: bool = False
     ) -> BillingAccount:

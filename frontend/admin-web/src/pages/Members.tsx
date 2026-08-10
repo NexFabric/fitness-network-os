@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
+import MemberMemberships from '../components/MemberMemberships'
 
 type Member = {
   id: string
@@ -15,6 +16,14 @@ type CreateMemberForm = {
   member_number: string
   first_name: string
   last_name: string
+}
+
+type EditMemberForm = {
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  status: string
 }
 
 const emptyForm: CreateMemberForm = {
@@ -34,15 +43,15 @@ function formatApiError(e: unknown, fallback: string): string {
 function statusBadgeClass(status: string): string {
   const s = status.toLowerCase()
   if (s === 'active') {
-    return 'bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200'
+    return 'bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20'
   }
   if (s === 'inactive' || s === 'cancelled' || s === 'canceled') {
-    return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200'
+    return 'bg-slate-800 text-slate-400 ring-1 ring-inset ring-slate-700'
   }
   if (s === 'suspended') {
-    return 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200'
+    return 'bg-amber-500/10 text-amber-400 ring-1 ring-inset ring-amber-500/20'
   }
-  return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200'
+  return 'bg-slate-800 text-slate-400 ring-1 ring-inset ring-slate-700'
 }
 
 export default function Members() {
@@ -55,6 +64,11 @@ export default function Members() {
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [editForm, setEditForm] = useState<EditMemberForm | null>(null)
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   const loadMembers = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent ?? false
     if (!silent) {
@@ -66,7 +80,7 @@ export default function Members() {
       setMembers(data)
       if (silent) setError(null)
     } catch (e) {
-      setError(formatApiError(e, 'Failed to load members'))
+      setError(formatApiError(e, 'Üyeler yüklenemedi'))
     } finally {
       if (!silent) setLoading(false)
     }
@@ -86,7 +100,7 @@ export default function Members() {
     const last_name = form.last_name.trim()
 
     if (!member_number || !first_name || !last_name) {
-      setFormError('Member number, first name, and last name are required.')
+      setFormError('Üye Numarası, Ad ve Soyad gereklidir.')
       return
     }
 
@@ -97,29 +111,86 @@ export default function Members() {
         body: { member_number, first_name, last_name },
       })
       setForm(emptyForm)
-      setFormSuccess('Member created successfully.')
+      setFormSuccess('Üye başarıyla oluşturuldu.')
       await loadMembers({ silent: true })
     } catch (err) {
-      setFormError(formatApiError(err, 'Failed to create member'))
+      setFormError(formatApiError(err, 'Üye oluşturulamadı'))
     } finally {
       setSubmitting(false)
     }
   }
 
+  function openEditModal(member: Member) {
+    setEditingMember(member)
+    setEditForm({
+      first_name: member.first_name,
+      last_name: member.last_name,
+      email: member.email || '',
+      phone: member.phone || '',
+      status: member.status,
+    })
+    setEditError(null)
+  }
+
+  function closeEditModal() {
+    setEditingMember(null)
+    setEditForm(null)
+  }
+
+  async function handleEditSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!editingMember || !editForm) return
+
+    const first_name = editForm.first_name.trim()
+    const last_name = editForm.last_name.trim()
+    const email = editForm.email.trim() || null
+    const phone = editForm.phone.trim() || null
+
+    if (!first_name || !last_name) {
+      setEditError('Ad ve Soyad gereklidir.')
+      return
+    }
+
+    setEditSubmitting(true)
+    setEditError(null)
+    try {
+      // 1. Update basic fields
+      await api<Member>(`/api/v1/members/${editingMember.id}`, {
+        method: 'PATCH',
+        body: { first_name, last_name, email, phone },
+      })
+
+      // 2. Update status if changed
+      if (editForm.status !== editingMember.status) {
+        await api<Member>(`/api/v1/members/${editingMember.id}/status`, {
+          method: 'POST',
+          body: { status: editForm.status },
+        })
+      }
+
+      closeEditModal()
+      await loadMembers({ silent: true })
+    } catch (err) {
+      setEditError(formatApiError(err, 'Üye güncellenemedi'))
+    } finally {
+      setEditSubmitting(false)
+    }
+  }
+
   return (
     <div>
-      <h1 className="page-title">Members</h1>
+      <h1 className="page-title">Üyeler</h1>
       <p className="page-subtitle">
-        Roster for this gym — create and review members
+        Bu salonun üye listesi — üye oluşturun ve inceleyin
       </p>
 
       <section className="card mt-6" aria-labelledby="create-member-heading">
         <div className="card-header">
           <h2
             id="create-member-heading"
-            className="text-base font-semibold text-ink"
+            className="text-base font-semibold text-slate-100"
           >
-            Create member
+            Üye Oluştur
           </h2>
         </div>
         <form
@@ -129,7 +200,7 @@ export default function Members() {
         >
           <div>
             <label htmlFor="member_number" className="label-text">
-              Member number <span className="text-accent-danger">*</span>
+              Üye Numarası <span className="text-teal-500">*</span>
             </label>
             <input
               id="member_number"
@@ -148,7 +219,7 @@ export default function Members() {
           </div>
           <div>
             <label htmlFor="first_name" className="label-text">
-              First name <span className="text-accent-danger">*</span>
+              Ad <span className="text-teal-500">*</span>
             </label>
             <input
               id="first_name"
@@ -167,7 +238,7 @@ export default function Members() {
           </div>
           <div>
             <label htmlFor="last_name" className="label-text">
-              Last name <span className="text-accent-danger">*</span>
+              Soyad <span className="text-teal-500">*</span>
             </label>
             <input
               id="last_name"
@@ -186,15 +257,15 @@ export default function Members() {
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
             <button type="submit" disabled={submitting} className="btn-primary">
-              {submitting ? 'Creating…' : 'Create member'}
+              {submitting ? 'Oluşturuluyor…' : 'Üye Oluştur'}
             </button>
             {formError && (
-              <p className="text-sm text-red-700" role="alert">
+              <p className="text-sm text-rose-400" role="alert">
                 {formError}
               </p>
             )}
             {formSuccess && (
-              <p className="text-sm font-medium text-emerald-700" role="status">
+              <p className="text-sm font-medium text-emerald-400" role="status">
                 {formSuccess}
               </p>
             )}
@@ -203,14 +274,14 @@ export default function Members() {
       </section>
 
       {loading && (
-        <p className="mt-6 text-sm text-slate-500" role="status">
-          Loading members…
+        <p className="mt-6 text-sm text-slate-400" role="status">
+          Üyeler yükleniyor…
         </p>
       )}
 
       {error && (
         <div
-          className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="mt-6 rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300"
           role="alert"
         >
           {error}
@@ -219,38 +290,39 @@ export default function Members() {
 
       {!loading && !error && (
         <div className="table-shell mt-6">
-          <table className="min-w-full divide-y divide-slate-100 text-left">
-            <thead className="bg-surface/80">
+          <table className="min-w-full divide-y divide-slate-800 text-left">
+            <thead className="bg-slate-900/80 backdrop-blur-md">
               <tr>
-                <th className="table-th">Number</th>
-                <th className="table-th">Name</th>
-                <th className="table-th">Email</th>
-                <th className="table-th">Status</th>
+                <th className="table-th">Numara</th>
+                <th className="table-th">İsim</th>
+                <th className="table-th">E-posta</th>
+                <th className="table-th">Durum</th>
+                <th className="table-th">İşlemler</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-800">
               {members.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-12 text-center text-sm text-slate-500"
                   >
-                    <p className="font-medium text-slate-700">No members yet</p>
+                    <p className="font-medium text-slate-300">Henüz üye yok</p>
                     <p className="mt-1">
-                      Create the first member using the form above.
+                      Yukarıdaki formu kullanarak ilk üyeyi oluşturun.
                     </p>
                   </td>
                 </tr>
               ) : (
                 members.map((m) => (
-                  <tr key={m.id} className="hover:bg-surface/60">
-                    <td className="table-td font-mono text-xs text-slate-700">
+                  <tr key={m.id} className="transition-colors hover:bg-slate-800/50">
+                    <td className="table-td font-mono text-xs text-slate-400">
                       {m.member_number}
                     </td>
-                    <td className="table-td font-medium">
+                    <td className="table-td font-medium text-slate-200">
                       {m.first_name} {m.last_name}
                     </td>
-                    <td className="table-td text-slate-600">
+                    <td className="table-td text-slate-400">
                       {m.email ?? '—'}
                     </td>
                     <td className="table-td">
@@ -260,6 +332,14 @@ export default function Members() {
                         {m.status}
                       </span>
                     </td>
+                    <td className="table-td text-right">
+                      <button 
+                        onClick={() => openEditModal(m)}
+                        className="text-brand hover:text-brand-deep text-sm font-medium transition-colors"
+                      >
+                        Düzenle
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -267,6 +347,127 @@ export default function Members() {
           </table>
         </div>
       )}
+
+      {/* Edit Modal */}
+      {editingMember && editForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+              <h2 className="text-lg font-semibold text-slate-100">
+                Üye Detayı: <span className="text-brand">{editingMember.member_number}</span>
+              </h2>
+              <button 
+                onClick={closeEditModal}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                Kapat
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-8">
+              {/* Profil Düzenleme Formu */}
+              <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
+                <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">Profil Bilgileri</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="edit_first_name" className="label-text">Ad <span className="text-teal-500">*</span></label>
+                    <input
+                      id="edit_first_name"
+                      type="text"
+                      required
+                      maxLength={128}
+                      value={editForm.first_name}
+                      onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                      className="input-field"
+                      disabled={editSubmitting}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit_last_name" className="label-text">Soyad <span className="text-teal-500">*</span></label>
+                    <input
+                      id="edit_last_name"
+                      type="text"
+                      required
+                      maxLength={128}
+                      value={editForm.last_name}
+                      onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                      className="input-field"
+                      disabled={editSubmitting}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="edit_email" className="label-text">E-posta</label>
+                    <input
+                      id="edit_email"
+                      type="email"
+                      maxLength={128}
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                      className="input-field"
+                      disabled={editSubmitting}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit_phone" className="label-text">Telefon</label>
+                    <input
+                      id="edit_phone"
+                      type="text"
+                      maxLength={32}
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      className="input-field"
+                      disabled={editSubmitting}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="edit_status" className="label-text">Durum</label>
+                  <select
+                    id="edit_status"
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                    className="input-field"
+                    disabled={editSubmitting}
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                    <option value="CANCELED">CANCELED</option>
+                    <option value="LEAD">LEAD</option>
+                  </select>
+                </div>
+
+                {editError && (
+                  <div className="rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300 mt-2">
+                    {editError}
+                  </div>
+                )}
+
+                <div className="mt-2 flex justify-end gap-3">
+                  <button 
+                    type="submit" 
+                    disabled={editSubmitting} 
+                    className="btn-primary"
+                  >
+                    {editSubmitting ? 'Kaydediliyor...' : 'Profili Kaydet'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Abonelikler Bölümü */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">Abonelikler</h3>
+                <MemberMemberships memberId={editingMember.id} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

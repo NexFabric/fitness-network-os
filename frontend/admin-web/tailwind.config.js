@@ -12,8 +12,8 @@ export default {
           deep: '#0F766E',
           light: '#14B8A6',
         },
-        ink: '#0B1220',
-        surface: '#F4F6F8',
+        ink: '#f8fafc',
+        surface: '#020617',
         accent: {
           DEFAULT: '#34D399',
           warn: '#F59E0B',
@@ -36,8 +36,8 @@ export default {
         control: '8px',
       },
       boxShadow: {
-        card: '0 1px 2px rgb(0 0 0 / 0.05)',
-        elevated: '0 4px 24px rgb(11 18 32 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04)',
+        card: '0 1px 2px rgb(0 0 0 / 0.3)',
+        elevated: '0 4px 24px rgb(13 148 136 / 0.15), 0 1px 2px rgb(0 0 0 / 0.5)',
       },
     },
   },

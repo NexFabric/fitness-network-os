@@ -188,3 +188,13 @@ class ReconciliationRunResponse(BaseModel):
 
 class ReconciliationMatchRequest(BaseModel):
     payment_id: UUID
+
+
+class InvoiceListResponse(BaseModel):
+    items: list[InvoiceResponse]
+    total: int
+
+
+class PaymentListResponse(BaseModel):
+    items: list[PaymentResponse]
+    total: int

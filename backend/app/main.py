@@ -84,10 +84,36 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health_check():
+        from redis.asyncio import Redis
+        from sqlalchemy import text
+
+        from app.db.session import engine
+        
+        checks = {}
+        
+        # Check DB
+        try:
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            checks["db"] = "up"
+        except Exception:
+            checks["db"] = "down"
+            
+        # Check Redis
+        try:
+            r = Redis.from_url(str(settings.REDIS_URL))
+            await r.ping()
+            await r.aclose()
+            checks["redis"] = "up"
+        except Exception:
+            checks["redis"] = "down"
+            
+        status = "ok" if all(v == "up" for v in checks.values()) else "degraded"
+
         return {
-            "status": "ok",
+            "status": status,
             "timestamp": datetime.now(UTC).isoformat(),
-            "checks": {},
+            "checks": checks,
         }
 
     @app.exception_handler(Exception)
