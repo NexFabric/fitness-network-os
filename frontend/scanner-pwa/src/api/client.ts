@@ -83,10 +83,16 @@ export async function validateQr(
     payload.location_id = body.location_id
   }
 
+  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
+  if (match) {
+    headers['x-csrf-token'] = match[1]
+  }
+
   const res = await fetch(`${base}/api/v1/access/qr/validate`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
+    credentials: 'include',
   })
 
   const text = await res.text()

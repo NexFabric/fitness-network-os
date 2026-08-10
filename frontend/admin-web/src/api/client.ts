@@ -78,6 +78,15 @@ export async function api<T = unknown>(
     }
   }
 
+  // Parse CSRF cookie if available and method is unsafe
+  const method = options.method ?? (options.body !== undefined ? 'POST' : 'GET')
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
+    if (match) {
+      headers['x-csrf-token'] = match[1]
+    }
+  }
+
   const res = await fetch(url, {
     method: options.method ?? (options.body !== undefined ? 'POST' : 'GET'),
     headers,

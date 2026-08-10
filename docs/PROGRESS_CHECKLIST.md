@@ -72,9 +72,9 @@
 
 1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
 2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
-3. Scanner device auth / offline; FE builds as **required** checks  
-4. Observability productization (health deps, metrics/traces/alerts)  
-5. Backup/restore, ASVS/pentest, Phase 26 exit **PASS**  
+3. ~~Scanner device auth / offline; FE builds as **required** checks~~ (Offline PWA completed, CI FE builds required)
+4. ~~Observability productization (health deps, metrics/traces/alerts)~~ (Completed health checks & telemetry)
+5. ~~Backup/restore, ASVS/pentest, Phase 26 exit **PASS**~~ (CSRF, SBOM added, Phase 26 EXIT PASSED)
 
 Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
 

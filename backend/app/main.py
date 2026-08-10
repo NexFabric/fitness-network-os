@@ -9,6 +9,7 @@ from starlette.responses import Response
 
 from app.api.middleware.rate_limit import SimpleRateLimitMiddleware
 from app.api.middleware.request_logging import RequestLoggingMiddleware
+from app.api.middleware.csrf import CSRFMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 
@@ -81,6 +82,9 @@ def create_app() -> FastAPI:
             TrustedHostMiddleware,
             allowed_hosts=settings.allowed_hosts_list,
         )
+
+    # CSRF Double-Submit protection (Phase 23)
+    app.add_middleware(CSRFMiddleware)
 
     @app.get("/health")
     async def health_check():
