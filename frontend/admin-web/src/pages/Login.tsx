@@ -3,7 +3,6 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { api, ApiError, isAuthenticated, setAuth } from '../api/client'
 
 type LoginResponse = {
-  token: string
   user_id: string
   expires_at: string
   tenant_id: string | null
@@ -61,7 +60,7 @@ export default function Login() {
         return
       }
 
-      setAuth(data.token, tenantId)
+      setAuth(tenantId)
       navigate('/', { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {

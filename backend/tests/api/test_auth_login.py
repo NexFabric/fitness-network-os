@@ -103,14 +103,14 @@ async def test_login_success_returns_token_and_creates_session(
     )
     assert res.status_code == 200, res.text
     body = res.json()
-    assert "token" in body and len(body["token"]) > 20
+    assert "token" not in body  # token removed from JSON
     assert body["user_id"] == str(user.id)
     assert body["expires_at"]
     assert body["tenant_id"] == str(tenant.id)
     assert "session_token" in res.cookies
-    assert res.cookies["session_token"] == body["token"]
+    token = res.cookies["session_token"]
 
-    token_hash = hashlib.sha256(body["token"].encode()).hexdigest()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     async with pg_session_maker() as db:
         row = (
             await db.execute(
@@ -134,7 +134,7 @@ async def test_login_email_case_normalized(api_client, pg_session_maker):
         json={"email": email.upper(), "password": password},
     )
     assert res.status_code == 200, res.text
-    assert res.json()["token"]
+    assert "session_token" in res.cookies
 
 
 @pytest.mark.asyncio
@@ -173,11 +173,11 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
         json={"email": email, "password": password},
     )
     assert login.status_code == 200
-    token = login.json()["token"]
+    token = login.cookies["session_token"]
 
     out = await api_client.post(
         "/api/v1/auth/logout",
-        headers={"Authorization": f"Bearer {token}"},
+        cookies={"session_token": token},
     )
     assert out.status_code == 200
     assert out.json()["ok"] is True
@@ -195,6 +195,6 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
 
     again = await api_client.post(
         "/api/v1/auth/logout",
-        headers={"Authorization": f"Bearer {token}"},
+        cookies={"session_token": token},
     )
     assert again.status_code == 401

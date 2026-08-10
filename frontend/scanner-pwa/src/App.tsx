@@ -2,7 +2,6 @@ import { useCallback, useState, type FormEvent, useEffect } from 'react'
 import {
   clearAuth,
   getTenantId,
-  getToken,
   setAuth,
   validateQr,
   type ValidateQrResponse,
@@ -12,7 +11,8 @@ import { ReloadPrompt } from './components/ReloadPrompt'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function App() {
-  const [sessionToken, setSessionToken] = useState(getToken() ?? '')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [tenantId, setTenantId] = useState(getTenantId() ?? '')
   const [qrToken, setQrToken] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +21,7 @@ export default function App() {
   const [manualMode, setManualMode] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [credsOpen, setCredsOpen] = useState(
-    () => !getToken() || !getTenantId(),
+    () => !getTenantId(),
   )
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -55,18 +55,36 @@ export default function App() {
     }
   }
 
-  function saveCredentials(e: FormEvent) {
+  async function saveCredentials(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    const t = sessionToken.trim()
+    const em = email.trim()
     const tid = tenantId.trim()
-    if (!t || !tid) {
-      setError('Oturum anahtarı ve Tenant ID gereklidir.')
+    if (!em || !password || !tid) {
+      setError('E-posta, şifre ve Tenant ID gereklidir.')
       return
     }
-    setAuth(t, tid)
-    setError(null)
-    setCredsOpen(false)
+    
+    try {
+      const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const res = await fetch(`${base}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em, password }),
+        credentials: 'include',
+      })
+      
+      if (!res.ok) {
+        setError('Giriş başarısız')
+        return
+      }
+      
+      setAuth(tid)
+      setError(null)
+      setCredsOpen(false)
+    } catch (err) {
+      setError('Bağlantı hatası')
+    }
   }
 
   const runValidate = useCallback(
@@ -78,12 +96,8 @@ export default function App() {
         setError('QR kod gereklidir.')
         return
       }
-      // Persist credentials if filled
-      if (sessionToken.trim() && tenantId.trim()) {
-        setAuth(sessionToken.trim(), tenantId.trim())
-      }
-      if (!getToken() || !getTenantId()) {
-        setError('Önce oturum anahtarı ve tenant ID kaydedin.')
+      if (!getTenantId()) {
+        setError('Önce giriş yapın ve tenant ID kaydedin.')
         setCredsOpen(true)
         return
       }
@@ -102,7 +116,7 @@ export default function App() {
         // ...
       }
     },
-    [sessionToken, tenantId],
+    [tenantId],
   )
 
   async function onValidate(e: FormEvent) {
@@ -116,26 +130,25 @@ export default function App() {
       setQrToken(token)
       setError(null)
       // Auto-validate when staff credentials are already present
-      const hasCreds =
-        Boolean(getToken() && getTenantId()) ||
-        Boolean(sessionToken.trim() && tenantId.trim())
+      const hasCreds = Boolean(getTenantId())
       if (hasCreds) {
         void runValidate(token)
       }
     },
-    [runValidate, sessionToken, tenantId],
+    [runValidate, tenantId],
   )
 
   function logout() {
     clearAuth()
-    setSessionToken('')
     setTenantId('')
+    setEmail('')
+    setPassword('')
     setResult(null)
     setCredsOpen(true)
   }
 
   const granted = result?.granted === true
-  const hasSavedCreds = Boolean(getToken() && getTenantId())
+  const hasSavedCreds = Boolean(getTenantId())
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 font-sans text-slate-50 selection:bg-teal-500/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
@@ -203,8 +216,12 @@ export default function App() {
           {credsOpen && (
             <form onSubmit={saveCredentials} className="mt-3 space-y-3 border-t border-slate-800/80 pt-3">
               <div>
-                <label htmlFor="session" className="text-xs text-slate-500">Oturum anahtarı</label>
-                <input id="session" type="password" value={sessionToken} onChange={(e) => setSessionToken(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
+                <label htmlFor="email" className="text-xs text-slate-500">E-posta</label>
+                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
+              </div>
+              <div>
+                <label htmlFor="password" className="text-xs text-slate-500">Şifre</label>
+                <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div>
                 <label htmlFor="tenant" className="text-xs text-slate-500">Tenant ID</label>

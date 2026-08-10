@@ -9,26 +9,20 @@ export function getBaseUrl(): string {
   return url.replace(/\/$/, '')
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
 export function getTenantId(): string | null {
   return localStorage.getItem(TENANT_KEY)
 }
 
-export function setAuth(token: string, tenantId: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
+export function setAuth(tenantId: string): void {
   localStorage.setItem(TENANT_KEY, tenantId)
 }
 
 export function clearAuth(): void {
-  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(TENANT_KEY)
 }
 
 export function isAuthenticated(): boolean {
-  return Boolean(getToken() && getTenantId())
+  return Boolean(getTenantId())
 }
 
 export class ApiError extends Error {

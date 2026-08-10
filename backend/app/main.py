@@ -120,6 +120,32 @@ def create_app() -> FastAPI:
             "checks": checks,
         }
 
+    @app.get("/live")
+    async def liveness_probe():
+        return Response(content="OK", status_code=200, media_type="text/plain")
+
+    @app.get("/ready")
+    async def readiness_probe():
+        # Quick check for db/redis
+        try:
+            from redis.asyncio import Redis
+            from sqlalchemy import text
+            from app.db.session import engine
+            
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            r = Redis.from_url(str(settings.REDIS_URL))
+            await r.ping()
+            await r.aclose()
+            return Response(content="OK", status_code=200, media_type="text/plain")
+        except Exception:
+            return Response(content="Service Unavailable", status_code=503, media_type="text/plain")
+
+    @app.get("/metrics")
+    async def metrics_probe():
+        # Placeholder for Prometheus metrics (Phase 24+)
+        return Response(content="# TYPE http_requests_total counter\nhttp_requests_total 0\n", media_type="text/plain")
+
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         return JSONResponse(

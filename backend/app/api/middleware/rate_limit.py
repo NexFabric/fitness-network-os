@@ -35,8 +35,25 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if request.method == "POST" and self._match(request.url.path):
-            client = request.client.host if request.client else "unknown"
-            key = f"{client}:{request.url.path}"
+            import json
+            
+            # Read body to extract identifier (email) for rate limiting
+            body_bytes = await request.body()
+            
+            # Restore the body for downstream handlers
+            async def receive():
+                return {"type": "http.request", "body": body_bytes}
+            request._receive = receive
+            
+            identifier = "unknown"
+            try:
+                if body_bytes:
+                    data = json.loads(body_bytes)
+                    identifier = str(data.get("email", "unknown")).lower().strip()
+            except Exception:
+                pass
+                
+            key = f"{identifier}:{request.url.path}"
             now = time.monotonic()
             window = self._hits[key]
             cutoff = now - self.window_seconds

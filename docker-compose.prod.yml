@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-backend-prod
+    ports:
+      - "8000:8000"
+    volumes:
+      - report_storage:/tmp/reports
+    environment:
+      # P1-1: Use the local volume as object storage substitute
+      - REPORT_STORAGE_DIR=/tmp/reports
+      - ENVIRONMENT=production
+      - CORS_ORIGINS=https://admin.gymclubnex.com,https://scanner.gymclubnex.com
+      - ALLOWED_HOSTS=api.gymclubnex.com
+      - NOTIFICATION_EMAIL_PROVIDER=smtp
+      # Require external PostgreSQL / Redis for true production
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      # Real SMTP credentials should be injected via .env
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    restart: always
+
+volumes:
+  report_storage:

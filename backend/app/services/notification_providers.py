@@ -63,11 +63,9 @@ class ConsoleEmailNotificationProvider:
         # Structured fields only — omit body / context (sensitive free-form).
         logger.info(
             "notification.email.console delivery_id=%s channel=%s "
-            "recipient_address=%s template_id=%s subject=%s "
-            "provider_message_id=%s",
+            "template_id=%s subject=%s provider_message_id=%s",
             delivery.id,
             delivery.channel,
-            delivery.recipient_address,
             delivery.template_id,
             delivery.subject,
             mid,
@@ -139,8 +137,8 @@ class SmtpNotificationProvider:
             await asyncio.to_thread(_send)
             
             logger.info(
-                "notification.email.smtp delivery_id=%s recipient_address=%s provider_message_id=%s",
-                delivery.id, delivery.recipient_address, mid
+                "notification.email.smtp delivery_id=%s provider_message_id=%s",
+                delivery.id, mid
             )
             return ProviderResult(success=True, provider=self.name, provider_message_id=mid)
         except Exception as e:
@@ -157,10 +155,22 @@ def _email_provider() -> NotificationProvider:
     Unknown values fall back to console (safe, no network).
     """
     mode = os.environ.get(_EMAIL_PROVIDER_ENV, "console").strip().lower()
+    env = os.environ.get("ENVIRONMENT", "development")
+    
+    if env == "production":
+        if mode not in ("smtp", "disabled"):
+            if os.environ.get("ALLOW_MOCK_EMAIL") != "true":
+                raise RuntimeError(
+                    "Production requires NOTIFICATION_EMAIL_PROVIDER=smtp (or 'disabled' "
+                    "or ALLOW_MOCK_EMAIL=true)"
+                )
+    
     if mode == "log":
         return LogNotificationProvider()
     elif mode == "smtp":
         return SmtpNotificationProvider()
+    elif mode == "disabled":
+        return FailingNotificationProvider()
     return ConsoleEmailNotificationProvider()
 
 

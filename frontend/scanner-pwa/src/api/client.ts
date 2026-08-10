@@ -9,21 +9,15 @@ export function getBaseUrl(): string {
   return url.replace(/\/$/, '')
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
 export function getTenantId(): string | null {
   return localStorage.getItem(TENANT_KEY)
 }
 
-export function setAuth(token: string, tenantId: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
+export function setAuth(tenantId: string): void {
   localStorage.setItem(TENANT_KEY, tenantId)
 }
 
 export function clearAuth(): void {
-  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(TENANT_KEY)
 }
 
@@ -69,9 +63,7 @@ export async function validateQr(
     Accept: 'application/json',
     'Content-Type': 'application/json',
   }
-  const token = getToken()
   const tenantId = getTenantId()
-  if (token) headers.Authorization = `Bearer ${token}`
   if (tenantId) headers['X-Tenant-ID'] = tenantId
 
   const payload: Record<string, unknown> = {

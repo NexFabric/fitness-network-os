@@ -187,9 +187,27 @@ class ReportService:
         await self.db.flush()
 
         try:
-            # Placeholder export: real exporters land in later phase
-            run.row_count = 0
-            run.result_url = f"memory://reports/{tenant_id}/{run.id}"
+            import os
+            import csv
+            import tempfile
+            from app.core.config import settings
+
+            # Substitute for object storage: local volume or temp dir
+            storage_dir = os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
+            tenant_dir = os.path.join(storage_dir, str(tenant_id))
+            os.makedirs(tenant_dir, exist_ok=True)
+            
+            filepath = os.path.join(tenant_dir, f"{run.id}.csv")
+            
+            # Simple dummy export for the report definition
+            with open(filepath, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Id', 'Status', 'Date'])
+                writer.writerow([str(run.id), 'SUCCEEDED', datetime.now(UTC).isoformat()])
+                
+            run.row_count = 1
+            # In a real app this would be a signed S3 URL
+            run.result_url = f"file://{filepath}"
             run.status = REPORT_STATUS_SUCCEEDED
             run.finished_at = datetime.now(UTC)
             run.error_message = None

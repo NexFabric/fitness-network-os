@@ -12,6 +12,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     """
 
     SAFE_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
+    EXEMPT_PATHS: frozenset[str] = frozenset({"/api/v1/auth/login", "/api/v1/auth/logout"})
     COOKIE_NAME = "csrf_token"
     HEADER_NAME = "x-csrf-token"
 
@@ -29,7 +30,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             csrf_cookie = secrets.token_urlsafe(32)
 
         # For unsafe methods, validate the header against the cookie
-        if request.method not in self.SAFE_METHODS:
+        if request.method not in self.SAFE_METHODS and request.url.path not in self.EXEMPT_PATHS:
             csrf_header = request.headers.get(self.HEADER_NAME)
             
             # Simple constant-time comparison is recommended for tokens, 

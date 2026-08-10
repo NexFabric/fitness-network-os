@@ -34,7 +34,6 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     """Shape requested for Admin / API clients."""
 
-    token: str
     user_id: UUID
     expires_at: datetime
     tenant_id: UUID | None = None
@@ -113,18 +112,18 @@ async def login(
 
     tenant_id = await _primary_tenant_id(db, user.id)
 
+    from app.core.config import settings
     response.set_cookie(
         key=COOKIE_NAME,
         value=raw_token,
         httponly=True,
         samesite="lax",
-        secure=False,  # local/dev; terminate TLS at reverse proxy in prod
+        secure=settings.ENVIRONMENT == "production",  # secure in prod
         max_age=SESSION_DAYS * 24 * 3600,
         path="/",
     )
 
     return LoginResponse(
-        token=raw_token,
         user_id=user.id,
         expires_at=expires_at,
         tenant_id=tenant_id,
