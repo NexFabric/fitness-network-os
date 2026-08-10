@@ -25,6 +25,14 @@ def setup_database():
             f"REFUSING destructive test setup against non-test database: {db_name}. "
             f"Database name must end with '_test' or '_test_db'."
         )
+    if os.getenv("ENVIRONMENT") != "test":
+        raise RuntimeError(
+            f"REFUSING destructive test setup: ENVIRONMENT must be 'test', got '{os.getenv('ENVIRONMENT')}'."
+        )
+    if os.getenv("ALLOW_DESTRUCTIVE_TEST_RESET") != "1":
+        raise RuntimeError(
+            "REFUSING destructive test setup: ALLOW_DESTRUCTIVE_TEST_RESET=1 must be set."
+        )
 
     env = os.environ.copy()
     parsed = urlparse(TEST_DATABASE_URL)

@@ -1,8 +1,8 @@
 # Uygulama hazır — çalıştırma özeti
 
-**Tarih:** 2026-08-10  
-**main equality:** `541c496` — verify `git rev-parse HEAD` == `origin/main` after pull  
-**Alembic head:** `q0d1e2f3a4b5`  
+**Tarih:** 2026-08-11  
+**main equality:** `b90b3ed` — verify `git rev-parse HEAD` == `origin/main` after pull  
+**Alembic head:** `6590aca081d6`  
 **Production-ready?** **NO** — Phase 27 production closure in progress (architecture strong; launch gates open).
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
@@ -46,8 +46,8 @@ PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d fitness_os -f ../po
 
 ## 2) Demo seed (Admin login credentials)
 
-Admin Web uses **email/password** via `POST /api/v1/auth/login` (returns `token`, `user_id`, `expires_at`, `tenant_id`). Seed still prints a bearer token for API curl fallback.
-
+Admin Web uses **email/password** via `POST /api/v1/auth/login` (sets HttpOnly cookie, returns `{"status": "ok"}`).  
+CSRF tokens are required via `GET /api/v1/auth/csrf`. Seed prints test credentials.
 ```bash
 cd backend
 set -a && source .env && set +a
@@ -60,7 +60,6 @@ Script prints (example fields):
 
 | Field | Use |
 |-------|-----|
-| `bearer_token` | Admin → **Session token** (no `Bearer ` prefix) |
 | `tenant_id` | Admin → **Tenant ID** |
 | `email` / `password` | Admin login form → `POST /api/v1/auth/login` |
 
@@ -75,21 +74,22 @@ After login: Admin → **Members** (create member) and **Locations** (create loc
 
 Re-run rotates the session token (prior sessions revoked).
 
-### Password login (preferred)
+### Password login (preferred API check)
 
 ```bash
+# Get CSRF
+curl -sS -c cookie.txt http://localhost:8000/api/v1/auth/csrf
+
+# Login
 curl -sS -X POST http://localhost:8000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
+  -H 'X-CSRF-Token: <token>' \
+  -b cookie.txt -c cookie.txt \
   -d '{"email":"demo.admin@demo.local","password":"DemoAdmin123!"}'
-```
 
-Use returned `token` as Bearer and `tenant_id` as `X-Tenant-ID`.
-
-Quick API check after seed:
-
-```bash
+# Check API
 curl -sS \
-  -H "Authorization: Bearer <bearer_token>" \
+  -b cookie.txt \
   -H "X-Tenant-ID: <tenant_id>" \
   http://localhost:8000/api/v1/members
 ```
@@ -113,8 +113,8 @@ npm run dev -- --port 5174
 - Public generic `/outbox` inject **yok** (15.5C — correct).
 - Self: `/api/v1/me/*`, `/api/v1/access/qr/issue-self`
 - Staff: members, locations, notifications, reports, finance, access, …
-- Auth: HttpOnly cookie preferred; Bearer header accepted for local/admin MVP.
-- Email notifications: `NOTIFICATION_EMAIL_PROVIDER=console` (default) or `log` — no real SMTP yet.
+- Auth: HttpOnly cookie + CSRF token enforcement.
+- Email notifications: SMTP integration is active in `docker-compose.prod.yml`.
 
 ## Production-ready?
 

@@ -60,10 +60,11 @@ def create_app() -> FastAPI:
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["*"],
         )
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=settings.allowed_hosts_list,
-        )
+        if settings.allowed_hosts_list:
+            app.add_middleware(
+                TrustedHostMiddleware,
+                allowed_hosts=settings.allowed_hosts_list,
+            )
     else:
         # Permissive local / non-prod UX (existing behavior)
         app.add_middleware(
