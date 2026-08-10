@@ -3,7 +3,7 @@
 **Date:** 2026-08-10  
 **Main SHA (equality):** `e19d935` (local == `origin/main` at board authoring)  
 **Alembic head:** `q0d1e2f3a4b5`  
-**Open PRs:** **none**  
+**Open PRs:** see session PR (feat/complete-remaining-mvp); #35 seed supersession candidate  
 **Branch protection:** `required_approving_review_count` = **1**  
 **Production-ready?** **NO** — Phase 26 exit gate **NOT PASSED**
 
@@ -36,7 +36,7 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 |----|------|------------|--------------------|
 | P0-1 | **Demo seed usable** | DevEx | ✅ **CLOSED this session:** `backend/scripts/seed_demo.py` → `seed_demo_tenant.py` prints `bearer_token` + `tenant_id`; seeds GYM_OWNER + location + member. |
 | P0-2 | **READY_TO_RUN exact URLs** | Docs | ✅ **CLOSED this session:** root `READY_TO_RUN.md` with ports 8000/5173/5174/5433 + seed steps. |
-| P0-3 | **Admin login works end-to-end** | FE + BE | After seed: open http://localhost:5173/login → paste token + tenant → Members/Locations non-empty. Manual verify remaining if FE not started. |
+| P0-3 | **Admin login works end-to-end** | FE + BE | ✅ **CLOSED this session:** email/password via POST /api/v1/auth/login + Admin Login form; tenant_id from response. |
 | P0-4 | **`fitness_app` role on long-lived volumes** | DevOps | Compose expects `fitness_app`; old volumes may only have `app_user`. Documented in READY_TO_RUN; consider one-shot bootstrap script or compose note. |
 | P0-5 | **No open stale docs PRs** | Orchestrator | ✅ **CLOSED:** open PR count **0** (#31/#33 closed, #32 merged). |
 | P0-6 | **Docs SHA lag** | Docs | `PROGRESS_CHECKLIST` / master plan may still mention older SHAs (`398e858` / `4120b7f`). Bump to current main when editing those files. |
@@ -47,8 +47,8 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 | ID | Item | Phase | Notes |
 |----|------|-------|-------|
-| P1-1 | Public **login API** (email/password → session cookie or token) | 17/19 | Removes token-paste UX; keep argon2 + hashed sessions. |
-| P1-2 | Admin Web: create/edit member, create location | 19 | Today list-only. |
+| P1-1 | Public **login API** (email/password → session cookie or token) | 17/19 | ✅ **CLOSED this session:** POST /api/v1/auth/login + logout; argon2 + hashed sessions + HttpOnly cookie. |
+| P1-2 | Admin Web: create/edit member, create location | 19 | ✅ **partial:** create member form (first/last/number); location create still open. |
 | P1-3 | Admin Web: cookie/session path (HttpOnly) | 19/C4 | Align with `deps.get_session_token_from_cookie`. |
 | P1-4 | Scanner: camera QR capture (not paste-only) | 20 | Keep offline/device auth deferred if needed. |
 | P1-5 | HTTP/ASGI vertical e2e (member → QR → validate) | 18 | Service e2e exists; ASGI missing. |
@@ -57,7 +57,7 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 | P1-8 | Notification adapters beyond log (email first) | 16/B10 | Domain → Event → Outbox → Adapter only. |
 | P1-9 | Report export real artifact (not placeholder metadata) | 16/B11 | Still MVP stub. |
 | P1-10 | Phase 21: frontend build jobs as **required** checks | 21 | Branch protection currently: Security / Lint / Unit only. |
-| P1-11 | Phase 23: HSTS + CSP + rate limit baseline | 23 | CORS allowlist already env-gated. |
+| P1-11 | Phase 23: HSTS + CSP + rate limit baseline | 23 | ✅ **partial:** in-memory rate limit on /auth/login; HSTS/CSP still open. |
 | P1-12 | Phase 24: health/deps + metrics beyond request-id stub | 24 | No PII in logs. |
 
 ---
@@ -106,6 +106,12 @@ Do **not** claim production-ready. Do **not** spam multi-minute full pytest loca
 
 | Item | Evidence |
 |------|----------|
+
+| Auth login API | POST /api/v1/auth/login|logout; tests/api/test_auth_login.py |
+| Admin password login UX | frontend Login.tsx email/password |
+| Admin create member form | Members.tsx POST /api/v1/members |
+| Login rate limit (light) | SimpleRateLimitMiddleware |
+| seed_demo password path | READY_TO_RUN + seed print for login API |
 | Inventory open PRs | `gh pr list --state open` → **0** |
 | Equality main | `e19d935` local == origin/main |
 | Demo seed | `scripts/seed_demo.py` / `seed_demo_tenant.py`; verified `/api/v1/members` + `/locations` 200 |
