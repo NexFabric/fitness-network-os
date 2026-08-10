@@ -80,14 +80,14 @@ Prefer **MERGED / IMPLEMENTED / PARTIAL** in new writing. Historical “LOCKED�
 | 22 Container | 🟢 **MERGED MVP** | `Dockerfile.prod` multi-stage non-root |
 | 23 HTTP security | 🟢 **MERGED baseline** | CORS + HSTS/CSP #41 + light RL; not LOCKED |
 | 24 Observability | 🟡 **PARTIAL stub on main** | Request/correlation id + access log; no OTel |
-| 25 Checklist truth | 🟢 **docs on main** | Keep SHA aligned (`325d93d`) |
+| 25 Checklist truth | 🟢 **docs on main** | Keep SHA aligned (`7671c25`) |
 | 26 Exit gate | 🔴 **FAIL / NOT PASSED** | See phase26 scorecard |
 
 ### Main equality (docs truth pass)
 
 | Ref | Value |
 |-----|--------|
-| Main HEAD | `325d93d` |
+| Main HEAD | `7671c25` |
 | Alembic on main | `q0d1e2f3a4b5` |
 | Product stack | PR #26 + remaining-MVP #37–#42 + brand #44–#45 |
 | Production-ready | **NO** |

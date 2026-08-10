@@ -2,7 +2,7 @@
 
 **Status:** Living roadmap (Phase 0–26)  
 **Last updated:** 2026-08-10  
-**Main HEAD:** `325d93d`  
+**Main HEAD:** `7671c25`  
 **Alembic head:** `q0d1e2f3a4b5`  
 
 **Hierarchy:** MASTER_SPEC → PRODUCTION_READINESS → this plan → PROGRESS_CHECKLIST → phase plans  
