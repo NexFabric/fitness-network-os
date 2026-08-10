@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
 import {
   clearAuth,
   getTenantId,
@@ -7,6 +7,7 @@ import {
   validateQr,
   type ValidateQrResponse,
 } from './api/client'
+import { CameraQrScanner } from './components/CameraQrScanner'
 
 export default function App() {
   const [sessionToken, setSessionToken] = useState(getToken() ?? '')
@@ -17,6 +18,7 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ValidateQrResponse | null>(null)
+  const [scanning, setScanning] = useState(false)
 
   function saveCredentials(e: FormEvent) {
     e.preventDefault()
@@ -31,39 +33,62 @@ export default function App() {
     setError(null)
   }
 
+  const runValidate = useCallback(
+    async (tokenRaw: string) => {
+      setError(null)
+      setResult(null)
+      const token = tokenRaw.trim()
+      if (!token) {
+        setError('QR token is required.')
+        return
+      }
+      // Persist credentials if filled
+      if (sessionToken.trim() && tenantId.trim()) {
+        setAuth(sessionToken.trim(), tenantId.trim())
+      }
+      if (!getToken() || !getTenantId()) {
+        setError('Save session token and tenant ID first.')
+        return
+      }
+
+      setBusy(true)
+      try {
+        const loc = locationId.trim() || null
+        const res = await validateQr({
+          token,
+          location_id: loc,
+          consume,
+        })
+        setResult(res)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Validation request failed')
+      } finally {
+        setBusy(false)
+      }
+    },
+    [sessionToken, tenantId, locationId, consume],
+  )
+
   async function onValidate(e: FormEvent) {
     e.preventDefault()
-    setError(null)
-    setResult(null)
-    const token = qrToken.trim()
-    if (!token) {
-      setError('QR token is required.')
-      return
-    }
-    // Persist credentials if filled
-    if (sessionToken.trim() && tenantId.trim()) {
-      setAuth(sessionToken.trim(), tenantId.trim())
-    }
-    if (!getToken() || !getTenantId()) {
-      setError('Save session token and tenant ID first.')
-      return
-    }
-
-    setBusy(true)
-    try {
-      const loc = locationId.trim() || null
-      const res = await validateQr({
-        token,
-        location_id: loc,
-        consume,
-      })
-      setResult(res)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation request failed')
-    } finally {
-      setBusy(false)
-    }
+    await runValidate(qrToken)
   }
+
+  const onCameraDecode = useCallback(
+    (token: string) => {
+      setScanning(false)
+      setQrToken(token)
+      setError(null)
+      // Auto-validate when staff credentials are already present
+      const hasCreds =
+        Boolean(getToken() && getTenantId()) ||
+        Boolean(sessionToken.trim() && tenantId.trim())
+      if (hasCreds) {
+        void runValidate(token)
+      }
+    },
+    [runValidate, sessionToken, tenantId],
+  )
 
   function logout() {
     clearAuth()
@@ -139,7 +164,30 @@ export default function App() {
           </form>
         </section>
 
-        {/* Validate form */}
+        {/* Camera capture */}
+        <section className="mb-4">
+          {!scanning ? (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null)
+                setResult(null)
+                setScanning(true)
+              }}
+              className="w-full rounded-lg border border-emerald-700/60 bg-emerald-950/40 py-3 text-base font-semibold text-emerald-300 hover:bg-emerald-900/50"
+            >
+              Scan with camera
+            </button>
+          ) : (
+            <CameraQrScanner
+              active={scanning}
+              onDecode={onCameraDecode}
+              onStop={() => setScanning(false)}
+            />
+          )}
+        </section>
+
+        {/* Validate form (paste fallback) */}
         <form
           onSubmit={onValidate}
           className="rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-lg"
@@ -154,7 +202,7 @@ export default function App() {
               value={qrToken}
               onChange={(e) => setQrToken(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm focus:border-emerald-500 focus:outline-none"
-              placeholder="Paste signed QR token…"
+              placeholder="Paste signed QR token, or scan with camera…"
             />
           </div>
           <div className="mt-3">

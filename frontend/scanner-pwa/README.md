@@ -32,6 +32,14 @@ VITE_API_URL=http://localhost:8000
 
 Credentials are stored in `localStorage` (`fnos_scanner_token`, `fnos_scanner_tenant_id`).
 
+## Camera QR capture
+
+- **Scan with camera** uses `getUserMedia` (prefers `facingMode: environment` / back camera).
+- Decode: native **BarcodeDetector** when available, otherwise **jsQR** on video frames.
+- On successful decode: fills the QR token field and auto-validates if credentials are saved.
+- Paste token + Validate remains the fallback if permission is denied, no camera, or insecure context.
+- **Browser note:** camera access requires a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) (HTTPS or `localhost`). Local HTTP on a LAN IP will block `getUserMedia`; use paste or tunnel/HTTPS.
+
 ## PWA
 
 - `public/manifest.json` — name/theme for installability
