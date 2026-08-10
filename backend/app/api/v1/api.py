@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     access,
+    auth,
     entitlements,
     finance,
     locations,
@@ -14,6 +15,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(
     memberships.router, prefix="/memberships", tags=["memberships"]
 )
