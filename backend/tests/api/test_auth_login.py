@@ -17,7 +17,7 @@ from app.main import app
 from app.models.organization import Organization
 from app.models.rbac import Role, UserRole
 from app.models.tenant import Tenant
-from app.models.user import User, UserSession
+from app.models.user import User, UserMfaMethod, UserSession
 
 
 @pytest.fixture
@@ -198,3 +198,72 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
         cookies={"session_token": token},
     )
     assert again.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_required(api_client, pg_session_maker):
+    email = f"mfareq-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert res.status_code == 401
+    assert res.json()["detail"] == "mfa_required"
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_invalid(api_client, pg_session_maker):
+    email = f"mfainv-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password, "mfa_code": "wrong_code"},
+    )
+    assert res.status_code == 401
+    assert res.json()["detail"] == "mfa_invalid"
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_success(api_client, pg_session_maker):
+    email = f"mfasucc-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password, "mfa_code": "secret123"},
+    )
+    assert res.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_misconfigured(api_client, pg_session_maker):
+    email = f"mfamisc-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        # Active MFA method registered but provider_id is None/empty
+        db.add(UserMfaMethod(user_id=user.id, provider_id="", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password, "mfa_code": "some_code"},
+    )
+    assert res.status_code == 500
+    assert res.json()["detail"] == "mfa_misconfigured"
+

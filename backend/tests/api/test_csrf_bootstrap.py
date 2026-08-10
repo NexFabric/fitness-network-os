@@ -9,6 +9,8 @@ from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
 from app.db.session import get_db
@@ -17,8 +19,6 @@ from app.models.organization import Organization
 from app.models.rbac import Role, UserRole
 from app.models.tenant import Tenant
 from app.models.user import User
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture

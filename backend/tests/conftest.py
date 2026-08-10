@@ -12,13 +12,20 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 import app.models  # noqa: F401
 from app.db.base import Base
 
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/fitness_test_db")
-TEST_RUNTIME_DATABASE_URL = os.getenv("TEST_RUNTIME_DATABASE_URL", "postgresql+asyncpg://app_user:app_password@localhost:5432/fitness_test_db")
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_test_db")
+TEST_RUNTIME_DATABASE_URL = os.getenv("TEST_RUNTIME_DATABASE_URL", "postgresql+asyncpg://app_user:app_password@localhost:5433/fitness_test_db")
 SYNC_TEST_DATABASE_URL = TEST_DATABASE_URL.replace("+asyncpg", "")
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
     """Run Alembic migrations once per session."""
+    db_name = urlparse(SYNC_TEST_DATABASE_URL).path.lstrip("/")
+    if not db_name.endswith(("_test", "_test_db")):
+        raise RuntimeError(
+            f"REFUSING destructive test setup against non-test database: {db_name}. "
+            f"Database name must end with '_test' or '_test_db'."
+        )
+
     env = os.environ.copy()
     parsed = urlparse(TEST_DATABASE_URL)
     if parsed.password:

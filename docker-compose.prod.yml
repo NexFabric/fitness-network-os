@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: fitness-os-backend-prod
     ports:
       - "8000:8000"
@@ -19,13 +19,75 @@ services:
       - NOTIFICATION_EMAIL_PROVIDER=smtp
       # Require external PostgreSQL / Redis for true production
       - DATABASE_URL=${DATABASE_URL}
+      - MIGRATOR_DATABASE_URL=${MIGRATOR_DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       # Real SMTP credentials should be injected via .env
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: always
+
+  outbox-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fitness-os-outbox-worker-prod
+    # TODO: Create app.workers.outbox module entry point
+    command: ["python", "-m", "app.workers.outbox"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ENVIRONMENT=production
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  notification-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fitness-os-notification-worker-prod
+    # TODO: Create app.workers.notification module entry point
+    command: ["python", "-m", "app.workers.notification"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ENVIRONMENT=production
+      - NOTIFICATION_EMAIL_PROVIDER=smtp
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  report-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fitness-os-report-worker-prod
+    # TODO: Create app.workers.report module entry point
+    command: ["python", "-m", "app.workers.report"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ENVIRONMENT=production
+      - REPORT_STORAGE_DIR=/tmp/reports
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   report_storage:
+

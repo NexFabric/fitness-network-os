@@ -147,14 +147,14 @@ class MembershipService:
         self,
         membership_id: UUID,
         start_date: datetime,
-        expected_end_date: datetime,
-        reason: str | None,
+        expected_end_date: datetime | None = None,
+        reason: str | None = None,
         changed_by_user_id: UUID | None = None,
     ) -> MembershipFreeze:
         """
         Freeze a membership. Changes its status to 'FROZEN'.
         """
-        if expected_end_date <= start_date:
+        if expected_end_date is not None and expected_end_date <= start_date:
             raise ValueError("expected_end_date must be after start_date")
 
         membership = await self.get_membership(membership_id, for_update=True)

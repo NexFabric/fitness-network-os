@@ -9,13 +9,12 @@ import {
 
 type Invoice = {
   id: string
-  invoice_number: string
+  invoice_number: string | null
   status: string
   total_amount_minor: number
   currency: string
   due_date: string | null
-  paid_at: string | null
-  created_at: string
+  issued_at: string | null
 }
 
 type Payment = {
@@ -23,9 +22,9 @@ type Payment = {
   amount_minor: number
   currency: string
   status: string
-  payment_method: string | null
-  transaction_id: string | null
-  created_at: string
+  method: string
+  provider: string | null
+  provider_ref: string | null
 }
 
 function formatCurrency(amount_minor: number, currency: string) {
@@ -51,12 +50,12 @@ export default function Finance() {
     setLoading(true)
     setError(null)
     try {
-      const [invData, payData] = await Promise.all([
-        api<Invoice[]>('/api/v1/finance/invoices?limit=50'),
-        api<Payment[]>('/api/v1/finance/payments?limit=50'),
+      const [invRes, payRes] = await Promise.all([
+        api<{ items: Invoice[]; total: number }>('/api/v1/finance/invoices?limit=50'),
+        api<{ items: Payment[]; total: number }>('/api/v1/finance/payments?limit=50'),
       ])
-      setInvoices(invData)
-      setPayments(payData)
+      setInvoices(invRes.items)
+      setPayments(payRes.items)
     } catch (e) {
       setError(formatApiError(e, 'Finans verileri yüklenemedi'))
     } finally {
@@ -131,7 +130,7 @@ export default function Finance() {
                         className="transition-colors hover:bg-slate-800/50"
                       >
                         <td className="table-td font-mono text-xs text-slate-400">
-                          {inv.invoice_number}
+                          {inv.invoice_number || '—'}
                         </td>
                         <td className="table-td font-medium text-slate-200">
                           {formatCurrency(inv.total_amount_minor, inv.currency)}
@@ -145,7 +144,9 @@ export default function Finance() {
                           <StatusBadge status={inv.status} kind="invoice" />
                         </td>
                         <td className="table-td text-right text-xs text-slate-400">
-                          {new Date(inv.created_at).toLocaleDateString('tr-TR')}
+                          {inv.issued_at
+                            ? new Date(inv.issued_at).toLocaleDateString('tr-TR')
+                            : '—'}
                         </td>
                       </tr>
                     ))
@@ -167,14 +168,13 @@ export default function Finance() {
                     <th className="table-th">İşlem ID</th>
                     <th className="table-th">Tutar</th>
                     <th className="table-th">Durum</th>
-                    <th className="table-th">Tarih</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {payments.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={4}
                         className="px-4 py-8 text-center text-sm text-ink-muted"
                       >
                         Henüz ödeme kaydı bulunmuyor.
@@ -187,19 +187,16 @@ export default function Finance() {
                         className="transition-colors hover:bg-slate-800/50"
                       >
                         <td className="table-td text-slate-300">
-                          {pay.payment_method || 'Bilinmiyor'}
+                          {pay.method || 'Bilinmiyor'}
                         </td>
                         <td className="table-td font-mono text-xs text-slate-400">
-                          {pay.transaction_id || '—'}
+                          {pay.provider_ref || '—'}
                         </td>
                         <td className="table-td font-medium text-slate-200">
                           {formatCurrency(pay.amount_minor, pay.currency)}
                         </td>
                         <td className="table-td">
                           <StatusBadge status={pay.status} kind="payment" />
-                        </td>
-                        <td className="table-td text-right text-xs text-slate-400">
-                          {new Date(pay.created_at).toLocaleString('tr-TR')}
                         </td>
                       </tr>
                     ))

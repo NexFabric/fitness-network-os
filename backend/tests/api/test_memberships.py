@@ -245,6 +245,36 @@ async def test_successful_freeze(api_client, setup_data):
     assert data["tenant_id"] == str(setup_data['tenant_a'])
     assert data["membership_id"] == str(setup_data['membership_a_id'])
 
+
+@pytest.mark.asyncio
+async def test_successful_freeze_without_expected_end_date(api_client, setup_data):
+    headers = {
+        "Authorization": f"Bearer {setup_data['token_a']}",
+        "X-Tenant-ID": str(setup_data['tenant_a'])
+    }
+    
+    # Unfreeze membership_a first
+    await api_client.post(
+        f"/api/v1/memberships/{setup_data['membership_a_id']}/unfreeze",
+        headers=headers
+    )
+
+    start = datetime.now(UTC)
+    
+    response = await api_client.post(
+        f"/api/v1/memberships/{setup_data['membership_a_id']}/freeze",
+        headers=headers,
+        json={
+            "start_date": start.isoformat(),
+            "reason": "Open ended freeze"
+        }
+    )
+    
+    assert response.status_code == 200, f"Response detail: {response.json()}"
+    data = response.json()
+    assert data["reason"] == "Open ended freeze"
+    assert data["expected_end_date"] is None
+
 @pytest.mark.asyncio
 async def test_non_privileged_user_cannot_freeze(api_client, setup_data, pg_engine):
     # Create a user with FRONT_DESK role (which doesn't have memberships:write)

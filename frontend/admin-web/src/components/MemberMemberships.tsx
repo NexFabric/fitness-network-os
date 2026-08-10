@@ -26,6 +26,7 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
 
   const [freezing, setFreezing] = useState<string | null>(null) // membership_id
   const [freezeReason, setFreezeReason] = useState('')
+  const [expectedEndDate, setExpectedEndDate] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -51,10 +52,15 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
       const today = new Date().toISOString().split('T')[0]
       await api(`/api/v1/memberships/${membershipId}/freeze`, {
         method: 'POST',
-        body: { start_date: today, reason: freezeReason }
+        body: {
+          start_date: today,
+          reason: freezeReason,
+          expected_end_date: expectedEndDate || undefined,
+        }
       })
       setFreezing(null)
       setFreezeReason('')
+      setExpectedEndDate('')
       // reload
       const data = await api<Membership[]>(`/api/v1/members/${memberId}/memberships`)
       setMemberships(data)
@@ -105,20 +111,33 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
               </button>
             )}
             {freezing === m.id && (
-              <div className="flex items-center gap-2 w-full">
-                <input 
-                  type="text" 
-                  placeholder="Dondurma sebebi..." 
-                  value={freezeReason}
-                  onChange={e => setFreezeReason(e.target.value)}
-                  className="input-field py-1 text-sm flex-1"
-                />
-                <button onClick={() => handleFreeze(m.id)} className="px-3 py-1 text-xs font-medium bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors">
-                  Onayla
-                </button>
-                <button onClick={() => { setFreezing(null); setFreezeReason(''); }} className="px-3 py-1 text-xs text-slate-400 hover:text-white transition-colors">
-                  İptal
-                </button>
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex flex-wrap items-end gap-2 w-full">
+                  <input 
+                    type="text" 
+                    placeholder="Dondurma sebebi..." 
+                    value={freezeReason}
+                    onChange={e => setFreezeReason(e.target.value)}
+                    className="input-field py-1 text-sm flex-1 min-w-[180px]"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs text-slate-400">Beklenen Bitiş Tarihi</label>
+                    <input 
+                      type="date" 
+                      value={expectedEndDate}
+                      onChange={e => setExpectedEndDate(e.target.value)}
+                      className="input-field py-1 text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleFreeze(m.id)} className="px-3 py-1 text-xs font-medium bg-cyan-600 hover:bg-cyan-500 text-white rounded transition-colors">
+                      Onayla
+                    </button>
+                    <button onClick={() => { setFreezing(null); setFreezeReason(''); setExpectedEndDate(''); }} className="px-3 py-1 text-xs text-slate-400 hover:text-white transition-colors">
+                      İptal
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             {m.status === 'FROZEN' && (

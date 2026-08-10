@@ -136,9 +136,14 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_required",
             )
-        # Temporary verifier until TOTP: if provider_id is set, code must match it.
         expected = (mfa_row.provider_id or "").strip()
-        if expected and not hmac.compare_digest(code, expected):
+        if not expected:
+            # MFA method registered but no secret configured — invalid state
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="mfa_misconfigured",
+            )
+        if not hmac.compare_digest(code, expected):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_invalid",
