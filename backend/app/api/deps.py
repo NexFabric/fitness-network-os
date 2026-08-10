@@ -21,11 +21,7 @@ def get_current_session_token(request: Request) -> str:
     Dependency that enforces authentication via Secure HttpOnly cookie.
     """
     token = get_session_token_from_cookie(request)
-    # Stub: if no token in cookie, look in Authorization header for testing
-    if not token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
+    # Removed Bearer fallback to enforce HttpOnly cookies for hardening
             
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")

@@ -72,11 +72,7 @@ export async function api<T = unknown>(
   }
 
   if (!options.skipAuth) {
-    const token = getToken()
     const tenantId = getTenantId()
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
     if (tenantId) {
       headers['X-Tenant-ID'] = tenantId
     }

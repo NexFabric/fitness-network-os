@@ -70,8 +70,8 @@
 
 ## Remaining to “complete” production bar
 
-1. Real notification transports (SMTP/SMS/WhatsApp) behind adapters  
-2. Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)  
+1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
+2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
 3. Scanner device auth / offline; FE builds as **required** checks  
 4. Observability productization (health deps, metrics/traces/alerts)  
 5. Backup/restore, ASVS/pentest, Phase 26 exit **PASS**  

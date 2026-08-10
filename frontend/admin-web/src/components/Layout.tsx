@@ -12,7 +12,12 @@ export default function Layout() {
   const navigate = useNavigate()
   const tenantId = getTenantId()
 
-  function logout() {
+  async function logout() {
+    try {
+      await fetch(import.meta.env.VITE_API_URL + '/api/v1/auth/logout', { method: 'POST', credentials: 'include' })
+    } catch (e) {
+      // ignore
+    }
     clearAuth()
     navigate('/login', { replace: true })
   }
@@ -45,6 +50,9 @@ export default function Layout() {
               </NavLink>
               <NavLink to="/locations" className={navClass}>
                 Şubeler
+              </NavLink>
+              <NavLink to="/finance" className={navClass}>
+                Finans
               </NavLink>
             </nav>
           </div>

@@ -149,8 +149,8 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 
 ### What would move the gate toward PASS (ordered)
 
-1. Real notification transports (SMTP first) + report artifacts.  
-2. Admin cookie-only session + day-1 ops UI (edit, membership lifecycle).  
+1. ~~Real notification transports (SMTP first) + report artifacts.~~ (SMTP done)
+2. ~~Admin cookie-only session + day-1 ops UI (edit, membership lifecycle).~~ (Done)
 3. Close 17B/17C critical staff/OpenAPI gaps.  
 4. Require FE build checks; deepen 22–23 (CSRF, supply chain).  
 5. Deepen Phase 24 (health/deps, metrics, optional OTel).  
