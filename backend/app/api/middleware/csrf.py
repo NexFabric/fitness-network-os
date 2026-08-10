@@ -1,8 +1,8 @@
 import secrets
-from typing import Set
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 
 class CSRFMiddleware(BaseHTTPMiddleware):
     """Simple Double-Submit Cookie CSRF Middleware.
@@ -11,7 +11,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     for all state-changing requests (POST, PUT, PATCH, DELETE).
     """
 
-    SAFE_METHODS: Set[str] = {"GET", "HEAD", "OPTIONS", "TRACE"}
+    SAFE_METHODS: frozenset[str] = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
     COOKIE_NAME = "csrf_token"
     HEADER_NAME = "x-csrf-token"
 

@@ -91,6 +91,7 @@ class FailingNotificationProvider:
 import smtplib
 from email.message import EmailMessage
 
+
 class SmtpNotificationProvider:
     """Real SMTP adapter for production email delivery.
     

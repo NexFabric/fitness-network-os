@@ -7,9 +7,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import Response
 
+from app.api.middleware.csrf import CSRFMiddleware
 from app.api.middleware.rate_limit import SimpleRateLimitMiddleware
 from app.api.middleware.request_logging import RequestLoggingMiddleware
-from app.api.middleware.csrf import CSRFMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 
