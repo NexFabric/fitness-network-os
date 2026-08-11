@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GymClubNex — Implementation + Target Architecture Console</title>
+  <title>GymClubNex — Architecture Truth Console</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-base: #030712;
@@ -442,10 +442,10 @@
     <header>
       <div class="header-content">
         <div class="badge">
-          <span>●</span> IMPLEMENTATION + TARGET ARCHITECTURE CONSOLE
+          <span>●</span> ARCHITECTURE TRUTH CONSOLE
         </div>
-        <h1>GymClubNex — Mimari Görselleştirme Konsolu</h1>
-        <p>Mevcut Üretim Kodu (✅ IMPLEMENTED) ve Hedef Spesifikasyonlar (🔵 TARGET / MASTER SPEC) Karşılaştırmalı Raporu.</p>
+        <h1>GymClubNex — Mimari Gerçeklik Konsolu</h1>
+        <p>Mevcut Üretim Kodu (✅ IMPLEMENTED) ve Hedef Spesifikasyonlar (🔵 TARGET / MASTER SPEC) Birebir Doğrulama Raporu.</p>
       </div>
 
       <div class="status-bar">
@@ -474,7 +474,7 @@
       <span class="legend-badge impl">✅ IMPLEMENTED</span>
       <span>= Mevcut kod tabanında canlı çalışan bileşen</span>
       <span class="legend-badge partial">🟡 PARTIAL</span>
-      <span>= DB/Logic hazır, transport/bus aşaması hedefte</span>
+      <span>= DB/Logic veya endpoint var, alt yapı/hardware hedefte</span>
       <span class="legend-badge target">🔵 TARGET</span>
       <span>= MASTER_SPEC.md belgesinde tanımlı hedef mimari</span>
     </div>
@@ -517,7 +517,7 @@
           <div class="diagram-header">
             <div class="diagram-header-text">
               <h2>🏛️ Uçtan Uca Sistem Topolojisi</h2>
-              <p>Mevcut FastApi Dependency injection & Session Cookie ile Hedef IsolationProvider katmanı.</p>
+              <p>Admin Web, Scanner PWA (Staff Session + Device Endpoint) ve Member Portal (/member) mimarisi.</p>
             </div>
             <div class="diagram-toolbar">
               <button class="tool-btn" onclick="zoomDiagram('m-top', 0.15)">🔍 +</button>
@@ -530,8 +530,9 @@
 flowchart TD
   subgraph CLIENTS ["📱 FRONTEND CLIENTS & EDGE DEVICES"]
     ADMIN["💻 Admin Web Portal<br/>(Vite / React :5173) ✅"]
-    SCANNER["📹 Turnike Scanner PWA<br/>(Offline-Ready :5174) ✅"]
-    MOBILE["📱 Member Mobile App / PWA ✅"]
+    SCANNER["📹 Turnike Scanner PWA<br/>(Staff Auth + Device Endpoint :5174) 🟡 PARTIAL"]
+    MEMBER_PORTAL["👤 Member Portal<br/>(/member Route in Admin Web) ✅"]
+    MOBILE_APP["📱 Standalone Member Mobile App 🔵 TARGET"]
   end
 
   subgraph GATEWAY ["⚡ API GATEWAY & SECURITY (FastAPI :8000)"]
@@ -545,7 +546,7 @@ flowchart TD
 
   subgraph DOMAIN ["🧠 BACKEND CORE DOMAIN SERVICES"]
     AUTH_SVC["🔐 Auth & RBAC Service ✅"]
-    TENANT_SVC["🏢 Tenant Engine ✅"]
+    TENANT_SVC["🏢 Tenant Model & Admin Management API ✅"]
     MEMBER_SVC["👤 Member & Visibility Engine ✅"]
     ENTITLE_SVC["🎟️ Entitlement Wallet Engine ✅"]
     ACCESS_SVC["🚪 Access Gate Engine ✅"]
@@ -703,16 +704,16 @@ flowchart TD
       <div class="perspective-banner" style="border-left-color: var(--brand-amber);">
         <div class="perspective-title">
           <span>🔑 4. Bakış Açısı: Dinamik QR & Turnike Geçiş Akışı</span>
-          <span class="legend-badge impl">✅ IMPLEMENTED</span>
+          <span class="legend-badge partial">🟡 PARTIAL (Logic Live / Hardware Target)</span>
         </div>
-        <div class="perspective-desc">Compact 2-part HMAC-SHA256 kısa ömürlü QR (Default 60s TTL), Scanner PWA offline-ready doğrulaması, JTI replay saldırı koruması ve turnike kapı rölesi sinyali.</div>
+        <div class="perspective-desc">Compact 2-part HMAC-SHA256 kısa ömürlü QR (Default 60s TTL), Scanner PWA (Staff Session + Device Endpoint Fallback), JTI replay koruması ve Target Turnstile Relay.</div>
       </div>
 
       <div class="diagram-card">
         <div class="diagram-header">
           <div class="diagram-header-text">
             <h2>⚡ Kriptografik QR ve Donanım Geçiş Sıralaması</h2>
-            <p>Compact HMAC Token formatı: base64url(payload).base64url(hmac_sha256). Default 60s TTL.</p>
+            <p>Compact HMAC Token: base64url(payload).base64url(sig). Key format: qr-202608-x9a1. Default 60s TTL.</p>
           </div>
           <div class="diagram-toolbar">
             <button class="tool-btn" onclick="zoomDiagram('m-qr', 0.15)">🔍 +</button>
@@ -724,37 +725,37 @@ flowchart TD
           <pre class="mermaid" id="m-qr">
 sequenceDiagram
   autonumber
-  actor Member as 👤 Member (Mobile App)
+  actor Member as 👤 Member (/member Route)
   participant Gateway as ⚡ API Gateway (:8000)
   participant AccessService as 🔑 Access Engine (app/services/access.py)
   actor Kiosk as 📹 Kiosk Scanner PWA (:5174)
-  actor Turnstile as 🚪 Turnstile Relay
+  actor Turnstile as 🚪 Turnstile Relay 🔵 TARGET
 
   rect rgb(15, 23, 42)
   note over Member, AccessService: A. Dynamic Compact HMAC QR Generation Phase
-  Member->>Gateway: POST /api/v1/qr/issue-self (Bearer / Session Cookie)
+  Member->>Gateway: POST /api/v1/qr/issue-self (Secure HttpOnly Session Cookie)
   Gateway->>AccessService: Generate Short-Lived QR (Default 60s TTL)
-  AccessService->>AccessService: Sign HMAC-SHA256 (kid: local-key, exp: +60s, unique JTI)
-  AccessService-->>Gateway: Compact Token: base64(payload).base64(sig)
-  Gateway-->>Member: Render QR Visual on App Screen
+  AccessService->>AccessService: Sign HMAC-SHA256 (kid: qr-202608-a9f1, exp: +60s, unique JTI)
+  AccessService-->>Gateway: Compact Token: base64url(payload).base64url(sig)
+  Gateway-->>Member: Render Dynamic QR Visual on Member Portal
   end
 
   rect rgb(11, 15, 25)
-  note over Member, Turnstile: B. Turnstile Scanning & Hardware Access Phase
+  note over Member, Turnstile: B. Turnstile Scanning & Access Verification Phase
   Member->>Kiosk: Present QR Code to Camera Scanner
-  Kiosk->>Gateway: POST /api/v1/devices/qr/validate (device_session Cookie + Token)
+  Kiosk->>Gateway: POST /api/v1/devices/qr/validate (Device Session or Staff Session Fallback)
   Gateway->>AccessService: 1. Validate Signature (kid)<br/>2. Check Expiration (Default 60s)<br/>3. Check Replay Cache (JTI in QrJtiReplay)<br/>4. Check Entitlement Wallet (EntitlementService)
   end
 
   alt 🟢 ACCESS GRANTED (Valid & Entitled)
     AccessService->>Gateway: Result: GRANTED (Checkin Recorded in DB)
     Gateway-->>Kiosk: granted: true, checkin_id
-    Kiosk->>Turnstile: ⚡ Trigger Relay Pulse (Door Opens)
-    Kiosk-->>Kiosk: Render GREEN Screen: "Hoşgeldiniz!"
+    Kiosk-->>Kiosk: Render GREEN Screen: "Geçiş Onaylandı" ✅
+    Kiosk-.->Turnstile: ⚡ Trigger Hardware Relay Pulse 🔵 TARGET
   else 🔴 ACCESS DENIED (Replay / Expired / No Entitlement)
     AccessService->>Gateway: Result: DENIED (Reason: REPLAY_ATTACK / EXPIRED)
     Gateway-->>Kiosk: granted: false, reason
-    Kiosk-->>Kiosk: Render RED Screen: "Geçersiz / Kullanılmış QR!"
+    Kiosk-->>Kiosk: Render RED Screen: "Geçersiz / Kullanılmış QR!" ✅
   end
           </pre>
         </div>
@@ -768,14 +769,14 @@ sequenceDiagram
           <span>⚡ 5. Bakış Açısı: Transactional Outbox & DB Workflow</span>
           <span class="legend-badge partial">🟡 PARTIAL (DB Live / Bus Target)</span>
         </div>
-        <div class="perspective-desc">Atomik PostgreSQL Outbox tablosu (SKIP LOCKED, claim, retry, dead-letter) canlıdır. Event bus transport katmanı (NATS) hedef mimaridir.</div>
+        <div class="perspective-desc">Gerçek atomik outbox kullanımı: Report Run Request (`ReportService.request_run`). PostgreSQL outbox_events (FOR UPDATE SKIP LOCKED) canlıdır.</div>
       </div>
 
       <div class="diagram-card">
         <div class="diagram-header">
           <div class="diagram-header-text">
             <h2>🛡️ Atomik Veritabanı İşlemi & Outbox Dağıtım Akışı</h2>
-            <p>Gerçekleşen endpoint: <code>/api/v1/memberships/{id}/renew</code>. DB Transaction + Outbox atomik commit.</p>
+            <p>Gerçekleşen kod örneği: <code>POST /api/v1/reports/runs/request</code> → <code>ReportService.request_run()</code>.</p>
           </div>
           <div class="diagram-toolbar">
             <button class="tool-btn" onclick="zoomDiagram('m-outbox', 0.15)">🔍 +</button>
@@ -787,17 +788,17 @@ sequenceDiagram
           <pre class="mermaid" id="m-outbox">
 flowchart LR
   subgraph CLIENT ["Client Request"]
-    REQ["POST /api/v1/memberships/{id}/renew ✅"]
+    REQ["POST /api/v1/reports/runs/request ✅"]
   end
 
   subgraph DB_TX ["PostgreSQL Atomic Transaction Boundary"]
     BEGIN["1. BEGIN TRANSACTION ✅"]
     RLS["2. SET LOCAL app.current_tenant_id ✅"]
-    UPDATE["3. UPDATE memberships & refresh entitlements ✅"]
-    OUTBOX["4. INSERT INTO outbox_events (type, payload) ✅"]
+    INSERT_REPORT["3. INSERT INTO report_runs (status = PENDING) ✅"]
+    OUTBOX["4. OutboxService.enqueue(REPORT_RUN_REQUESTED_V1) ✅"]
     COMMIT["5. COMMIT TRANSACTION ✅"]
 
-    BEGIN --> RLS --> UPDATE --> OUTBOX --> COMMIT
+    BEGIN --> RLS --> INSERT_REPORT --> OUTBOX --> COMMIT
   end
 
   subgraph WORKER_TIER ["Async Outbox Worker Loop"]
@@ -907,7 +908,7 @@ flowchart TD
           <span class="matrix-item-title">Identity & Membership</span>
           <span class="legend-badge impl">✅ IMPLEMENTED</span>
         </div>
-        <p class="matrix-item-desc">User != Member, Federation != Tenant, Branch = Location strictly enforced across DB models and routes.</p>
+        <p class="matrix-item-desc">User != Member, Federation != Tenant, Branch = Location strictly enforced. Member Portal is <code>/member</code> route in admin-web.</p>
       </div>
 
       <div class="matrix-item">
@@ -921,9 +922,9 @@ flowchart TD
       <div class="matrix-item">
         <div class="matrix-item-head">
           <span class="matrix-item-title">Turnstile Security Gate</span>
-          <span class="legend-badge impl">✅ IMPLEMENTED</span>
+          <span class="legend-badge partial">🟡 PARTIAL</span>
         </div>
-        <p class="matrix-item-desc">Compact HMAC-SHA256 QR + Default 60s expiry + JTI Replay Prevention + Turnstile Scanner PWA (:5174) relay trigger.</p>
+        <p class="matrix-item-desc">Compact HMAC-SHA256 QR + Default 60s expiry + JTI Replay Prevention + Scanner PWA UI. Physical Relay Pulse is Target.</p>
       </div>
 
       <div class="matrix-item">
@@ -931,7 +932,7 @@ flowchart TD
           <span class="matrix-item-title">Transactional Outbox</span>
           <span class="legend-badge partial">🟡 PARTIAL</span>
         </div>
-        <p class="matrix-item-desc">Atomic DB transactions insert state mutations + outbox_events with <code>SKIP LOCKED</code> poller. NATS event bus is Target transport.</p>
+        <p class="matrix-item-desc">Atomic DB outbox live in <code>ReportService.request_run</code> with <code>SKIP LOCKED</code> poller. NATS event bus is Target transport.</p>
       </div>
 
       <div class="matrix-item">
@@ -945,7 +946,7 @@ flowchart TD
   </div>
 
   <footer>
-    GymClubNex (Fitness Network OS) — Implementation (✅ IMPLEMENTED) + Target (🔵 TARGET) Architecture Console
+    GymClubNex (Fitness Network OS) — Production Verified Architecture Truth Console
   </footer>
 
   <script>
