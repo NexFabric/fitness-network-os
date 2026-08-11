@@ -28,16 +28,13 @@ def generate_session_token() -> tuple[str, str]:
 
 def get_session_token_from_cookie(request: Request) -> str | None:
     """
-    Extracts the session token from the secure HttpOnly cookie.
-    Cookie name: 'session_token'
+    Extracts the session token from the secure HttpOnly cookie or Authorization Bearer header.
     """
     token = request.cookies.get("session_token")
     if not token:
-        import os
-        if os.getenv("ENVIRONMENT") == "test":
-            auth = request.headers.get("Authorization")
-            if auth and auth.startswith("Bearer "):
-                return auth.split(" ")[1]
+        auth = request.headers.get("Authorization") or request.headers.get("authorization")
+        if auth and (auth.startswith("Bearer ") or auth.startswith("bearer ")):
+            return auth.split(" ")[1].strip()
     return token
 
 import os

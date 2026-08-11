@@ -83,3 +83,46 @@ def test_authorization_evaluate_scope_federation_aggregate():
     
     assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=org_id) == True
     assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=uuid4()) == False
+
+
+def test_member_role_cannot_cross_tenant_on_own_resources():
+    """A MEMBER grant in tenant A must not authorize the same user in tenant B.
+
+    Regression: is_authorized had a MEMBER fallback that returned True on
+    resource_owner_id == user.id alone, skipping the tenant check entirely.
+    """
+    user = User(id=uuid4(), email="member@test.com", is_superuser=False)
+    tenant_a = uuid4()
+    tenant_b = uuid4()
+
+    perm = Permission(id=uuid4(), name="profile:read")
+    role = Role(id=uuid4(), name="MEMBER", permissions=[perm])
+    user.user_roles = [
+        UserRole(
+            id=uuid4(),
+            user_id=user.id,
+            role_id=role.id,
+            tenant_id=tenant_a,
+            role=role,
+        )
+    ]
+
+    assert (
+        AuthorizationService.is_authorized(
+            user=user,
+            permission="profile:read",
+            resource_tenant_id=tenant_a,
+            resource_owner_id=user.id,
+        )
+        is True
+    )
+
+    assert (
+        AuthorizationService.is_authorized(
+            user=user,
+            permission="profile:read",
+            resource_tenant_id=tenant_b,
+            resource_owner_id=user.id,
+        )
+        is False
+    )

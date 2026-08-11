@@ -65,7 +65,8 @@ def _client_meta(request: Request) -> tuple[str | None, str | None]:
 
 
 async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
-    """First tenant-scoped role for the user (Admin Web needs X-Tenant-ID)."""
+    """First tenant-scoped role for the user, or member.tenant_id for end-user members."""
+    from app.models.member import Member
     result = await db.execute(
         select(UserRole.tenant_id)
         .where(
@@ -74,7 +75,13 @@ async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
         )
         .limit(1)
     )
-    return result.scalar_one_or_none()
+    tid = result.scalar_one_or_none()
+    if tid is not None:
+        return tid
+    m_res = await db.execute(
+        select(Member.tenant_id).where(Member.user_id == user_id).limit(1)
+    )
+    return m_res.scalar_one_or_none()
 
 
 @router.get("/csrf", response_model=CsrfResponse)

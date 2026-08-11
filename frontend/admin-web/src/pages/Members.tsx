@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
 import MemberMemberships from '../components/MemberMemberships'
+import MemberAccessLogs from '../components/MemberAccessLogs'
 import {
   Alert,
   EmptyState,
@@ -492,6 +493,12 @@ export default function Members() {
               <div>
                 <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">Abonelikler</h3>
                 <MemberMemberships memberId={editingMember.id} />
+              </div>
+
+              {/* Giriş-Çıkış Geçmişi Bölümü */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">Giriş - Çıkış Geçmişi</h3>
+                <MemberAccessLogs memberId={editingMember.id} />
               </div>
             </div>
           </div>

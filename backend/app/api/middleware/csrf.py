@@ -43,6 +43,11 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # Single source of truth for this request (auth/csrf endpoint reads it)
         request.state.csrf_token = csrf_cookie
 
+        # ASVS 4.0.3: Explicit Authorization: Bearer headers are exempt from ambient cookie CSRF checks
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.startswith("Bearer ") or auth_header.startswith("bearer "):
+            return await call_next(request)
+
         if (
             request.method not in self.SAFE_METHODS
             and request.url.path not in self.EXEMPT_PATHS

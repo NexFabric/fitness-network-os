@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     access,
+    admin,
     auth,
     devices,
     entitlements,
@@ -15,9 +16,11 @@ from app.api.v1.endpoints import (
     reports,
     staff,
     telemetry,
+    trainers,
 )
 
 api_router = APIRouter()
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(mfa.router, prefix="/auth/mfa", tags=["mfa"])
 api_router.include_router(
@@ -35,5 +38,6 @@ api_router.include_router(
 )
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(telemetry.router, prefix="/telemetry", tags=["telemetry"])
+api_router.include_router(trainers.router, prefix="/trainers", tags=["trainers"])
 # Phase 15.5C: generic /outbox HTTP ingress removed — OutboxService is in-process only.
 api_router.include_router(me.router, prefix="/me", tags=["me"])

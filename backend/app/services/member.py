@@ -96,10 +96,20 @@ class MemberService:
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
+        restrict_to_ids: list[UUID] | None = None,
     ) -> list[Member]:
+        """``restrict_to_ids=None`` means no row filter; ``[]`` means no rows.
+
+        See app/services/member_visibility.py — the distinction is what keeps an
+        assignment-scoped trainer with zero assignments from seeing the tenant.
+        """
         limit = max(1, min(limit, 200))
         offset = max(0, offset)
         stmt = select(Member).where(Member.tenant_id == tenant_id)
+        if restrict_to_ids is not None:
+            if not restrict_to_ids:
+                return []
+            stmt = stmt.where(Member.id.in_(restrict_to_ids))
         if status:
             stmt = stmt.where(Member.status == status)
         stmt = stmt.order_by(Member.created_at.desc()).limit(limit).offset(offset)

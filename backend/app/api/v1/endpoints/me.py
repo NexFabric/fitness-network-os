@@ -67,6 +67,23 @@ class MeProfileResponse(BaseModel):
     member: MeMemberResponse
 
 
+class MeSessionResponse(BaseModel):
+    """Who-am-I for any authenticated principal — staff included.
+
+    Distinct from ``/me/profile``, which 404s when no member row is bound and so
+    can never answer this for staff. Roles/permissions are the ones effective in
+    the requested tenant plus platform/federation-scoped grants.
+    """
+
+    user_id: UUID
+    email: str | None
+    tenant_id: UUID
+    is_superuser: bool
+    roles: list[str]
+    permissions: list[str]
+    has_member_binding: bool
+
+
 class MeWalletSummary(BaseModel):
     """Entitlement wallet row for the bound member (read-only snapshot)."""
 
@@ -107,6 +124,47 @@ async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID)
             detail="member_not_bound",
         )
     return member
+
+
+@router.get("/session", response_model=MeSessionResponse)
+async def get_my_session(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Effective roles and permissions for the caller in the current tenant.
+
+    No permission gate: a principal may always read its own identity, and
+    ``get_tenant_id`` has already proven tenant membership. Returning only what
+    the caller already holds means there is nothing here to escalate with.
+    """
+    roles: set[str] = set()
+    permissions: set[str] = set()
+
+    for user_role in current_user.user_roles:
+        role = user_role.role
+        if role is None:
+            continue
+        # Tenant-scoped grants count only for the tenant being addressed;
+        # platform (both None) and federation (organization_id) grants are
+        # not tenant-bound and always apply.
+        if user_role.tenant_id is not None and user_role.tenant_id != tenant_id:
+            continue
+        roles.add(role.name)
+        for permission in role.permissions or []:
+            permissions.add(permission.name)
+
+    member = await MemberService(db).get_member_by_user_id(tenant_id, current_user.id)
+
+    return MeSessionResponse(
+        user_id=current_user.id,
+        email=current_user.email,
+        tenant_id=tenant_id,
+        is_superuser=current_user.is_superuser,
+        roles=sorted(roles),
+        permissions=sorted(permissions),
+        has_member_binding=member is not None,
+    )
 
 
 @router.get("/profile", response_model=MeProfileResponse)

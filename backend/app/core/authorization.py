@@ -231,15 +231,12 @@ class AuthorizationService:
                         return True
                     continue
 
+                # Non-:self perms need only tenant match. There used to be a
+                # MEMBER-role fallback below this returning True without
+                # tenant_matches, which let a MEMBER grant in tenant A authorize
+                # the same user inside tenant B. It was removed: with the tenant
+                # check applied it is unreachable, and without it it is a hole.
                 if tenant_matches:
-                    return True
-
-                # Self access for non-:self perms (e.g. Member own profile path)
-                if (
-                    role.name == DefaultRole.MEMBER.value
-                    and resource_owner_id is not None
-                    and resource_owner_id == user.id
-                ):
                     return True
 
         return False

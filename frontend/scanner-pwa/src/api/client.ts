@@ -93,12 +93,21 @@ export async function validateQr(
     headers['x-csrf-token'] = csrf
   }
 
-  const res = await fetch(`${base}/api/v1/access/qr/validate`, {
+  let res = await fetch(`${base}/api/v1/devices/qr/validate`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
     credentials: 'include',
   })
+
+  if (res.status === 401 || res.status === 404) {
+    res = await fetch(`${base}/api/v1/access/qr/validate`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    })
+  }
 
   const text = await res.text()
   let data: unknown = null

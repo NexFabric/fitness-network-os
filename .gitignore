@@ -42,3 +42,5 @@ dist/
 *.tsbuildinfo
 frontend/**/dist/
 frontend/node_modules/
+cookie.txt
+backend/fix_tests.py

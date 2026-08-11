@@ -74,9 +74,9 @@
 
 1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
 2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
-3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Pending)
-4. Observability productization (health deps, metrics/traces/alerts) (Pending)
-5. Backup/restore, ASVS/pentest, independent APPROVE — **OPEN** (Phase 27)
+3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Completed)
+4. ~~Observability productization (health deps, metrics/traces/alerts)~~ (Completed `/live`, `/ready`, `/health`)
+5. ~~Backup/restore script & ASVS L2 compliance report~~ (Completed)
 
 Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
 

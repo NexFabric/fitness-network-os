@@ -52,7 +52,21 @@ def create_app() -> FastAPI:
         description="Core backend for Fitness Network OS",
     )
 
+    # Last registered runs first on the request path (Starlette).
+    app.add_middleware(SecurityHeadersMiddleware)
+    # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
+    app.add_middleware(RequestLoggingMiddleware)
+    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
+    app.add_middleware(SimpleRateLimitMiddleware)
+    # CSRF Double-Submit protection (Phase 23)
+    app.add_middleware(CSRFMiddleware)
+
     if settings.is_production:
+        if settings.allowed_hosts_list:
+            app.add_middleware(
+                TrustedHostMiddleware,
+                allowed_hosts=settings.allowed_hosts_list,
+            )
         app.add_middleware(
             CORSMiddleware,
             allow_origins=settings.cors_origins_list,
@@ -60,30 +74,20 @@ def create_app() -> FastAPI:
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["*"],
         )
-        if settings.allowed_hosts_list:
-            app.add_middleware(
-                TrustedHostMiddleware,
-                allowed_hosts=settings.allowed_hosts_list,
-            )
     else:
-        # Permissive local / non-prod UX (existing behavior)
+        # Permissive local / non-prod UX with credentials support for 5173/5174
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=[
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",
+            ],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
-
-    # Last registered runs first on the request path (Starlette).
-    app.add_middleware(SecurityHeadersMiddleware)
-    # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
-    app.add_middleware(RequestLoggingMiddleware)
-    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
-    app.add_middleware(SimpleRateLimitMiddleware)
-
-    # CSRF Double-Submit protection (Phase 23)
-    app.add_middleware(CSRFMiddleware)
 
     @app.get("/health")
     async def health_check():

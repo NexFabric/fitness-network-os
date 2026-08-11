@@ -55,6 +55,7 @@ from app.models.rbac import Permission, Role, UserRole
 from app.models.report import ReportDefinition, ReportRun
 from app.models.staff import Staff
 from app.models.tenant import Tenant
+from app.models.trainer_assignment import TrainerAssignment
 from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 
 __all__ = [
@@ -122,6 +123,7 @@ __all__ = [
     "Tag",
     "Task",
     "Tenant",
+    "TrainerAssignment",
     "User",
     "UserDevice",
     "UserMfaMethod",

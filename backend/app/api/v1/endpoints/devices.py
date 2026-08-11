@@ -200,12 +200,6 @@ async def revoke_device(
     device.status = DeviceStatus.OFFLINE
 
     # Revoke sessions
-    await db.execute(
-        select(DeviceSession).where(
-            DeviceSession.device_id == device.id, DeviceSession.is_revoked == False
-        )
-    )
-    # Actually, we need an update statement
     from sqlalchemy import update
 
     await db.execute(

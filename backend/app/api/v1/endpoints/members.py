@@ -10,6 +10,7 @@ from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
 from app.schemas.membership import MembershipResponse
 from app.services.member import MemberService
+from app.services.member_visibility import require_member_visible, visible_member_ids
 from app.services.membership import MembershipService
 
 router = APIRouter()
@@ -134,9 +135,14 @@ async def list_members(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "members:read")
+    allowed_ids = await visible_member_ids(db, current_user, tenant_id)
     svc = MemberService(db)
     return await svc.list_members(
-        tenant_id, status=status, limit=limit, offset=offset
+        tenant_id,
+        status=status,
+        limit=limit,
+        offset=offset,
+        restrict_to_ids=allowed_ids,
     )
 
 
@@ -148,6 +154,7 @@ async def get_member(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "members:read")
+    await require_member_visible(db, current_user, tenant_id, member_id)
     svc = MemberService(db)
     member = await svc.get_member(tenant_id, member_id)
     if member is None:
@@ -230,6 +237,7 @@ async def list_tags(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "members:read")
+    await require_member_visible(db, current_user, tenant_id, member_id)
     return await MemberService(db).list_tags(tenant_id, member_id)
 
 
@@ -261,6 +269,7 @@ async def list_notes(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "members:read")
+    await require_member_visible(db, current_user, tenant_id, member_id)
     return await MemberService(db).list_notes(tenant_id, member_id)
 
 
@@ -306,6 +315,47 @@ async def list_member_memberships(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "members:read")
+    await require_member_visible(db, current_user, tenant_id, member_id)
     svc = MembershipService(db)
     return await svc.list_memberships_for_member(tenant_id, member_id)
+
+
+class AccessLogItem(BaseModel):
+    id: UUID
+    status: str
+    denial_reason: str | None
+    method: str | None
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/{member_id}/access-logs", response_model=list[AccessLogItem])
+async def list_member_access_logs(
+    member_id: UUID,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    _require(current_user, tenant_id, "members:read")
+    await require_member_visible(db, current_user, tenant_id, member_id)
+    from sqlalchemy import select
+    from app.models.access import AccessAttempt
+    res = await db.execute(
+        select(AccessAttempt)
+        .where(AccessAttempt.tenant_id == tenant_id, AccessAttempt.member_id == member_id)
+        .order_by(AccessAttempt.timestamp.desc())
+        .limit(20)
+    )
+    attempts = res.scalars().all()
+    return [
+        AccessLogItem(
+            id=a.id,
+            status=a.status.value if hasattr(a.status, "value") else str(a.status),
+            denial_reason=a.denial_reason,
+            method=a.method,
+            timestamp=a.timestamp,
+        )
+        for a in attempts
+    ]
 

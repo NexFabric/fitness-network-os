@@ -288,6 +288,13 @@ class AccessService:
             device_id=device_id,
         )
         checkin_id = None
+        if location_id is None:
+            from app.models.location import Location as LocationModel
+            res_loc = await self.db.execute(select(LocationModel).where(LocationModel.tenant_id == tenant_id))
+            loc = res_loc.scalars().first()
+            if loc:
+                location_id = loc.id
+
         if location_id is not None:
             checkin = Checkin(
                 tenant_id=tenant_id,

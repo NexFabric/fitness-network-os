@@ -11,9 +11,9 @@ import { ReloadPrompt } from './components/ReloadPrompt'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 export default function App() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [tenantId, setTenantId] = useState(getTenantId() ?? '')
+  const [email, setEmail] = useState('demo.admin@demo.local')
+  const [password, setPassword] = useState('DemoAdmin123!')
+  const [tenantId, setTenantId] = useState(getTenantId() ?? '92c41231-2a7d-42a5-862d-fda966f1137e')
   const [qrToken, setQrToken] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ValidateQrResponse | null>(null)
