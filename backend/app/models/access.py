@@ -96,6 +96,12 @@ class Device(TenantMixin, Base):
 
 
 class DeviceSession(TenantMixin, Base):
+    """Authentication Bootstrap Domain table for edge scanner devices.
+
+    Maps bearer token_hash to device_id and tenant_id prior to RLS context initialization
+    in `get_current_device()`. Classified under AUTH_BOOTSTRAP_TABLES in tenancy verification.
+    """
+
     __tablename__ = "device_sessions"
 
     device_id: Mapped[UUID] = mapped_column(nullable=False)

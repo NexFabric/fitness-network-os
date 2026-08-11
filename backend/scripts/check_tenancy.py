@@ -11,6 +11,13 @@ from sqlalchemy import text
 from app.db.base import Base, TenantMixin
 from app.models import *  # ensure all models are loaded in Base.metadata
 
+# Authentication Bootstrap Domain Tables:
+# Tables used for initial credential resolution (token_hash -> tenant_id / user_id / device_id)
+# before tenant context (app.current_tenant_id) exists.
+AUTH_BOOTSTRAP_TABLES = {
+    "device_sessions",  # Pre-RLS session token resolution in get_current_device() (ADR-031)
+}
+
 
 async def check_db_rls(errors, table_name):
     from app.db.session import engine
@@ -134,8 +141,8 @@ async def main_async():
         if not has_index:
             errors.append(f"Model {cls.__name__} missing an index starting with tenant_id.")
 
-        # 4. RLS enabled in DB
-        if not static_only:
+        # 4. RLS enabled in DB (Exempt for Auth Bootstrap domain tables which perform pre-RLS session token resolution)
+        if not static_only and table_name not in AUTH_BOOTSTRAP_TABLES:
             await check_db_rls(errors, table_name)
     
     if errors:

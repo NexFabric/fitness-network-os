@@ -92,7 +92,7 @@ export default function MemberPortal() {
             </div>
             <div className="text-right">
               <div className="text-slate-400">Güvenlik Prototipi</div>
-              <div className="font-bold text-sky-400">Client-Side Render (Zero Leak)</div>
+              <div className="font-bold text-sky-400">No Third-Party QR Transmission</div>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function MemberPortal() {
 
         <div className="mt-6 border-t border-slate-800/80 pt-4 text-center text-xs text-slate-500 leading-relaxed">
           💡 <b>Turnike Geçiş Adımı:</b> QR kodunuzu ürettikten sonra kopyalayıp kapı okuyucu sekmesinde (
-          <code className="text-emerald-400">http://localhost:5174</code>) doğrulatın.
+          <code className="text-emerald-400">Scanner PWA :5174</code>) doğrulatın.
         </div>
       </div>
     </div>
