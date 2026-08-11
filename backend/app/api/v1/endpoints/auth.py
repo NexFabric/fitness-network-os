@@ -9,19 +9,18 @@ explicit non-browser tooling.
 from __future__ import annotations
 
 import hashlib
-import hmac
 import secrets
-import pyotp
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import pyotp
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_session_token, get_current_user, get_db
-from app.core.security import generate_session_token, verify_password, decrypt_string, get_password_hash
+from app.core.security import decrypt_string, generate_session_token, verify_password
 from app.models.rbac import UserRole
 from app.models.user import User, UserMfaMethod, UserSession
 

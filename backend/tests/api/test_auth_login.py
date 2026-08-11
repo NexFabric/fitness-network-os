@@ -6,13 +6,13 @@ import hashlib
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import pyotp
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash, encrypt_string
-import pyotp
+from app.core.security import encrypt_string, get_password_hash
 from app.db.session import get_db
 from app.main import app
 from app.models.organization import Organization

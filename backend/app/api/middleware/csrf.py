@@ -45,7 +45,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         # ASVS 4.0.3: Explicit Authorization: Bearer headers are exempt from ambient cookie CSRF checks
         auth_header = request.headers.get("authorization", "")
-        if auth_header.startswith("Bearer ") or auth_header.startswith("bearer "):
+        if auth_header.startswith(("Bearer ", "bearer ")):
             return await call_next(request)
 
         if (

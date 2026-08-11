@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import QRCode from 'qrcode'
 
 export default function MemberPortal() {
-  const [memberId, setMemberId] = useState('56e4427d-950d-483a-ae1b-19e510725f61')
   const [token, setToken] = useState('')
+  const [qrDataUrl, setQrDataUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(60)
   const [copied, setCopied] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>
@@ -20,13 +22,13 @@ export default function MemberPortal() {
   const handleGenerateQr = async () => {
     setLoading(true)
     setCopied(false)
+    setErrorMsg('')
     try {
-      // 1. Try authenticated member self-issue endpoint (/api/v1/access/qr/issue-self)
-      let res = await fetch('http://localhost:8000/api/v1/access/qr/issue-self', {
+      // Authenticated member self-issue endpoint (/api/v1/access/qr/issue-self)
+      const res = await fetch('/api/v1/access/qr/issue-self', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-ID': '92c41231-2a7d-42a5-862d-fda966f1137e',
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -34,31 +36,19 @@ export default function MemberPortal() {
         }),
       })
 
-      // 2. If unauthenticated demo mode (401/404), fall back to staff endpoint with demo member_id
-      if (!res.ok && (res.status === 401 || res.status === 404)) {
-        res = await fetch('http://localhost:8000/api/v1/access/qr/issue', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-ID': '92c41231-2a7d-42a5-862d-fda966f1137e',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            member_id: memberId,
-            ttl_seconds: 60,
-          }),
-        })
-      }
-
       const data = await res.json()
-      if (data.token) {
+      if (res.ok && data.token) {
         setToken(data.token)
+        // Render QR strictly client-side to prevent credential leakage
+        const url = await QRCode.toDataURL(data.token, { width: 220, margin: 2 })
+        setQrDataUrl(url)
         setSecondsLeft(60)
       } else {
-        alert('QR Kod üretilemedi: ' + JSON.stringify(data))
+        const msg = data.detail || 'Geçerli bir oturum bulunamadı. Lütfen giriş yapın.'
+        setErrorMsg(msg)
       }
     } catch (err) {
-      alert('Hata oluştu: ' + (err as Error).message)
+      setErrorMsg('Bağlantı hatası: ' + (err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -84,47 +74,34 @@ export default function MemberPortal() {
               <h1 className="text-lg font-bold text-white tracking-tight">
                 GymClubNex
               </h1>
-              <p className="text-xs text-slate-400">Üye Mobil Portal (Athlete App)</p>
+              <p className="text-xs text-slate-400">Üye Portalı (Member Portal)</p>
             </div>
           </div>
           <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-400">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-            CANLI PWA
+            MEMBER ROUTE
           </span>
         </div>
 
-        {/* Member Account Selector */}
+        {/* Info Card */}
         <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-          <label className="mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-            📱 SPORCU HESABI SEÇİN
-          </label>
-          <select
-            value={memberId}
-            onChange={(e) => {
-              setMemberId(e.target.value)
-              setToken('')
-            }}
-            className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white outline-none focus:border-emerald-500"
-          >
-            <option value="56e4427d-950d-483a-ae1b-19e510725f61">
-              Mehmet Kaya (DEMO-101) - mehmet@demo.local
-            </option>
-            <option value="89023693-520e-40fa-af48-a014479d3f0e">
-              Emrah Akçay (DEMO-001) - demo.admin@demo.local
-            </option>
-          </select>
-
           <div className="flex justify-between text-xs">
             <div>
-              <div className="text-slate-400">Abonelik Statüsü</div>
-              <div className="font-bold text-emerald-400">🟢 VIP ÜYELİK (AKTİF)</div>
+              <div className="text-slate-400">Giriş Modu</div>
+              <div className="font-bold text-emerald-400">🔑 Self-Service QR (Oturum Bağlı)</div>
             </div>
             <div className="text-right">
-              <div className="text-slate-400">Hak Cüzdanı</div>
-              <div className="font-bold text-sky-400">10 / 10 GİRİŞ HAKKI</div>
+              <div className="text-slate-400">Güvenlik Prototipi</div>
+              <div className="font-bold text-sky-400">Client-Side Render (Zero Leak)</div>
             </div>
           </div>
         </div>
+
+        {errorMsg && (
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs font-bold text-red-400">
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
         {/* Generate Button */}
         <button
@@ -136,7 +113,7 @@ export default function MemberPortal() {
         </button>
 
         {/* QR Display */}
-        {token && (
+        {token && qrDataUrl && (
           <div className="mt-6 text-center animate-fade-in">
             <div className="mb-3 flex items-center justify-center gap-2 text-sm font-bold">
               <span>⏰ Kalan Geçerlilik Süresi:</span>
@@ -149,10 +126,8 @@ export default function MemberPortal() {
 
             <div className="mb-4 inline-block rounded-2xl bg-white p-4 shadow-xl shadow-emerald-500/10">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                  token
-                )}`}
-                alt="Üye QR Kodu"
+                src={qrDataUrl}
+                alt="Üye Giriş QR Kodu"
                 className="h-52 w-52"
               />
             </div>

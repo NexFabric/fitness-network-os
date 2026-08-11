@@ -10,8 +10,8 @@ from app.api.idempotency_uow import materialize_replay, run_idempotent
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
 from app.services.entitlement import EntitlementService
-from app.services.member_visibility import require_member_visible
 from app.services.idempotency import ENTITLEMENT_CONSUME
+from app.services.member_visibility import require_member_visible
 
 router = APIRouter()
 

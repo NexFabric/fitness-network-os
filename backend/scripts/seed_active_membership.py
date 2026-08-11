@@ -2,7 +2,6 @@
 """Seed an active Membership for DEMO-001 so scanner QR checkins return GRANTED (green screen)."""
 
 import asyncio
-import os
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -12,12 +11,13 @@ if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.models.member import Member
 from app.models.membership import Membership, Plan, PlanVersion
 from app.models.tenant import Tenant
-from scripts.seed_demo_tenant import _engine_url, DEMO_MEMBER_NUMBER
+from scripts.seed_demo_tenant import DEMO_MEMBER_NUMBER, _engine_url
+
 
 async def seed_active_membership():
     url = _engine_url()

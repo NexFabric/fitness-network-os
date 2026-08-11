@@ -3,7 +3,7 @@ import secrets
 import pyotp
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -26,7 +26,7 @@ class MfaVerifyRequest(BaseModel):
     code: str
 
 class MfaVerifyResponse(BaseModel):
-    ok: bool
+    success: bool
 
 @router.post("/setup", response_model=MfaSetupResponse)
 async def setup_mfa(
@@ -40,7 +40,7 @@ async def setup_mfa(
         raise HTTPException(status_code=400, detail="MFA is already active")
     
     # Clean up any inactive ones
-    await db.execute(UserMfaMethod.__table__.delete().where(UserMfaMethod.user_id == current_user.id))
+    await db.execute(delete(UserMfaMethod).where(UserMfaMethod.user_id == current_user.id))
 
     totp_secret = pyotp.random_base32()
     provisioning_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(name=current_user.email, issuer_name="GymClubNex")
@@ -92,4 +92,4 @@ async def verify_mfa_setup(
     ))
     
     await db.commit()
-    return MfaVerifyResponse(ok=True)
+    return MfaVerifyResponse(success=True)

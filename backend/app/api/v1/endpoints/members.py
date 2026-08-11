@@ -340,6 +340,7 @@ async def list_member_access_logs(
     _require(current_user, tenant_id, "members:read")
     await require_member_visible(db, current_user, tenant_id, member_id)
     from sqlalchemy import select
+
     from app.models.access import AccessAttempt
     res = await db.execute(
         select(AccessAttempt)

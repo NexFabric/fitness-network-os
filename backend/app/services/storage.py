@@ -15,12 +15,10 @@ class StorageProvider(ABC):
     @abstractmethod
     async def save_bytes(self, tenant_id: UUID, artifact_id: str, data: bytes, filename: str) -> str:
         """Save raw bytes to storage, return storage reference URI."""
-        pass
 
     @abstractmethod
     async def generate_presigned_url(self, tenant_id: UUID, artifact_id: str, expires_in: int = 3600) -> str:
         """Generate presigned download URL for the target artifact."""
-        pass
 
 
 class LocalStorageProvider(StorageProvider):
@@ -28,11 +26,17 @@ class LocalStorageProvider(StorageProvider):
         self.base_dir = base_dir or os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
 
     async def save_bytes(self, tenant_id: UUID, artifact_id: str, data: bytes, filename: str) -> str:
+        import asyncio
+
         tenant_dir = os.path.join(self.base_dir, str(tenant_id))
         os.makedirs(tenant_dir, exist_ok=True)
         filepath = os.path.join(tenant_dir, f"{artifact_id}_{filename}")
-        with open(filepath, "wb") as f:
-            f.write(data)
+
+        def _write() -> None:
+            with open(filepath, "wb") as f:
+                f.write(data)
+
+        await asyncio.to_thread(_write)
         return f"file://{filepath}"
 
     async def generate_presigned_url(self, tenant_id: UUID, artifact_id: str, expires_in: int = 3600) -> str:

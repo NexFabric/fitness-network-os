@@ -33,7 +33,7 @@ def get_session_token_from_cookie(request: Request) -> str | None:
     token = request.cookies.get("session_token")
     if not token:
         auth = request.headers.get("Authorization") or request.headers.get("authorization")
-        if auth and (auth.startswith("Bearer ") or auth.startswith("bearer ")):
+        if auth and auth.startswith(("Bearer ", "bearer ")):
             return auth.split(" ")[1].strip()
     return token
 
