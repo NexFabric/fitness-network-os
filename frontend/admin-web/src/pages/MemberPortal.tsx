@@ -21,17 +21,35 @@ export default function MemberPortal() {
     setLoading(true)
     setCopied(false)
     try {
-      const res = await fetch('http://localhost:8000/api/v1/access/qr/issue', {
+      // 1. Try authenticated member self-issue endpoint (/api/v1/access/qr/issue-self)
+      let res = await fetch('http://localhost:8000/api/v1/access/qr/issue-self', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': '92c41231-2a7d-42a5-862d-fda966f1137e',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          member_id: memberId,
           ttl_seconds: 60,
         }),
       })
+
+      // 2. If unauthenticated demo mode (401/404), fall back to staff endpoint with demo member_id
+      if (!res.ok && (res.status === 401 || res.status === 404)) {
+        res = await fetch('http://localhost:8000/api/v1/access/qr/issue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': '92c41231-2a7d-42a5-862d-fda966f1137e',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            member_id: memberId,
+            ttl_seconds: 60,
+          }),
+        })
+      }
+
       const data = await res.json()
       if (data.token) {
         setToken(data.token)

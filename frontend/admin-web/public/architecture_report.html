@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-base: #030712;
@@ -657,7 +657,7 @@ flowchart LR
           <span>🔄 3. Bakış Açısı: Target Tenant Lifecycle (MASTER_SPEC 129)</span>
           <span class="legend-badge target">🔵 TARGET (MASTER_SPEC)</span>
         </div>
-        <div class="perspective-desc">`MASTER_SPEC 129` belgesinde tanımlanan 11 aşamalı hedef durum makinesi. (Mevcut kod modelinde basitleştirilmiş status durumları kullanılmaktadır).</div>
+        <div class="perspective-desc">Mevcut Tenant modelinde lifecycle/status state machine henüz uygulanmamıştır (MASTER_SPEC 129 uyarınca TARGET mimaridir).</div>
       </div>
 
       <div class="diagram-card">
@@ -733,7 +733,7 @@ sequenceDiagram
 
   rect rgb(15, 23, 42)
   note over Member, AccessService: A. Dynamic Compact HMAC QR Generation Phase
-  Member->>Gateway: POST /api/v1/qr/issue-self (Secure HttpOnly Session Cookie)
+  Member->>Gateway: POST /api/v1/access/qr/issue-self (credentials: include)
   Gateway->>AccessService: Generate Short-Lived QR (Default 60s TTL)
   AccessService->>AccessService: Sign HMAC-SHA256 (kid: qr-202608-a9f1, exp: +60s, unique JTI)
   AccessService-->>Gateway: Compact Token: base64url(payload).base64url(sig)
@@ -776,7 +776,7 @@ sequenceDiagram
         <div class="diagram-header">
           <div class="diagram-header-text">
             <h2>🛡️ Atomik Veritabanı İşlemi & Outbox Dağıtım Akışı</h2>
-            <p>Gerçekleşen kod örneği: <code>POST /api/v1/reports/runs/request</code> → <code>ReportService.request_run()</code>.</p>
+            <p>Gerçekleşen kod örneği: <code>POST /api/v1/reports/runs</code> → <code>ReportService.request_run()</code>.</p>
           </div>
           <div class="diagram-toolbar">
             <button class="tool-btn" onclick="zoomDiagram('m-outbox', 0.15)">🔍 +</button>
@@ -788,7 +788,7 @@ sequenceDiagram
           <pre class="mermaid" id="m-outbox">
 flowchart LR
   subgraph CLIENT ["Client Request"]
-    REQ["POST /api/v1/reports/runs/request ✅"]
+    REQ["POST /api/v1/reports/runs ✅"]
   end
 
   subgraph DB_TX ["PostgreSQL Atomic Transaction Boundary"]
