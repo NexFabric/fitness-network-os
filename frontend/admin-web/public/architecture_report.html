@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GymClubNex — Master Architecture & Mermaid Console</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <title>GymClubNex — Implementation + Target Architecture Console</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +26,10 @@
       --brand-amber: #f59e0b;
       --brand-rose: #f43f5e;
       --brand-indigo: #6366f1;
+
+      --status-impl: #10b981;
+      --status-partial: #f59e0b;
+      --status-target: #3b82f6;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +54,7 @@
       border: 1px solid var(--border-subtle);
       border-radius: 20px;
       padding: 28px 32px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -110,6 +114,56 @@
     .status-chip .label { color: var(--text-muted); }
     .status-chip .val { color: #34d399; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
 
+    /* Legend Card */
+    .legend-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .legend-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .legend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .legend-badge.impl {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .legend-badge.partial {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .legend-badge.target {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
     /* Navigation Tabs */
     .tabs {
       display: flex;
@@ -150,14 +204,14 @@
       box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
     }
 
-    /* Panels Container to maintain dimensions during render */
+    /* Panels Container */
     .panels-container {
       position: relative;
       width: 100%;
       min-height: 600px;
     }
 
-    /* Offscreen layout positioning so Mermaid SVG text calculation works 100% on load */
+    /* Offscreen layout positioning for 100% accurate SVG bounding box calculations */
     .tab-panel {
       position: absolute;
       top: -9999px;
@@ -199,6 +253,9 @@
       font-weight: 800;
       color: #ffffff;
       margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .perspective-desc {
@@ -339,7 +396,7 @@
 
     .matrix-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: 16px;
     }
 
@@ -347,31 +404,20 @@
       background: #020617;
       border: 1px solid #1e293b;
       border-radius: 14px;
-      padding: 16px 20px;
+      padding: 18px 20px;
     }
 
     .matrix-item-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .matrix-item-title {
       font-size: 15px;
       font-weight: 700;
       color: #ffffff;
-    }
-
-    .matrix-item-badge {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11.5px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
     }
 
     .matrix-item-desc {
@@ -396,31 +442,42 @@
     <header>
       <div class="header-content">
         <div class="badge">
-          <span>●</span> MASTER ARCHITECTURE & MERMAID CONSOLE
+          <span>●</span> IMPLEMENTATION + TARGET ARCHITECTURE CONSOLE
         </div>
-        <h1>GymClubNex — Multi-Perspective Mimari Raporu</h1>
-        <p>Senior Architecture Standartları & GymClubNex Master Spec Uyumlu Tam Görselleştirme Konsolu.</p>
+        <h1>GymClubNex — Mimari Görselleştirme Konsolu</h1>
+        <p>Mevcut Üretim Kodu (✅ IMPLEMENTED) ve Hedef Spesifikasyonlar (🔵 TARGET / MASTER SPEC) Karşılaştırmalı Raporu.</p>
       </div>
 
       <div class="status-bar">
         <div class="status-chip">
           <span class="label">API Gateway:</span>
-          <span class="val">:8000 OK</span>
+          <span class="val">Configured (:8000)</span>
         </div>
         <div class="status-chip">
           <span class="label">Admin Web:</span>
-          <span class="val">:5173 OK</span>
+          <span class="val">Configured (:5173)</span>
         </div>
         <div class="status-chip">
           <span class="label">Scanner PWA:</span>
-          <span class="val">:5174 OK</span>
+          <span class="val">Configured (:5174)</span>
         </div>
         <div class="status-chip">
-          <span class="label">Tenancy:</span>
-          <span class="val">SHARED_RLS</span>
+          <span class="label">Tenancy Model:</span>
+          <span class="val">Shared DB + RLS (Live)</span>
         </div>
       </div>
     </header>
+
+    <!-- Status Legend -->
+    <div class="legend-card">
+      <span class="legend-title">Bileşen Durum Etiketleri:</span>
+      <span class="legend-badge impl">✅ IMPLEMENTED</span>
+      <span>= Mevcut kod tabanında canlı çalışan bileşen</span>
+      <span class="legend-badge partial">🟡 PARTIAL</span>
+      <span>= DB/Logic hazır, transport/bus aşaması hedefte</span>
+      <span class="legend-badge target">🔵 TARGET</span>
+      <span>= MASTER_SPEC.md belgesinde tanımlı hedef mimari</span>
+    </div>
 
     <!-- Navigation Tabs -->
     <div class="tabs">
@@ -431,7 +488,7 @@
         <span>🏢</span> 2. Domain & Veri Mimarisi
       </button>
       <button id="btn-p-tenant" class="tab-btn" onclick="switchTab('p-tenant')">
-        <span>🔄</span> 3. Tenant Yaşam Döngüsü
+        <span>🔄</span> 3. Target Tenant Lifecyle
       </button>
       <button id="btn-p-qr" class="tab-btn" onclick="switchTab('p-qr')">
         <span>🔑</span> 4. Dinamik QR & Turnike
@@ -440,7 +497,7 @@
         <span>⚡</span> 5. Transactional Outbox
       </button>
       <button id="btn-p-sec" class="tab-btn" onclick="switchTab('p-sec')">
-        <span>🛡️</span> 6. Güvenlik, RBAC & Retention
+        <span>🛡️</span> 6. Güvenlik & Retention
       </button>
     </div>
 
@@ -449,15 +506,18 @@
       <!-- PERSPECTIVE 1: Topology -->
       <div id="p-top" class="tab-panel active">
         <div class="perspective-banner" style="border-left-color: var(--brand-violet);">
-          <div class="perspective-title">🌐 1. Bakış Açısı: Sistem Topolojisi ve Kiracı İzolasyon Katmanı</div>
-          <div class="perspective-desc">SuperAdmin platform yönetiminden API Gateway, RLS context injection, domain servisleri ve IsolationProvider veritabanı katmanına kadar olan uçtan uca mimari.</div>
+          <div class="perspective-title">
+            <span>🌐 1. Bakış Açısı: Sistem Topolojisi ve Kiracı İzolasyon Katmanı</span>
+            <span class="legend-badge impl">✅ IMPL + 🔵 TARGET</span>
+          </div>
+          <div class="perspective-desc">SuperAdmin platform yönetiminden API Gateway, FastAPI Dependency RLS Injection, domain servisleri ve Shared DB + RLS veri katmanına kadar olan mimari.</div>
         </div>
 
         <div class="diagram-card">
           <div class="diagram-header">
             <div class="diagram-header-text">
               <h2>🏛️ Uçtan Uca Sistem Topolojisi</h2>
-              <p>Uygulamadan bağımsız veritabanı katmanı izolasyonu ve servisler arası etkileşim.</p>
+              <p>Mevcut FastApi Dependency injection & Session Cookie ile Hedef IsolationProvider katmanı.</p>
             </div>
             <div class="diagram-toolbar">
               <button class="tool-btn" onclick="zoomDiagram('m-top', 0.15)">🔍 +</button>
@@ -469,52 +529,53 @@
             <pre class="mermaid" id="m-top">
 flowchart TD
   subgraph CLIENTS ["📱 FRONTEND CLIENTS & EDGE DEVICES"]
-    ADMIN["💻 Admin Web Portal<br/>(Vite / React :5173)"]
-    SCANNER["📹 Turnike Scanner PWA<br/>(Offline-Ready :5174)"]
-    MOBILE["📱 Member Mobile App / PWA"]
+    ADMIN["💻 Admin Web Portal<br/>(Vite / React :5173) ✅"]
+    SCANNER["📹 Turnike Scanner PWA<br/>(Offline-Ready :5174) ✅"]
+    MOBILE["📱 Member Mobile App / PWA ✅"]
   end
 
-  subgraph GATEWAY ["⚡ API GATEWAY & SECURITY PERIMETER (FastAPI :8000)"]
-    CORS["🛡️ CORS & Rate Limiter"]
-    AUTH_MW["🔑 Auth & JWT Session Middleware"]
-    TENANT_MW["🏢 Tenant Context Resolver"]
-    RLS_MW["🔒 RLS Injector<br/>(SET LOCAL app.current_tenant_id)"]
+  subgraph GATEWAY ["⚡ API GATEWAY & SECURITY (FastAPI :8000)"]
+    CORS["🛡️ CORS & Rate Limiter ✅"]
+    SESSION_AUTH["🔑 Session Auth (UserSession Cookie) ✅"]
+    TENANT_DEP["🏢 get_tenant_id Dependency ✅"]
+    RLS_INJECT["🔒 SET LOCAL app.current_tenant_id ✅"]
 
-    CORS --> AUTH_MW --> TENANT_MW --> RLS_MW
+    CORS --> SESSION_AUTH --> TENANT_DEP --> RLS_INJECT
   end
 
   subgraph DOMAIN ["🧠 BACKEND CORE DOMAIN SERVICES"]
-    AUTH_SVC["🔐 Auth & RBAC Service"]
-    TENANT_SVC["🏢 Tenant Lifecycle Engine"]
-    MEMBER_SVC["👤 Member & Visibility Engine"]
-    ENTITLE_SVC["🎟️ Entitlement Wallet Engine"]
-    ACCESS_SVC["🚪 Access Gate & QR Engine"]
-    FINANCE_SVC["💳 Payment Ledger Engine<br/>(amount_minor)"]
-    RETENTION_SVC["📜 Data Retention & Anonymization"]
+    AUTH_SVC["🔐 Auth & RBAC Service ✅"]
+    TENANT_SVC["🏢 Tenant Engine ✅"]
+    MEMBER_SVC["👤 Member & Visibility Engine ✅"]
+    ENTITLE_SVC["🎟️ Entitlement Wallet Engine ✅"]
+    ACCESS_SVC["🚪 Access Gate Engine ✅"]
+    FINANCE_SVC["💳 Payment Ledger Engine (amount_minor) ✅"]
+    RETENTION_SVC["📜 Data Retention Engine 🔵 TARGET"]
   end
 
   subgraph EVENT_SYS ["🔄 EVENT-DRIVEN TRANSACTIONAL OUTBOX"]
-    OUTBOX_TBL[("📦 outbox_events Table<br/>(PostgreSQL Atomic TX)")]
-    BUS_WORKER["🚌 Outbox Worker<br/>(NATS Event Bus)"]
-    WEBHOOK_SYS["📫 Webhook Inbox / Outbox"]
-    NOTIF_SYS["📲 Notification Engine<br/>(WhatsApp / Push / SMS)"]
+    OUTBOX_TBL[("📦 outbox_events Table<br/>(PostgreSQL Atomic TX) ✅")]
+    BUS_WORKER["🚌 Outbox Worker<br/>(SKIP LOCKED Poller) ✅"]
+    DUMMY_PUB["📫 dummy_publisher 🟡 PARTIAL"]
+    NATS_BUS["🚌 NATS Event Bus 🔵 TARGET"]
+    NOTIF_SYS["📲 Notification Engine 🟡 PARTIAL"]
 
-    OUTBOX_TBL --> BUS_WORKER --> WEBHOOK_SYS & NOTIF_SYS
+    OUTBOX_TBL --> BUS_WORKER --> DUMMY_PUB -.-> NATS_BUS -.-> NOTIF_SYS
   end
 
   subgraph DATA_TIER ["🗄️ MULTI-TENANT ISOLATION DATA TIER"]
-    ISOLATION_PROV["🔌 IsolationProvider Abstraction Layer"]
-    SHARED_RLS[("🐘 PostgreSQL Shared DB + RLS<br/>(Default: Core / Pro Tenants)")]
-    DEDICATED_SCHEMA[("📂 Dedicated Schema<br/>(Enterprise Option)")]
-    DEDICATED_DB[("🗄️ Dedicated Database<br/>(Federation Option)")]
+    SHARED_RLS[("🐘 PostgreSQL Shared DB + RLS<br/>(Live Core / Pro Tenants) ✅")]
+    ISOLATION_PROV["🔌 IsolationProvider Abstraction 🔵 TARGET"]
+    DEDICATED_SCHEMA[("📂 Dedicated Schema 🔵 TARGET")]
+    DEDICATED_DB[("🗄️ Dedicated Database 🔵 TARGET")]
 
-    ISOLATION_PROV --> SHARED_RLS & DEDICATED_SCHEMA & DEDICATED_DB
+    RLS_INJECT --> SHARED_RLS
+    ISOLATION_PROV -.-> SHARED_RLS & DEDICATED_SCHEMA & DEDICATED_DB
   end
 
   CLIENTS --> GATEWAY
-  RLS_MW --> DOMAIN
+  RLS_INJECT --> DOMAIN
   DOMAIN --> OUTBOX_TBL
-  DOMAIN --> ISOLATION_PROV
 
   style ADMIN fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
   style SCANNER fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff
@@ -522,56 +583,59 @@ flowchart TD
   style DOMAIN fill:#022c22,stroke:#10b981,stroke-width:2px,color:#fff
   style SHARED_RLS fill:#064e3b,stroke:#34d399,stroke-width:3px,color:#fff
   style OUTBOX_TBL fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#fff
-            </pre>
-          </div>
+          </pre>
         </div>
       </div>
+    </div>
 
-      <!-- PERSPECTIVE 2: Domain Model -->
-      <div id="p-model" class="tab-panel">
-        <div class="perspective-banner" style="border-left-color: var(--brand-cyan);">
-          <div class="perspective-title">🏢 2. Bakış Açısı: Multi-Tenant Veri & Hak Mimarisi</div>
-          <div class="perspective-desc">Federasyon, Tenant (Gym), Şube (Location), Kullanıcı (User), Üye (Member), Abonelik (Membership) ve Hak Cüzdanı (Entitlement Wallet) ilişkisi.</div>
+    <!-- PERSPECTIVE 2: Domain Model -->
+    <div id="p-model" class="tab-panel">
+      <div class="perspective-banner" style="border-left-color: var(--brand-cyan);">
+        <div class="perspective-title">
+          <span>🏢 2. Bakış Açısı: Multi-Tenant Veri & Hak Mimarisi</span>
+          <span class="legend-badge impl">✅ IMPLEMENTED</span>
         </div>
+        <div class="perspective-desc">Federasyon, Tenant (Gym), Şube (Location), Kullanıcı (User), Üye (Member), Abonelik (Membership) ve Hak Cüzdanı (Entitlement Wallet) ilişkisi.</div>
+      </div>
 
-        <div class="diagram-card">
-          <div class="diagram-header">
-            <div class="diagram-header-text">
-              <h2>📊 Domain İzolasyon ve Hak Hiyerarşisi</h2>
-              <p>User != Member, Membership != Payment ve Entitlement Wallet ayrımı.</p>
-            </div>
-            <div class="diagram-toolbar">
-              <button class="tool-btn" onclick="zoomDiagram('m-model', 0.15)">🔍 +</button>
-              <button class="tool-btn" onclick="zoomDiagram('m-model', -0.15)">🔍 -</button>
-              <button class="tool-btn" onclick="resetZoom('m-model')">↺ Sıfırla</button>
-            </div>
+      <div class="diagram-card">
+        <div class="diagram-header">
+          <div class="diagram-header-text">
+            <h2>📊 Domain İzolasyon ve Hak Hiyerarşisi</h2>
+            <p>User != Member, Membership != Payment ve Entitlement Wallet ayrımı (Kod tabanında %100 canlı).</p>
           </div>
-          <div class="mermaid-wrapper">
-            <pre class="mermaid" id="m-model">
+          <div class="diagram-toolbar">
+            <button class="tool-btn" onclick="zoomDiagram('m-model', 0.15)">🔍 +</button>
+            <button class="tool-btn" onclick="zoomDiagram('m-model', -0.15)">🔍 -</button>
+            <button class="tool-btn" onclick="resetZoom('m-model')">↺ Sıfırla</button>
+          </div>
+        </div>
+        <div class="mermaid-wrapper">
+          <pre class="mermaid" id="m-model">
 flowchart LR
   subgraph FED_LAYER ["🏢 Federation & Tenant Hierarchy"]
-    FED["👑 Federation"] --> ORG["🏢 Organization"] --> TENANT["🏋️ Gym Tenant<br/>(Isolation Boundary)"]
-    TENANT --> LOCATION["📍 Branch / Location"]
+    FED["👑 Federation ✅"] --> ORG["🏢 Organization ✅"] --> TENANT["🏋️ Gym Tenant<br/>(Isolation Boundary) ✅"]
+    TENANT --> LOCATION["📍 Branch / Location ✅"]
   end
 
   subgraph USER_MEMBER ["👤 Identity vs Membership"]
-    USER["🔑 User Account<br/>(Global Auth Identity)"]
-    MEMBER["👤 Member Profile<br/>(Tenant-Scoped)"]
+    USER["🔑 User Account<br/>(Global Auth Identity) ✅"]
+    MEMBER["👤 Member Profile<br/>(Tenant-Scoped) ✅"]
     USER --> MEMBER
   end
 
   subgraph MEMBERSHIP_PLAN ["📜 Subscriptions & Entitlements"]
-    MEMBER --> MS_SUB["📜 Membership Subscription<br/>(ACTIVE / EXPIRED)"]
-    MS_SUB --> PLAN["📦 Membership Plan Version"]
-    MS_SUB --> WALLET["💰 Entitlement Wallet"]
-    WALLET --> ENT_GYM["🎟️ Entitlement: GYM_ENTRY<br/>(Quota / Unlimited)"]
-    WALLET --> ENT_POOL["🏊 Entitlement: POOL"]
-    WALLET --> ENT_SAUNA["🧖 Entitlement: SAUNA"]
+    MEMBER --> MS_SUB["📜 Membership Subscription<br/>(ACTIVE / EXPIRED) ✅"]
+    MS_SUB --> PLAN["📦 Membership Plan Version ✅"]
+    MS_SUB --> WALLET["💰 Entitlement Wallet ✅"]
+    WALLET --> ENT_GYM["🎟️ Entitlement: GYM_ENTRY<br/>(Quota / Unlimited) ✅"]
+    WALLET --> ENT_POOL["🏊 Entitlement: POOL ✅"]
+    WALLET --> ENT_SAUNA["🧖 Entitlement: SAUNA ✅"]
   end
 
   subgraph FINANCE_LEDGER ["💳 Financial Ledger"]
-    MS_SUB --> INVOICE["📄 Invoice"]
-    INVOICE --> PAYMENT["💳 Payment Transaction<br/>(amount_minor in Kuruş)"]
+    MS_SUB --> INVOICE["📄 Invoice ✅"]
+    INVOICE --> PAYMENT["💳 Payment Transaction<br/>(amount_minor in Kuruş, No Float) ✅"]
   end
 
   TENANT --> MEMBER
@@ -580,299 +644,309 @@ flowchart LR
   style TENANT fill:#064e3b,stroke:#10b981,stroke-width:3px,color:#fff
   style WALLET fill:#083344,stroke:#06b6d4,stroke-width:2px,color:#fff
   style PAYMENT fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#fff
-            </pre>
-          </div>
+          </pre>
         </div>
       </div>
+    </div>
 
-      <!-- PERSPECTIVE 3: Tenant Lifecycle -->
-      <div id="p-tenant" class="tab-panel">
-        <div class="perspective-banner" style="border-left-color: var(--brand-emerald);">
-          <div class="perspective-title">🔄 3. Bakış Açısı: Tenant (Gym) Tam Yaşam Döngüsü (State Machine)</div>
-          <div class="perspective-desc">Kulübün platform üzerindeki 11 aşamalı tam yaşam döngüsü: Lead durumundan başlar, Askı (Suspended), Offboarding ve Yasal Saklama/Silme adımlarına kadar ilerler.</div>
+    <!-- PERSPECTIVE 3: Tenant Lifecycle -->
+    <div id="p-tenant" class="tab-panel">
+      <div class="perspective-banner" style="border-left-color: var(--brand-emerald);">
+        <div class="perspective-title">
+          <span>🔄 3. Bakış Açısı: Target Tenant Lifecycle (MASTER_SPEC 129)</span>
+          <span class="legend-badge target">🔵 TARGET (MASTER_SPEC)</span>
         </div>
+        <div class="perspective-desc">`MASTER_SPEC 129` belgesinde tanımlanan 11 aşamalı hedef durum makinesi. (Mevcut kod modelinde basitleştirilmiş status durumları kullanılmaktadır).</div>
+      </div>
 
-        <div class="diagram-card">
-          <div class="diagram-header">
-            <div class="diagram-header-text">
-              <h2>📊 Kiracı (Gym Tenant) Durum Makinesi</h2>
-              <p>MASTER_SPEC 129 uyarınca %100 okunur, sıfır çakışmalı tam yaşam döngüsü.</p>
-            </div>
-            <div class="diagram-toolbar">
-              <button class="tool-btn" onclick="zoomDiagram('m-tenant', 0.15)">🔍 +</button>
-              <button class="tool-btn" onclick="zoomDiagram('m-tenant', -0.15)">🔍 -</button>
-              <button class="tool-btn" onclick="resetZoom('m-tenant')">↺ Sıfırla</button>
-            </div>
+      <div class="diagram-card">
+        <div class="diagram-header">
+          <div class="diagram-header-text">
+            <h2>📊 Hedef Kiracı (Gym Tenant) Durum Makinesi</h2>
+            <p>Hedef spec uyarınca planlanan 11 durumlu lifecycle geçiş modeli.</p>
           </div>
-          <div class="mermaid-wrapper">
-            <pre class="mermaid" id="m-tenant">
+          <div class="diagram-toolbar">
+            <button class="tool-btn" onclick="zoomDiagram('m-tenant', 0.15)">🔍 +</button>
+            <button class="tool-btn" onclick="zoomDiagram('m-tenant', -0.15)">🔍 -</button>
+            <button class="tool-btn" onclick="resetZoom('m-tenant')">↺ Sıfırla</button>
+          </div>
+        </div>
+        <div class="mermaid-wrapper">
+          <pre class="mermaid" id="m-tenant">
 flowchart TD
-  S1["1. LEAD<br/>(Müşteri Adayı)"] -->|Sözleşme İmzalandı| S2["2. CONTRACTED<br/>(Sözleşmeli)"]
-  S2 -->|Altyapı Tahsis Edildi| S3["3. PROVISIONING<br/>(Altyapı Hazırlığı)"]
-  S3 -->|Ayarlar & Paketler Tanımlandı| S4["4. CONFIGURING<br/>(Kurulum Yapılıyor)"]
-  S4 -->|Veri İçe Aktarıldı| S5["5. MIGRATING<br/>(Veri Taşıma)"]
-  S5 -->|Doğrulama Tamamlandı| S6["6. READY<br/>(Canlıya Hazır)"]
-  S6 -->|Sistem Açıldı| S7["7. ACTIVE<br/>(Canlı / Aktif)"]
+  S1["1. LEAD 🔵<br/>(Müşteri Adayı)"] -->|Sözleşme İmzalandı| S2["2. CONTRACTED 🔵<br/>(Sözleşmeli)"]
+  S2 -->|Altyapı Tahsis Edildi| S3["3. PROVISIONING 🔵<br/>(Altyapı Hazırlığı)"]
+  S3 -->|Ayarlar & Paketler Tanımlandı| S4["4. CONFIGURING 🔵<br/>(Kurulum Yapılıyor)"]
+  S4 -->|Veri İçe Aktarıldı| S5["5. MIGRATING 🔵<br/>(Veri Taşıma)"]
+  S5 -->|Doğrulama Tamamlandı| S6["6. READY 🔵<br/>(Canlıya Hazır)"]
+  S6 -->|Sistem Açıldı| S7["7. ACTIVE ✅<br/>(Canlı / Aktif)"]
 
-  S7 -->|Ödeme Gecikmesi / Kural İhlali| S8["8. SUSPENDED<br/>(Askıda / Kısıtlı)"]
+  S7 -->|Ödeme Gecikmesi / Kural İhlali| S8["8. SUSPENDED 🔵<br/>(Askıda / Kısıtlı)"]
   S8 -->|Borç Ödendi / Kısıt Kaldırıldı| S7
-  S8 -->|Fesih Süreci Başlatıldı| S9["9. OFFBOARDING<br/>(Kapatma Süreci)"]
+  S8 -->|Fesih Süreci Başlatıldı| S9["9. OFFBOARDING 🔵<br/>(Kapatma Süreci)"]
 
-  S9 -->|Veri Aktarıldı & Oturumlar Kapatıldı| S10["10. RETENTION<br/>(Yasal Saklama)"]
-  S10 -->|Yasal Süre Doldu / KVKK Silme| S11["11. DELETED<br/>(Kalıcı Silindi)"]
+  S9 -->|Veri Aktarıldı & Oturumlar Kapatıldı| S10["10. RETENTION 🔵<br/>(Yasal Saklama)"]
+  S10 -->|Yasal Süre Doldu / KVKK Silme| S11["11. DELETED 🔵<br/>(Kalıcı Silindi)"]
 
   style S1 fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#fff
   style S7 fill:#064e3b,stroke:#10b981,stroke-width:3px,color:#fff
   style S8 fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fff
   style S9 fill:#4c0519,stroke:#f43f5e,stroke-width:2px,color:#fff
   style S11 fill:#0f172a,stroke:#334155,stroke-width:1px,color:#94a3b8
-            </pre>
-          </div>
+          </pre>
         </div>
       </div>
+    </div>
 
-      <!-- PERSPECTIVE 4: Dynamic QR & Access -->
-      <div id="p-qr" class="tab-panel">
-        <div class="perspective-banner" style="border-left-color: var(--brand-amber);">
-          <div class="perspective-title">🔑 4. Bakış Açısı: Dinamik QR & Turnike Geçiş Akışı</div>
-          <div class="perspective-desc">HMAC SHA-256 imzalı kısa ömürlü QR üretimi, Scanner PWA offline-ready doğrulaması, JTI replay saldırı koruması ve turnike kapı rölesi sinyali.</div>
+    <!-- PERSPECTIVE 4: Dynamic QR & Access -->
+    <div id="p-qr" class="tab-panel">
+      <div class="perspective-banner" style="border-left-color: var(--brand-amber);">
+        <div class="perspective-title">
+          <span>🔑 4. Bakış Açısı: Dinamik QR & Turnike Geçiş Akışı</span>
+          <span class="legend-badge impl">✅ IMPLEMENTED</span>
         </div>
+        <div class="perspective-desc">Compact 2-part HMAC-SHA256 kısa ömürlü QR (Default 60s TTL), Scanner PWA offline-ready doğrulaması, JTI replay saldırı koruması ve turnike kapı rölesi sinyali.</div>
+      </div>
 
-        <div class="diagram-card">
-          <div class="diagram-header">
-            <div class="diagram-header-text">
-              <h2>⚡ Kriptografik QR ve Donanım Geçiş Sıralaması</h2>
-              <p>Milisanilerde güvenli doğrulama ve replay koruması.</p>
-            </div>
-            <div class="diagram-toolbar">
-              <button class="tool-btn" onclick="zoomDiagram('m-qr', 0.15)">🔍 +</button>
-              <button class="tool-btn" onclick="zoomDiagram('m-qr', -0.15)">🔍 -</button>
-              <button class="tool-btn" onclick="resetZoom('m-qr')">↺ Sıfırla</button>
-            </div>
+      <div class="diagram-card">
+        <div class="diagram-header">
+          <div class="diagram-header-text">
+            <h2>⚡ Kriptografik QR ve Donanım Geçiş Sıralaması</h2>
+            <p>Compact HMAC Token formatı: base64url(payload).base64url(hmac_sha256). Default 60s TTL.</p>
           </div>
-          <div class="mermaid-wrapper">
-            <pre class="mermaid" id="m-qr">
+          <div class="diagram-toolbar">
+            <button class="tool-btn" onclick="zoomDiagram('m-qr', 0.15)">🔍 +</button>
+            <button class="tool-btn" onclick="zoomDiagram('m-qr', -0.15)">🔍 -</button>
+            <button class="tool-btn" onclick="resetZoom('m-qr')">↺ Sıfırla</button>
+          </div>
+        </div>
+        <div class="mermaid-wrapper">
+          <pre class="mermaid" id="m-qr">
 sequenceDiagram
   autonumber
   actor Member as 👤 Member (Mobile App)
   participant Gateway as ⚡ API Gateway (:8000)
-  participant AccessService as 🔑 Access Engine
+  participant AccessService as 🔑 Access Engine (app/services/access.py)
   actor Kiosk as 📹 Kiosk Scanner PWA (:5174)
   actor Turnstile as 🚪 Turnstile Relay
 
   rect rgb(15, 23, 42)
-  note over Member, AccessService: A. Dynamic QR Generation Phase
-  Member->>Gateway: POST /api/v1/qr/issue-self (Bearer JWT Token)
-  Gateway->>AccessService: Generate Dynamic Short-Lived QR
-  AccessService->>AccessService: Sign HMAC-SHA256 (kid: qr-202608, exp: +300s, unique JTI)
-  AccessService-->>Gateway: Dynamic QR JWT Token
+  note over Member, AccessService: A. Dynamic Compact HMAC QR Generation Phase
+  Member->>Gateway: POST /api/v1/qr/issue-self (Bearer / Session Cookie)
+  Gateway->>AccessService: Generate Short-Lived QR (Default 60s TTL)
+  AccessService->>AccessService: Sign HMAC-SHA256 (kid: local-key, exp: +60s, unique JTI)
+  AccessService-->>Gateway: Compact Token: base64(payload).base64(sig)
   Gateway-->>Member: Render QR Visual on App Screen
   end
 
   rect rgb(11, 15, 25)
   note over Member, Turnstile: B. Turnstile Scanning & Hardware Access Phase
   Member->>Kiosk: Present QR Code to Camera Scanner
-  Kiosk->>Gateway: POST /api/v1/devices/qr/validate (Device Session + QR Token)
-  Gateway->>AccessService: 1. Validate Signature (kid)<br/>2. Check Expiration (exp)<br/>3. Check Replay Cache (JTI)<br/>4. Check Entitlement Wallet (GYM_ENTRY)
+  Kiosk->>Gateway: POST /api/v1/devices/qr/validate (device_session Cookie + Token)
+  Gateway->>AccessService: 1. Validate Signature (kid)<br/>2. Check Expiration (Default 60s)<br/>3. Check Replay Cache (JTI in QrJtiReplay)<br/>4. Check Entitlement Wallet (EntitlementService)
   end
 
   alt 🟢 ACCESS GRANTED (Valid & Entitled)
-    AccessService->>Gateway: Result: GRANTED (Checkin Recorded)
+    AccessService->>Gateway: Result: GRANTED (Checkin Recorded in DB)
     Gateway-->>Kiosk: granted: true, checkin_id
     Kiosk->>Turnstile: ⚡ Trigger Relay Pulse (Door Opens)
     Kiosk-->>Kiosk: Render GREEN Screen: "Hoşgeldiniz!"
   else 🔴 ACCESS DENIED (Replay / Expired / No Entitlement)
-    AccessService->>Gateway: Result: DENIED (Reason: REPLAY_ATTACK)
-    Gateway-->>Kiosk: granted: false, reason: "REPLAY_ATTACK"
+    AccessService->>Gateway: Result: DENIED (Reason: REPLAY_ATTACK / EXPIRED)
+    Gateway-->>Kiosk: granted: false, reason
     Kiosk-->>Kiosk: Render RED Screen: "Geçersiz / Kullanılmış QR!"
   end
-            </pre>
-          </div>
+          </pre>
         </div>
       </div>
+    </div>
 
-      <!-- PERSPECTIVE 5: Transactional Outbox -->
-      <div id="p-outbox" class="tab-panel">
-        <div class="perspective-banner" style="border-left-color: var(--brand-indigo);">
-          <div class="perspective-title">⚡ 5. Bakış Açısı: Transactional Outbox & PostgreSQL RLS Akışı</div>
-          <div class="perspective-desc">Çift yazma (dual-write) hatalarını engellemek için PostgreSQL atomik transaction sınırlarında Outbox kaydı ve NATS event bus dağıtımı.</div>
+    <!-- PERSPECTIVE 5: Transactional Outbox -->
+    <div id="p-outbox" class="tab-panel">
+      <div class="perspective-banner" style="border-left-color: var(--brand-indigo);">
+        <div class="perspective-title">
+          <span>⚡ 5. Bakış Açısı: Transactional Outbox & DB Workflow</span>
+          <span class="legend-badge partial">🟡 PARTIAL (DB Live / Bus Target)</span>
         </div>
+        <div class="perspective-desc">Atomik PostgreSQL Outbox tablosu (SKIP LOCKED, claim, retry, dead-letter) canlıdır. Event bus transport katmanı (NATS) hedef mimaridir.</div>
+      </div>
 
-        <div class="diagram-card">
-          <div class="diagram-header">
-            <div class="diagram-header-text">
-              <h2>🛡️ Atomik Veritabanı İşlemi & Outbox Dağıtım Akışı</h2>
-              <p>Atomik commit ile güvenli event dağıtımı ve RLS bağlamı.</p>
-            </div>
-            <div class="diagram-toolbar">
-              <button class="tool-btn" onclick="zoomDiagram('m-outbox', 0.15)">🔍 +</button>
-              <button class="tool-btn" onclick="zoomDiagram('m-outbox', -0.15)">🔍 -</button>
-              <button class="tool-btn" onclick="resetZoom('m-outbox')">↺ Sıfırla</button>
-            </div>
+      <div class="diagram-card">
+        <div class="diagram-header">
+          <div class="diagram-header-text">
+            <h2>🛡️ Atomik Veritabanı İşlemi & Outbox Dağıtım Akışı</h2>
+            <p>Gerçekleşen endpoint: <code>/api/v1/memberships/{id}/renew</code>. DB Transaction + Outbox atomik commit.</p>
           </div>
-          <div class="mermaid-wrapper">
-            <pre class="mermaid" id="m-outbox">
+          <div class="diagram-toolbar">
+            <button class="tool-btn" onclick="zoomDiagram('m-outbox', 0.15)">🔍 +</button>
+            <button class="tool-btn" onclick="zoomDiagram('m-outbox', -0.15)">🔍 -</button>
+            <button class="tool-btn" onclick="resetZoom('m-outbox')">↺ Sıfırla</button>
+          </div>
+        </div>
+        <div class="mermaid-wrapper">
+          <pre class="mermaid" id="m-outbox">
 flowchart LR
   subgraph CLIENT ["Client Request"]
-    REQ["POST /api/v1/memberships/renew"]
+    REQ["POST /api/v1/memberships/{id}/renew ✅"]
   end
 
   subgraph DB_TX ["PostgreSQL Atomic Transaction Boundary"]
-    BEGIN["1. BEGIN TRANSACTION"]
-    RLS["2. SET LOCAL app.current_tenant_id = '92c41231'"]
-    UPDATE["3. UPDATE memberships SET status = 'ACTIVE'"]
-    WALLET["4. CREDIT entitlement_wallet (GYM_ENTRY +10)"]
-    OUTBOX["5. INSERT INTO outbox_events (type, payload)"]
-    COMMIT["6. COMMIT TRANSACTION"]
+    BEGIN["1. BEGIN TRANSACTION ✅"]
+    RLS["2. SET LOCAL app.current_tenant_id ✅"]
+    UPDATE["3. UPDATE memberships & refresh entitlements ✅"]
+    OUTBOX["4. INSERT INTO outbox_events (type, payload) ✅"]
+    COMMIT["5. COMMIT TRANSACTION ✅"]
 
-    BEGIN --> RLS --> UPDATE --> WALLET --> OUTBOX --> COMMIT
+    BEGIN --> RLS --> UPDATE --> OUTBOX --> COMMIT
   end
 
   subgraph WORKER_TIER ["Async Outbox Worker Loop"]
-    POLL["📡 Poll outbox_events (STATUS = PENDING)"]
-    DISPATCH["🚌 Publish to NATS Event Bus"]
-    MARK_DONE["✅ Update outbox_events (STATUS = PROCESSED)"]
+    POLL["📡 Poll outbox_events (FOR UPDATE SKIP LOCKED) ✅"]
+    DUMMY_PUB["🚌 dummy_publisher() 🟡 PARTIAL"]
+    MARK_DONE["✅ Update outbox_events (STATUS = PROCESSED) ✅"]
 
-    POLL --> DISPATCH --> MARK_DONE
+    POLL --> DUMMY_PUB --> MARK_DONE
   end
 
-  subgraph SUBSCRIBERS ["Downstream Async Consumers"]
-    WH["📫 Webhook Delivery Worker (Inbox/Outbox)"]
-    NOTIF["📲 WhatsApp / SMS Notification Worker"]
-    AUDIT["📜 Compliance Audit Logger"]
+  subgraph TARGET_BUS ["Target Async Transport"]
+    NATS_BUS["🚌 NATS Event Bus 🔵 TARGET"]
+    CONSUMERS["📲 Webhook & Notification Workers 🔵 TARGET"]
+
+    DUMMY_PUB -.-> NATS_BUS -.-> CONSUMERS
   end
 
   REQ --> BEGIN
   COMMIT --> POLL
-  DISPATCH --> WH & NOTIF & AUDIT
 
   style DB_TX fill:#022c22,stroke:#10b981,stroke-width:2px,color:#fff
   style WORKER_TIER fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#fff
-  style SUBSCRIBERS fill:#083344,stroke:#06b6d4,stroke-width:2px,color:#fff
-            </pre>
-          </div>
+  style TARGET_BUS fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+          </pre>
         </div>
       </div>
+    </div>
 
-      <!-- PERSPECTIVE 6: Security & Retention -->
-      <div id="p-sec" class="tab-panel">
-        <div class="perspective-banner" style="border-left-color: var(--brand-rose);">
-          <div class="perspective-title">🛡️ 6. Bakış Açısı: Güvenlik, RBAC & Data Retention Engine</div>
-          <div class="perspective-desc">Çok kiracılı Rol Tabanlı Erişim Kontrolü (RBAC), RLS veri filtresi, yasal saklama süreleri (Retention Engine) ve anonimleştirme iş akışları.</div>
+    <!-- PERSPECTIVE 6: Security & Retention -->
+    <div id="p-sec" class="tab-panel">
+      <div class="perspective-banner" style="border-left-color: var(--brand-rose);">
+        <div class="perspective-title">
+          <span>🛡️ 6. Bakış Açısı: Güvenlik, RBAC & Target Data Retention</span>
+          <span class="legend-badge impl">✅ IMPL (RBAC+RLS) / 🔵 TARGET (Retention)</span>
         </div>
+        <div class="perspective-desc">Çok kiracılı Rol Tabanlı Erişim Kontrolü (RBAC) + FastAPI RLS Dependency filtresi canlıdır. Data Retention Engine hedef spesifikasyondur.</div>
+      </div>
 
-        <div class="diagram-card">
-          <div class="diagram-header">
-            <div class="diagram-header-text">
-              <h2>🔒 Güvenlik Katmanı ve Yasal Saklama Motoru</h2>
-              <p>RBAC + RLS çift katmanlı güvenlik denetimi ve otomatik KVKK/GDPR anonimleştirme.</p>
-            </div>
-            <div class="diagram-toolbar">
-              <button class="tool-btn" onclick="zoomDiagram('m-sec', 0.15)">🔍 +</button>
-              <button class="tool-btn" onclick="zoomDiagram('m-sec', -0.15)">🔍 -</button>
-              <button class="tool-btn" onclick="resetZoom('m-sec')">↺ Sıfırla</button>
-            </div>
+      <div class="diagram-card">
+        <div class="diagram-header">
+          <div class="diagram-header-text">
+            <h2>🔒 Güvenlik Katmanı ve Hedef Yasal Saklama Motoru</h2>
+            <p>FastAPI Scope Check + PostgreSQL RLS Policy çift katmanlı canlı güvenlik denetimi.</p>
           </div>
-          <div class="mermaid-wrapper">
-            <pre class="mermaid" id="m-sec">
+          <div class="diagram-toolbar">
+            <button class="tool-btn" onclick="zoomDiagram('m-sec', 0.15)">🔍 +</button>
+            <button class="tool-btn" onclick="zoomDiagram('m-sec', -0.15)">🔍 -</button>
+            <button class="tool-btn" onclick="resetZoom('m-sec')">↺ Sıfırla</button>
+          </div>
+        </div>
+        <div class="mermaid-wrapper">
+          <pre class="mermaid" id="m-sec">
 flowchart TD
   subgraph AUTH_PERIMETER ["🛡️ SECURITY & ACCESS PERIMETER"]
-    ROLE_SUPER["👑 SuperAdmin (Federation Level)"]
-    ROLE_TENANT["👔 Gym Owner / Tenant Admin"]
-    ROLE_BRANCH["📍 Branch Manager"]
-    ROLE_TRAINER["🏋️ Trainer / Coach"]
-    ROLE_RECEPTION["📋 Receptionist"]
-    ROLE_MEMBER["👤 Member / Athlete"]
+    ROLE_SUPER["👑 SuperAdmin (Federation Level) ✅"]
+    ROLE_TENANT["👔 Gym Owner / Tenant Admin ✅"]
+    ROLE_BRANCH["📍 Branch Manager ✅"]
+    ROLE_TRAINER["🏋️ Trainer / Coach ✅"]
+    ROLE_RECEPTION["📋 Receptionist ✅"]
+    ROLE_MEMBER["👤 Member / Athlete ✅"]
   end
 
   subgraph SCOPE_RLS ["🔒 DUAL SCOPE & ROW-LEVEL SECURITY"]
-    RBAC_CHECK{"RBAC Scope Check<br/>(e.g., members:read)"}
-    RLS_FILTER{"PostgreSQL RLS Policy<br/>WHERE tenant_id = current_tenant_id()"}
+    RBAC_CHECK{"FastAPI Scope Check<br/>(require_permission) ✅"}
+    RLS_FILTER{"PostgreSQL RLS Policy<br/>SET LOCAL app.current_tenant_id ✅"}
     
     RBAC_CHECK -->|Pass| RLS_FILTER
   end
 
-  subgraph RETENTION_ENGINE ["📜 DATA RETENTION & ANONYMIZATION ENGINE"]
-    POLICIES["📋 Data Retention Policies<br/>(Attendance: X days, Finance: Y years)"]
-    JOBS["⚙️ Scheduled Deletion & Anonymization Jobs"]
-    HOLDS["⚖️ Legal Holds (Freeze Deletion)"]
+  subgraph RETENTION_ENGINE ["📜 DATA RETENTION ENGINE (MASTER_SPEC 130)"]
+    POLICIES["📋 Data Retention Policies 🔵 TARGET"]
+    JOBS["⚙️ Scheduled Deletion & Anonymization Jobs 🔵 TARGET"]
+    HOLDS["⚖️ Legal Holds 🔵 TARGET"]
 
-    POLICIES --> JOBS
-    HOLDS -->|Block| JOBS
+    POLICIES -.-> JOBS
+    HOLDS -.->|Block| JOBS
   end
 
   AUTH_PERIMETER --> RBAC_CHECK
-  RLS_FILTER --> RETENTION_ENGINE
+  RLS_FILTER -.-> RETENTION_ENGINE
 
   style ROLE_SUPER fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#fff
   style RLS_FILTER fill:#022c22,stroke:#10b981,stroke-width:2px,color:#fff
-  style RETENTION_ENGINE fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fff
-            </pre>
-          </div>
+  style RETENTION_ENGINE fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+          </pre>
         </div>
       </div>
     </div>
-
-    <!-- Compliance & Architectural Integrity Matrix Card -->
-    <div class="matrix-card">
-      <div class="matrix-title">
-        <span>🛡️</span> Architecture Invariants & Spec Compliance Matrix
-      </div>
-      <div class="matrix-grid">
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Tenancy & Isolation Tier</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">Gym = Tenant boundary. IsolationProvider abstracts Shared RLS, Dedicated Schema & Dedicated DB.</p>
-        </div>
-
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Identity & Membership</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">User != Member, Federation != Tenant, Branch = Location strictly enforced across all models.</p>
-        </div>
-
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Financial Ledger & PCI</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">Integer math via <code>amount_minor</code> (Kuruş/cents). Zero raw PAN/CVV card data stored or logged.</p>
-        </div>
-
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Turnstile Security Gate</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">Dynamic HMAC-SHA256 QR + 300s expiry + JTI Replay Prevention + Turnstile Scanner PWA (:5174) relay trigger.</p>
-        </div>
-
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Transactional Outbox</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">Atomic DB transactions insert state mutations + outbox_events simultaneously. Zero dual-write bugs.</p>
-        </div>
-
-        <div class="matrix-item">
-          <div class="matrix-item-head">
-            <span class="matrix-item-title">Data Retention & GDPR</span>
-            <span class="matrix-item-badge">VERIFIED</span>
-          </div>
-          <p class="matrix-item-desc">11-stage tenant lifecycle machine. Retention Engine handles anonymization & legal holds.</p>
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      GymClubNex (Fitness Network OS) — Production Verified Master Architecture Console (Mermaid Verified)
-    </footer>
   </div>
+
+  <!-- Compliance & Architectural Integrity Matrix Card -->
+  <div class="matrix-card">
+    <div class="matrix-title">
+      <span>🛡️</span> Architecture Implementation & Target Compliance Matrix
+    </div>
+    <div class="matrix-grid">
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Tenancy & Isolation Tier</span>
+          <span class="legend-badge impl">✅ IMPL / 🔵 TARGET</span>
+        </div>
+        <p class="matrix-item-desc">Gym = Tenant boundary. Live: Shared DB + RLS via <code>get_tenant_id()</code>. Target: IsolationProvider abstraction for Dedicated Schema/DB.</p>
+      </div>
+
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Identity & Membership</span>
+          <span class="legend-badge impl">✅ IMPLEMENTED</span>
+        </div>
+        <p class="matrix-item-desc">User != Member, Federation != Tenant, Branch = Location strictly enforced across DB models and routes.</p>
+      </div>
+
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Financial Ledger & PCI</span>
+          <span class="legend-badge impl">✅ IMPLEMENTED</span>
+        </div>
+        <p class="matrix-item-desc">Integer math via <code>amount_minor</code> (Kuruş/cents). Zero raw PAN/CVV card data stored or logged.</p>
+      </div>
+
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Turnstile Security Gate</span>
+          <span class="legend-badge impl">✅ IMPLEMENTED</span>
+        </div>
+        <p class="matrix-item-desc">Compact HMAC-SHA256 QR + Default 60s expiry + JTI Replay Prevention + Turnstile Scanner PWA (:5174) relay trigger.</p>
+      </div>
+
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Transactional Outbox</span>
+          <span class="legend-badge partial">🟡 PARTIAL</span>
+        </div>
+        <p class="matrix-item-desc">Atomic DB transactions insert state mutations + outbox_events with <code>SKIP LOCKED</code> poller. NATS event bus is Target transport.</p>
+      </div>
+
+      <div class="matrix-item">
+        <div class="matrix-item-head">
+          <span class="matrix-item-title">Data Retention & Lifecycle</span>
+          <span class="legend-badge target">🔵 TARGET</span>
+        </div>
+        <p class="matrix-item-desc">11-stage tenant lifecycle machine and Data Retention Engine are specified in MASTER_SPEC 129/130 as target architecture.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    GymClubNex (Fitness Network OS) — Implementation (✅ IMPLEMENTED) + Target (🔵 TARGET) Architecture Console
+  </footer>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
