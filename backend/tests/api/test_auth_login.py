@@ -11,7 +11,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, encrypt_string
+import pyotp
 from app.db.session import get_db
 from app.main import app
 from app.models.organization import Organization
@@ -206,7 +207,7 @@ async def test_login_mfa_required(api_client, pg_session_maker):
     password = "MfaPassword1!"
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
         await db.commit()
 
     res = await api_client.post(
@@ -223,7 +224,7 @@ async def test_login_mfa_invalid(api_client, pg_session_maker):
     password = "MfaPassword1!"
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
         await db.commit()
 
     res = await api_client.post(
@@ -238,32 +239,16 @@ async def test_login_mfa_invalid(api_client, pg_session_maker):
 async def test_login_mfa_success(api_client, pg_session_maker):
     email = f"mfasucc-{uuid4().hex[:8]}@example.com"
     password = "MfaPassword1!"
+    totp_secret = pyotp.random_base32()
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, provider_id="secret123", is_active=True))
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(totp_secret), provider_id="totp", is_active=True))
         await db.commit()
 
+    totp = pyotp.TOTP(totp_secret)
     res = await api_client.post(
         "/api/v1/auth/login",
-        json={"email": email, "password": password, "mfa_code": "secret123"},
+        json={"email": email, "password": password, "mfa_code": totp.now()},
     )
     assert res.status_code == 200
-
-
-@pytest.mark.asyncio
-async def test_login_mfa_misconfigured(api_client, pg_session_maker):
-    email = f"mfamisc-{uuid4().hex[:8]}@example.com"
-    password = "MfaPassword1!"
-    async with pg_session_maker() as db:
-        user, _ = await _seed_user(db, email=email, password=password)
-        # Active MFA method registered but provider_id is None/empty
-        db.add(UserMfaMethod(user_id=user.id, provider_id="", is_active=True))
-        await db.commit()
-
-    res = await api_client.post(
-        "/api/v1/auth/login",
-        json={"email": email, "password": password, "mfa_code": "some_code"},
-    )
-    assert res.status_code == 500
-    assert res.json()["detail"] == "mfa_misconfigured"
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+import pyotp
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -20,7 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_session_token, get_current_user, get_db
-from app.core.security import generate_session_token, verify_password
+from app.core.security import generate_session_token, verify_password, decrypt_string, get_password_hash
 from app.models.rbac import UserRole
 from app.models.user import User, UserMfaMethod, UserSession
 
@@ -136,18 +137,48 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_required",
             )
-        expected = (mfa_row.provider_id or "").strip()
-        if not expected:
-            # MFA method registered but no secret configured — invalid state
+        # Brute force protection
+        if mfa_row.locked_until and mfa_row.locked_until > datetime.now(UTC):
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="mfa_misconfigured",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="mfa_locked_out",
             )
-        if not hmac.compare_digest(code, expected):
+        
+        valid = False
+        
+        # Try TOTP
+        if mfa_row.encrypted_secret:
+            totp_secret = decrypt_string(mfa_row.encrypted_secret)
+            totp = pyotp.TOTP(totp_secret)
+            if totp.verify(code):
+                valid = True
+                
+        # Try Recovery Codes
+        if not valid and mfa_row.hashed_recovery_codes:
+            for idx, hcode in enumerate(mfa_row.hashed_recovery_codes):
+                if verify_password(code, hcode):
+                    valid = True
+                    # Remove used recovery code
+                    mfa_row.hashed_recovery_codes.pop(idx)
+                    mfa_row.hashed_recovery_codes = list(mfa_row.hashed_recovery_codes)
+                    break
+        
+        if not valid:
+            mfa_row.failed_attempts = (mfa_row.failed_attempts or 0) + 1
+            if mfa_row.failed_attempts >= 5:
+                mfa_row.locked_until = datetime.now(UTC) + timedelta(minutes=15)
+                mfa_row.failed_attempts = 0
+            await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_invalid",
             )
+        
+        # Reset failed attempts on success
+        if mfa_row.failed_attempts or mfa_row.locked_until:
+            mfa_row.failed_attempts = 0
+            mfa_row.locked_until = None
+            await db.commit()
 
     raw_token, token_hash = generate_session_token()
     expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)

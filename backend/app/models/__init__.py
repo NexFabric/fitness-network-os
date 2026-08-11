@@ -7,6 +7,7 @@ from app.models.access import (
     QrJtiReplay,
     SigningKey,
 )
+from app.models.audit import AuditEvent
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
 from app.models.entitlement import (
     EntitlementDefinition,
@@ -59,6 +60,7 @@ from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 __all__ = [
     "AccessAttempt",
     "AccessMethod",
+    "AuditEvent",
     "BillingAccount",
     "Checkin",
     "ComplianceRecord",

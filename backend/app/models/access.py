@@ -82,6 +82,9 @@ class Device(TenantMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    api_key_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
     _model_table_args = (
         ForeignKeyConstraint(
             ["tenant_id", "location_id"], ["locations.tenant_id", "locations.id"]
@@ -89,6 +92,25 @@ class Device(TenantMixin, Base):
     )
 
     location = relationship("Location")
+    sessions: Mapped[list["DeviceSession"]] = relationship("DeviceSession", back_populates="device", cascade="all, delete-orphan")
+
+
+class DeviceSession(TenantMixin, Base):
+    __tablename__ = "device_sessions"
+
+    device_id: Mapped[UUID] = mapped_column(nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False)
+
+    _model_table_args = (
+        ForeignKeyConstraint(
+            ["tenant_id", "device_id"], ["devices.tenant_id", "devices.id"]
+        ),
+    )
+
+    device: Mapped["Device"] = relationship("Device", back_populates="sessions")
 
 
 class AccessAttempt(TenantMixin, Base):

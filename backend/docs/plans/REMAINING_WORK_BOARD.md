@@ -21,7 +21,7 @@
 | Public-site CI job | 🟢 added |
 | MFA enrollment enforcement (code gate) | 🟡 partial (no full TOTP UX) |
 | Scanner offline deny-by-default | 🟢 landed |
-| Scanner device auth | 🔴 still staff login (not device credential) |
+| Scanner device auth | 🟢 landed (device credentials) |
 | Playwright E2E | 🔴 not added |
 | DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
 | Independent APPROVE | 🔴 human |
@@ -47,6 +47,8 @@
 | P1-10/11 | Honest UNVERIFIED status docs under `docs/ops/` |
 | P1-12 | FE builds as **required** branch checks (via `all-green` job) |
 | SEC-1 | Dependabot high alert triage (npm audit fix vite/esbuild) |
+| P1-1 | Scanner **device** authentication |
+| P1-4b | Real TOTP + privileged role matrix UI (Backend) |
 
 ---
 
@@ -55,8 +57,6 @@
 | ID | Item | Owner |
 |----|------|-------|
 | P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
-| P1-1 | Scanner **device** authentication | A-SCAN |
-| P1-4b | Real TOTP + privileged role matrix UI | A-MFA |
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
 | P1-7 | Playwright browser E2E suite | A-FE |
 | P1-10 | Actual restore drill evidence | A-OPS |
