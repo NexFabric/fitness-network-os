@@ -1,5 +1,10 @@
 # Phase 8 Deep-Dive Fix Plan
 
+## Reference Plans
+
+- [Shelf.nu Reference and Fitness Network OS Adaptation Plan](./SHELF_NU_ADAPTATION_REFERENCE.md)
+- [Gym MVP Product Closure Plan](./GYM_MVP_PRODUCT_CLOSURE_PLAN.md)
+
 ## 1. Cleanup & Easy Wins
 - [x] Delete `pytest_error.log`, `pytest_failure.log`, `pytest_output.log` and add to `.gitignore`.
 - [x] Fix Pydantic v2 `class Config` to `model_config = ConfigDict(from_attributes=True)`.
