@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-12  
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Alembic head on main:** `t3a4b5c6d7e8` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
+**Alembic head:** `u4b5c6d7e8f9` on branch `feat/phase27-ui-production-closure` (PR #49); `t3a4b5c6d7e8` on `main` until it merges
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · MERGED · ⚠️ CI NOT GREEN (recent main) · PRODUCTION **NO-GO**
+**Maturity:** IMPLEMENTED · MERGED · CI GREEN on PR #49 (`a051f52`) · PRODUCTION **NO-GO** (Phase 26 exit gate)
 
 ---
 
@@ -22,9 +22,9 @@
 | Phase 8–15 domain | 🟢 MERGED | Tenancy/finance/outbox strong |
 | Phase 15.5 integrity | 🟢 MERGED | Maintain |
 | Phase 16–20 product MVP | 🟢 MERGED (depth partial) | Admin/Scanner polish open |
-| Phase 21–24 hardening MVP | 🟡 MERGED code / 🔴 CI flaky | CSRF/auth still P0 |
+| Phase 21–24 hardening MVP | 🟢 MERGED code / CI green | CSRF narrowed; SBOM flake isolated from the gate |
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
-| **Phase 27 production closure** | 🟡 **UI/RBAC wave landed** | Role-guarded portals + real portal data; device replay protection still open |
+| **Phase 27 production closure** | 🟢 **UI/RBAC + device hardening done** (PR #49 open) | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ---
