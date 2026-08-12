@@ -72,7 +72,15 @@ class DeviceResponse(BaseModel):
 
 
 def _hash_api_key(api_key: str) -> str:
-    """Hash the API key using SHA-256 for storage."""
+    """Hash the API key using SHA-256 for storage.
+
+    Deliberately a fast hash, not Argon2. The key is never chosen by a human:
+    ``provision_device`` mints it as ``secrets.token_urlsafe(32)`` — 256 bits of
+    CSPRNG entropy — so there is no guessable keyspace for a slow KDF to defend.
+    A memory-hard hash here would only add latency to every scanner auth. Human
+    passwords take the opposite path (``app.core.security.get_password_hash``,
+    Argon2id). Static analysis flags this on the ``api_key`` name alone.
+    """
     return hashlib.sha256(api_key.encode()).hexdigest()
 
 

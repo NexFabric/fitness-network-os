@@ -1,5 +1,7 @@
 const TENANT_KEY = 'fnos_scanner_tenant_id'
-const DEVICE_SECRET_KEY = 'fnos_scanner_device_secret'
+const KEY_DB_NAME = 'fnos_scanner_keys'
+const KEY_STORE_NAME = 'device'
+const KEY_RECORD_ID = 'signing_key'
 
 export function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL
@@ -19,7 +21,7 @@ export function setAuth(tenantId: string): void {
 
 export function clearAuth(): void {
   localStorage.removeItem(TENANT_KEY)
-  localStorage.removeItem(DEVICE_SECRET_KEY)
+  void forgetDeviceKey()
 }
 
 /**
@@ -29,6 +31,11 @@ export function clearAuth(): void {
  * server also demands an HMAC-SHA256 signature keyed on the per-session secret
  * handed out once by POST /devices/auth. The secret lives here, outside the
  * cookie jar, so a stolen cookie cannot be replayed from another machine.
+ *
+ * The secret is never *stored* as a string: it is imported into a
+ * non-extractable `CryptoKey` and only the key handle is persisted (IndexedDB).
+ * The page can sign with it but cannot read it back out, so script running on
+ * this origin cannot exfiltrate the credential — only use it, here, live.
  */
 const DEVICE_SIGNATURE_HEADER = 'X-Device-Signature'
 const DEVICE_TIMESTAMP_HEADER = 'X-Device-Timestamp'
@@ -56,13 +63,61 @@ function toHex(buffer: ArrayBuffer): string {
     .join('')
 }
 
-export function getDeviceSecret(): string | null {
-  return localStorage.getItem(DEVICE_SECRET_KEY)
+function openKeyDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(KEY_DB_NAME, 1)
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(KEY_STORE_NAME)) {
+        req.result.createObjectStore(KEY_STORE_NAME)
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+function keyTx(
+  db: IDBDatabase,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest,
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const req = run(db.transaction(KEY_STORE_NAME, mode).objectStore(KEY_STORE_NAME))
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+/** The signing key handle, or null when this scanner is not paired. */
+export async function getDeviceKey(): Promise<CryptoKey | null> {
+  if (typeof indexedDB === 'undefined') return null
+  try {
+    const db = await openKeyDb()
+    const stored = await keyTx(db, 'readonly', (s) => s.get(KEY_RECORD_ID))
+    db.close()
+    return (stored as CryptoKey | undefined) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function forgetDeviceKey(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return
+  try {
+    const db = await openKeyDb()
+    await keyTx(db, 'readwrite', (s) => s.delete(KEY_RECORD_ID))
+    db.close()
+  } catch {
+    // Nothing paired, or storage unavailable — nothing to clear.
+  }
 }
 
 /**
  * POST /api/v1/devices/auth — pairs this scanner with a provisioned device.
- * The returned signing secret is stored locally and never sent again.
+ *
+ * The signing secret in the response is imported straight into a
+ * non-extractable key and only that handle is kept; the plaintext never
+ * reaches any storage API and is unreachable after this function returns.
  */
 export async function authenticateDevice(
   deviceId: string,
@@ -83,9 +138,21 @@ export async function authenticateDevice(
     throw new ApiError(res.status, 'Cihaz doğrulanamadı, bilgileri kontrol edin')
   }
   const data = (await res.json()) as DeviceAuthResult & { signing_secret: string }
-  localStorage.setItem(DEVICE_SECRET_KEY, data.signing_secret)
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    base64UrlToBytes(data.signing_secret) as unknown as ArrayBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false, // non-extractable: usable for signing, unreadable afterwards
+    ['sign'],
+  )
+  const db = await openKeyDb()
+  await keyTx(db, 'readwrite', (s) => s.put(key, KEY_RECORD_ID))
+  db.close()
+
   setAuth(data.tenant_id)
-  return data
+  const { signing_secret: _secret, ...safe } = data
+  return safe as DeviceAuthResult
 }
 
 async function deviceSignatureHeaders(
@@ -93,8 +160,8 @@ async function deviceSignatureHeaders(
   path: string,
   body: string,
 ): Promise<Record<string, string>> {
-  const secret = getDeviceSecret()
-  if (!secret || !crypto?.subtle) return {}
+  const key = await getDeviceKey()
+  if (!key || !crypto?.subtle) return {}
 
   const encoder = new TextEncoder()
   const bodyDigest = toHex(await crypto.subtle.digest('SHA-256', encoder.encode(body)))
@@ -106,13 +173,6 @@ async function deviceSignatureHeaders(
     .join('')
 
   const canonical = [method.toUpperCase(), path, timestamp, nonce, bodyDigest].join('\n')
-  const key = await crypto.subtle.importKey(
-    'raw',
-    base64UrlToBytes(secret) as unknown as ArrayBuffer,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(canonical))
 
   return {

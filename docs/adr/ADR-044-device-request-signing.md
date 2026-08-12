@@ -73,9 +73,11 @@ Verification lives in `app/api/deps.py::_verify_device_signature`, called by
 - Clock drift on a scanner beyond 5 minutes breaks it. That is deliberate: a
   wider window is a wider replay window, and NTP is a solved problem on the
   tablets we ship.
-- XSS on the scanner origin still defeats this — the secret is reachable from
-  the page. Signing raises the bar from "copy a cookie" to "run code on the
-  device"; it does not replace the CSP and origin controls.
+- The scanner keeps the secret as a non-extractable `CryptoKey` in IndexedDB, so
+  script on the origin can *sign* but cannot read the key back out. XSS can
+  therefore still act as the device while it runs, but it cannot walk away with
+  a reusable credential. Signing raises the bar from "copy a cookie" to "run
+  code on the device, live"; it does not replace the CSP and origin controls.
 
 ## Alternatives rejected
 

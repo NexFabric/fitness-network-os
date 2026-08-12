@@ -25,7 +25,7 @@
 
 ## 3. Session Management (V3)
 - [x] **3.4.1** Session identifier lives only in a `HttpOnly`, `Secure`, `SameSite=Lax` cookie.
-- [x] **3.4.2** No raw session secret in `localStorage`/`sessionStorage`. The browser stores the tenant id only.
+- [x] **3.4.2** No raw session secret in `localStorage`/`sessionStorage`. The browser stores the tenant id only. The scanner's device signing secret is held as a non-extractable `CryptoKey` handle in IndexedDB — signable, unreadable, never persisted as plaintext.
 
 ## 4. Access Control (V4)
 - [x] **4.1.1** RBAC matrix of 11 canonical roles enforced at the FastAPI layer. Roles are `PLATFORM_SUPER_ADMIN`, `FEDERATION_ADMIN`, `FEDERATION_ANALYST`, `FEDERATION_SUPPORT`, `GYM_OWNER`, `GYM_ADMIN`, `GYM_MANAGER`, `ACCOUNTANT`, `FRONT_DESK`, `TRAINER`, `MEMBER` (`backend/permissions.yml`, `app/core/authorization.py`). Source of truth is CI-checked against the database (`scripts/check_permissions_db.py`).
