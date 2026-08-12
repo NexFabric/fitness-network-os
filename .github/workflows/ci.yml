@@ -58,6 +58,11 @@ jobs:
     name: Generate SBOM
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The action fetches the syft binary from GitHub releases at run time, which
+    # has returned 000/503 repeatedly. An upstream asset outage is not a defect
+    # in this repository and must not paint `main` red: the job still reports its
+    # own failure, but the run's conclusion is decided by the actual gates.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 

@@ -59,7 +59,6 @@
 | ID | Item | Owner |
 |----|------|-------|
 | P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
-| PR #49 | Merge blocked: `main` needs 1 approving review, `enforce_admins` on — author cannot self-approve | human |
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
