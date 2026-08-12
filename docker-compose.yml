@@ -12,6 +12,9 @@ services:
       - ./backend:/app
     environment:
       - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      # Dev/e2e only: the browser suite logs in repeatedly as a few seeded
+      # accounts. Production keeps the 20/min default from config.py.
+      - RATE_LIMIT_LOGIN_MAX_REQUESTS=500
       - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
     depends_on:

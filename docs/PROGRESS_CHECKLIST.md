@@ -90,6 +90,27 @@ string).
 
 **Evidence (local + CI on `630aeef`, 2026-08-12):** backend `pytest` **301 passed · 1 skipped** (local and CI), Playwright e2e **21 passed** against real Chromium + real backend with zero console errors, all 12 CI checks green including CodeQL. `tests/api/test_scanner_device_auth.py` 3 passed — cookie-only, forged signature, body/signature mismatch, stale timestamp, nonce replay, and unsigned-session paths each asserted 401 with their distinct reason; ruff, mypy (85 files), `alembic check` (no drift), `check_tenancy`, `check_permissions*`, `check_no_money_floats`, all three frontend builds green.
 
+## Phase 27.2 — Operations console depth (2026-08-13)
+
+Backend endpoints that had shipped with no operator surface now have one. Every
+page was exercised against the real API in Chromium, not just built.
+
+- [x] **Cihazlar** (`/devices`) — provision with one-time API key panel (copy, does not survive reload), list with humanised heartbeat, revoke behind a confirm dialog stating the consequence. Closes the loop on the signed device channel from Phase 27.1, which was previously only reachable by curl.
+- [x] **Üyelik yaşam döngüsü** — cancel / renew / expire / past-due added next to the existing freeze / unfreeze; every outcome is an inline Alert carrying the API's own message. Removed `alert()`, which blocked the page and discarded the server's reason for refusing.
+- [x] **Şube düzenleme** — the `PATCH /locations/{id}` endpoint had no UI.
+- [x] **Bildirimler** (`/notifications`) — template list + create, one-off delivery scheduling with the returned delivery state rendered. No delivery history list is shown because the API exposes no list endpoint.
+- [x] **Raporlar** (`/reports`) — definition list + create, run with format choice, status refresh and artifact link. Runs are session-scoped for the same reason.
+- [x] **Personel** (`/staff`) — list + link an existing user by id, role and location. Labelled as linking, not creating, since no user-creation API exists.
+- [x] Login rate limit made configurable (`RATE_LIMIT_LOGIN_*`). The parallel browser suite tripped the 20/min budget on shared seeded accounts — a real product behaviour, not a flake. Production keeps the tight default; the dev stack raises it.
+
+All new routes and nav items are gated to `GYM_OWNER`/`GYM_ADMIN`; the nav hides rather than offering a link that 403s. The API remains the boundary.
+
+**Evidence (local, 2026-08-13):** Playwright **33 passed** against real Chromium + real backend (was 21) — provisioning a device and reading its key once, revoking it through the dialog, editing a location, creating a notification template, creating and running a report definition, inline validation refusals, and every ops route redirecting members/trainers back to their own portal. admin-web build green.
+
+**Known gaps recorded, not papered over:**
+- **API-1** No membership *creation* API and no plan catalogue — memberships can only be created by a seed script, so the lifecycle UI cannot be driven end to end yet.
+- Notification deliveries and report runs have no list endpoints, so both pages show only what the current session started.
+
 ---
 
 ## Closed on main (feature waves)

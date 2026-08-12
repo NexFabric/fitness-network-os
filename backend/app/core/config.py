@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     # Production requires smtp or disabled (or ALLOW_MOCK_EMAIL=true).
     NOTIFICATION_EMAIL_PROVIDER: str = "console"
 
+    # Login rate limit budget (per identifier, sliding window). Production keeps
+    # the tight default; the dev stack raises it so a parallel e2e run against a
+    # handful of shared accounts is not throttled into failure.
+    RATE_LIMIT_LOGIN_MAX_REQUESTS: int = 20
+    RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = 60
+
     DATABASE_URL: PostgresDsn
     MIGRATOR_DATABASE_URL: PostgresDsn
     REDIS_URL: RedisDsn
