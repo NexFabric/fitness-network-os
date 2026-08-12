@@ -43,48 +43,51 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 def create_app() -> FastAPI:
+    # Fail closed before wiring routes when production config is incomplete.
+    settings.validate_production()
+
     app = FastAPI(
         title="Fitness Network OS",
         version="0.1.0",
         description="Core backend for Fitness Network OS",
     )
 
+    # Last registered runs first on the request path (Starlette).
+    app.add_middleware(SecurityHeadersMiddleware)
+    # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
+    app.add_middleware(RequestLoggingMiddleware)
+    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
+    app.add_middleware(SimpleRateLimitMiddleware)
+    # CSRF Double-Submit protection (Phase 23)
+    app.add_middleware(CSRFMiddleware)
+
     if settings.is_production:
-        # Fail closed for browser CORS when ENVIRONMENT=production
-        origins = settings.cors_origins_list
+        if settings.allowed_hosts_list:
+            app.add_middleware(
+                TrustedHostMiddleware,
+                allowed_hosts=settings.allowed_hosts_list,
+            )
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=origins,
+            allow_origins=settings.cors_origins_list,
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["*"],
         )
     else:
-        # Permissive local / non-prod UX (existing behavior)
+        # Permissive local / non-prod UX with credentials support for 5173/5174
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=[
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",
+            ],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
-
-    # Last registered runs first on the request path (Starlette).
-    app.add_middleware(SecurityHeadersMiddleware)
-    # Phase 24 stub: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
-    app.add_middleware(RequestLoggingMiddleware)
-    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
-    app.add_middleware(SimpleRateLimitMiddleware)
-
-    # Production Host allowlist only when ALLOWED_HOSTS is non-empty (skip if unset).
-    if settings.is_production and settings.allowed_hosts_list:
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=settings.allowed_hosts_list,
-        )
-
-    # CSRF Double-Submit protection (Phase 23)
-    app.add_middleware(CSRFMiddleware)
 
     @app.get("/health")
     async def health_check():
@@ -119,6 +122,33 @@ def create_app() -> FastAPI:
             "timestamp": datetime.now(UTC).isoformat(),
             "checks": checks,
         }
+
+    @app.get("/live")
+    async def liveness_probe():
+        return Response(content="OK", status_code=200, media_type="text/plain")
+
+    @app.get("/ready")
+    async def readiness_probe():
+        # Quick check for db/redis
+        try:
+            from redis.asyncio import Redis
+            from sqlalchemy import text
+
+            from app.db.session import engine
+            
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            r = Redis.from_url(str(settings.REDIS_URL))
+            await r.ping()
+            await r.aclose()
+            return Response(content="OK", status_code=200, media_type="text/plain")
+        except Exception:
+            return Response(content="Service Unavailable", status_code=503, media_type="text/plain")
+
+    @app.get("/metrics")
+    async def metrics_probe():
+        # Placeholder for Prometheus metrics (Phase 24+)
+        return Response(content="# TYPE http_requests_total counter\nhttp_requests_total 0\n", media_type="text/plain")
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):

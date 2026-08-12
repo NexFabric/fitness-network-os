@@ -110,7 +110,7 @@ class MembershipFreeze(TenantMixin, Base):
         Index("ix_membership_freezes_active", "tenant_id", "membership_id", unique=True, postgresql_where=text("actual_end_date IS NULL")),
     )
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    expected_end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expected_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     actual_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     previous_status: Mapped[str | None] = mapped_column(String, nullable=True)
     reason: Mapped[str | None] = mapped_column(String, nullable=True)

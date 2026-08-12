@@ -39,40 +39,63 @@ class NotificationProvider(Protocol):
 
 
 class LogNotificationProvider:
-    """Dev/test provider: always succeeds, no external calls, no log noise."""
+    """Dev/test provider: always succeeds, no external calls, no recipient PII."""
 
     name = "log"
 
     async def send(self, delivery: NotificationDelivery) -> ProviderResult:
         mid = f"log-{delivery.id.hex[:12]}-{uuid4().hex[:8]}"
+        # Never log recipient_address / body (PII / secrets).
+        logger.debug(
+            "notification.log delivery_id=%s channel=%s provider_message_id=%s",
+            delivery.id,
+            delivery.channel,
+            mid,
+        )
         return ProviderResult(success=True, provider=self.name, provider_message_id=mid)
 
 
 class ConsoleEmailNotificationProvider:
     """EMAIL adapter: structured console log only — never network SMTP.
 
-    Logs delivery metadata only (ids, channel, recipient address, template_id,
-    subject key/text if short). Does **not** log free-form body content
-    (may contain OTP/secrets/PII). Never logs PAN/CVV/card data.
+    Logs delivery ids only — never recipient_address, body, or free-form context
+    (PII / OTP). Never logs PAN/CVV/card data.
     """
 
     name = "console_email"
 
     async def send(self, delivery: NotificationDelivery) -> ProviderResult:
         mid = f"console-email-{delivery.id.hex[:12]}-{uuid4().hex[:8]}"
-        # Structured fields only — omit body / context (sensitive free-form).
         logger.info(
             "notification.email.console delivery_id=%s channel=%s "
-            "recipient_address=%s template_id=%s subject=%s "
-            "provider_message_id=%s",
+            "template_id=%s provider_message_id=%s",
             delivery.id,
             delivery.channel,
-            delivery.recipient_address,
             delivery.template_id,
-            delivery.subject,
             mid,
         )
         return ProviderResult(success=True, provider=self.name, provider_message_id=mid)
+
+
+class ProductionMockBlockedProvider:
+    """Production fail-closed stub: mock transports must not silently succeed."""
+
+    name = "prod_mock_blocked"
+
+    def __init__(self, channel: str):
+        self.channel = channel
+
+    async def send(self, delivery: NotificationDelivery) -> ProviderResult:
+        logger.error(
+            "notification.prod_mock_blocked channel=%s delivery_id=%s",
+            self.channel,
+            delivery.id,
+        )
+        return ProviderResult(
+            success=False,
+            provider=self.name,
+            error=f"channel_{self.channel}_not_configured_for_production",
+        )
 
 
 class FailingNotificationProvider:
@@ -139,8 +162,8 @@ class SmtpNotificationProvider:
             await asyncio.to_thread(_send)
             
             logger.info(
-                "notification.email.smtp delivery_id=%s recipient_address=%s provider_message_id=%s",
-                delivery.id, delivery.recipient_address, mid
+                "notification.email.smtp delivery_id=%s provider_message_id=%s",
+                delivery.id, mid
             )
             return ProviderResult(success=True, provider=self.name, provider_message_id=mid)
         except Exception as e:
@@ -157,14 +180,35 @@ def _email_provider() -> NotificationProvider:
     Unknown values fall back to console (safe, no network).
     """
     mode = os.environ.get(_EMAIL_PROVIDER_ENV, "console").strip().lower()
+    env = os.environ.get("ENVIRONMENT", "development")
+    
+    if env == "production":
+        if mode not in ("smtp", "disabled"):
+            if os.environ.get("ALLOW_MOCK_EMAIL") != "true":
+                raise RuntimeError(
+                    "Production requires NOTIFICATION_EMAIL_PROVIDER=smtp (or 'disabled' "
+                    "or ALLOW_MOCK_EMAIL=true)"
+                )
+    
     if mode == "log":
         return LogNotificationProvider()
     elif mode == "smtp":
         return SmtpNotificationProvider()
+    elif mode == "disabled":
+        return FailingNotificationProvider()
     return ConsoleEmailNotificationProvider()
 
 
 def default_providers() -> dict[str, NotificationProvider]:
+    env = os.environ.get("ENVIRONMENT", "development").strip().lower()
+    if env == "production" and os.environ.get("ALLOW_MOCK_SMS_WA_PUSH") != "true":
+        # Do not treat log/mock as successful delivery in production.
+        return {
+            "EMAIL": _email_provider(),
+            "SMS": ProductionMockBlockedProvider("SMS"),
+            "WHATSAPP": ProductionMockBlockedProvider("WHATSAPP"),
+            "PUSH": ProductionMockBlockedProvider("PUSH"),
+        }
     log = LogNotificationProvider()
     return {
         "EMAIL": _email_provider(),

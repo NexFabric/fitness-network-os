@@ -82,6 +82,9 @@ class Device(TenantMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    api_key_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+
     _model_table_args = (
         ForeignKeyConstraint(
             ["tenant_id", "location_id"], ["locations.tenant_id", "locations.id"]
@@ -89,6 +92,35 @@ class Device(TenantMixin, Base):
     )
 
     location = relationship("Location")
+    sessions: Mapped[list["DeviceSession"]] = relationship("DeviceSession", back_populates="device", cascade="all, delete-orphan")
+
+
+class DeviceSession(TenantMixin, Base):
+    """Authentication Bootstrap Domain table for edge scanner devices.
+
+    Maps bearer token_hash to device_id and tenant_id prior to RLS context initialization
+    in `get_current_device()`. Classified under AUTH_BOOTSTRAP_TABLES in tenancy verification.
+    """
+
+    __tablename__ = "device_sessions"
+
+    device_id: Mapped[UUID] = mapped_column(nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False)
+    # Second half of the device credential: the request-signing secret, held as
+    # a `local:hmac:…` reference. The token above travels in a cookie and the
+    # secret never does, so stealing one does not yield the other.
+    signing_key_material: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
+    _model_table_args = (
+        ForeignKeyConstraint(
+            ["tenant_id", "device_id"], ["devices.tenant_id", "devices.id"]
+        ),
+    )
+
+    device: Mapped["Device"] = relationship("Device", back_populates="sessions")
 
 
 class AccessAttempt(TenantMixin, Base):
@@ -171,6 +203,30 @@ class OfflineSnapshot(TenantMixin, Base):
     )
 
     device = relationship("Device")
+
+
+class DeviceNonce(TenantMixin, Base):
+    """Consumed device request nonces (tenant-scoped).
+
+    Same shape as :class:`QrJtiReplay`, one layer up: it stops a *captured
+    signed request* from being replayed inside its timestamp window, where the
+    jti table stops a captured QR credential from being spent twice.
+    """
+
+    __tablename__ = "device_nonces"
+
+    device_session_id: Mapped[UUID] = mapped_column(nullable=False)
+    nonce: Mapped[str] = mapped_column(String(128), nullable=False)
+    # Indexed: the expiry sweep runs on every signed device request.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+
+    _model_table_args = (
+        UniqueConstraint(
+            "tenant_id", "device_session_id", "nonce", name="uq_device_nonces_session_nonce"
+        ),
+    )
 
 
 class QrJtiReplay(TenantMixin, Base):

@@ -13,7 +13,12 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, get_tenant_id
+from app.api.deps import (
+    get_current_user,
+    get_db,
+    get_optional_tenant_id,
+    get_tenant_id,
+)
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.access import Checkin
 from app.models.user import User
@@ -67,6 +72,24 @@ class MeProfileResponse(BaseModel):
     member: MeMemberResponse
 
 
+class MeSessionResponse(BaseModel):
+    """Who-am-I for any authenticated principal — staff included.
+
+    Distinct from ``/me/profile``, which 404s when no member row is bound and so
+    can never answer this for staff. Roles/permissions are the ones effective in
+    the requested tenant plus platform/federation-scoped grants.
+    """
+
+    user_id: UUID
+    # null for federation/platform principals, which belong to no single tenant.
+    tenant_id: UUID | None
+    email: str | None
+    is_superuser: bool
+    roles: list[str]
+    permissions: list[str]
+    has_member_binding: bool
+
+
 class MeWalletSummary(BaseModel):
     """Entitlement wallet row for the bound member (read-only snapshot)."""
 
@@ -107,6 +130,55 @@ async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID)
             detail="member_not_bound",
         )
     return member
+
+
+@router.get("/session", response_model=MeSessionResponse)
+async def get_my_session(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID | None = Depends(get_optional_tenant_id),
+):
+    """Effective roles and permissions for the caller.
+
+    X-Tenant-ID is optional: a federation or platform principal holds no
+    tenant-scoped role, and requiring a tenant would leave it unable to answer
+    even "who am I". When a tenant is supplied, membership has already been
+    proven by the dependency.
+
+    No permission gate — this returns only what the caller already holds, so
+    there is nothing here to escalate with.
+    """
+    roles: set[str] = set()
+    permissions: set[str] = set()
+
+    for user_role in current_user.user_roles:
+        role = user_role.role
+        if role is None:
+            continue
+        # Tenant-scoped grants count only for the tenant being addressed;
+        # platform (both None) and federation (organization_id) grants are not
+        # tenant-bound and always apply.
+        if user_role.tenant_id is not None and user_role.tenant_id != tenant_id:
+            continue
+        roles.add(role.name)
+        for permission in role.permissions or []:
+            permissions.add(permission.name)
+
+    member = (
+        await MemberService(db).get_member_by_user_id(tenant_id, current_user.id)
+        if tenant_id is not None
+        else None
+    )
+
+    return MeSessionResponse(
+        user_id=current_user.id,
+        email=current_user.email,
+        tenant_id=tenant_id,
+        is_superuser=current_user.is_superuser,
+        roles=sorted(roles),
+        permissions=sorted(permissions),
+        has_member_binding=member is not None,
+    )
 
 
 @router.get("/profile", response_model=MeProfileResponse)

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 class MembershipFreezeCreate(BaseModel):
     start_date: datetime
-    expected_end_date: datetime
+    expected_end_date: datetime | None = None
     reason: str | None = None
 
 
@@ -14,7 +14,7 @@ class MembershipFreezeResponse(BaseModel):
     id: UUID
     membership_id: UUID
     start_date: datetime
-    expected_end_date: datetime
+    expected_end_date: datetime | None = None
     actual_end_date: datetime | None = None
     reason: str | None = None
     tenant_id: UUID

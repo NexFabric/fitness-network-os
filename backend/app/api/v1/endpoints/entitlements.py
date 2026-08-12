@@ -11,6 +11,7 @@ from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
 from app.services.entitlement import EntitlementService
 from app.services.idempotency import ENTITLEMENT_CONSUME
+from app.services.member_visibility import require_member_visible
 
 router = APIRouter()
 
@@ -52,6 +53,7 @@ async def check_entitlement(
         resource_tenant_id=tenant_id,
     ):
         raise SecurityException()
+    await require_member_visible(db, current_user, tenant_id, member_id)
 
     result = await EntitlementService.check_access(
         db, tenant_id, member_id, request.action, request.quantity
@@ -84,6 +86,7 @@ async def consume_entitlement(
         resource_tenant_id=tenant_id,
     ):
         raise SecurityException()
+    await require_member_visible(db, current_user, tenant_id, member_id)
 
     if not idempotency_key:
         raise HTTPException(

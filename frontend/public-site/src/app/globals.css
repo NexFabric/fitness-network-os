@@ -1,30 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020617; /* Surface (slate-950) */
-  --foreground: #f8fafc; /* Ink (slate-50) */
-  --brand: #0D9488; /* Teal-600 */
-  --brand-deep: #0F766E; /* Teal-700 */
-  --accent: #34D399; /* Emerald-400 */
-  --card: rgba(15, 23, 42, 0.5); /* Slate-900 with opacity */
-  --border: rgba(30, 41, 59, 0.5); /* Slate-800 with opacity */
+  --background: #020617;
+  --foreground: #f8fafc;
+  --ink-muted: #94a3b8;
+  --surface-raised: #0b1220;
+  --brand: #0d9488;
+  --brand-deep: #0f766e;
+  --brand-light: #14b8a6;
+  --accent: #34d399;
+  --warn: #f59e0b;
+  --danger: #dc2626;
+  --card: rgba(15, 23, 42, 0.55);
+  --border: rgba(51, 65, 85, 0.55);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-surface-raised: var(--surface-raised);
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
+  --color-brand-light: var(--brand-light);
   --color-accent: var(--accent);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
   --color-card: var(--card);
   --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-dm-sans);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 35%, transparent);
+  color: var(--foreground);
+}
+
+/* Primary CTA glow — restrained */
+.btn-glow {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent),
+    0 8px 24px -8px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 50%, transparent),
+    0 12px 32px -8px color-mix(in srgb, var(--brand) 55%, transparent);
 }

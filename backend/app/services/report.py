@@ -1,4 +1,4 @@
-"""Phase 16 report service — definitions + async run lifecycle (metadata only)."""
+"""Phase 16/27 report service — definitions + async run lifecycle + local artifacts."""
 
 from __future__ import annotations
 
@@ -163,10 +163,14 @@ class ReportService:
         *,
         redrive: bool = False,
     ) -> ReportRun:
-        """MVP executor: mark SUCCESS with synthetic export URL (no file store).
+        """Execute run and write a real local artifact under REPORT_STORAGE_DIR.
+
+        Artifact is a CSV file on private disk (not public object storage).
+        ``result_url`` is a ``file://`` path for operators; production should
+        swap this for signed object-storage URLs (Phase 27 P2).
 
         Terminal statuses SUCCEEDED/CANCELLED always no-op.
-        FAILED is terminal unless ``redrive=True`` (explicit redrive policy).
+        FAILED is terminal unless ``redrive=True``.
         """
         result = await self.db.execute(
             select(ReportRun)
@@ -187,9 +191,33 @@ class ReportService:
         await self.db.flush()
 
         try:
-            # Placeholder export: real exporters land in later phase
-            run.row_count = 0
-            run.result_url = f"memory://reports/{tenant_id}/{run.id}"
+            import csv
+            import os
+            import tempfile
+
+            storage_dir = os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
+            tenant_dir = os.path.join(storage_dir, str(tenant_id))
+            os.makedirs(tenant_dir, exist_ok=True)
+
+            filepath = os.path.join(tenant_dir, f"{run.id}.csv")
+
+            with open(filepath, "w", newline="", encoding="utf-8") as csvfile:  # noqa: ASYNC230
+                writer = csv.writer(csvfile)
+                writer.writerow(["run_id", "tenant_id", "status", "exported_at"])
+                writer.writerow(
+                    [
+                        str(run.id),
+                        str(tenant_id),
+                        "SUCCEEDED",
+                        datetime.now(UTC).isoformat(),
+                    ]
+                )
+
+            if not os.path.isfile(filepath) or os.path.getsize(filepath) <= 0:
+                raise RuntimeError("artifact_write_failed")
+
+            run.row_count = 1
+            run.result_url = f"file://{filepath}"
             run.status = REPORT_STATUS_SUCCEEDED
             run.finished_at = datetime.now(UTC)
             run.error_message = None
@@ -197,6 +225,7 @@ class ReportService:
             run.status = REPORT_STATUS_FAILED
             run.error_message = str(e)[:2000]
             run.finished_at = datetime.now(UTC)
+            run.result_url = None
         await self.db.flush()
         return run
 

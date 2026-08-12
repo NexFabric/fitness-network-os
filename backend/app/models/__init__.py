@@ -3,10 +3,12 @@ from app.models.access import (
     AccessMethod,
     Checkin,
     Device,
+    DeviceNonce,
     OfflineSnapshot,
     QrJtiReplay,
     SigningKey,
 )
+from app.models.audit import AuditEvent
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
 from app.models.entitlement import (
     EntitlementDefinition,
@@ -54,11 +56,13 @@ from app.models.rbac import Permission, Role, UserRole
 from app.models.report import ReportDefinition, ReportRun
 from app.models.staff import Staff
 from app.models.tenant import Tenant
+from app.models.trainer_assignment import TrainerAssignment
 from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 
 __all__ = [
     "AccessAttempt",
     "AccessMethod",
+    "AuditEvent",
     "BillingAccount",
     "Checkin",
     "ComplianceRecord",
@@ -68,6 +72,7 @@ __all__ = [
     "CreditApplication",
     "CreditNote",
     "Device",
+    "DeviceNonce",
     "Discount",
     "Entitlement",
     "EntitlementDefinition",
@@ -120,6 +125,7 @@ __all__ = [
     "Tag",
     "Task",
     "Tenant",
+    "TrainerAssignment",
     "User",
     "UserDevice",
     "UserMfaMethod",

@@ -28,7 +28,7 @@ PHASE11_EXPAND = "f7a8b9c0d1e2"
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/fitness_test_db",
+    "postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_test_db",
 )
 SYNC_URL = TEST_DATABASE_URL.replace("+asyncpg", "")
 

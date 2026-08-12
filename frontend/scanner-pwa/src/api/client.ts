@@ -1,5 +1,7 @@
-const TOKEN_KEY = 'fnos_scanner_token'
 const TENANT_KEY = 'fnos_scanner_tenant_id'
+const KEY_DB_NAME = 'fnos_scanner_keys'
+const KEY_STORE_NAME = 'device'
+const KEY_RECORD_ID = 'signing_key'
 
 export function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL
@@ -9,22 +11,175 @@ export function getBaseUrl(): string {
   return url.replace(/\/$/, '')
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
 export function getTenantId(): string | null {
   return localStorage.getItem(TENANT_KEY)
 }
 
-export function setAuth(token: string, tenantId: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
+export function setAuth(tenantId: string): void {
   localStorage.setItem(TENANT_KEY, tenantId)
 }
 
 export function clearAuth(): void {
-  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(TENANT_KEY)
+  void forgetDeviceKey()
+}
+
+/**
+ * Device request signing.
+ *
+ * The `device_session` cookie is only half of the device credential — the
+ * server also demands an HMAC-SHA256 signature keyed on the per-session secret
+ * handed out once by POST /devices/auth. The secret lives here, outside the
+ * cookie jar, so a stolen cookie cannot be replayed from another machine.
+ *
+ * The secret is never *stored* as a string: it is imported into a
+ * non-extractable `CryptoKey` and only the key handle is persisted (IndexedDB).
+ * The page can sign with it but cannot read it back out, so script running on
+ * this origin cannot exfiltrate the credential — only use it, here, live.
+ */
+const DEVICE_SIGNATURE_HEADER = 'X-Device-Signature'
+const DEVICE_TIMESTAMP_HEADER = 'X-Device-Timestamp'
+const DEVICE_NONCE_HEADER = 'X-Device-Nonce'
+
+export type DeviceAuthResult = {
+  device_id: string
+  tenant_id: string
+  location_id: string
+  session_id: string
+  expires_at: string
+}
+
+function base64UrlToBytes(value: string): Uint8Array {
+  const padded = value + '='.repeat((4 - (value.length % 4)) % 4)
+  const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+  const out = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i)
+  return out
+}
+
+function toHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function openKeyDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(KEY_DB_NAME, 1)
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(KEY_STORE_NAME)) {
+        req.result.createObjectStore(KEY_STORE_NAME)
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+function keyTx(
+  db: IDBDatabase,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest,
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const req = run(db.transaction(KEY_STORE_NAME, mode).objectStore(KEY_STORE_NAME))
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+/** The signing key handle, or null when this scanner is not paired. */
+export async function getDeviceKey(): Promise<CryptoKey | null> {
+  if (typeof indexedDB === 'undefined') return null
+  try {
+    const db = await openKeyDb()
+    const stored = await keyTx(db, 'readonly', (s) => s.get(KEY_RECORD_ID))
+    db.close()
+    return (stored as CryptoKey | undefined) ?? null
+  } catch {
+    return null
+  }
+}
+
+async function forgetDeviceKey(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return
+  try {
+    const db = await openKeyDb()
+    await keyTx(db, 'readwrite', (s) => s.delete(KEY_RECORD_ID))
+    db.close()
+  } catch {
+    // Nothing paired, or storage unavailable — nothing to clear.
+  }
+}
+
+/**
+ * POST /api/v1/devices/auth — pairs this scanner with a provisioned device.
+ *
+ * The signing secret in the response is imported straight into a
+ * non-extractable key and only that handle is kept; the plaintext never
+ * reaches any storage API and is unreachable after this function returns.
+ */
+export async function authenticateDevice(
+  deviceId: string,
+  tenantId: string,
+  apiKey: string,
+): Promise<DeviceAuthResult> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/devices/auth`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      device_id: deviceId,
+      tenant_id: tenantId,
+      api_key: apiKey,
+    }),
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, 'Cihaz doğrulanamadı, bilgileri kontrol edin')
+  }
+  const data = (await res.json()) as DeviceAuthResult & { signing_secret: string }
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    base64UrlToBytes(data.signing_secret) as unknown as ArrayBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false, // non-extractable: usable for signing, unreadable afterwards
+    ['sign'],
+  )
+  const db = await openKeyDb()
+  await keyTx(db, 'readwrite', (s) => s.put(key, KEY_RECORD_ID))
+  db.close()
+
+  setAuth(data.tenant_id)
+  const { signing_secret: _secret, ...safe } = data
+  return safe as DeviceAuthResult
+}
+
+async function deviceSignatureHeaders(
+  method: string,
+  path: string,
+  body: string,
+): Promise<Record<string, string>> {
+  const key = await getDeviceKey()
+  if (!key || !crypto?.subtle) return {}
+
+  const encoder = new TextEncoder()
+  const bodyDigest = toHex(await crypto.subtle.digest('SHA-256', encoder.encode(body)))
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const nonceBytes = new Uint8Array(16)
+  crypto.getRandomValues(nonceBytes)
+  const nonce = Array.from(nonceBytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  const canonical = [method.toUpperCase(), path, timestamp, nonce, bodyDigest].join('\n')
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(canonical))
+
+  return {
+    [DEVICE_TIMESTAMP_HEADER]: timestamp,
+    [DEVICE_NONCE_HEADER]: nonce,
+    [DEVICE_SIGNATURE_HEADER]: toHex(signature),
+  }
 }
 
 export class ApiError extends Error {
@@ -69,9 +224,7 @@ export async function validateQr(
     Accept: 'application/json',
     'Content-Type': 'application/json',
   }
-  const token = getToken()
   const tenantId = getTenantId()
-  if (token) headers.Authorization = `Bearer ${token}`
   if (tenantId) headers['X-Tenant-ID'] = tenantId
 
   const payload: Record<string, unknown> = {
@@ -83,17 +236,45 @@ export async function validateQr(
     payload.location_id = body.location_id
   }
 
-  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/)
-  if (match) {
-    headers['x-csrf-token'] = match[1]
+  // Cross-origin: bootstrap CSRF from API (cookie not readable via document.cookie)
+  let csrf: string | null = null
+  try {
+    const boot = await fetch(`${base}/api/v1/auth/csrf`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    })
+    if (boot.ok) {
+      const j = (await boot.json()) as { csrf_token?: string }
+      csrf = j.csrf_token ?? null
+    }
+  } catch {
+    // continue; server may return 403
+  }
+  if (csrf) {
+    headers['x-csrf-token'] = csrf
   }
 
-  const res = await fetch(`${base}/api/v1/access/qr/validate`, {
+  // Signed over the exact bytes sent — re-serializing would break the digest.
+  const bodyText = JSON.stringify(payload)
+  const devicePath = '/api/v1/devices/qr/validate'
+  const signature = await deviceSignatureHeaders('POST', devicePath, bodyText)
+
+  let res = await fetch(`${base}${devicePath}`, {
     method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
+    headers: { ...headers, ...signature },
+    body: bodyText,
     credentials: 'include',
   })
+
+  if (res.status === 401 || res.status === 404) {
+    res = await fetch(`${base}/api/v1/access/qr/validate`, {
+      method: 'POST',
+      headers,
+      body: bodyText,
+      credentials: 'include',
+    })
+  }
 
   const text = await res.text()
   let data: unknown = null

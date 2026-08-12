@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -58,5 +59,11 @@ class UserMfaMethod(Base):
     encrypted_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
     provider_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    hashed_recovery_codes: Mapped[list[str]] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list
+    )
+    failed_attempts: Mapped[int] = mapped_column(default=0, nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     user: Mapped["User"] = relationship("User", back_populates="mfa_methods")

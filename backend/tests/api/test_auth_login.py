@@ -6,18 +6,19 @@ import hashlib
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import pyotp
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash
+from app.core.security import encrypt_string, get_password_hash
 from app.db.session import get_db
 from app.main import app
 from app.models.organization import Organization
 from app.models.rbac import Role, UserRole
 from app.models.tenant import Tenant
-from app.models.user import User, UserSession
+from app.models.user import User, UserMfaMethod, UserSession
 
 
 @pytest.fixture
@@ -103,14 +104,14 @@ async def test_login_success_returns_token_and_creates_session(
     )
     assert res.status_code == 200, res.text
     body = res.json()
-    assert "token" in body and len(body["token"]) > 20
+    assert "token" not in body  # token removed from JSON
     assert body["user_id"] == str(user.id)
     assert body["expires_at"]
     assert body["tenant_id"] == str(tenant.id)
     assert "session_token" in res.cookies
-    assert res.cookies["session_token"] == body["token"]
+    token = res.cookies["session_token"]
 
-    token_hash = hashlib.sha256(body["token"].encode()).hexdigest()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     async with pg_session_maker() as db:
         row = (
             await db.execute(
@@ -134,7 +135,7 @@ async def test_login_email_case_normalized(api_client, pg_session_maker):
         json={"email": email.upper(), "password": password},
     )
     assert res.status_code == 200, res.text
-    assert res.json()["token"]
+    assert "session_token" in res.cookies
 
 
 @pytest.mark.asyncio
@@ -173,11 +174,11 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
         json={"email": email, "password": password},
     )
     assert login.status_code == 200
-    token = login.json()["token"]
+    token = login.cookies["session_token"]
 
     out = await api_client.post(
         "/api/v1/auth/logout",
-        headers={"Authorization": f"Bearer {token}"},
+        cookies={"session_token": token},
     )
     assert out.status_code == 200
     assert out.json()["ok"] is True
@@ -195,6 +196,59 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
 
     again = await api_client.post(
         "/api/v1/auth/logout",
-        headers={"Authorization": f"Bearer {token}"},
+        cookies={"session_token": token},
     )
     assert again.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_required(api_client, pg_session_maker):
+    email = f"mfareq-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert res.status_code == 401
+    assert res.json()["detail"] == "mfa_required"
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_invalid(api_client, pg_session_maker):
+    email = f"mfainv-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
+        await db.commit()
+
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password, "mfa_code": "wrong_code"},
+    )
+    assert res.status_code == 401
+    assert res.json()["detail"] == "mfa_invalid"
+
+
+@pytest.mark.asyncio
+async def test_login_mfa_success(api_client, pg_session_maker):
+    email = f"mfasucc-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    totp_secret = pyotp.random_base32()
+    async with pg_session_maker() as db:
+        user, _ = await _seed_user(db, email=email, password=password)
+        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(totp_secret), provider_id="totp", is_active=True))
+        await db.commit()
+
+    totp = pyotp.TOTP(totp_secret)
+    res = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password, "mfa_code": totp.now()},
+    )
+    assert res.status_code == 200
+

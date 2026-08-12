@@ -1,38 +1,130 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { BrandMark } from "./BrandMark";
+
+const ADMIN_URL =
+  process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, "") ||
+  "http://localhost:5173";
+
+const nav = [
+  { href: "#features", label: "Özellikler" },
+  { href: "#architecture", label: "Mimari" },
+  { href: "#pricing", label: "Fiyatlandırma" },
+];
 
 export function Header() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/75 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5 focus-visible:outline-none group">
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded bg-brand/10 border border-brand/20 text-sm font-bold text-brand shadow-sm transition group-hover:bg-brand/20 group-hover:border-brand/40"
-              aria-hidden="true"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
-            </span>
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              GymClubNex
-            </span>
+          <Link
+            href="/"
+            className="focus-visible:outline-none group"
+            onClick={() => setOpen(false)}
+          >
+            <BrandMark size="sm" />
           </Link>
-          <nav className="hidden md:flex gap-6 text-sm font-medium text-foreground/70">
-            <Link href="#features" className="hover:text-foreground transition-colors">Özellikler</Link>
-            <Link href="#architecture" className="hover:text-foreground transition-colors">Mimari</Link>
-            <Link href="#pricing" className="hover:text-foreground transition-colors">Fiyatlandırma</Link>
+          <nav
+            className="hidden md:flex gap-1 text-sm font-medium"
+            aria-label="Ana menü"
+          >
+            {nav.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="rounded-lg px-3 py-2 text-ink-muted transition-colors hover:bg-white/5 hover:text-foreground"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/#demo" className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors hidden sm:block">
-            Sistemi İncele
-          </Link>
-          <Link href="http://localhost:5173/login" className="rounded bg-brand px-4 py-2 text-sm font-medium text-white shadow-[0_0_15px_rgba(13,148,136,0.3)] hover:shadow-[0_0_20px_rgba(13,148,136,0.5)] hover:bg-brand-deep transition-all duration-300">
-            Giriş Yap
-          </Link>
+
+        <div className="hidden sm:flex items-center gap-3">
+          <a
+            href="#demo"
+            className="text-sm font-medium text-ink-muted transition-colors hover:text-foreground px-2 py-2"
+          >
+            Sistemi incele
+          </a>
+          <a
+            href={`${ADMIN_URL}/login`}
+            className="btn-glow rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-deep"
+          >
+            Giriş yap
+          </a>
         </div>
+
+        <button
+          type="button"
+          className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-foreground hover:bg-white/5"
+          aria-expanded={open}
+          aria-controls="mobile-nav"
+          aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {open && (
+        <div
+          id="mobile-nav"
+          className="md:hidden border-t border-border bg-surface-raised/95 backdrop-blur-xl"
+        >
+          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-4" aria-label="Mobil menü">
+            {nav.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="rounded-lg px-3 py-3 text-base font-medium text-foreground hover:bg-white/5"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+            <a
+              href="#demo"
+              className="rounded-lg px-3 py-3 text-base font-medium text-ink-muted hover:bg-white/5"
+              onClick={() => setOpen(false)}
+            >
+              Sistemi incele
+            </a>
+            <a
+              href={`${ADMIN_URL}/login`}
+              className="mt-2 rounded-lg bg-brand px-4 py-3 text-center text-base font-semibold text-white hover:bg-brand-deep"
+              onClick={() => setOpen(false)}
+            >
+              Giriş yap
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

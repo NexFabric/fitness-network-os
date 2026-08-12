@@ -147,14 +147,14 @@ class MembershipService:
         self,
         membership_id: UUID,
         start_date: datetime,
-        expected_end_date: datetime,
-        reason: str | None,
+        expected_end_date: datetime | None = None,
+        reason: str | None = None,
         changed_by_user_id: UUID | None = None,
     ) -> MembershipFreeze:
         """
         Freeze a membership. Changes its status to 'FROZEN'.
         """
-        if expected_end_date <= start_date:
+        if expected_end_date is not None and expected_end_date <= start_date:
             raise ValueError("expected_end_date must be after start_date")
 
         membership = await self.get_membership(membership_id, for_update=True)
@@ -357,7 +357,7 @@ class MembershipService:
                 # Close current active period if any
                 stmt_active_period = select(MembershipPeriod).where(
                     MembershipPeriod.membership_id == membership.id,
-                    MembershipPeriod.is_active == True
+                    MembershipPeriod.is_active
                 )
                 active_period = (await self.session.execute(stmt_active_period)).scalar_one_or_none()
                 if active_period:
@@ -453,7 +453,7 @@ class MembershipService:
 
         stmt_period = select(MembershipPeriod).where(
             MembershipPeriod.membership_id == membership.id,
-            MembershipPeriod.is_active == True
+            MembershipPeriod.is_active
         )
         active_period = (await self.session.execute(stmt_period)).scalar_one_or_none()
         if active_period:

@@ -28,7 +28,39 @@ def generate_session_token() -> tuple[str, str]:
 
 def get_session_token_from_cookie(request: Request) -> str | None:
     """
-    Extracts the session token from the secure HttpOnly cookie.
-    Cookie name: 'session_token'
+    Extracts the session token from the secure HttpOnly cookie or Authorization Bearer header.
     """
-    return request.cookies.get("session_token")
+    token = request.cookies.get("session_token")
+    if not token:
+        auth = request.headers.get("Authorization") or request.headers.get("authorization")
+        if auth and auth.startswith(("Bearer ", "bearer ")):
+            return auth.split(" ")[1].strip()
+    return token
+
+import os
+
+from cryptography.fernet import Fernet
+
+
+def get_fernet() -> Fernet:
+    key = os.environ.get("ENCRYPTION_KEY")
+    if not key:
+        # Generate a dummy key for tests if not provided
+        if os.getenv("ENVIRONMENT") == "test":
+            key = Fernet.generate_key().decode()
+            os.environ["ENCRYPTION_KEY"] = key
+        else:
+            raise RuntimeError("ENCRYPTION_KEY environment variable is not set")
+    return Fernet(key.encode())
+
+def encrypt_string(plain_text: str) -> str:
+    if not plain_text:
+        return plain_text
+    f = get_fernet()
+    return f.encrypt(plain_text.encode()).decode()
+
+def decrypt_string(cipher_text: str) -> str:
+    if not cipher_text:
+        return cipher_text
+    f = get_fernet()
+    return f.decrypt(cipher_text.encode()).decode()

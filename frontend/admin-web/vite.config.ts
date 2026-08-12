@@ -7,19 +7,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'GymClubNex Staff Console',
         short_name: 'GymClubNex',
         description: 'GymClubNex administrative staff console',
-        theme_color: '#09090b', // zinc-950 to match dark ops theme
-        background_color: '#09090b',
+        // Matches the index.html theme-color meta and the icon plate, so the
+        // splash screen does not flash a different shade than the app chrome.
+        theme_color: '#020617',
+        background_color: '#020617',
         display: 'standalone',
         start_url: '/',
         orientation: 'portrait',
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
@@ -42,6 +45,6 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 3000
+    port: 5173
   }
 })

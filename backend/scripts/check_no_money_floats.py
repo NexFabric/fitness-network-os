@@ -100,8 +100,8 @@ def main() -> int:
     errors = scan_source_ast()
     try:
         errors.extend(scan_models())
-    except Exception as e:  # pragma: no cover
-        errors.append(f"Failed to import models for float scan: {e}")
+    except Exception as exc:  # pragma: no cover
+        errors.append(f"Failed to import models for float scan: {exc}")
 
     # de-dupe preserve order
     seen: set[str] = set()

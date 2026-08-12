@@ -139,7 +139,7 @@ async def test_activate_scheduled_memberships(db_session, pg_session_maker, setu
     await db_session.refresh(m)
     assert m.status == "ACTIVE"
     await db_session.refresh(p)
-    assert p.is_active == True
+    assert p.is_active
 
 @pytest.mark.asyncio
 async def test_process_expirations(db_session, pg_session_maker, setup_tenant, setup_base_data):
@@ -179,7 +179,7 @@ async def test_process_expirations(db_session, pg_session_maker, setup_tenant, s
     await db_session.refresh(m)
     assert m.status == "EXPIRED"
     await db_session.refresh(p)
-    assert p.is_active == False
+    assert not p.is_active
 
 @pytest.mark.asyncio
 async def test_process_renewals(db_session, pg_session_maker, setup_tenant, setup_base_data):
@@ -250,9 +250,9 @@ async def test_process_renewals(db_session, pg_session_maker, setup_tenant, setu
     
     assert m.plan_version_id == next_pv.id
     assert r.status == RenewalStatus.APPLIED.value
-    assert p.is_active == False
+    assert not p.is_active
     
-    stmt = select(MembershipPeriod).where(MembershipPeriod.membership_id == m.id, MembershipPeriod.is_active == True)
+    stmt = select(MembershipPeriod).where(MembershipPeriod.membership_id == m.id, MembershipPeriod.is_active)
     active_period = (await db_session.execute(stmt)).scalar_one_or_none()
     assert active_period is not None
     assert active_period.start_date == p.end_date

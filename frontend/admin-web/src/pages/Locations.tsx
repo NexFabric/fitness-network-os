@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
+import {
+  Alert,
+  EmptyState,
+  LoadingSkeleton,
+  PageHeader,
+} from '../components/ui'
 
 type Location = {
   id: string
@@ -92,10 +98,10 @@ export default function Locations() {
 
   return (
     <div>
-      <h1 className="page-title">Şubeler</h1>
-      <p className="page-subtitle">
-        Bu salonun şubeleri — Şube = Lokasyon
-      </p>
+      <PageHeader
+        title="Şubeler"
+        subtitle="Bu salonun şubeleri — Şube = Lokasyon"
+      />
 
       <section className="card mt-6" aria-labelledby="create-location-heading">
         <div className="card-header">
@@ -103,7 +109,7 @@ export default function Locations() {
             id="create-location-heading"
             className="text-base font-semibold text-slate-100"
           >
-            Şube Oluştur
+            Şube oluştur
           </h2>
         </div>
         <form
@@ -169,7 +175,7 @@ export default function Locations() {
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
             <button type="submit" disabled={submitting} className="btn-primary">
-              {submitting ? 'Oluşturuluyor…' : 'Şube Oluştur'}
+              {submitting ? 'Oluşturuluyor…' : 'Şube oluştur'}
             </button>
             {formError && (
               <p className="text-sm text-rose-400" role="alert">
@@ -186,17 +192,14 @@ export default function Locations() {
       </section>
 
       {loading && (
-        <p className="mt-6 text-sm text-slate-400" role="status">
-          Şubeler yükleniyor…
-        </p>
+        <div className="table-shell mt-6">
+          <LoadingSkeleton rows={4} />
+        </div>
       )}
 
       {error && (
-        <div
-          className="mt-6 rounded-control border border-rose-800/80 bg-rose-950/50 px-4 py-3 text-sm text-rose-300"
-          role="alert"
-        >
-          {error}
+        <div className="mt-6">
+          <Alert onRetry={() => void loadLocations()}>{error}</Alert>
         </div>
       )}
 
@@ -206,23 +209,18 @@ export default function Locations() {
             <thead className="bg-slate-900/80 backdrop-blur-md">
               <tr>
                 <th className="table-th">İsim</th>
-                <th className="table-th">Zaman Dilimi</th>
+                <th className="table-th">Zaman dilimi</th>
                 <th className="table-th">Adres</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {locations.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={3}
-                    className="px-4 py-12 text-center text-sm text-slate-500"
-                  >
-                    <p className="font-medium text-slate-300">
-                      Henüz şube yok
-                    </p>
-                    <p className="mt-1">
-                      Yukarıdaki formu kullanarak ilk şubeyi oluşturun.
-                    </p>
+                  <td colSpan={3}>
+                    <EmptyState
+                      title="Henüz şube yok"
+                      description="Yukarıdaki formu kullanarak ilk şubeyi oluşturun."
+                    />
                   </td>
                 </tr>
               ) : (

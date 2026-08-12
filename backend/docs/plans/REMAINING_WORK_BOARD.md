@@ -1,129 +1,75 @@
 # Remaining Work Board
 
 **Date:** 2026-08-10  
-**Main SHA (equality):** `541c496` (local == `origin/main` after exit gate completion)  
-**Alembic head:** `q0d1e2f3a4b5`  
-**Open PRs:** **0**  
-**Branch protection:** `required_approving_review_count` = **1**  
-**Production-ready?** **YES** — Phase 26 exit gate **PASSED**
-
-This board is the session handoff for next agents. Prefer small, mergeable slices.  
-Production-ready status is claimed. Continue hardening and closing out the remaining partials.
+**Program:** Phase 27 — Final Production Closure  
+**Production-ready?** **NO** (architecture strong; evidence gates + full main CI still open)  
+**Phase 26 PASS?** **NO / NOT VERIFIED**
 
 ---
 
 ## Snapshot
 
-| Band | On main? | Depth | Next |
-|------|----------|-------|------|
-| 0–15.5 integrity | YES | Full for gate | Maintain only |
-| 16 notifications/reports | YES | Console email + SMTP MVP | Real SMS/WA (P1/P2) |
-| 17 API V1 | YES | 17A `/me/*` + auth login; 17B/C | Staff gaps + OpenAPI (P1) |
-| 18 vertical E2E | YES | Service-layer PG **+ HTTP/ASGI** | Expand money path depth (P1) |
-| 19 Admin Web | YES | Login + create member/location + **brand** | Cookie path done, edit UI open (P1) |
-| 20 Scanner PWA | YES | Camera QR + paste + **Access brand** + offline | Device auth (P1) |
-| 21–24 hardening | YES | CSRF + HSTS/CSP baseline + RL + SBOM | Deepen + LOCK (P1–P2) |
-| 25 truth docs | YES | Docs | Keep in sync (P2) |
-| 26 exit gate | Docs | **PASS** | Maintain PASS |
-
-**MVP surface ~100% · production polish ongoing**
-
----
-
-## P0 — next session (unblocks demos / truth)
-
-| ID | Item | Owner hint | Notes / acceptance |
-|----|------|------------|--------------------|
-| P0-1 | **Demo seed usable** | DevEx | ✅ **CLOSED:** `seed_demo.py` / `seed_demo_tenant.py` |
-| P0-2 | **READY_TO_RUN exact URLs** | Docs | ✅ **CLOSED:** root `READY_TO_RUN.md` |
-| P0-3 | **Admin login works end-to-end** | FE + BE | ✅ **CLOSED:** email/password login |
-| P0-4 | **`fitness_app` role on long-lived volumes** | DevOps | Still open on old volumes; documented in READY_TO_RUN |
-| P0-5 | **No open stale PRs** | Orchestrator | ✅ **CLOSED:** open count **0** after #44/#45 |
-| P0-6 | **Docs SHA lag** | Docs | ✅ **CLOSED this pass:** bump to `7671c25` |
+| Band | Verdict |
+|------|---------|
+| Architecture / tenancy / finance / outbox / QR core | 🟢 GO |
+| CSRF bootstrap + cookie admin (local) | 🟢 landed |
+| Production fail-closed config | 🟢 landed |
+| Notification PII / prod mock block | 🟢 landed |
+| Report local artifact (file://) | 🟢 improved (not S3 signed URL) |
+| /live /ready /metrics | 🟢 present |
+| Public metrics honesty | 🟢 landed |
+| Public-site CI job | 🟢 added |
+| MFA enrollment enforcement (code gate) | 🟡 partial (no full TOTP UX) |
+| Scanner offline deny-by-default | 🟢 landed |
+| Scanner device auth | 🟢 landed — credentials **+ HMAC request signing + single-use nonce** (ADR-044) |
+| Playwright E2E | 🟢 landed (21 tests, real Chromium + real backend) |
+| DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
+| Independent APPROVE | 🔴 human |
+| Public launch | 🔴 **NO-GO** |
 
 ---
 
-## P1 — product depth (toward Phase 26 PARTIAL → closer to PASS)
+## Closed this session (code)
 
-| ID | Item | Phase | Notes |
-|----|------|-------|-------|
-| P1-1 | Public **login API** | 17/19 | ✅ **CLOSED** |
-| P1-2 | Admin Web: create member/location | 19 | ✅ **CLOSED (create)**; edit still open |
-| P1-2b | Admin Web **brand system** | 19 | ✅ **CLOSED:** #45 + `frontend/UI_BRAND_SYSTEM.md` |
-| P1-3 | Admin Web: cookie/session path (HttpOnly) | 19/C4 | FE still localStorage token MVP |
-| P1-4 | Scanner camera QR | 20 | ✅ **CLOSED** (#40) |
-| P1-4b | Scanner Access brand polish | 20 | ✅ **CLOSED** (#44) |
-| P1-5 | HTTP/ASGI vertical e2e | 18 | ✅ **CLOSED (baseline)** (#39) |
-| P1-6 | Staff API gaps (17B) used by admin day-1 | 17 | Open |
-| P1-7 | OpenAPI completeness pass (17C) | 17 | Open |
-| P1-8 | Notification adapters beyond log | 16/B10 | ✅ **partial:** console email; real SMTP open |
-| P1-9 | Report export real artifact | 16/B11 | Open |
-| P1-10 | FE builds as **required** checks | 21 | Protection still Security/Lint/Unit only |
-| P1-11 | HSTS + CSP + rate limit baseline | 23 | ✅ **CLOSED (baseline)** (#41); not LOCKED |
-| P1-12 | Health/deps + metrics | 24 | Open |
-
----
-
-## P2 — production bar / LOCK hygiene
-
-| ID | Item | Phase | Notes |
-|----|------|-------|-------|
-| P2-1 | `Dockerfile.prod` digest pins, HEALTHCHECK, SBOM | 22 | Sketch exists |
-| P2-2 | Prod compose / secrets injection | 22/C12 | Open |
-| P2-3 | Privileged MFA enforcement | C5 | Foundation only |
-| P2-4 | Formal threat models | C9 | Open |
-| P2-5 | CONTRACT DROP legacy floats | 11/C10 | Deferred |
-| P2-6 | Real WhatsApp/SMS + webhook inbox | 16 | Open |
-| P2-7 | Backup/restore drill evidence | 26 | Exit gate |
-| P2-8 | ASVS / pentest + independent APPROVE | 26/D5 | Exit gate |
-| P2-9 | Phase 16–24 **LOCKED** after depth CI | 25 | MVP ≠ LOCKED |
-| P2-10 | Require Admin + Scanner build checks | 21 | Optional |
+| ID | Item |
+|----|------|
+| P0-2 | CSRF `GET /auth/csrf` + admin/scanner ensureCsrf |
+| P0-3 | Cookie-only admin session (tenant in localStorage only) |
+| P0-4 | Truth docs NO production-ready |
+| P1-5 | `Settings.validate_production()` fail-closed |
+| P1-6 | No recipient PII in logs; prod blocks mock SMS/WA/PUSH |
+| P1-3 | Report writes real CSV under REPORT_STORAGE_DIR |
+| P1-8 | CI job `public-site` build |
+| P1-9 | Marketing design targets (not fake live stats) |
+| P1-2 | Scanner offline deny-by-default |
+| P2-1 | /live, /ready (503), /metrics stub |
+| P1-4 | MFA: refuse login without code if MFA enrolled |
+| P1-10/11 | Honest UNVERIFIED status docs under `docs/ops/` |
+| P1-12 | FE builds as **required** branch checks (via `all-green` job) |
+| SEC-1 | Dependabot high alert triage (npm audit fix vite/esbuild) |
+| P1-1 | Scanner **device** authentication |
+| P1-4b | Real TOTP + privileged role matrix UI (Backend) |
+| P1-7 | Playwright browser E2E suite (21 tests, real Chromium + real backend) |
+| SEC-2 | Device channel HMAC signing + nonce replay protection (ADR-044) |
 
 ---
 
-## Explicit non-work / do-not
+## Still open (cannot fake “complete”)
 
-- Do **not** reintroduce public generic outbox/inbox inject.
-- Do **not** store PAN/CVV or log card data.
-- Do **not** use float for money (`amount_minor` only).
-- Do **not** shortcut Membership → WhatsApp.
-- Do **not** add Kafka/K8s/microservices without ADR.
-- Do **not** set `review_count=0` permanently — restore **1** after emergency merges.
-- Do **not** claim Phase 26 PASS without independent human APPROVE.
-
----
-
-## Suggested agent slices (next sessions)
-
-1. **Admin cookie session** — stop localStorage token; rely on HttpOnly cookie.  
-2. **Admin day-1 ops** — member edit, membership freeze/renew, finance lists.  
-3. **Real email SMTP** — env-gated behind NotificationProvider.  
-4. **Report export artifact** — non-placeholder bytes + tenancy tests.  
-5. **Observability** — `/health` deps + metrics; no PII.  
-6. **Branch protection** — require Admin Web + Scanner PWA builds.
+| ID | Item | Owner |
+|----|------|-------|
+| P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
+| PR #49 | Merge blocked: `main` needs 1 approving review, `enforce_admins` on — author cannot self-approve | human |
+| P1-3b | Signed object-storage URLs + encryption | A-RPT |
+| P1-10 | Actual restore drill evidence | A-OPS |
+| P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
+| P2-2 | Redis distributed rate limit | A-CFG |
+| P2-3 | KMS QR secrets | A-QR |
 
 ---
 
-## Closed this session (UI brand + docs truth)
+## Explicit non-claims
 
-| Item | Evidence |
-|------|----------|
-| PR #44 Scanner brand | GymClubNex · Access, GRANT/DENY UX |
-| PR #45 Admin brand | Teal brand tokens, login/shell/dashboard |
-| UI brand contract | `frontend/UI_BRAND_SYSTEM.md` |
-| Prior remaining-MVP #37–#42 | Auth, CRUD create, camera, e2e, HSTS, console email |
-| Docs SHA | `7671c25` |
-| Open PRs | **0** |
-| Branch protection | review_count **1** |
-| Phase 26 PASS | **Not claimed** |
-
----
-
-## References
-
-- `docs/MASTER_SPEC.md`, `docs/PRODUCTION_READINESS.md`
-- `docs/PROGRESS_CHECKLIST.md`, `docs/IMPLEMENTATION_MASTER_PLAN.md`
-- `backend/docs/plans/phase26_core_mvp_exit_gate.md`
-- `backend/docs/plans/MORNING_STATUS.md`
-- `frontend/UI_BRAND_SYSTEM.md`
-- `READY_TO_RUN.md`
+- Do **not** claim production-ready YES or Phase 26 PASS.  
+- Do **not** redesign multitenancy.  
+- Independent human APPROVE is **not** automated by this board.

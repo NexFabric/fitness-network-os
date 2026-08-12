@@ -29,7 +29,7 @@ Prints on stdout (copy into Admin login at http://localhost:5173/login)::
     === Demo seed ready ===
     tenant_id:      <uuid>
     email:          demo.admin@demo.local
-    password:       DemoAdmin123!
+    password:       (never echoed — --password value or DEMO_PASSWORD default)
     role:           GYM_OWNER
     bearer_token:   <raw session token — paste without Bearer prefix>
     member_id:      <uuid or (none)>
@@ -304,7 +304,6 @@ async def seed_demo(
                 "organization_id": str(org.id),
                 "user_id": str(user.id),
                 "email": email,
-                "password": password,
                 "role": role_name,
                 "role_permission_count": str(perm_count),
                 "bearer_token": raw_token,
@@ -323,7 +322,10 @@ def _print_result(result: dict[str, str | None]) -> None:
     print(f"organization_id:{result['organization_id']}")
     print(f"user_id:        {result['user_id']}")
     print(f"email:          {result['email']}")
-    print(f"password:       {result['password']}  (use with POST /api/v1/auth/login)")
+    # The password is never echoed: it is either the value the operator passed
+    # via --password or the documented DEMO_PASSWORD default, so printing it
+    # only leaks a credential into terminal scrollback, shell logs and CI output.
+    print("password:       (--password value, or the DEMO_PASSWORD default in this script)")
     print(f"role:           {result['role']} ({result['role_permission_count']} perms)")
     print(f"bearer_token:   {token}")
     print(f"member_id:      {result['member_id'] or '(none)'}")

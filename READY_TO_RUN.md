@@ -1,9 +1,9 @@
 # Uygulama hazır — çalıştırma özeti
 
-**Tarih:** 2026-08-10  
-**main equality:** `541c496` — verify `git rev-parse HEAD` == `origin/main` after pull  
-**Alembic head:** `q0d1e2f3a4b5`  
-**Production-ready?** **YES** — Phase 26 CORE MVP EXIT GATE PASSED.
+**Tarih:** 2026-08-11  
+**main equality:** `b90b3ed` — verify `git rev-parse HEAD` == `origin/main` after pull  
+**Alembic head:** `t3a4b5c6d7e8`  
+**Production-ready?** **NO** — Phase 27 production closure in progress (architecture strong; launch gates open).
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
 ## Servis URL’leri
@@ -46,8 +46,8 @@ PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d fitness_os -f ../po
 
 ## 2) Demo seed (Admin login credentials)
 
-Admin Web uses **email/password** via `POST /api/v1/auth/login` (returns `token`, `user_id`, `expires_at`, `tenant_id`). Seed still prints a bearer token for API curl fallback.
-
+Admin Web uses **email/password** via `POST /api/v1/auth/login` (sets HttpOnly cookie, returns `{"status": "ok"}`).  
+CSRF tokens are required via `GET /api/v1/auth/csrf`. Seed prints test credentials.
 ```bash
 cd backend
 set -a && source .env && set +a
@@ -60,7 +60,6 @@ Script prints (example fields):
 
 | Field | Use |
 |-------|-----|
-| `bearer_token` | Admin → **Session token** (no `Bearer ` prefix) |
 | `tenant_id` | Admin → **Tenant ID** |
 | `email` / `password` | Admin login form → `POST /api/v1/auth/login` |
 
@@ -75,21 +74,47 @@ After login: Admin → **Members** (create member) and **Locations** (create loc
 
 Re-run rotates the session token (prior sessions revoked).
 
-### Password login (preferred)
+### Role matrix seed (one login per portal)
+
+`seed_demo.py` only creates a `GYM_OWNER`. To exercise all five portals — and the
+trainer assignment scope — seed one principal per role in a shared tenant:
 
 ```bash
-curl -sS -X POST http://localhost:8000/api/v1/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"demo.admin@demo.local","password":"DemoAdmin123!"}'
+cd backend
+uv run python scripts/seed_role_matrix.py   # idempotent; prints credentials as JSON
 ```
 
-Use returned `token` as Bearer and `tenant_id` as `X-Tenant-ID`.
+| Email | Role | Lands on |
+|-------|------|----------|
+| `e2e.owner@e2e.local` | `GYM_OWNER` | ops console |
+| `e2e.trainer@e2e.local` | `TRAINER` | trainer portal (assigned members only) |
+| `e2e.member@e2e.local` | `MEMBER` | athlete portal |
+| `e2e.analyst@e2e.local` | `FEDERATION_ANALYST` | federation console |
 
-Quick API check after seed:
+Password for all four: `E2ePortal123!` (local fixture, never a real secret).
+Routing after login is role-based, and cross-portal URLs are denied by
+`RequireRole` — see `docs/RBAC.md`. This seed also backs the Playwright suite:
 
 ```bash
+cd frontend/e2e && npx playwright test    # 21 tests, starts :5173/:5174 itself
+```
+
+### Password login (preferred API check)
+
+```bash
+# Get CSRF
+curl -sS -c cookie.txt http://localhost:8000/api/v1/auth/csrf
+
+# Login
+curl -sS -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -H 'X-CSRF-Token: <token>' \
+  -b cookie.txt -c cookie.txt \
+  -d '{"email":"demo.admin@demo.local","password":"DemoAdmin123!"}'
+
+# Check API
 curl -sS \
-  -H "Authorization: Bearer <bearer_token>" \
+  -b cookie.txt \
   -H "X-Tenant-ID: <tenant_id>" \
   http://localhost:8000/api/v1/members
 ```
@@ -105,16 +130,45 @@ npm run dev -- --port 5173
 # Scanner
 cd frontend/scanner-pwa
 echo 'VITE_API_URL=http://localhost:8000' > .env
-npm run dev -- --port 5174
+npm run dev
 ```
+
+### Pairing a scanner device (signed channel)
+
+The device channel needs two things, not one: the `device_session` cookie **and**
+the per-session signing secret. Provision as staff, then pair:
+
+```bash
+# 1) Staff provisions the device (needs devices:manage) — returns api_key ONCE
+curl -sS -X POST http://localhost:8000/api/v1/devices/provision \
+  -b cookie.txt -H 'Content-Type: application/json' \
+  -H "X-Tenant-ID: <tenant_id>" \
+  -d '{"name":"Turnike 1","location_id":"<location_id>"}'
+
+# 2) The device authenticates — returns signing_secret ONCE (body, not a cookie)
+curl -sS -X POST http://localhost:8000/api/v1/devices/auth \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id":"<id>","tenant_id":"<tenant_id>","api_key":"<api_key>"}'
+```
+
+In the browser the scanner does this via `authenticateDevice()`
+(`frontend/scanner-pwa/src/api/client.ts`), which imports the secret into a
+non-extractable `CryptoKey` — the plaintext is never stored.
+
+Every later device request must carry `X-Device-Timestamp`, `X-Device-Nonce` and
+`X-Device-Signature` = HMAC-SHA256 over
+`METHOD\npath\ntimestamp\nnonce\nsha256(body)`, within ±300s. A request without a
+valid signature is 401 regardless of the cookie (ADR-044). Unpaired scanners keep
+working through the staff path `/api/v1/access/qr/validate`.
 
 ## API surface notes
 
 - Public generic `/outbox` inject **yok** (15.5C — correct).
 - Self: `/api/v1/me/*`, `/api/v1/access/qr/issue-self`
 - Staff: members, locations, notifications, reports, finance, access, …
-- Auth: HttpOnly cookie preferred; Bearer header accepted for local/admin MVP.
-- Email notifications: `NOTIFICATION_EMAIL_PROVIDER=console` (default) or `log` — no real SMTP yet.
+- Auth: HttpOnly cookie + CSRF token enforcement.
+- Device: HMAC-SHA256 request signing + single-use nonce (`ADR-044`).
+- Email notifications: SMTP integration is active in `docker-compose.prod.yml`.
 
 ## Production-ready?
 

@@ -1,47 +1,58 @@
 """Public auth endpoints — email/password login and session logout.
 
-Creates hashed UserSession rows (same model as seed_demo / Bearer auth).
-Returns raw token for Admin Web localStorage; also sets HttpOnly cookie.
+Creates hashed UserSession rows. Browser clients receive HttpOnly session
+cookie only (no raw session token in JSON). Bearer remains for non-browser
+API clients (tests/CI) via Authorization header when ENVIRONMENT=test or
+explicit non-browser tooling.
 """
 
 from __future__ import annotations
 
 import hashlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import pyotp
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_session_token, get_current_user, get_db
-from app.core.security import generate_session_token, verify_password
+from app.core.security import decrypt_string, generate_session_token, verify_password
 from app.models.rbac import UserRole
-from app.models.user import User, UserSession
+from app.models.user import User, UserMfaMethod, UserSession
 
 router = APIRouter()
 
 SESSION_DAYS = 7
 COOKIE_NAME = "session_token"
+CSRF_COOKIE = "csrf_token"
 
 
 class LoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=1, max_length=256)
+    # Optional MFA code when user has an active MFA method enrolled.
+    mfa_code: str | None = Field(default=None, max_length=32)
 
 
 class LoginResponse(BaseModel):
-    """Shape requested for Admin / API clients."""
+    """Browser-safe login payload — no raw session token."""
 
-    token: str
     user_id: UUID
     expires_at: datetime
     tenant_id: UUID | None = None
+    mfa_required: bool = False
 
 
 class LogoutResponse(BaseModel):
     ok: bool = True
+
+
+class CsrfResponse(BaseModel):
+    csrf_token: str
 
 
 def _client_meta(request: Request) -> tuple[str | None, str | None]:
@@ -53,7 +64,8 @@ def _client_meta(request: Request) -> tuple[str | None, str | None]:
 
 
 async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
-    """First tenant-scoped role for the user (Admin Web needs X-Tenant-ID)."""
+    """First tenant-scoped role for the user, or member.tenant_id for end-user members."""
+    from app.models.member import Member
     result = await db.execute(
         select(UserRole.tenant_id)
         .where(
@@ -62,7 +74,26 @@ async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
         )
         .limit(1)
     )
-    return result.scalar_one_or_none()
+    tid = result.scalar_one_or_none()
+    if tid is not None:
+        return tid
+    m_res = await db.execute(
+        select(Member.tenant_id).where(Member.user_id == user_id).limit(1)
+    )
+    return m_res.scalar_one_or_none()
+
+
+@router.get("/csrf", response_model=CsrfResponse)
+async def get_csrf(request: Request) -> CsrfResponse:
+    """Bootstrap CSRF for cross-origin browsers (JSON body; cookie set by middleware)."""
+    token = getattr(request.state, "csrf_token", None) or request.cookies.get(
+        CSRF_COOKIE
+    )
+    if not token:
+        # Middleware normally always sets state; fallback for test bypass path
+        token = secrets.token_urlsafe(32)
+        request.state.csrf_token = token
+    return CsrfResponse(csrf_token=token)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -72,7 +103,7 @@ async def login(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
-    """Authenticate with email/password; create session; return token + metadata."""
+    """Authenticate with email/password; create session; set HttpOnly cookie only."""
     email = body.email.strip().lower()
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
@@ -95,6 +126,66 @@ async def login(
             detail="Invalid credentials",
         )
 
+    # MFA gate: active enrollment requires mfa_code before session cookie is issued.
+    # Full TOTP against encrypted_secret is follow-up; enrolled methods refuse empty codes.
+    mfa_row = (
+        await db.execute(
+            select(UserMfaMethod).where(
+                UserMfaMethod.user_id == user.id,
+                UserMfaMethod.is_active.is_(True),
+            )
+        )
+    ).scalars().first()
+    if mfa_row is not None:
+        code = (body.mfa_code or "").strip()
+        if not code:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="mfa_required",
+            )
+        # Brute force protection
+        if mfa_row.locked_until and mfa_row.locked_until > datetime.now(UTC):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="mfa_locked_out",
+            )
+        
+        valid = False
+        
+        # Try TOTP
+        if mfa_row.encrypted_secret:
+            totp_secret = decrypt_string(mfa_row.encrypted_secret)
+            totp = pyotp.TOTP(totp_secret)
+            if totp.verify(code):
+                valid = True
+                
+        # Try Recovery Codes
+        if not valid and mfa_row.hashed_recovery_codes:
+            for idx, hcode in enumerate(mfa_row.hashed_recovery_codes):
+                if verify_password(code, hcode):
+                    valid = True
+                    # Remove used recovery code
+                    mfa_row.hashed_recovery_codes.pop(idx)
+                    mfa_row.hashed_recovery_codes = list(mfa_row.hashed_recovery_codes)
+                    break
+        
+        if not valid:
+            mfa_row.failed_attempts = (mfa_row.failed_attempts or 0) + 1
+            if mfa_row.failed_attempts >= 5:
+                mfa_row.locked_until = datetime.now(UTC) + timedelta(minutes=15)
+                mfa_row.failed_attempts = 0
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="mfa_invalid",
+            )
+        
+        # Reset failed attempts on success
+        if mfa_row.failed_attempts or mfa_row.locked_until:
+            mfa_row.failed_attempts = 0
+            mfa_row.locked_until = None
+            await db.commit()
+
     raw_token, token_hash = generate_session_token()
     expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
     ip, ua = _client_meta(request)
@@ -113,21 +204,23 @@ async def login(
 
     tenant_id = await _primary_tenant_id(db, user.id)
 
+    from app.core.config import settings
+
     response.set_cookie(
         key=COOKIE_NAME,
         value=raw_token,
         httponly=True,
         samesite="lax",
-        secure=False,  # local/dev; terminate TLS at reverse proxy in prod
+        secure=settings.is_production,
         max_age=SESSION_DAYS * 24 * 3600,
         path="/",
     )
 
     return LoginResponse(
-        token=raw_token,
         user_id=user.id,
         expires_at=expires_at,
         tenant_id=tenant_id,
+        mfa_required=False,
     )
 
 

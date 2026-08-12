@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>GymClubNex - Üye QR Kartı</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .badge {
+      background-color: #059669;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h2 { margin: 16px 0 4px; color: #f8fafc; }
+    p { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+    .qr-container {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .qr-container img { display: block; width: 240px; height: 240px; }
+    .token-box {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      word-break: break-all;
+      text-align: left;
+    }
+    .copy-btn {
+      margin-top: 12px;
+      background-color: #0d9488;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    .copy-btn:hover { background-color: #0f766e; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Aktif Üyelik · VIP</span>
+    <h2>Demo Admin (DEMO-001)</h2>
+    <p>GymClubNex · Geçiş QR Kodu</p>
+    
+    <div class="qr-container">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=eyJhdWQiOiJhY2Nlc3MiLCJjcmVkZW50aWFsX2lkIjoiZjhiZDQzNjItZmU0My00MmIzLTkxNjgtNTg0OTE1NmI5ZjcyIiwiZXhwIjoxNzg2NDUwNjA3LCJpYXQiOjE3ODY0NTAwMDcsImp0aSI6IlRiTW1QVGRxYkNSX3lXczJiemhDZGciLCJraWQiOiJxci0yMDI2MDgtYjViNTgxIiwibWVtYmVyX2lkIjoiODkwMjM2OTMtNTIwZS00MGZhLWFmNDgtYTAxNDQ3OWQzZjBlIiwidGVuYW50X2lkIjoiOTJjNDEyMzEtMmE3ZC00MmE1LTg2MmQtZmRhOTY2ZjExMzdlIn0.6xyurQqHuTH3YpqZkpsw2vp8jV9I1r5KluIUk57J_jg" alt="Demo Member QR Code">
+    </div>
+
+    <div class="token-box" id="tokenText">eyJhdWQiOiJhY2Nlc3MiLCJjcmVkZW50aWFsX2lkIjoiZjhiZDQzNjItZmU0My00MmIzLTkxNjgtNTg0OTE1NmI5ZjcyIiwiZXhwIjoxNzg2NDUwNjA3LCJpYXQiOjE3ODY0NTAwMDcsImp0aSI6IlRiTW1QVGRxYkNSX3lXczJiemhDZGciLCJraWQiOiJxci0yMDI2MDgtYjViNTgxIiwibWVtYmVyX2lkIjoiODkwMjM2OTMtNTIwZS00MGZhLWFmNDgtYTAxNDQ3OWQzZjBlIiwidGVuYW50X2lkIjoiOTJjNDEyMzEtMmE3ZC00MmE1LTg2MmQtZmRhOTY2ZjExMzdlIn0.6xyurQqHuTH3YpqZkpsw2vp8jV9I1r5KluIUk57J_jg</div>
+    <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('tokenText').innerText); alert('QR kopyalandı! Scanner PWA\'ya yapıştırabilirsiniz.');">Kodu Kopyala</button>
+  </div>
+</body>
+</html>

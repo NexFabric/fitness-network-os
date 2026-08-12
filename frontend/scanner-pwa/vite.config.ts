@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'GymClubNex · Access',
         short_name: 'Access',
@@ -22,13 +22,20 @@ export default defineConfig({
           {
             src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
@@ -39,6 +46,6 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 3001
+    port: 5174
   }
 })
