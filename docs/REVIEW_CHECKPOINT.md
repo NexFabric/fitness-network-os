@@ -1,7 +1,7 @@
 # Review Checkpoint — Main status
 
 **Date:** 2026-08-12  
-**Branch HEAD (PR #49):** `6f8c853`  
+**Main HEAD:** `8b2904e` (merge of PR #49)  
 **Alembic head:** `u4b5c6d7e8f9`
 
 ## Merged on main (truth)
@@ -13,14 +13,13 @@
 | Phase 15.5 docs | PR #27 |
 | Phase 16–26 MVP stack | PR #26 → `5046f10` |
 | Health docs | PR #28 → `398e858` |
-| Phase 27 UI/RBAC closure | `feat/phase27-ui-production-closure` (PR #49, **open**) — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*`, PWA icon set, CSRF Bearer narrowing |
-| Phase 27.1 device hardening | same branch — HMAC request signing + single-use nonce on the device channel (ADR-044), non-extractable `CryptoKey` on the scanner, CodeQL closure |
+| Phase 27 UI/RBAC closure | PR #49 → `8b2904e` — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*`, PWA icon set, CSRF Bearer narrowing |
+| Phase 27.1 device hardening | PR #49 → `8b2904e` — HMAC request signing + single-use nonce on the device channel (ADR-044), non-extractable `CryptoKey` on the scanner, CodeQL closure |
 
 ## Open / residual
 
 | Item | Status |
 |------|--------|
-| PR #49 merge | **blocked on human review** — `main` requires 1 approving review and `enforce_admins` is on; the author cannot self-approve |
 | PR #29 docs truth polish | may still open — optional |
 | Phase 26 exit gate | **NOT PASSED** |
 | Production-ready | **NO** |
@@ -28,7 +27,7 @@
 ## Current position
 
 ```text
-main = 15.5 + 16–24 MVP + exit-gate docs
+main = 15.5 + 16–26 MVP + 27/27.1 production closure
 Next = production depth (providers, full security/ops, exit PASS)
 ```
 
