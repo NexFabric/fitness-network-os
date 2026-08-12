@@ -51,6 +51,8 @@
 | P1-4b | Real TOTP + privileged role matrix UI (Backend) |
 | P1-7 | Playwright browser E2E suite (21 tests, real Chromium + real backend) |
 | SEC-2 | Device channel HMAC signing + nonce replay protection (ADR-044) |
+| P2-2 | Redis-backed distributed rate limit (login), fail-open with degraded log |
+| SEC-3 | Dead `verify_idempotency_key` middleware removed — it advertised idempotency while only checking header presence; the real path is `api/idempotency_uow.py` |
 
 ---
 
@@ -62,7 +64,6 @@
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
-| P2-2 | Redis distributed rate limit | A-CFG |
 | P2-3 | KMS QR secrets | A-QR |
 
 ---

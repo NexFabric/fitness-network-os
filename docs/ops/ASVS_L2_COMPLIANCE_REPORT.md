@@ -34,6 +34,14 @@
 - [x] **4.3.1** Device principals authenticate with `{device_id, tenant_id, api_key}` against a SHA-256 stored hash using constant-time comparison, receiving a `device_session` HttpOnly cookie. Device-side endpoints ignore client-supplied `device_id`/`location_id` and substitute the trusted device's own.
 - [x] **4.3.2** The device channel requires HMAC-SHA256 request signing. `POST /devices/auth` returns a per-session signing secret in the response body (never a cookie); every device request must carry `X-Device-Signature` over `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, within a ±300s clock-skew window, with a single-use nonce recorded in `device_nonces`. A stolen `device_session` cookie is therefore no longer a usable credential on its own, and a captured signed request cannot be replayed. Sessions issued before this change fail closed (`device_session_unsigned`) and must re-authenticate. Implementation: `app/core/device_auth.py`, `app/api/deps.py::_verify_device_signature`. Regression: `tests/api/test_scanner_device_auth.py::test_device_request_signing_is_enforced` (cookie-only, forged signature, body mismatch, stale timestamp, nonce replay) and `::test_device_session_without_signing_material_is_rejected`.
 
+- [x] **4.4.1** The one unauthenticated write (`POST /auth/login`) is rate limited on a
+sliding window held in Redis, so the budget is shared across API processes rather than
+multiplied by them. Keyed by the login identifier (hashed — no email reaches Redis or the
+logs), never by IP, since NAT co-tenants share an address. A Redis outage degrades to a
+bounded in-process window and logs it, rather than taking login down.
+Regression: `tests/api/test_rate_limit.py` (per-identifier budget, 429 shape, hashed key,
+cache-outage fallback, shared window across two instances).
+
 ## 5. Financial & Input Validation (V5 & V13)
 - [x] **5.1.1** Pydantic models at every API boundary; money is integer `amount_minor` (kuruş) throughout — float money fields are CI-blocked (`scripts/check_no_money_floats.py`).
 - [x] **13.1.1** Anti-CSRF double-submit validation for non-exempt state-changing routes.

@@ -157,4 +157,8 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
 
 - `device_sessions` tablosunda RLS yok (yukarıdaki gerekçe — bilinçli tasarım).
 - Ağır federasyon analitiği için rollup tablosu henüz yok (ADR-043 yol 3, ertelendi).
+- Login rate limit normalde Redis'te ortak pencere kullanır; **Redis erişilemezse
+  süreç-içi pencereye düşer** — yani çok süreçli kurulumda limit süreç sayısı kadar
+  çarpılır. Bilinçli fail-open (login cache kesintisinde kapanmasın), `rate_limit.redis_*`
+  uyarısıyla loglanır.
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.
