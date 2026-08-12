@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · MERGED · CI GREEN on PR #49 (`a051f52`) · PRODUCTION **NO-GO** (Phase 26 exit gate)
+**Maturity:** IMPLEMENTED · MERGED · CI GREEN on PR #49 (all 12 checks, head of branch) · PRODUCTION **NO-GO** (Phase 26 exit gate)
 
 ---
 
