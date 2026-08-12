@@ -89,7 +89,7 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
-    @app.get("/health")
+    @app.get("/health", tags=["ops"])
     async def health_check():
         from redis.asyncio import Redis
         from sqlalchemy import text
@@ -123,11 +123,11 @@ def create_app() -> FastAPI:
             "checks": checks,
         }
 
-    @app.get("/live")
+    @app.get("/live", tags=["ops"])
     async def liveness_probe():
         return Response(content="OK", status_code=200, media_type="text/plain")
 
-    @app.get("/ready")
+    @app.get("/ready", tags=["ops"])
     async def readiness_probe():
         # Quick check for db/redis
         try:
@@ -145,7 +145,7 @@ def create_app() -> FastAPI:
         except Exception:
             return Response(content="Service Unavailable", status_code=503, media_type="text/plain")
 
-    @app.get("/metrics")
+    @app.get("/metrics", tags=["ops"])
     async def metrics_probe():
         # Placeholder for Prometheus metrics (Phase 24+)
         return Response(content="# TYPE http_requests_total counter\nhttp_requests_total 0\n", media_type="text/plain")
