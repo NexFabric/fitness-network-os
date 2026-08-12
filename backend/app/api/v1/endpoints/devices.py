@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_device, get_current_user, get_db, get_tenant_id
 from app.api.v1.endpoints.access import ValidateQrRequest, ValidateQrResponse
 from app.core.authorization import AuthorizationService
+from app.core.device_auth import MAX_CLOCK_SKEW_SECONDS, new_device_signing_material
 from app.core.security import generate_session_token
 from app.models.access import Device, DeviceSession, DeviceStatus
 from app.models.audit import AuditEvent
@@ -47,6 +48,12 @@ class DeviceAuthResponse(BaseModel):
     tenant_id: UUID
     location_id: UUID
     expires_at: datetime
+    session_id: UUID
+    # Returned exactly once, here. The device stores it locally and signs every
+    # subsequent request with it; it is never accepted back over the wire.
+    signing_secret: str
+    signature_algorithm: str = "HMAC-SHA256"
+    max_clock_skew_seconds: int = MAX_CLOCK_SKEW_SECONDS
 
 
 class RevokeDeviceRequest(BaseModel):
@@ -144,17 +151,20 @@ async def auth_device(
 
     ip = request.client.host if request.client else None
 
-    db.add(
-        DeviceSession(
-            tenant_id=device.tenant_id,
-            device_id=device.id,
-            token_hash=token_hash,
-            ip_address=ip,
-            expires_at=expires_at,
-            is_revoked=False,
-        )
+    key_material, raw_signing_secret = new_device_signing_material()
+
+    session = DeviceSession(
+        tenant_id=device.tenant_id,
+        device_id=device.id,
+        token_hash=token_hash,
+        ip_address=ip,
+        expires_at=expires_at,
+        is_revoked=False,
+        signing_key_material=key_material,
     )
+    db.add(session)
     await db.commit()
+    await db.refresh(session)
 
     from app.core.config import settings
 
@@ -173,6 +183,8 @@ async def auth_device(
         tenant_id=device.tenant_id,
         location_id=device.location_id,
         expires_at=expires_at,
+        session_id=session.id,
+        signing_secret=raw_signing_secret,
     )
 
 

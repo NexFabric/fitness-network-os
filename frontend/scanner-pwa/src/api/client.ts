@@ -1,4 +1,5 @@
 const TENANT_KEY = 'fnos_scanner_tenant_id'
+const DEVICE_SECRET_KEY = 'fnos_scanner_device_secret'
 
 export function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL
@@ -18,6 +19,107 @@ export function setAuth(tenantId: string): void {
 
 export function clearAuth(): void {
   localStorage.removeItem(TENANT_KEY)
+  localStorage.removeItem(DEVICE_SECRET_KEY)
+}
+
+/**
+ * Device request signing.
+ *
+ * The `device_session` cookie is only half of the device credential — the
+ * server also demands an HMAC-SHA256 signature keyed on the per-session secret
+ * handed out once by POST /devices/auth. The secret lives here, outside the
+ * cookie jar, so a stolen cookie cannot be replayed from another machine.
+ */
+const DEVICE_SIGNATURE_HEADER = 'X-Device-Signature'
+const DEVICE_TIMESTAMP_HEADER = 'X-Device-Timestamp'
+const DEVICE_NONCE_HEADER = 'X-Device-Nonce'
+
+export type DeviceAuthResult = {
+  device_id: string
+  tenant_id: string
+  location_id: string
+  session_id: string
+  expires_at: string
+}
+
+function base64UrlToBytes(value: string): Uint8Array {
+  const padded = value + '='.repeat((4 - (value.length % 4)) % 4)
+  const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+  const out = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i)
+  return out
+}
+
+function toHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+export function getDeviceSecret(): string | null {
+  return localStorage.getItem(DEVICE_SECRET_KEY)
+}
+
+/**
+ * POST /api/v1/devices/auth — pairs this scanner with a provisioned device.
+ * The returned signing secret is stored locally and never sent again.
+ */
+export async function authenticateDevice(
+  deviceId: string,
+  tenantId: string,
+  apiKey: string,
+): Promise<DeviceAuthResult> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/devices/auth`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      device_id: deviceId,
+      tenant_id: tenantId,
+      api_key: apiKey,
+    }),
+  })
+  if (!res.ok) {
+    throw new ApiError(res.status, 'Cihaz doğrulanamadı, bilgileri kontrol edin')
+  }
+  const data = (await res.json()) as DeviceAuthResult & { signing_secret: string }
+  localStorage.setItem(DEVICE_SECRET_KEY, data.signing_secret)
+  setAuth(data.tenant_id)
+  return data
+}
+
+async function deviceSignatureHeaders(
+  method: string,
+  path: string,
+  body: string,
+): Promise<Record<string, string>> {
+  const secret = getDeviceSecret()
+  if (!secret || !crypto?.subtle) return {}
+
+  const encoder = new TextEncoder()
+  const bodyDigest = toHex(await crypto.subtle.digest('SHA-256', encoder.encode(body)))
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const nonceBytes = new Uint8Array(16)
+  crypto.getRandomValues(nonceBytes)
+  const nonce = Array.from(nonceBytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  const canonical = [method.toUpperCase(), path, timestamp, nonce, bodyDigest].join('\n')
+  const key = await crypto.subtle.importKey(
+    'raw',
+    base64UrlToBytes(secret) as unknown as ArrayBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(canonical))
+
+  return {
+    [DEVICE_TIMESTAMP_HEADER]: timestamp,
+    [DEVICE_NONCE_HEADER]: nonce,
+    [DEVICE_SIGNATURE_HEADER]: toHex(signature),
+  }
 }
 
 export class ApiError extends Error {
@@ -93,10 +195,15 @@ export async function validateQr(
     headers['x-csrf-token'] = csrf
   }
 
-  let res = await fetch(`${base}/api/v1/devices/qr/validate`, {
+  // Signed over the exact bytes sent — re-serializing would break the digest.
+  const bodyText = JSON.stringify(payload)
+  const devicePath = '/api/v1/devices/qr/validate'
+  const signature = await deviceSignatureHeaders('POST', devicePath, bodyText)
+
+  let res = await fetch(`${base}${devicePath}`, {
     method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
+    headers: { ...headers, ...signature },
+    body: bodyText,
     credentials: 'include',
   })
 
@@ -104,7 +211,7 @@ export async function validateQr(
     res = await fetch(`${base}/api/v1/access/qr/validate`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
+      body: bodyText,
       credentials: 'include',
     })
   }

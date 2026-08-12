@@ -104,7 +104,7 @@ Rol ayrımı üç katmanda birden zorunludur; hiçbiri tek başına yeterli say�
 |---|---|
 | `tenants`, `organizations` | Tenant bariyerinin *üstünde* — dizin verisi |
 | `users`, `user_sessions` | Kimlik doğrulama artefaktı; tenant'a ait değil |
-| `device_sessions` | Tenant context kurulmadan *önce* okunmak zorunda. **Açık madde** — bkz. ASVS raporu |
+| `device_sessions` | Tenant'ı *türeten* bootstrap okuması; policy burada her cihaz isteğini kapatırdı. Tek pre-context okuma budur — `devices` ve `device_nonces` context kurulduktan sonra, tam RLS altında okunur |
 
 ### Cross-tenant okuma
 
@@ -132,8 +132,8 @@ sequenceDiagram
     API-->>M: {token, jti, exp}
     Note over M: QR tarayıcıda yerel üretilir<br/>(token üçüncü tarafa gitmez)
     M->>K: QR göster
-    K->>API: POST /devices/qr/validate {token}
-    Note over API: imza + exp + jti replay kontrolü<br/>cihazın kendi device_id/location_id'si kullanılır
+    K->>API: POST /devices/qr/validate {token}<br/>+ X-Device-Signature / Timestamp / Nonce
+    Note over API: cihaz istek imzası (HMAC-SHA256) + nonce<br/>sonra QR imza + exp + jti replay kontrolü<br/>cihazın kendi device_id/location_id'si kullanılır
     API-->>K: granted / denied(reason)
     K->>K: röle tetikle
 ```
@@ -142,6 +142,12 @@ sequenceDiagram
 - Personel yolu ayrıdır: `POST /access/qr/issue` + `access:issue` izni.
 - Aynı token ikinci kez taranırsa `replay` ile reddedilir.
 - Kiosk çevrimdışıyken **deny-by-default** uygular.
+- Cihaz kimliği iki parçadır: `device_session` cookie'si **ve** `POST /devices/auth`
+  yanıtında bir kez verilen imza sırrı (cookie'de taşınmaz). Her istek
+  `METHOD\npath\ntimestamp\nnonce\nsha256(body)` üzerinden HMAC-SHA256 ile
+  imzalanır; ±300 sn saat toleransı, nonce tek kullanımlıktır (`device_nonces`).
+  Çalınan cookie tek başına yetmez, yakalanan imzalı istek tekrar oynatılamaz.
+  Karar ve reddedilen alternatifler: **`docs/adr/ADR-044-device-request-signing.md`**.
 
 ---
 
@@ -149,8 +155,6 @@ sequenceDiagram
 
 Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
 
-- Cihaz kanalında HMAC imzalama / nonce yok; `device_session` cookie'si 30 gün geçerli.
-- `device_sessions` tablosunda RLS yok (yukarıdaki gerekçe).
-- `Authorization: Bearer` başlığı CSRF kontrolünü atlıyor; bugün CORS allowlist'i ile sınırlanmış durumda.
+- `device_sessions` tablosunda RLS yok (yukarıdaki gerekçe — bilinçli tasarım).
 - Ağır federasyon analitiği için rollup tablosu henüz yok (ADR-043 yol 3, ertelendi).
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.

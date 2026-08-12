@@ -16,7 +16,7 @@
 ## 1. Architecture, Design and Threat Modeling (V1)
 - [x] **1.1.1** Multi-tenant isolation enforced at the database layer via PostgreSQL RLS with `FORCE ROW LEVEL SECURITY`; context set transaction-scoped (`SET LOCAL app.current_tenant_id`) and re-armed after commit (`app/db/session.py`).
 - [x] **1.2.1** Modular monolith (Auth, Gym Core, Access, Finance, Outbox). No unauthenticated internal inter-service channels.
-- [ ] **Gap:** `device_sessions` carries `tenant_id` but has no RLS policy. It is read before any tenant context exists (`get_current_device`), so a tenant policy there would fail closed on every device request. Currently gated only by a hashed bearer token. Tracked as open.
+- [x] **1.2.2** `device_sessions` carries `tenant_id` but deliberately has no RLS policy: it is the bootstrap lookup that *derives* the tenant, so a tenant policy there would fail closed on every device request. It is the only pre-context read — `devices` and `device_nonces` are queried after `SET LOCAL app.current_tenant_id` and keep full RLS. The row holds a hashed token only, and since 4.3.2 possession of it is insufficient without the signing secret.
 
 ## 2. Authentication (V2)
 - [x] **2.1.1** Password storage uses Argon2id (`passlib.context.CryptContext`). No MD5/SHA1 legacy hashes.
@@ -32,7 +32,7 @@
 - [x] **4.2.1** Object-level authorization: `*:self` permissions require ownership proof, never tenant match alone (`AuthorizationService.require_self`). `POST /access/qr/issue-self` accepts no `member_id` and resolves the member from the session.
 - [x] **4.2.2** Row-level scoping for trainers: `members:read` grants the call, `members:read:all` grants the whole tenant. TRAINER holds only the former and is restricted to `trainer_assignments` rows.
 - [x] **4.3.1** Device principals authenticate with `{device_id, tenant_id, api_key}` against a SHA-256 stored hash using constant-time comparison, receiving a `device_session` HttpOnly cookie. Device-side endpoints ignore client-supplied `device_id`/`location_id` and substitute the trusted device's own.
-- [ ] **Gap:** the device channel has no HMAC request signing, nonce, or replay protection; a stolen `device_session` cookie is valid for its 30-day lifetime (revocable via `POST /devices/revoke`). Tracked as open.
+- [x] **4.3.2** The device channel requires HMAC-SHA256 request signing. `POST /devices/auth` returns a per-session signing secret in the response body (never a cookie); every device request must carry `X-Device-Signature` over `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, within a ±300s clock-skew window, with a single-use nonce recorded in `device_nonces`. A stolen `device_session` cookie is therefore no longer a usable credential on its own, and a captured signed request cannot be replayed. Sessions issued before this change fail closed (`device_session_unsigned`) and must re-authenticate. Implementation: `app/core/device_auth.py`, `app/api/deps.py::_verify_device_signature`. Regression: `tests/api/test_scanner_device_auth.py::test_device_request_signing_is_enforced` (cookie-only, forged signature, body mismatch, stale timestamp, nonce replay) and `::test_device_session_without_signing_material_is_rejected`.
 
 ## 5. Financial & Input Validation (V5 & V13)
 - [x] **5.1.1** Pydantic models at every API boundary; money is integer `amount_minor` (kuruş) throughout — float money fields are CI-blocked (`scripts/check_no_money_floats.py`).
@@ -43,6 +43,7 @@
 
 ## Verdict
 
-**Not a pass.** One gap above is open (device channel replay protection), and no independent verification has
-taken place. Phase 26 remains **NOT PASSED** until an external penetration test
-report is attached and an APPROVE is recorded per `ASVS_PENTEST_STATUS.md`.
+**Not a pass.** Every checklist item above is now closed with code and a regression test, but this is
+self-assessment only: no independent verification has taken place. Phase 26 remains **NOT PASSED**
+until an external penetration test report is attached and an APPROVE is recorded per
+`ASVS_PENTEST_STATUS.md`.

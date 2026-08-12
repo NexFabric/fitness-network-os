@@ -216,6 +216,93 @@ async def get_federation_scope(
     return FederationScope(user, org_ids)
 
 
+async def _verify_device_signature(
+    request: Request, db: AsyncSession, session, tenant_id: UUID
+) -> None:
+    """Reject a device request that does not prove possession of the signing secret.
+
+    The session token alone (a cookie, and therefore stealable off the device or
+    replayable by anything that can read it) is deliberately not sufficient: the
+    caller must also sign the request with the per-session secret handed out at
+    ``POST /devices/auth``. The nonce claim then makes each signed request
+    single-use, so capturing one on the wire buys nothing either.
+    """
+    from datetime import datetime, timedelta
+
+    from sqlalchemy import delete
+    from sqlalchemy.exc import IntegrityError
+
+    from app.core.device_auth import (
+        MAX_CLOCK_SKEW_SECONDS,
+        MAX_NONCE_LENGTH,
+        MIN_NONCE_LENGTH,
+        NONCE_HEADER,
+        NONCE_RETENTION_SECONDS,
+        SIGNATURE_HEADER,
+        TIMESTAMP_HEADER,
+        verify_signature,
+    )
+    from app.core.qr_crypto import QrCryptoError
+    from app.models.access import DeviceNonce
+
+    if not session.signing_key_material:
+        # Session predates request signing (or was issued without material).
+        # Fail closed and make the device re-authenticate rather than silently
+        # falling back to cookie-only trust.
+        raise HTTPException(status_code=401, detail="device_session_unsigned")
+
+    signature = request.headers.get(SIGNATURE_HEADER)
+    timestamp = request.headers.get(TIMESTAMP_HEADER)
+    nonce = request.headers.get(NONCE_HEADER)
+
+    if not signature or not timestamp or not nonce:
+        raise HTTPException(status_code=401, detail="device_signature_missing")
+
+    if not (MIN_NONCE_LENGTH <= len(nonce) <= MAX_NONCE_LENGTH):
+        raise HTTPException(status_code=401, detail="device_nonce_invalid")
+
+    try:
+        sent_at = int(timestamp)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="device_timestamp_invalid") from None
+
+    now = datetime.now(UTC)
+    if abs(int(now.timestamp()) - sent_at) > MAX_CLOCK_SKEW_SECONDS:
+        raise HTTPException(status_code=401, detail="device_timestamp_skew")
+
+    body = await request.body()
+    try:
+        ok = verify_signature(
+            session.signing_key_material,
+            signature,
+            request.method,
+            request.url.path,
+            timestamp,
+            nonce,
+            body,
+        )
+    except QrCryptoError:
+        raise HTTPException(status_code=401, detail="device_signature_invalid") from None
+    if not ok:
+        raise HTTPException(status_code=401, detail="device_signature_invalid")
+
+    # Signature is valid — only now is the nonce worth spending.
+    await db.execute(delete(DeviceNonce).where(DeviceNonce.expires_at < now))
+    try:
+        async with db.begin_nested():
+            db.add(
+                DeviceNonce(
+                    tenant_id=tenant_id,
+                    device_session_id=session.id,
+                    nonce=nonce,
+                    expires_at=now + timedelta(seconds=NONCE_RETENTION_SECONDS),
+                )
+            )
+            await db.flush()
+    except IntegrityError:
+        raise HTTPException(status_code=401, detail="device_nonce_replay") from None
+
+
 async def get_current_device(request: Request, db: AsyncSession = Depends(get_db)):
     import hashlib
 
@@ -245,8 +332,17 @@ async def get_current_device(request: Request, db: AsyncSession = Depends(get_db
     if not session:
         raise HTTPException(status_code=401, detail="Invalid or expired device session")
 
+    # The session row is the bootstrap credential (device_sessions carries no RLS
+    # policy for exactly this reason); every read after it happens under tenant
+    # context, so `devices` and `device_nonces` stay RLS-protected like any other
+    # tenant-owned table.
+    current_tenant_id_var.set(session.tenant_id)
+    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{session.tenant_id}';"))
+
     result_device = await db.execute(
-        select(Device).where(Device.id == session.device_id)
+        select(Device).where(
+            Device.id == session.device_id, Device.tenant_id == session.tenant_id
+        )
     )
     device = result_device.scalars().first()
 
@@ -254,6 +350,6 @@ async def get_current_device(request: Request, db: AsyncSession = Depends(get_db
         # If device was marked offline by revocation or something else
         raise HTTPException(status_code=401, detail="Device inactive or offline")
 
-    current_tenant_id_var.set(device.tenant_id)
-    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{device.tenant_id}';"))
+    await _verify_device_signature(request, db, session, device.tenant_id)
+
     return device

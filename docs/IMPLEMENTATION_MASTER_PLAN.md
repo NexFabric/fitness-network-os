@@ -25,7 +25,8 @@
 | 22–24 | Container / HTTP / request-id | 🟢 MERGED MVP (+ HSTS/CSP #41 + CSRF + SBOM) |
 | 25 | Checklist truth | 🟢 docs MERGED |
 | 26 | CORE MVP EXIT GATE | 🔴 **NOT PASSED** — no external pentest evidence (docs/ops/ASVS_PENTEST_STATUS.md) |
-| 27 | UI production closure (RBAC portals) | 🟡 UI/RBAC wave landed — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*` (ADR-043), PWA icon set; device channel replay protection open |
+| 27 | UI production closure (RBAC portals) | 🟢 UI/RBAC wave landed — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*` (ADR-043), PWA icon set |
+| 27.1 | Device channel hardening | 🟢 HMAC request signing + single-use nonce on the device channel (ADR-044); CodeQL high + workflow-permission alerts cleared |
 
 **Roadmap completion (MVP vs full prod):** MVP surface area delivered on main. The production bar is **not** met — Phase 26 is open.
 

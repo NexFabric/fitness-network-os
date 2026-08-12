@@ -77,8 +77,16 @@ string).
 **Evidence (local, 2026-08-12):** backend `pytest` 299 passed · 1 skipped; Playwright e2e 21 passed against real Chromium + real backend (QR issue→validate→replay 409 round trip included); zero console errors across all 5 portals (`console_clean.spec.ts`); ruff, mypy, `check_permissions`, `check_permissions_db`, `check_tenancy`, `check_no_money_floats`, both frontend builds green.
 
 **Known gaps (not closed, deliberately):**
-- Device channel has no HMAC/nonce — a stolen `device_session` cookie is valid for 30 days. Feature-sized change touching the live access path; tracked in `docs/ops/ASVS_L2_COMPLIANCE_REPORT.md`.
 - No external pentest; the ASVS L2 report is **SELF-ASSESSED**, not verified.
+
+## Phase 27.1 — Device channel hardening + CodeQL closure (2026-08-12)
+
+- [x] Device requests require HMAC-SHA256 signing: per-session secret issued once by `POST /devices/auth` (body, never a cookie), `X-Device-Signature` over `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, ±300s skew, single-use nonce in `device_nonces` (new table, RLS on, migration `u4b5c6d7e8f9`). A stolen `device_session` cookie is no longer a credential on its own; pre-signing sessions fail closed with `device_session_unsigned`.
+- [x] `get_current_device` now establishes tenant context from the bootstrap session row *before* reading `devices`, so the devices table is no longer read outside RLS (it previously depended on the connection role not enforcing it).
+- [x] scanner-pwa signs device requests via Web Crypto (`authenticateDevice()` stores the secret locally; the QR validate call carries the three headers) and still falls back to the staff `/access/qr/validate` path when unpaired.
+- [x] CodeQL: cleared the high alert (demo seed script no longer echoes the password) and the 5 `actions/missing-workflow-permissions` alerts (top-level `permissions: contents: read` in `ci.yml`).
+
+**Evidence (local, 2026-08-12):** `tests/api/test_scanner_device_auth.py` 3 passed — cookie-only, forged signature, body/signature mismatch, stale timestamp, nonce replay, and unsigned-session paths each asserted 401 with their distinct reason; full backend suite, ruff, mypy, `alembic check`, `check_tenancy`, `check_permissions*`, `check_no_money_floats`, scanner-pwa + admin-web builds green.
 
 ---
 
