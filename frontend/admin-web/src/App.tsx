@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Locations from './pages/Locations'
 import Login from './pages/Login'
 import Members from './pages/Members'
+import Devices from './pages/Devices'
 import Finance from './pages/Finance'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { AuthProvider } from './auth/AuthContext'
@@ -97,6 +98,16 @@ export default function App() {
             <Route path="members" element={<Members />} />
             <Route path="locations" element={<Locations />} />
             <Route path="finance" element={<Finance />} />
+            {/* devices:manage is held only by GYM_OWNER/GYM_ADMIN — the API is
+                the boundary, this guard just keeps the page out of reach. */}
+            <Route
+              path="devices"
+              element={
+                <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN]}>
+                  <Devices />
+                </RequireRole>
+              }
+            />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

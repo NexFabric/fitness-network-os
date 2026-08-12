@@ -33,6 +33,15 @@
       disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  /* Destructive confirmations only (device revoke). Deliberately distinct from
+     btn-primary so an irreversible action never looks like the default one. */
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-control bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition
+      hover:bg-rose-500
+      focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .btn-ghost {
     @apply inline-flex items-center justify-center rounded-control px-3 py-1.5 text-sm font-medium text-ink-muted transition
       hover:bg-slate-800 hover:text-ink
