@@ -42,6 +42,7 @@ from app.models.user import User
 # Staff surface for list + QR issue/validate (aligned with access endpoints).
 STAFF_SLICE_PERMS = [
     "members:read",
+    "members:read:all",
     "locations:read",
     "access:issue",
     "access:validate",

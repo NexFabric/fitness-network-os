@@ -105,6 +105,8 @@ MEMBER_SELF_PERMS = [
 
 STAFF_MEMBER_READ = [
     "members:read",
+    # tenant-wide row scope; TRAINER deliberately lacks this
+    "members:read:all",
     "memberships:read",
     "entitlements:read",
     "entitlements:check",

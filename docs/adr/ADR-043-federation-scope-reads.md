@@ -1,4 +1,4 @@
-# ADR-031 — Federation-Scope Reads Without Weakening RLS
+# ADR-043 — Federation-Scope Reads Without Weakening RLS
 
 - **Status:** Accepted
 - **Date:** 2026-08-11

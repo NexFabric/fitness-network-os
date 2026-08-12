@@ -1,4 +1,4 @@
-"""Federation / platform-level read surface. Implements ADR-031.
+"""Federation / platform-level read surface. Implements ADR-043.
 
 Every route here is read-only and organization-scoped from the caller's own role
 assignments. Cross-tenant aggregates are computed one tenant at a time so the

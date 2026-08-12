@@ -1,12 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import {
-  api,
-  ApiError,
-  ensureCsrf,
-  isAuthenticated,
-  setAuth,
-} from '../api/client'
+import { api, ApiError, ensureCsrf, setAuth } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
+import { homeRouteFor } from '../auth/roles'
 
 type LoginResponse = {
   user_id: string
@@ -20,6 +16,7 @@ type LoginResponse = {
  */
 export default function Login() {
   const navigate = useNavigate()
+  const { session, refresh } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [tenantOverride, setTenantOverride] = useState('')
@@ -27,8 +24,10 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  if (isAuthenticated()) {
-    return <Navigate to="/" replace />
+  if (session) {
+    return (
+      <Navigate to={homeRouteFor(session.roles, session.is_superuser)} replace />
+    )
   }
 
   async function onSubmit(e: FormEvent) {
@@ -62,17 +61,29 @@ export default function Login() {
         skipCsrf: true,
       })
 
+      // A federation/platform principal has no tenant — that is valid, so an
+      // absent tenant_id must not be treated as a failed login.
       const tenantId = override || data.tenant_id
-      if (!tenantId) {
+      if (tenantId) {
+        setAuth(tenantId)
+      }
+
+      // Ask the server who this is, then land on the portal that matches.
+      // Without this every role would be dropped into the ops console.
+      const me = await api<{ roles: string[]; is_superuser: boolean }>(
+        '/api/v1/me/session',
+      )
+
+      if (me.roles.length === 0 && !me.is_superuser) {
         setError(
-          'Giriş başarılı ancak atanmış bir tenant bulunamadı. Gelişmiş seçeneklerden Tenant ID girin.',
+          'Giriş başarılı ancak hesabınıza rol tanımlanmamış. Kulüp yöneticinizle iletişime geçin.',
         )
         setShowAdvanced(true)
         return
       }
 
-      setAuth(tenantId)
-      navigate('/', { replace: true })
+      await refresh()
+      navigate(homeRouteFor(me.roles, me.is_superuser), { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
         setError(

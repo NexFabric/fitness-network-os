@@ -1,8 +1,8 @@
-"""Federation-scope reads. Implements ADR-031.
+"""Federation-scope reads. Implements ADR-043.
 
 Cross-tenant aggregates are produced by visiting one tenant at a time — the RLS
 GUC still holds exactly one tenant for every statement issued. No policy is
-widened and no RLS-bypassing role is used. See docs/adr/ADR-031-federation-scope-reads.md.
+widened and no RLS-bypassing role is used. See docs/adr/ADR-043-federation-scope-reads.md.
 """
 
 from uuid import UUID
@@ -67,7 +67,7 @@ class FederationService:
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    # ----- per-tenant aggregates (ADR-031 path 2) -----
+    # ----- per-tenant aggregates (ADR-043 path 2) -----
 
     async def _enter_tenant(self, tenant_id: UUID) -> None:
         await self.db.execute(

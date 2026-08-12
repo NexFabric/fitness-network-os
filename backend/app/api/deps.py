@@ -143,6 +143,23 @@ async def get_tenant_id(
     return tenant_id
 
 
+async def get_optional_tenant_id(
+    x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UUID | None:
+    """Same checks as get_tenant_id, but the header may be absent.
+
+    Federation and platform principals hold no tenant-scoped UserRole, so a
+    hard tenant requirement would make them unable to answer even "who am I".
+    When the header is present the full membership check still applies — this
+    relaxes the requirement, not the verification.
+    """
+    if x_tenant_id is None:
+        return None
+    return await get_tenant_id(x_tenant_id=x_tenant_id, user=user, db=db)
+
+
 class FederationScope:
     """Which organizations a federation-level caller may read across.
 

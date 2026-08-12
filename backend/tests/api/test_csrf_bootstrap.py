@@ -141,3 +141,64 @@ async def test_post_members_without_csrf_header_forbidden(
     # Prefer success when perms allow
     if good.status_code in (200, 201):
         assert good.json().get("member_number") == "CSRF-002"
+
+
+@pytest.mark.asyncio
+async def test_bearer_header_does_not_waive_csrf_when_session_cookie_present(
+    api_client, pg_session_maker
+):
+    """An attacker-supplied Bearer header must not disarm the cookie CSRF check.
+
+    get_session_token_from_cookie prefers the cookie, so a request carrying both
+    authenticates ambiently. The Bearer exemption only applies with no cookie.
+    """
+    email = f"csrf-bearer-{uuid4().hex[:8]}@example.com"
+    password = "CsrfPass99!"
+    async with pg_session_maker() as db:
+        tenant = await _seed_staff(db, email, password)
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    session = login.cookies.get("session_token")
+    assert session
+
+    boot = await api_client.get("/api/v1/auth/csrf", headers={"X-Test-CSRF": "enforce"})
+    csrf = boot.json()["csrf_token"]
+
+    res = await api_client.post(
+        "/api/v1/members",
+        json={
+            "member_number": "CSRF-BEARER",
+            "first_name": "Bearer",
+            "last_name": "Bypass",
+        },
+        headers={
+            "X-Test-CSRF": "enforce",
+            "Authorization": "Bearer attacker-supplied-value",
+            "X-Tenant-ID": str(tenant.id),
+        },
+        cookies={"session_token": session, "csrf_token": csrf},
+    )
+    assert res.status_code == 403
+    assert "CSRF" in res.text
+
+    # Same call with no session cookie keeps the legitimate Bearer exemption.
+    # The client jar still holds the login cookies, so drop them first.
+    api_client.cookies.clear()
+    exempt = await api_client.post(
+        "/api/v1/members",
+        json={
+            "member_number": "CSRF-BEARER-2",
+            "first_name": "Bearer",
+            "last_name": "Only",
+        },
+        headers={
+            "X-Test-CSRF": "enforce",
+            "Authorization": f"Bearer {session}",
+            "X-Tenant-ID": str(tenant.id),
+        },
+    )
+    assert exempt.status_code != 403 or "CSRF" not in exempt.text

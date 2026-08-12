@@ -1,97 +1,280 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api, setAuth } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
+import { Alert, EmptyState, LoadingSkeleton } from '../components/ui'
 
+type TenantSummary = {
+  id: string
+  name: string
+  location_code: string
+  organization_id: string
+  member_count: number
+  active_membership_count: number
+  revenue_minor: number
+}
+
+type FederationSummary = {
+  organization_count: number
+  tenant_count: number
+  member_count: number
+  active_membership_count: number
+  revenue_minor: number
+  partial: boolean
+}
+
+type AuditEvent = {
+  id: string
+  tenant_id: string
+  user_id: string | null
+  action: string
+  resource_type: string
+  created_at: string
+}
+
+/** amount_minor → display. Money never becomes a float on the way in. */
+function formatMinor(minor: number): string {
+  const major = Math.trunc(minor / 100)
+  const cents = Math.abs(minor % 100)
+    .toString()
+    .padStart(2, '0')
+  return `₺${major.toLocaleString('tr-TR')},${cents}`
+}
+
+/**
+ * Federation console.
+ *
+ * Every figure comes from /api/v1/admin/* — there are no placeholder KPIs here.
+ * The backend computes cross-tenant aggregates one tenant at a time (ADR-031),
+ * so `partial` is surfaced rather than hidden: a page total must never be
+ * presented as a platform total.
+ */
 export default function SuperAdminPortal() {
-  const [tenants] = useState([
-    { id: '92c41231-2a7d-42a5-862d-fda966f1137e', name: 'Demo Gym', org: 'NexFabric Network', members: 3, status: 'ACTIVE', quota: '1,000 Üye' },
-    { id: 'a1b2c3d4-5678-90ab-cdef-1234567890ab', name: 'FitClub Levent', org: 'FitClub Franchise', members: 1420, status: 'ACTIVE', quota: '5,000 Üye' },
-    { id: 'b2c3d4e5-6789-01ab-cdef-2345678901bc', name: 'Gold Gym Kadıköy', org: 'Gold Fitness Group', members: 890, status: 'ACTIVE', quota: '2,500 Üye' },
-  ])
+  const { session, refresh } = useAuth()
+
+  const [tenants, setTenants] = useState<TenantSummary[]>([])
+  const [summary, setSummary] = useState<FederationSummary | null>(null)
+  const [audit, setAudit] = useState<AuditEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [switching, setSwitching] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [tenantRows, summaryRow, auditRows] = await Promise.all([
+        api<TenantSummary[]>('/api/v1/admin/tenants?limit=25'),
+        api<FederationSummary>('/api/v1/admin/federation/summary'),
+        api<AuditEvent[]>('/api/v1/admin/audit?tenant_limit=10&limit_per_tenant=5'),
+      ])
+      setTenants(tenantRows)
+      setSummary(summaryRow)
+      setAudit(auditRows)
+    } catch {
+      setError('Federasyon verileri yüklenemedi. Birkaç saniye sonra tekrar deneyin.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  /** Switch the ops console into a tenant. Audited server-side (deps.py). */
+  async function enterTenant(tenantId: string) {
+    setSwitching(tenantId)
+    setAuth(tenantId)
+    await refresh()
+    window.location.assign('/')
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 font-sans">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between border-b border-slate-800 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 font-black text-white text-2xl shadow-xl shadow-purple-500/20">
-              👑
-            </div>
-            <div>
-              <h1 className="text-2xl font-extrabold text-white tracking-tight">
-                Federasyon & Platform SuperAdmin Konsolu
-              </h1>
-              <p className="text-sm text-slate-400">Global Organizasyonlar, Kulüp Tenant Kotaları ve Sistem Denetimi</p>
-            </div>
+    <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 font-sans">
+      <div className="mx-auto w-full max-w-6xl">
+        <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-white">
+              Federasyon Konsolu
+            </h1>
+            <p className="mt-1 text-sm text-slate-400">
+              {session?.email}
+              {session?.is_superuser && ' · platform yöneticisi'}
+            </p>
           </div>
-          <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-xs font-bold text-purple-400">
-            PLATFORM OPERATÖRÜ MODU
-          </span>
-        </div>
+          <Link
+            to="/portal"
+            className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+          >
+            Portallara dön
+          </Link>
+        </header>
 
-        {/* Global KPI Cards */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Toplam Kulüp (Tenant)</div>
-            <div className="mt-2 text-3xl font-extrabold text-white">14 Kulüp</div>
-            <div className="mt-1 text-xs text-emerald-400">+2 Yeni Kulüp (Bu Ay)</div>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Toplam Aktif Sporcu</div>
-            <div className="mt-2 text-3xl font-extrabold text-purple-400">24,850</div>
-            <div className="mt-1 text-xs text-slate-400">Multi-Tenant RLS Korumalı</div>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Donanım Kapı Okuyucuları</div>
-            <div className="mt-2 text-3xl font-extrabold text-amber-400">48 Kiosk PWA</div>
-            <div className="mt-1 text-xs text-emerald-400">● 48/48 Çevrimiçi</div>
-          </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Sistem Lisans Geliri</div>
-            <div className="mt-2 text-3xl font-extrabold text-emerald-400">₺184,500 / ay</div>
-            <div className="mt-1 text-xs text-slate-400">Stripe/Iyzico Bağlantılı</div>
-          </div>
-        </div>
+        {loading && <LoadingSkeleton rows={6} />}
 
-        {/* Tenants Table */}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">🏛️ Bağlı Spor Salonu Tenant'ları</h2>
-            <button className="rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500">
-              + Yeni Tenant (Gym) Lisansla
+        {!loading && error && (
+          <div className="space-y-3">
+            <Alert variant="error">{error}</Alert>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700"
+            >
+              Tekrar dene
             </button>
           </div>
+        )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Tenant ID</th>
-                  <th className="py-3 px-4">Kulüp Adı</th>
-                  <th className="py-3 px-4">Organizasyon</th>
-                  <th className="py-3 px-4">Aktif Üye</th>
-                  <th className="py-3 px-4">Lisans Kotası</th>
-                  <th className="py-3 px-4">Durum</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {tenants.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-800/30">
-                    <td className="py-3 px-4 font-mono text-xs text-slate-400">{t.id.substring(0, 13)}...</td>
-                    <td className="py-3 px-4 font-bold text-white">{t.name}</td>
-                    <td className="py-3 px-4 text-slate-300">{t.org}</td>
-                    <td className="py-3 px-4 font-semibold text-purple-300">{t.members} Sporcu</td>
-                    <td className="py-3 px-4 text-slate-400">{t.quota}</td>
-                    <td className="py-3 px-4">
-                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-xs font-bold text-emerald-400">
-                        {t.status}
+        {!loading && !error && summary && (
+          <>
+            <section
+              aria-label="Federasyon özeti"
+              className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {[
+                { label: 'Organizasyon', value: summary.organization_count },
+                { label: 'Kulüp (tenant)', value: summary.tenant_count },
+                { label: 'Toplam üye', value: summary.member_count },
+                {
+                  label: 'Aktif abonelik',
+                  value: summary.active_membership_count,
+                },
+              ].map((kpi) => (
+                <div
+                  key={kpi.label}
+                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    {kpi.label}
+                  </div>
+                  <div className="mt-2 text-3xl font-extrabold text-white">
+                    {kpi.value.toLocaleString('tr-TR')}
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Tahsil edilen toplam
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-emerald-400">
+                {formatMinor(summary.revenue_minor)}
+              </div>
+            </section>
+
+            {summary.partial && (
+              <div className="mb-6">
+                <Alert variant="info">
+                  Bu rakamlar yalnızca listelenen ilk {summary.tenant_count}{' '}
+                  kulübü kapsıyor; platform geneli toplam değildir.
+                </Alert>
+              </div>
+            )}
+
+            <section
+              aria-label="Kulüpler"
+              className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-5"
+            >
+              <h2 className="mb-4 text-lg font-bold text-white">Kulüpler</h2>
+              {tenants.length === 0 ? (
+                <EmptyState
+                  title="Görüntülenecek kulüp yok"
+                  description="Yetkiniz olan organizasyonlarda henüz kulüp tanımlı değil."
+                />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-500">
+                      <tr>
+                        <th className="pb-3 font-semibold">Kulüp</th>
+                        <th className="pb-3 font-semibold">Kod</th>
+                        <th className="pb-3 text-right font-semibold">Üye</th>
+                        <th className="pb-3 text-right font-semibold">
+                          Aktif abonelik
+                        </th>
+                        <th className="pb-3 text-right font-semibold">Gelir</th>
+                        <th className="pb-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {tenants.map((tenant) => (
+                        <tr key={tenant.id} className="text-slate-300">
+                          <td className="py-3 font-semibold text-white">
+                            {tenant.name}
+                          </td>
+                          <td className="py-3 font-mono text-xs text-slate-500">
+                            {tenant.location_code}
+                          </td>
+                          <td className="py-3 text-right">
+                            {tenant.member_count.toLocaleString('tr-TR')}
+                          </td>
+                          <td className="py-3 text-right">
+                            {tenant.active_membership_count.toLocaleString(
+                              'tr-TR',
+                            )}
+                          </td>
+                          <td className="py-3 text-right font-semibold text-emerald-400">
+                            {formatMinor(tenant.revenue_minor)}
+                          </td>
+                          <td className="py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => void enterTenant(tenant.id)}
+                              disabled={switching !== null}
+                              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                            >
+                              {switching === tenant.id
+                                ? 'Geçiliyor…'
+                                : 'Bu kulübe geç'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="mt-4 text-xs text-slate-500">
+                    “Bu kulübe geç” operasyon konsolunu seçilen kulübe bağlar.
+                    Bu erişim sunucu tarafında audit kaydına yazılır.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            <section
+              aria-label="Audit kayıtları"
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+            >
+              <h2 className="mb-4 text-lg font-bold text-white">
+                Son sistem olayları
+              </h2>
+              {audit.length === 0 ? (
+                <EmptyState
+                  title="Audit kaydı yok"
+                  description="Kayda değer bir sistem olayı henüz oluşmadı."
+                />
+              ) : (
+                <ul className="divide-y divide-slate-800/60 text-sm">
+                  {audit.map((event) => (
+                    <li
+                      key={event.id}
+                      className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                    >
+                      <span className="font-mono text-xs text-slate-300">
+                        {event.action}
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      <span className="text-xs text-slate-500">
+                        {event.resource_type} ·{' '}
+                        {new Date(event.created_at).toLocaleString('tr-TR')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </div>
   )

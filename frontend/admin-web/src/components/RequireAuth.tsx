@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { getTenantId } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { Alert, LoadingSkeleton } from './ui'
 
@@ -15,11 +14,8 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation()
   const { session, loading, error } = useAuth()
 
-  // No tenant id at all — never authenticated, skip the spinner.
-  if (!getTenantId() && !session) {
-    return <Navigate to="/login" replace state={{ from: location }} />
-  }
-
+  // Note: absence of a tenant id is NOT a signal here — federation and
+  // platform principals legitimately have none. Only /me/session decides.
   if (loading) {
     return (
       <div className="p-8">

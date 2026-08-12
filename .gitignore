@@ -44,3 +44,7 @@ frontend/**/dist/
 frontend/node_modules/
 cookie.txt
 backend/fix_tests.py
+
+# Playwright / pytest run artifacts
+test-results/
+playwright-report/

@@ -145,6 +145,8 @@ async def test_member_cannot_check_other_member_entitlement(api_client, pg_engin
             "entitlements:check",
             "entitlements:read",
             "members:read",
+            # tenant-wide row scope; without it a reader is assignment-scoped
+            "members:read:all",
         ]
 
         user_a, token_a = await _user_with_role(

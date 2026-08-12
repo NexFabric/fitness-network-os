@@ -1,8 +1,8 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-10  
+**Last updated:** 2026-08-12  
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Alembic head on main:** `q0d1e2f3a4b5` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
+**Alembic head on main:** `t3a4b5c6d7e8` (Phase 16; after 15.5 `p9c0d1e2f3a4`)
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -24,7 +24,7 @@
 | Phase 16–20 product MVP | 🟢 MERGED (depth partial) | Admin/Scanner polish open |
 | Phase 21–24 hardening MVP | 🟡 MERGED code / 🔴 CI flaky | CSRF/auth still P0 |
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
-| **Phase 27 production closure** | 🔴 **ACTIVE** | P0→P1→P2 board |
+| **Phase 27 production closure** | 🟡 **UI/RBAC wave landed** | Role-guarded portals + real portal data; device replay protection still open |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ---
@@ -54,6 +54,31 @@
 ### Exit (25–26)
 - [x] Phase 25 checklist truth model (docs)  
 - [ ] Phase 26 CORE MVP EXIT GATE — **NOT PASSED** (superseded by Phase 27 closure; independent APPROVE + green CI required)
+
+### Phase 27 — UI production closure (RBAC portals)
+
+Closed the gap between the "5 portals live" claim and the code. Before this wave
+`/superadmin` and `/trainer` were pure mock, `/member` called a hardcoded member
+id, and no portal was role-guarded (`RequireAuth` only read a localStorage
+string).
+
+- [x] `GET /api/v1/me/session` — role + permission payload for the frontend guard  
+- [x] `trainer_assignments` table + RLS (migration `s2f3a4b5c6d7`) → TRAINER sees only assigned members (`members:read` endpoint scope, `members:read:all` row scope)  
+- [x] `/api/v1/admin/*` federation endpoints — ADR-043: no RLS widening, per-tenant loop, 50-row page cap, `partial` flag  
+- [x] `audit_events` RLS + superuser tenant impersonation written to audit (migration `t3a4b5c6d7e8`)  
+- [x] Two real holes closed: `devices:manage` granted to no role (migration `r1e2f3a4b5c6`); MEMBER fallback in `authorization.py` returned True without a tenant check  
+- [x] `AuthContext` + `RequireRole`, role-based post-login routing, `/portal` filtered by role  
+- [x] MemberPortal → `/access/qr/issue-self`, shared api client, real membership/entitlement data, QR rendered locally (access token no longer leaves the origin)  
+- [x] TrainerPortal + SuperAdminPortal wired to real APIs, invented KPIs deleted  
+- [x] PWA icon set produced for both apps — manifests previously pointed at files that did not exist (admin-web) or flat placeholder squares off-theme (scanner-pwa); `any` + `maskable` purposes split, `theme_color` aligned to `#020617`  
+- [x] CSRF `Authorization: Bearer` exemption narrowed to requests with no `session_token` cookie (an attacker-supplied header no longer waives the check) + regression test  
+- [x] Docs: `docs/ARCHITECTURE.md` (moved into the repo, verified against code), `docs/RBAC.md`, ADR-043  
+
+**Evidence (local, 2026-08-12):** backend `pytest` 299 passed · 1 skipped; Playwright e2e 21 passed against real Chromium + real backend (QR issue→validate→replay 409 round trip included); zero console errors across all 5 portals (`console_clean.spec.ts`); ruff, mypy, `check_permissions`, `check_permissions_db`, `check_tenancy`, `check_no_money_floats`, both frontend builds green.
+
+**Known gaps (not closed, deliberately):**
+- Device channel has no HMAC/nonce — a stolen `device_session` cookie is valid for 30 days. Feature-sized change touching the live access path; tracked in `docs/ops/ASVS_L2_COMPLIANCE_REPORT.md`.
+- No external pentest; the ASVS L2 report is **SELF-ASSESSED**, not verified.
 
 ---
 

@@ -1,8 +1,8 @@
 # FITNESS NETWORK OS — IMPLEMENTATION MASTER PLAN
 
 **Status:** Living roadmap (Phase 0–27)  
-**Last updated:** 2026-08-10  
-**Alembic head:** `q0d1e2f3a4b5`  
+**Last updated:** 2026-08-12  
+**Alembic head:** `t3a4b5c6d7e8`  
 
 **Hierarchy:** MASTER_SPEC → PRODUCTION_READINESS → this plan → PROGRESS_CHECKLIST → phase plans  
 
@@ -24,9 +24,10 @@
 | 21 | CI V2 frontend jobs | 🟢 MERGED (FE builds required checks) |
 | 22–24 | Container / HTTP / request-id | 🟢 MERGED MVP (+ HSTS/CSP #41 + CSRF + SBOM) |
 | 25 | Checklist truth | 🟢 docs MERGED |
-| 26 | CORE MVP EXIT GATE | 🟢 **PASS** |
+| 26 | CORE MVP EXIT GATE | 🔴 **NOT PASSED** — no external pentest evidence (docs/ops/ASVS_PENTEST_STATUS.md) |
+| 27 | UI production closure (RBAC portals) | 🟡 UI/RBAC wave landed — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*` (ADR-043), PWA icon set; device channel replay protection open |
 
-**Roadmap completion (MVP vs full prod):** MVP surface area delivered as MVP on main; production bar met.
+**Roadmap completion (MVP vs full prod):** MVP surface area delivered on main. The production bar is **not** met — Phase 26 is open.
 
 ---
 

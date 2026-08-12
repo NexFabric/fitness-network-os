@@ -37,14 +37,23 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
 
         from app.models.rbac import Permission, Role, UserRole
         
-        perm = Permission(name="devices:manage", description="Manage devices")
-        db.add(perm)
-        await db.flush()
+        # devices:manage is seeded by migration r1e2f3a4b5c6, so get-or-create.
+        perm = (
+            await db.execute(
+                select(Permission).where(Permission.name == "devices:manage")
+            )
+        ).scalar_one_or_none()
+        if perm is None:
+            perm = Permission(name="devices:manage", description="Manage devices")
+            db.add(perm)
+            await db.flush()
         
         # User role is created in _seed_user, let's just find it
         role_row = (await db.execute(select(UserRole).where(UserRole.user_id == user.id))).scalar_one()
         role = (await db.execute(select(Role).options(selectinload(Role.permissions)).where(Role.id == role_row.role_id))).scalar_one()
-        role.permissions.append(perm)
+        # The seeded role may already hold it (migration r1e2f3a4b5c6).
+        if perm.id not in {p.id for p in role.permissions}:
+            role.permissions.append(perm)
         await db.commit()
         
     # Login as admin
@@ -123,6 +132,14 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
     
     # Check audit log for revoke
     async with pg_session_maker() as db:
+        from sqlalchemy import text
+
+        # audit_events is RLS-protected (migration t3a4b5c6d7e8): without tenant
+        # context this session correctly sees zero rows.
+        await db.execute(
+            text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+            {"tid": str(tenant.id)},
+        )
         audit = (await db.execute(select(AuditEvent).where(AuditEvent.resource_id == device_id, AuditEvent.action == "device_revoked"))).scalar_one()
         assert audit.action == "device_revoked"
         

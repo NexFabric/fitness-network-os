@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-08-11  
 **main equality:** `b90b3ed` — verify `git rev-parse HEAD` == `origin/main` after pull  
-**Alembic head:** `6590aca081d6`  
+**Alembic head:** `t3a4b5c6d7e8`  
 **Production-ready?** **NO** — Phase 27 production closure in progress (architecture strong; launch gates open).
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
@@ -74,6 +74,31 @@ After login: Admin → **Members** (create member) and **Locations** (create loc
 
 Re-run rotates the session token (prior sessions revoked).
 
+### Role matrix seed (one login per portal)
+
+`seed_demo.py` only creates a `GYM_OWNER`. To exercise all five portals — and the
+trainer assignment scope — seed one principal per role in a shared tenant:
+
+```bash
+cd backend
+uv run python scripts/seed_role_matrix.py   # idempotent; prints credentials as JSON
+```
+
+| Email | Role | Lands on |
+|-------|------|----------|
+| `e2e.owner@e2e.local` | `GYM_OWNER` | ops console |
+| `e2e.trainer@e2e.local` | `TRAINER` | trainer portal (assigned members only) |
+| `e2e.member@e2e.local` | `MEMBER` | athlete portal |
+| `e2e.analyst@e2e.local` | `FEDERATION_ANALYST` | federation console |
+
+Password for all four: `E2ePortal123!` (local fixture, never a real secret).
+Routing after login is role-based, and cross-portal URLs are denied by
+`RequireRole` — see `docs/RBAC.md`. This seed also backs the Playwright suite:
+
+```bash
+cd frontend/e2e && npx playwright test    # 21 tests, starts :5173/:5174 itself
+```
+
 ### Password login (preferred API check)
 
 ```bash
@@ -105,7 +130,7 @@ npm run dev -- --port 5173
 # Scanner
 cd frontend/scanner-pwa
 echo 'VITE_API_URL=http://localhost:8000' > .env
-npm run dev -- --port 5174
+npm run dev
 ```
 
 ## API surface notes

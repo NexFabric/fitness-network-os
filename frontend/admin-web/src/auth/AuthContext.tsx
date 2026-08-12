@@ -14,7 +14,8 @@ import type { RoleName } from './roles'
 export type Session = {
   user_id: string
   email: string | null
-  tenant_id: string
+  /** null for federation/platform principals — they belong to no single tenant. */
+  tenant_id: string | null
   is_superuser: boolean
   roles: string[]
   permissions: string[]
@@ -28,7 +29,7 @@ type AuthState = {
   error: string | null
   hasRole: (allowed: RoleName[]) => boolean
   hasPermission: (permission: string) => boolean
-  refresh: () => Promise<void>
+  refresh: (opts?: { probe?: boolean }) => Promise<void>
   signOut: () => void
 }
 
@@ -39,9 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
-    // X-Tenant-ID is required by /me/session; without it there is nothing to ask.
-    if (!getTenantId()) {
+  const refresh = useCallback(async ({ probe = false } = {}) => {
+    // On the login page with no stored tenant there is no plausible session, so
+    // skip the probe rather than firing a request that can only 401.
+    // A stored tenant means a prior session, which is worth re-checking so a
+    // returning user is bounced straight to its portal.
+    if (
+      probe &&
+      typeof window !== 'undefined' &&
+      window.location.pathname.startsWith('/login') &&
+      !getTenantId()
+    ) {
       setSession(null)
       setLoading(false)
       return
@@ -65,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    void refresh()
+    void refresh({ probe: true })
   }, [refresh])
 
   const signOut = useCallback(() => {
