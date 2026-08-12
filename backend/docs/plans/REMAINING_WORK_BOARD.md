@@ -62,6 +62,7 @@
 |----|------|-------|
 | P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
+| API-1 | **No membership creation API** — `/memberships/*` only mutates existing rows; plans/plan-versions have no catalogue endpoint either, so a membership can currently only be created by a seed script. The lifecycle UI is wired but cannot be exercised end to end until this lands | A-DOMAIN |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
 | P2-3 | KMS QR secrets | A-QR |
