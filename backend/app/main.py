@@ -57,7 +57,11 @@ def create_app() -> FastAPI:
     # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
     app.add_middleware(RequestLoggingMiddleware)
     # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
-    app.add_middleware(SimpleRateLimitMiddleware)
+    app.add_middleware(
+        SimpleRateLimitMiddleware,
+        max_requests=settings.RATE_LIMIT_LOGIN_MAX_REQUESTS,
+        window_seconds=settings.RATE_LIMIT_LOGIN_WINDOW_SECONDS,
+    )
     # CSRF Double-Submit protection (Phase 23)
     app.add_middleware(CSRFMiddleware)
 

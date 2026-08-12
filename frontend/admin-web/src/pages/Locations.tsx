@@ -44,6 +44,11 @@ export default function Locations() {
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
 
+  const [editing, setEditing] = useState<Location | null>(null)
+  const [editForm, setEditForm] = useState<CreateLocationForm>(emptyForm)
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   const loadLocations = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent ?? false
     if (!silent) {
@@ -93,6 +98,48 @@ export default function Locations() {
       setFormError(formatApiError(err, 'Şube oluşturulamadı'))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  function startEdit(loc: Location) {
+    setEditing(loc)
+    setEditError(null)
+    setEditForm({
+      name: loc.name,
+      timezone: loc.timezone,
+      address: loc.address ?? '',
+    })
+  }
+
+  async function handleUpdate(e: FormEvent) {
+    e.preventDefault()
+    if (!editing) return
+    setEditError(null)
+
+    const name = editForm.name.trim()
+    if (!name) {
+      setEditError('Şube adı gereklidir.')
+      return
+    }
+    const addressTrimmed = editForm.address.trim()
+
+    setEditSubmitting(true)
+    try {
+      await api<Location>(`/api/v1/locations/${editing.id}`, {
+        method: 'PATCH',
+        body: {
+          name,
+          timezone: editForm.timezone.trim() || 'UTC',
+          address: addressTrimmed.length > 0 ? addressTrimmed : null,
+        },
+      })
+      setEditing(null)
+      setFormSuccess('Şube güncellendi.')
+      await loadLocations({ silent: true })
+    } catch (err) {
+      setEditError(formatApiError(err, 'Şube güncellenemedi'))
+    } finally {
+      setEditSubmitting(false)
     }
   }
 
@@ -211,12 +258,13 @@ export default function Locations() {
                 <th className="table-th">İsim</th>
                 <th className="table-th">Zaman dilimi</th>
                 <th className="table-th">Adres</th>
+                <th className="table-th text-right">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {locations.length === 0 ? (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <EmptyState
                       title="Henüz şube yok"
                       description="Yukarıdaki formu kullanarak ilk şubeyi oluşturun."
@@ -233,11 +281,103 @@ export default function Locations() {
                     <td className="table-td text-slate-400">
                       {loc.address ?? '—'}
                     </td>
+                    <td className="table-td text-right">
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => startEdit(loc)}
+                      >
+                        Düzenle
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {editing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-location-heading"
+        >
+          <form className="card w-full max-w-lg" onSubmit={handleUpdate} noValidate>
+            <h2
+              id="edit-location-heading"
+              className="text-base font-semibold text-slate-100"
+            >
+              Şubeyi düzenle
+            </h2>
+            <div className="mt-4 grid gap-4">
+              <div>
+                <label htmlFor="edit_location_name" className="label-text">
+                  İsim <span className="text-teal-500">*</span>
+                </label>
+                <input
+                  id="edit_location_name"
+                  type="text"
+                  required
+                  maxLength={200}
+                  value={editForm.name}
+                  onChange={(ev) =>
+                    setEditForm((f) => ({ ...f, name: ev.target.value }))
+                  }
+                  className="input-field"
+                  disabled={editSubmitting}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit_location_timezone" className="label-text">
+                  Zaman Dilimi
+                </label>
+                <input
+                  id="edit_location_timezone"
+                  type="text"
+                  maxLength={64}
+                  value={editForm.timezone}
+                  onChange={(ev) =>
+                    setEditForm((f) => ({ ...f, timezone: ev.target.value }))
+                  }
+                  className="input-field"
+                  disabled={editSubmitting}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit_location_address" className="label-text">
+                  Adres
+                </label>
+                <input
+                  id="edit_location_address"
+                  type="text"
+                  maxLength={500}
+                  value={editForm.address}
+                  onChange={(ev) =>
+                    setEditForm((f) => ({ ...f, address: ev.target.value }))
+                  }
+                  className="input-field"
+                  disabled={editSubmitting}
+                />
+              </div>
+              {editError && <Alert variant="error">{editError}</Alert>}
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setEditing(null)}
+                disabled={editSubmitting}
+              >
+                Vazgeç
+              </button>
+              <button type="submit" className="btn-primary" disabled={editSubmitting}>
+                {editSubmitting ? 'Kaydediliyor…' : 'Kaydet'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
