@@ -86,7 +86,9 @@ string).
 - [x] scanner-pwa signs device requests via Web Crypto. `authenticateDevice()` imports the secret into a **non-extractable** `CryptoKey` and persists only that handle in IndexedDB — the plaintext never reaches a storage API, so script on the origin can sign but cannot exfiltrate the credential (keeps ASVS 3.4.2 true). Falls back to the staff `/access/qr/validate` path when unpaired.
 - [x] CodeQL: cleared the high alert (demo seed script no longer echoes the password) and the 5 `actions/missing-workflow-permissions` alerts (top-level `permissions: contents: read` in `ci.yml`).
 
-**Evidence (local, 2026-08-12):** `tests/api/test_scanner_device_auth.py` 3 passed — cookie-only, forged signature, body/signature mismatch, stale timestamp, nonce replay, and unsigned-session paths each asserted 401 with their distinct reason; full backend suite, ruff, mypy, `alembic check`, `check_tenancy`, `check_permissions*`, `check_no_money_floats`, scanner-pwa + admin-web builds green.
+- [x] CI hardening: SBOM generation split out of the `security` gate (an upstream syft/GitHub-releases outage was failing `security` and, through `needs`, skipping the whole test suite), `anchore/sbom-action` pinned to a SHA, `timeout-minutes` on every job.
+
+**Evidence (local + CI on `630aeef`, 2026-08-12):** backend `pytest` **301 passed · 1 skipped** (local and CI), Playwright e2e **21 passed** against real Chromium + real backend with zero console errors, all 12 CI checks green including CodeQL. `tests/api/test_scanner_device_auth.py` 3 passed — cookie-only, forged signature, body/signature mismatch, stale timestamp, nonce replay, and unsigned-session paths each asserted 401 with their distinct reason; ruff, mypy (85 files), `alembic check` (no drift), `check_tenancy`, `check_permissions*`, `check_no_money_floats`, all three frontend builds green.
 
 ---
 
