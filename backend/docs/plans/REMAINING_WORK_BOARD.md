@@ -21,8 +21,8 @@
 | Public-site CI job | 🟢 added |
 | MFA enrollment enforcement (code gate) | 🟡 partial (no full TOTP UX) |
 | Scanner offline deny-by-default | 🟢 landed |
-| Scanner device auth | 🟢 landed (device credentials) |
-| Playwright E2E | 🔴 not added |
+| Scanner device auth | 🟢 landed — credentials **+ HMAC request signing + single-use nonce** (ADR-044) |
+| Playwright E2E | 🟢 landed (21 tests, real Chromium + real backend) |
 | DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
 | Independent APPROVE | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
@@ -49,6 +49,8 @@
 | SEC-1 | Dependabot high alert triage (npm audit fix vite/esbuild) |
 | P1-1 | Scanner **device** authentication |
 | P1-4b | Real TOTP + privileged role matrix UI (Backend) |
+| P1-7 | Playwright browser E2E suite (21 tests, real Chromium + real backend) |
+| SEC-2 | Device channel HMAC signing + nonce replay protection (ADR-044) |
 
 ---
 
@@ -57,8 +59,8 @@
 | ID | Item | Owner |
 |----|------|-------|
 | P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
+| PR #49 | Merge blocked: `main` needs 1 approving review, `enforce_admins` on — author cannot self-approve | human |
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
-| P1-7 | Playwright browser E2E suite | A-FE |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
 | P2-2 | Redis distributed rate limit | A-CFG |

@@ -133,12 +133,41 @@ echo 'VITE_API_URL=http://localhost:8000' > .env
 npm run dev
 ```
 
+### Pairing a scanner device (signed channel)
+
+The device channel needs two things, not one: the `device_session` cookie **and**
+the per-session signing secret. Provision as staff, then pair:
+
+```bash
+# 1) Staff provisions the device (needs devices:manage) — returns api_key ONCE
+curl -sS -X POST http://localhost:8000/api/v1/devices/provision \
+  -b cookie.txt -H 'Content-Type: application/json' \
+  -H "X-Tenant-ID: <tenant_id>" \
+  -d '{"name":"Turnike 1","location_id":"<location_id>"}'
+
+# 2) The device authenticates — returns signing_secret ONCE (body, not a cookie)
+curl -sS -X POST http://localhost:8000/api/v1/devices/auth \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id":"<id>","tenant_id":"<tenant_id>","api_key":"<api_key>"}'
+```
+
+In the browser the scanner does this via `authenticateDevice()`
+(`frontend/scanner-pwa/src/api/client.ts`), which imports the secret into a
+non-extractable `CryptoKey` — the plaintext is never stored.
+
+Every later device request must carry `X-Device-Timestamp`, `X-Device-Nonce` and
+`X-Device-Signature` = HMAC-SHA256 over
+`METHOD\npath\ntimestamp\nnonce\nsha256(body)`, within ±300s. A request without a
+valid signature is 401 regardless of the cookie (ADR-044). Unpaired scanners keep
+working through the staff path `/api/v1/access/qr/validate`.
+
 ## API surface notes
 
 - Public generic `/outbox` inject **yok** (15.5C — correct).
 - Self: `/api/v1/me/*`, `/api/v1/access/qr/issue-self`
 - Staff: members, locations, notifications, reports, finance, access, …
 - Auth: HttpOnly cookie + CSRF token enforcement.
+- Device: HMAC-SHA256 request signing + single-use nonce (`ADR-044`).
 - Email notifications: SMTP integration is active in `docker-compose.prod.yml`.
 
 ## Production-ready?
