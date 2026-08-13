@@ -21,6 +21,12 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Set when an administrator provisions the account with a one-time password.
+    # Login then issues a restricted ``password_reset`` session instead of a
+    # usable one, so a provisioned password never becomes a standing credential.
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
 
     sessions: Mapped[list["UserSession"]] = relationship(
         "UserSession", back_populates="user", cascade="all, delete-orphan"
@@ -40,7 +46,7 @@ class UserSession(Base):
     __tablename__ = "user_sessions"
     __table_args__ = (
         CheckConstraint(
-            "auth_level IN ('full', 'mfa_setup')",
+            "auth_level IN ('full', 'mfa_setup', 'password_reset')",
             name="ck_user_sessions_auth_level",
         ),
     )
@@ -57,7 +63,8 @@ class UserSession(Base):
         DateTime(timezone=True), nullable=False
     )
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
-    # ``mfa_setup`` sessions can call only MFA enrollment endpoints. Ordinary
+    # ``mfa_setup`` sessions can call only MFA enrollment endpoints and
+    # ``password_reset`` sessions only the change-password endpoint. Ordinary
     # authenticated dependencies require ``full`` assurance.
     auth_level: Mapped[str] = mapped_column(
         String(32), nullable=False, default="full", server_default="full"

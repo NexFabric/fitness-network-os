@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**37 components** (react)
+**38 components** (react)
 
 ## Client Components
 
@@ -33,6 +33,7 @@
 - **Members** — `frontend/admin-web/src/pages/Members.tsx`
 - **MfaSetup** — `frontend/admin-web/src/pages/MfaSetup.tsx`
 - **Notifications** — `frontend/admin-web/src/pages/Notifications.tsx`
+- **PasswordChange** — `frontend/admin-web/src/pages/PasswordChange.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
 - **Reports** — `frontend/admin-web/src/pages/Reports.tsx`

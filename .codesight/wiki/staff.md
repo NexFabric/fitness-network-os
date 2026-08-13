@@ -2,10 +2,12 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Staff subsystem handles **1 routes**.
+The Staff subsystem handles **2 routes** and touches: cache.
 
 ## Routes
 
+- `POST` `/accounts` → in: StaffLinkRequest, out: StaffResponse [cache]
+  `backend/app/api/v1/endpoints/staff.py`
 - `GET` `/{staff_id}` params(staff_id) → in: UUI, out: StaffResponse
   `backend/app/api/v1/endpoints/staff.py`
 

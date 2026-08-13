@@ -16,6 +16,11 @@ type SessionResponse = {
   is_superuser: boolean
 }
 
+type VerifyResponse = {
+  success: boolean
+  password_change_required: boolean
+}
+
 export default function MfaSetup() {
   const navigate = useNavigate()
   const { refresh } = useAuth()
@@ -73,11 +78,19 @@ export default function MfaSetup() {
     setBusy(true)
     setError(null)
     try {
-      await api('/api/v1/auth/mfa/verify', {
+      const result = await api<VerifyResponse>('/api/v1/auth/mfa/verify', {
         method: 'POST',
         body: { code: code.trim() },
         skipAuth: true,
       })
+
+      // Enrollment is not always the last gate: an account provisioned with a
+      // one-time password still owes a rotation before it can be used.
+      if (result.password_change_required) {
+        navigate('/password/change', { replace: true })
+        return
+      }
+
       const session = await api<SessionResponse>('/api/v1/me/session')
       await refresh()
       navigate(homeRouteFor(session.roles, session.is_superuser), {

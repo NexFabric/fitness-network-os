@@ -49,6 +49,7 @@
 - `backend/alembic/versions/t3a4b5c6d7e8_audit_events_rls.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/v5c6d7e8f9a0_privileged_mfa_session_level.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/w6d7e8f9a0b1_forced_password_rotation.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]

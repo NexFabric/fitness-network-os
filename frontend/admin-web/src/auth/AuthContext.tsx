@@ -47,7 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // returning user is bounced straight to its portal.
     if (probe && typeof window !== 'undefined') {
       const path = window.location.pathname
-      if (path.startsWith('/mfa/setup') || (path.startsWith('/login') && !getTenantId())) {
+      // /mfa/setup and /password/change run on restricted sessions that
+      // /me/session rejects by design, so probing there only produces noise.
+      if (
+        path.startsWith('/mfa/setup') ||
+        path.startsWith('/password/change') ||
+        (path.startsWith('/login') && !getTenantId())
+      ) {
         setSession(null)
         setLoading(false)
         return

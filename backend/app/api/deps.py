@@ -85,6 +85,16 @@ async def get_mfa_enrollment_user(
     )
 
 
+async def get_password_rotation_user(
+    token: str = Depends(get_current_session_token),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Allow a full session or a short-lived password-rotation-only session."""
+    return await _get_user_for_session(
+        token, db, allowed_auth_levels={"full", "password_reset"}
+    )
+
+
 async def _audit_superuser_tenant_access(
     db: AsyncSession, user: User, tenant_id: UUID
 ) -> None:

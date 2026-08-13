@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**59 library files** across 2 modules
+**60 library files** across 2 modules
 
-## Backend (56 files)
+## Backend (57 files)
 
 - `backend/alembic/env.py` — include_object, run_migrations_offline, do_run_migrations, run_migrations_online, run_async_migrations
 - `backend/scripts/check_no_money_floats.py` — scan_models, scan_source_ast, main
@@ -31,7 +31,7 @@
 - `backend/alembic/versions/c4f9a1b2e3d0_seed_entitlement_permissions.py` — upgrade, downgrade
 - `backend/alembic/versions/c938894ffe0d_add_organization_and_tenant_models.py` — upgrade, downgrade
 - `backend/alembic/versions/c938894ffe0e_add_wave_1_core_gym_models.py` — upgrade, downgrade
-- _…and 31 more files_
+- _…and 32 more files_
 
 ## Frontend (3 files)
 
