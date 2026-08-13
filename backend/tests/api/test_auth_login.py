@@ -73,7 +73,7 @@ async def _seed_user(
             await db.execute(select(Role).where(Role.name == role_name))
         ).scalar_one_or_none()
         if role is None:
-            role = Role(name=f"auth-role-{uuid4().hex[:8]}", description="auth test")
+            role = Role(name=role_name, description="auth test")
             db.add(role)
             await db.flush()
 
