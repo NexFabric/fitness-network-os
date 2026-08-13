@@ -13,6 +13,7 @@ from app.api.v1.endpoints import (
     memberships,
     mfa,
     notifications,
+    plans,
     reports,
     staff,
     telemetry,
@@ -23,6 +24,11 @@ api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(mfa.router, prefix="/auth/mfa", tags=["mfa"])
+api_router.include_router(plans.router, prefix="/plans", tags=["plans"])
+# Creation sits with the catalogue it depends on, but keeps the /memberships path.
+api_router.include_router(
+    plans.membership_router, prefix="/memberships", tags=["memberships"]
+)
 api_router.include_router(
     memberships.router, prefix="/memberships", tags=["memberships"]
 )

@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Members from './pages/Members'
 import Devices from './pages/Devices'
 import Notifications from './pages/Notifications'
+import Plans from './pages/Plans'
 import Reports from './pages/Reports'
 import Staff from './pages/Staff'
 import Finance from './pages/Finance'
@@ -113,6 +114,14 @@ export default function App() {
             />
             {/* notifications:* / reports:* / staff:* sit with the same two roles
                 in permissions.yml; the API is still the boundary. */}
+            <Route
+              path="plans"
+              element={
+                <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN, ROLES.GYM_MANAGER]}>
+                  <Plans />
+                </RequireRole>
+              }
+            />
             <Route
               path="notifications"
               element={

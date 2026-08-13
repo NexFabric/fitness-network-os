@@ -209,6 +209,24 @@ async def schedule_delivery(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+@router.get("/deliveries", response_model=list[DeliveryResponse])
+async def list_deliveries(
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    status: str | None = Query(default=None, max_length=32),
+    channel: str | None = Query(default=None, max_length=32),
+    limit: int = Query(default=50, ge=1, le=200),
+):
+    """Recent delivery history. Read-only, so `notifications:read` is enough —
+    scheduling one still needs write/send."""
+    _require(current_user, tenant_id, "notifications:read")
+    rows = await NotificationService(db).list_deliveries(
+        tenant_id, status=status, channel=channel, limit=limit
+    )
+    return [_delivery_response(row) for row in rows]
+
+
 @router.get("/deliveries/{delivery_id}", response_model=DeliveryResponse)
 async def get_delivery(
     delivery_id: UUID,

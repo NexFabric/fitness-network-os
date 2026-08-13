@@ -52,6 +52,8 @@
 | P1-7 | Playwright browser E2E suite (21 tests, real Chromium + real backend) |
 | SEC-2 | Device channel HMAC signing + nonce replay protection (ADR-044) |
 | P2-2 | Redis-backed distributed rate limit (login), fail-open with degraded log |
+| API-1 | Plan catalogue (`/plans`, versions, publish) + membership creation (`POST /memberships`) — the lifecycle surface can now be driven end to end |
+| API-2 | Delivery and run history endpoints (`GET /notifications/deliveries`, `GET /reports/runs`) — bounded, filterable |
 | SEC-3 | Dead `verify_idempotency_key` middleware removed — it advertised idempotency while only checking header presence; the real path is `api/idempotency_uow.py` |
 
 ---
@@ -62,7 +64,6 @@
 |----|------|-------|
 | P0-1 | GitHub main required Unit & Integration green on push | A-CI / ORCH |
 | P1-3b | Signed object-storage URLs + encryption | A-RPT |
-| API-1 | **No membership creation API** — `/memberships/*` only mutates existing rows; plans/plan-versions have no catalogue endpoint either, so a membership can currently only be created by a seed script. The lifecycle UI is wired but cannot be exercised end to end until this lands | A-DOMAIN |
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
 | P2-3 | KMS QR secrets | A-QR |

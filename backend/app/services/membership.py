@@ -12,6 +12,7 @@ from app.models.membership import (
     MembershipPeriod,
     MembershipRenewal,
     MembershipStatusHistory,
+    Plan,
     PlanVersion,
     RenewalStatus,
 )
@@ -52,6 +53,90 @@ class MembershipService:
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def create_plan(
+        self, tenant_id: UUID, *, name: str, description: str | None = None
+    ) -> Plan:
+        plan = Plan(tenant_id=tenant_id, name=name, description=description, is_active=True)
+        self.session.add(plan)
+        await self.session.flush()
+        return plan
+
+    async def list_plans(self, tenant_id: UUID, *, limit: int = 100) -> list[Plan]:
+        stmt = (
+            select(Plan)
+            .where(Plan.tenant_id == tenant_id)
+            .order_by(Plan.created_at.desc())
+            .limit(limit)
+        )
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def list_plan_versions(
+        self, tenant_id: UUID, *, plan_id: UUID | None = None, published_only: bool = False
+    ) -> list[PlanVersion]:
+        stmt = select(PlanVersion).where(PlanVersion.tenant_id == tenant_id)
+        if plan_id is not None:
+            stmt = stmt.where(PlanVersion.plan_id == plan_id)
+        if published_only:
+            stmt = stmt.where(PlanVersion.is_published.is_(True))
+        stmt = stmt.order_by(PlanVersion.version.desc())
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def create_plan_version(
+        self,
+        tenant_id: UUID,
+        *,
+        plan_id: UUID,
+        price_amount_minor: int,
+        billing_cycle_months: int,
+        currency: str = "TRY",
+        terms: dict | None = None,
+    ) -> PlanVersion:
+        """Draft a new version of a plan.
+
+        The version number is derived server-side rather than accepted from the
+        caller: two operators drafting at once must not be able to agree on the
+        same number, and a client-chosen version would let one silently take
+        another's slot.
+        """
+        plan = (
+            await self.session.execute(
+                select(Plan).where(Plan.id == plan_id, Plan.tenant_id == tenant_id)
+            )
+        ).scalar_one_or_none()
+        if not plan:
+            raise ValueError("Plan not found")
+
+        if price_amount_minor < 0:
+            raise ValueError("Price cannot be negative")
+        if billing_cycle_months < 1:
+            raise ValueError("Billing cycle must be at least one month")
+
+        latest = (
+            await self.session.execute(
+                select(PlanVersion.version)
+                .where(
+                    PlanVersion.plan_id == plan_id,
+                    PlanVersion.tenant_id == tenant_id,
+                )
+                .order_by(PlanVersion.version.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+
+        pv = PlanVersion(
+            tenant_id=tenant_id,
+            plan_id=plan_id,
+            version=(latest or 0) + 1,
+            price_amount_minor=price_amount_minor,
+            currency=currency.upper(),
+            billing_cycle_months=billing_cycle_months,
+            terms=terms or {},
+            is_published=False,
+        )
+        self.session.add(pv)
+        await self.session.flush()
+        return pv
 
     async def publish_plan_version(self, plan_version_id: UUID) -> PlanVersion:
         stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id).with_for_update()

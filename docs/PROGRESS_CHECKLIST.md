@@ -107,9 +107,20 @@ All new routes and nav items are gated to `GYM_OWNER`/`GYM_ADMIN`; the nav hides
 
 **Evidence (local, 2026-08-13):** Playwright **33 passed** against real Chromium + real backend (was 21) — provisioning a device and reading its key once, revoking it through the dialog, editing a location, creating a notification template, creating and running a report definition, inline validation refusals, and every ops route redirecting members/trainers back to their own portal. admin-web build green.
 
-**Known gaps recorded, not papered over:**
-- **API-1** No membership *creation* API and no plan catalogue — memberships can only be created by a seed script, so the lifecycle UI cannot be driven end to end yet.
-- Notification deliveries and report runs have no list endpoints, so both pages show only what the current session started.
+
+## Phase 27.3 — Plan catalogue + membership creation (API-1 closed, 2026-08-13)
+
+Every membership row points at a `plan_version`, but nothing over HTTP could create one: memberships existed only where a seed script had written them, and the whole lifecycle surface had nothing to act on.
+
+- [x] `POST/GET /api/v1/plans`, `POST /plans/{id}/versions`, `GET /plans/versions`, `POST /plans/versions/{id}/publish` — version numbers are assigned server-side (two operators drafting at once must not collide), prices are integer minor units end to end, and publishing is one-way because sold memberships are bound to that price.
+- [x] `POST /api/v1/memberships` — starts a membership against a **published** version only, snapshotting price and terms; a future `start_date` schedules instead of activating; a member cannot hold two live memberships.
+- [x] Authorisation reuses `memberships:read`/`memberships:write` rather than adding a `plans:*` pair that would need a matrix migration to say the same thing.
+- [x] **Planlar** page (`/plans`) — create plan, price a version (TL input parsed as digits into kuruş, never through a float), publish behind a dialog that states the irreversibility.
+- [x] Member detail can now start a membership from the published catalogue.
+
+- [x] **History lists** — `GET /notifications/deliveries` and `GET /reports/runs` (filterable by status/channel/definition, bounded to 200 rows so an authenticated page cannot scan a tenant's whole history). Both pages now show real history that survives a reload instead of only what the current session started.
+
+**Evidence (local, 2026-08-13):** 3 new backend tests (draft version refused for sale, publish is one-way, server-assigned version numbering, negative price and zero cycle rejected, duplicate live membership refused, missing plan 404, missing permission 403) · Playwright **37 passed** including the full commercial round trip in Chromium (create plan → price 499,90 → publish → create member → start membership → freeze → unfreeze) and the two history lists surviving a page reload.
 
 ---
 
