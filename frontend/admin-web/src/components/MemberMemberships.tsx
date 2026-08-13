@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../api/client'
+import { formatMinor } from '../pages/Plans'
 import { Alert } from './ui'
 
 export type Membership = {
@@ -12,6 +13,20 @@ export type Membership = {
   current_period_end: string | null
   canceled_at: string | null
   frozen_until: string | null
+}
+
+type PlanVersionOption = {
+  id: string
+  plan_id: string
+  version: number
+  price_amount_minor: number
+  currency: string
+  billing_cycle_months: number
+}
+
+type PlanOption = {
+  id: string
+  name: string
 }
 
 type PendingAction = {
@@ -74,6 +89,13 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
   // Irreversible transitions are confirmed before they run.
   const [pending, setPending] = useState<PendingAction | null>(null)
 
+  // Only published versions can be sold, so the picker asks the API for those
+  // rather than filtering a full catalogue client-side.
+  const [planVersions, setPlanVersions] = useState<PlanVersionOption[]>([])
+  const [plans, setPlans] = useState<PlanOption[]>([])
+  const [starting, setStarting] = useState(false)
+  const [selectedVersion, setSelectedVersion] = useState('')
+
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true)
     try {
@@ -87,9 +109,25 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
     }
   }, [memberId])
 
+  const loadCatalogue = useCallback(async () => {
+    try {
+      const [versionRows, planRows] = await Promise.all([
+        api<PlanVersionOption[]>('/api/v1/plans/versions?published_only=true'),
+        api<PlanOption[]>('/api/v1/plans'),
+      ])
+      setPlanVersions(versionRows)
+      setPlans(planRows)
+    } catch {
+      // A caller without memberships:read simply gets no picker; the list above
+      // already surfaced the real error.
+      setPlanVersions([])
+    }
+  }, [])
+
   useEffect(() => {
     void load()
-  }, [load])
+    void loadCatalogue()
+  }, [load, loadCatalogue])
 
   async function run(
     membershipId: string,
@@ -115,6 +153,29 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
       return false
     } finally {
       setBusy(null)
+    }
+  }
+
+  async function handleStart() {
+    if (!selectedVersion) {
+      setError('Önce yayımlanmış bir plan sürümü seçin.')
+      return
+    }
+    setStarting(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await api('/api/v1/memberships', {
+        method: 'POST',
+        body: { member_id: memberId, plan_version_id: selectedVersion },
+      })
+      setMessage('Abonelik başlatıldı.')
+      setSelectedVersion('')
+      await load({ silent: true })
+    } catch (e) {
+      setError(formatApiError(e, 'Abonelik başlatılamadı'))
+    } finally {
+      setStarting(false)
     }
   }
 
@@ -170,6 +231,47 @@ export default function MemberMemberships({ memberId }: { memberId: string }) {
     <div className="mt-4 space-y-4">
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
+
+      <div className="rounded-lg border border-slate-700 bg-slate-800/40 p-4">
+        <p className="text-sm font-semibold text-slate-200">Abonelik başlat</p>
+        {planVersions.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-400">
+            Yayımlanmış plan sürümü yok. Planlar sayfasından bir sürüm ekleyip
+            yayımlayın.
+          </p>
+        ) : (
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <div className="min-w-[220px] flex-1">
+              <label htmlFor={`start_plan_${memberId}`} className="label-text">
+                Plan sürümü
+              </label>
+              <select
+                id={`start_plan_${memberId}`}
+                value={selectedVersion}
+                onChange={(e) => setSelectedVersion(e.target.value)}
+                className="input-field py-1 text-sm"
+                disabled={starting}
+              >
+                <option value="">Seçin…</option>
+                {planVersions.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {plans.find((p) => p.id === v.plan_id)?.name ?? 'Plan'} v{v.version} —{' '}
+                    {formatMinor(v.price_amount_minor, v.currency)} / {v.billing_cycle_months} ay
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => void handleStart()}
+              disabled={starting}
+            >
+              {starting ? 'Başlatılıyor…' : 'Başlat'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {memberships.length === 0 ? (
         <p className="text-sm text-slate-500">Bu üyeye ait abonelik bulunmuyor.</p>

@@ -1,0 +1,38 @@
+# Components
+
+- **App** — `frontend/admin-web/src/App.tsx`
+- **AuthProvider** — `frontend/admin-web/src/auth/AuthContext.tsx`
+- **Layout** — `frontend/admin-web/src/components/Layout.tsx`
+- **MemberAccessLogs** — props: memberId — `frontend/admin-web/src/components/MemberAccessLogs.tsx`
+- **MemberMemberships** — props: memberId — `frontend/admin-web/src/components/MemberMemberships.tsx`
+- **ReloadPrompt** — `frontend/admin-web/src/components/ReloadPrompt.tsx`
+- **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
+- **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
+- **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
+- **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
+- **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
+- **Locations** — `frontend/admin-web/src/pages/Locations.tsx`
+- **Login** — `frontend/admin-web/src/pages/Login.tsx`
+- **MemberPortal** — `frontend/admin-web/src/pages/MemberPortal.tsx`
+- **Members** — `frontend/admin-web/src/pages/Members.tsx`
+- **Notifications** — `frontend/admin-web/src/pages/Notifications.tsx`
+- **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
+- **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
+- **Reports** — `frontend/admin-web/src/pages/Reports.tsx`
+- **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
+- **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`
+- **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
+- **RootLayout** — `frontend/public-site/src/app/layout.tsx`
+- **Home** — `frontend/public-site/src/app/page.tsx`
+- **Architecture** [client] — `frontend/public-site/src/components/Architecture.tsx`
+- **BrandMark** — props: size, showWordmark — `frontend/public-site/src/components/BrandMark.tsx`
+- **Cta** [client] — `frontend/public-site/src/components/Cta.tsx`
+- **Features** [client] — `frontend/public-site/src/components/Features.tsx`
+- **Footer** — `frontend/public-site/src/components/Footer.tsx`
+- **Header** [client] — `frontend/public-site/src/components/Header.tsx`
+- **Hero** [client] — `frontend/public-site/src/components/Hero.tsx`
+- **Metrics** [client] — `frontend/public-site/src/components/Metrics.tsx`
+- **Pricing** [client] — `frontend/public-site/src/components/Pricing.tsx`
+- **App** — `frontend/scanner-pwa/src/App.tsx`
+- **CameraQrScanner** — props: onDecode, active, onStop — `frontend/scanner-pwa/src/components/CameraQrScanner.tsx`
+- **ReloadPrompt** — `frontend/scanner-pwa/src/components/ReloadPrompt.tsx`

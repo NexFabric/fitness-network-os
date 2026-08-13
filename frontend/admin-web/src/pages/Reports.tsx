@@ -49,9 +49,9 @@ export default function Reports() {
   const [runFormat, setRunFormat] = useState<string>('CSV')
   const [running, setRunning] = useState<string | null>(null)
   const [runError, setRunError] = useState<string | null>(null)
-  // Runs are only readable one id at a time (no list endpoint), so this holds
-  // what this session started rather than pretending to be a history view.
+  // Keyed by definition so each card can show its own latest run.
   const [runs, setRuns] = useState<Record<string, Run>>({})
+  const [history, setHistory] = useState<Run[]>([])
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) {
@@ -59,7 +59,12 @@ export default function Reports() {
       setError(null)
     }
     try {
-      setDefinitions(await api<Definition[]>('/api/v1/reports/definitions'))
+      const [definitionRows, runRows] = await Promise.all([
+        api<Definition[]>('/api/v1/reports/definitions'),
+        api<Run[]>('/api/v1/reports/runs?limit=50'),
+      ])
+      setDefinitions(definitionRows)
+      setHistory(runRows)
       setError(null)
     } catch (e) {
       setError(formatApiError(e, 'Rapor tanımları yüklenemedi'))
@@ -113,6 +118,7 @@ export default function Reports() {
         body: { definition_code: def.code, export_format: runFormat },
       })
       setRuns((r) => ({ ...r, [def.id]: run }))
+      await load({ silent: true })
     } catch (err) {
       setRunError(formatApiError(err, 'Rapor çalıştırılamadı'))
     } finally {
@@ -301,6 +307,71 @@ export default function Reports() {
               )
             })}
           </ul>
+        )}
+      </section>
+
+      <section className="card mt-6" aria-labelledby="run-history-heading">
+        <div className="card-header">
+          <h2 id="run-history-heading" className="text-base font-semibold text-slate-100">
+            Son çalıştırmalar
+          </h2>
+        </div>
+        {loading ? (
+          <div className="mt-4">
+            <LoadingSkeleton rows={3} />
+          </div>
+        ) : history.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              title="Henüz çalıştırma yok"
+              description="Bir tanımı çalıştırdığınızda burada listelenir."
+            />
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">Tanım</th>
+                  <th className="px-3 py-2">Durum</th>
+                  <th className="px-3 py-2">Satır</th>
+                  <th className="px-3 py-2">Biçim</th>
+                  <th className="px-3 py-2 text-right">Çıktı</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {history.map((r) => (
+                  <tr key={r.id}>
+                    <td className="px-3 py-3 text-slate-300">
+                      {definitions.find((d) => d.id === r.definition_id)?.name ?? '—'}
+                    </td>
+                    <td className="px-3 py-3">
+                      <StatusBadge status={r.status} />
+                      {r.error_message && (
+                        <p className="mt-1 text-xs text-rose-400">{r.error_message}</p>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-slate-400">{r.row_count ?? '—'}</td>
+                    <td className="px-3 py-3 text-slate-400">{r.export_format ?? '—'}</td>
+                    <td className="px-3 py-3 text-right">
+                      {r.result_url ? (
+                        <a
+                          className="text-teal-400 underline"
+                          href={r.result_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Aç
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-500">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>

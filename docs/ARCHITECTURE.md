@@ -151,7 +151,48 @@ sequenceDiagram
 
 ---
 
-## 5. Bilinen açık maddeler
+## 5. Üyelik ve plan alanı
+
+Bir abonelik daima **yayımlanmış bir plan sürümüne** karşı satılır. Katalog ile
+abonelik arasındaki sınır kasıtlıdır: fiyat, ürün tanımında değil, satış anında
+aboneliğe **kopyalanır**.
+
+```mermaid
+graph LR
+    P[Plan<br/>ürün tanımı] --> PV1["PlanVersion v1<br/>taslak"]
+    P --> PV2["PlanVersion v2<br/>yayımlandı"]
+    PV2 -->|"POST /memberships"| M["Membership<br/>price_snapshot + terms_snapshot"]
+    M --> MP[MembershipPeriod]
+    M --> MH[MembershipStatusHistory]
+    M -.->|dondur / çöz / iptal / yenile / süre doldu| M
+```
+
+Kurallar ve gerekçeleri:
+
+- **Sürüm numarası sunucuda atanır** (`create_plan_version`). İstemciden gelse
+  aynı anda taslak açan iki operatör aynı numarayı isteyebilir ve biri
+  diğerinin yerini sessizce alırdı.
+- **Yayımlama tek yönlüdür.** Yayımlanmış sürüm düzenlenemez, geri alınamaz —
+  satılmış abonelikler o fiyata bağlıdır. Fiyat değişikliği = yeni sürüm.
+- **Taslak satılamaz.** `start_membership` yalnızca `is_published` sürümü kabul
+  eder, aksi hâlde 400 döner.
+- **Fiyat anlık kopyalanır** (`price_snapshot`, `price_snapshot_currency`,
+  `terms_snapshot`). Sonraki bir sürüm geçmişi yeniden yazamaz.
+- **Bir üyede tek canlı abonelik.** `ACTIVE / FROZEN / PAST_DUE / SCHEDULED /
+  PENDING` durumlarından biri varsa ikinci başlatma reddedilir.
+- **Para uçtan uca tam sayı kuruştur** (`amount_minor`). UI'daki `499,90`
+  girdisi float'tan geçmeden basamak ayrıştırmasıyla `49990`'a çevrilir; ORM'de
+  float para alanı CI tarafından bloke edilir (`check_no_money_floats.py`).
+- Yetki: katalog ve abonelik başlatma `memberships:read` / `memberships:write`
+  izinlerini kullanır. Ayrı bir `plans:*` çifti eklenmedi — aynı şeyi söyleyen
+  ikinci bir izin matrisi göç gerektirirdi.
+
+Gelecek durumlar (`SCHEDULED`) `start_date` geleceğe verildiğinde servis
+tarafından seçilir; istemci durum gönderemez.
+
+---
+
+## 6. Bilinen açık maddeler
 
 Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
 
@@ -161,4 +202,11 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
   süreç-içi pencereye düşer** — yani çok süreçli kurulumda limit süreç sayısı kadar
   çarpılır. Bilinçli fail-open (login cache kesintisinde kapanmasın), `rate_limit.redis_*`
   uyarısıyla loglanır.
+- Raporlar özel diske CSV yazar; imzalı object-storage URL'i ve şifreleme yok
+  (gerçek bir kova/kimlik bilgisi gerektirir).
+- QR imza sırları için KMS çözümü yok — `qr_crypto.py` KMS referansını tanır ama
+  bilinçli olarak `NotImplementedError` verir; üretimde `local:hmac:` kullanılır.
+- `/metrics` Prometheus placeholder'ıdır, gerçek metrik pipeline'ı yok.
+- MFA backend'i tam (TOTP + Fernet + kurtarma kodları); kayıt UX'i eksik.
+- Kullanıcı hesabı açan bir uç yok — Personel ekranı var olan kullanıcıyı bağlar.
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.

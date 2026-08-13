@@ -126,6 +126,32 @@ class NotificationService:
         )
         return list(result.scalars().all())
 
+    async def list_deliveries(
+        self,
+        tenant_id: UUID,
+        *,
+        status: str | None = None,
+        channel: str | None = None,
+        limit: int = 50,
+    ) -> list[NotificationDelivery]:
+        """Recent deliveries, newest first.
+
+        Bounded by design: an operator wants the recent tail, and an unbounded
+        scan of a tenant's whole delivery history is a way to hurt the database
+        from an authenticated page.
+        """
+        limit = max(1, min(limit, 200))
+        stmt = select(NotificationDelivery).where(
+            NotificationDelivery.tenant_id == tenant_id
+        )
+        if status:
+            stmt = stmt.where(NotificationDelivery.status == status.upper())
+        if channel:
+            stmt = stmt.where(NotificationDelivery.channel == channel.upper())
+        stmt = stmt.order_by(NotificationDelivery.created_at.desc()).limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
     # ----- schedule -----
     @staticmethod
     def _render(template: str, context: dict[str, Any]) -> str:

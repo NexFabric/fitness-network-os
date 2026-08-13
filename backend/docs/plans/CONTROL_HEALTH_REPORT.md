@@ -1,4 +1,4 @@
-# Control Health Report — 2026-08-12 (post Phase 27 UI/RBAC + 27.1 device hardening)
+# Control Health Report — 2026-08-13 (post Phase 27.2 ops depth + 27.3 plan catalogue)
 
 ## Overall: **HEALTHY_MVP**
 
@@ -10,7 +10,7 @@
 | Alembic head | `u4b5c6d7e8f9` |
 | `GET /health` | **200** (when stack up) |
 | Admin `:5173` / Scanner `:5174` | Runnable (Vite host) |
-| Full local pytest | **301 passed · 1 skipped** (2026-08-12), matches CI |
+| Full local pytest | **311 passed · 1 skipped** (2026-08-13) |
 
 ## Merged waves (truth)
 
@@ -22,6 +22,7 @@
 | UI brand | #44–#45 | Scanner Access + Admin teal brand |
 | Docs | #43 + docs truth pass | SHA / checklist aligned |
 | Phase 27 + 27.1 | **#49 merged** | RBAC portals, PWA icons, CSRF narrowing, device HMAC signing (ADR-044) |
+| Phase 27.2 + 27.3 | **#52 merged, 27.3 in PR** | Ops console depth, plan catalogue + membership creation, history endpoints |
 
 ## Phase matrix
 

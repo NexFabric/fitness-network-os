@@ -1,0 +1,80 @@
+# Routes
+
+## CRUD Resources
+
+- **``** GET | POST | GET/:id | PATCH/:id
+- **`/deliveries`** GET | POST | GET/:id → Deliverie
+- **`/runs`** GET | POST | GET/:id → Run
+- **`/{trainer_user_id}/members`** GET | POST | GET/:id | DELETE/:id → Member
+
+## Other Routes
+
+- `POST` `/qr/issue` params() → in: IssueQrRequest, out: IssueQrResponse [auth]
+- `POST` `/qr/issue-self` params() → in: IssueQrRequest, out: IssueQrResponse [auth]
+- `POST` `/qr/validate` params() → in: IssueQrRequest, out: IssueQrResponse [auth]
+- `POST` `/keys/rotate` params() → in: IssueQrRequest, out: IssueQrResponse
+- `GET` `/keys` params() → in: UUI, out: IssueQrResponse
+- `GET` `/organizations` params() → in: FederationScop, out: list
+- `GET` `/tenants` params() → in: FederationScop, out: list
+- `GET` `/tenants/{tenant_id}` params(tenant_id) → in: FederationScop, out: list
+- `GET` `/federation/summary` params() → in: FederationScop, out: list
+- `GET` `/audit` params() → in: FederationScop, out: list
+- `GET` `/csrf` params() → out: CsrfResponse [auth]
+- `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
+- `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
+- `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
+- `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
+- `POST` `/revoke` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
+- `GET` `/` params() → in: UUI, out: ProvisionDeviceResponse [auth, db] ✓
+- `POST` `/{member_id}/entitlements/check` params(member_id) → in: UUID, out: EntitlementAccessResponse [auth]
+- `POST` `/{member_id}/entitlements/consume` params(member_id) → in: UUID, out: EntitlementAccessResponse [auth]
+- `POST` `/billing-accounts` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/invoices` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/invoices/{invoice_id}/issue` params(invoice_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/invoices/{invoice_id}/void` params(invoice_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/payments` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/payments/{payment_id}/refunds` params(payment_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/credits` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/credits/{credit_id}/apply` params(credit_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/discounts` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/reconciliations` params() → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/reconciliations/items/{item_id}/match` params(item_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `POST` `/reconciliations/{run_id}/complete` params(run_id) → in: BillingAccountCreate, out: BillingAccountResponse
+- `GET` `/invoices` params() → out: BillingAccountResponse
+- `GET` `/payments` params() → out: BillingAccountResponse
+- `GET` `/session` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/profile` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/member` params() → in: AsyncSessio, out: MeSessionResponse [auth] ✓
+- `GET` `/memberships` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/entitlements` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
+- `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
+- `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
+- `POST` `/{member_id}/notes` params(member_id) → in: MemberCreate, out: MemberResponse
+- `GET` `/{member_id}/notes` params(member_id) → out: MemberResponse
+- `POST` `/{member_id}/consents` params(member_id) → in: MemberCreate, out: MemberResponse
+- `GET` `/{member_id}/memberships` params(member_id) → out: MemberResponse
+- `GET` `/{member_id}/access-logs` params(member_id) → out: MemberResponse [db]
+- `POST` `/{membership_id}/freeze` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/{membership_id}/unfreeze` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/{membership_id}/cancel` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/{membership_id}/renew` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/{membership_id}/expire` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/{membership_id}/past-due` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
+- `POST` `/setup` params() → in: Use, out: MfaSetupResponse [db]
+- `POST` `/verify` params() → in: Use, out: MfaSetupResponse [db]
+- `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
+- `GET` `/templates` params() → in: UUI, out: TemplateResponse
+- `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
+- `GET` `/versions` params() → in: UUI, out: PlanResponse
+- `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
+- `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
+- `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
+- `GET` `/public` params()
+- `GET` `/health` params() [auth, db, cache] ✓
+- `GET` `/live` params()
+- `GET` `/ready` params() [auth, db, cache]
+- `GET` `/metrics` params()
+- `GET` `/ping` params() ✓

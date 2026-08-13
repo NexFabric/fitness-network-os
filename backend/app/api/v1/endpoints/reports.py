@@ -164,6 +164,23 @@ async def request_run(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+@router.get("/runs", response_model=list[RunResponse])
+async def list_runs(
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    definition_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None, max_length=32),
+    limit: int = Query(default=50, ge=1, le=200),
+):
+    """Recent run history, newest first."""
+    _require(current_user, tenant_id, "reports:read")
+    rows = await ReportService(db).list_runs(
+        tenant_id, definition_id=definition_id, status=status, limit=limit
+    )
+    return [_run_response(row) for row in rows]
+
+
 @router.get("/runs/{run_id}", response_model=RunResponse)
 async def get_run(
     run_id: UUID,

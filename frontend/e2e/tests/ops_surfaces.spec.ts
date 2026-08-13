@@ -37,6 +37,26 @@ test.describe('notifications', () => {
     await expect(page.getByRole('row', { name: new RegExp(code) })).toBeVisible()
   })
 
+  test('a scheduled delivery lands in the history list', async ({ page }) => {
+    const stamp = Date.now()
+    const to = `gecmis${stamp}@ornek.com`
+
+    await login(page, OWNER)
+    await page.goto('/notifications')
+
+    const sendForm = page.locator('form').filter({ has: page.locator('#send_to') })
+    await page.fill('#send_to', to)
+    await page.fill('#send_body', 'Geçmiş testi')
+    await sendForm.getByRole('button', { name: 'Gönderimi planla' }).click()
+
+    // The history table is fed by the list endpoint, not by local state.
+    const history = page.getByRole('region', { name: 'Son gönderimler' })
+    await expect(history.getByRole('row', { name: new RegExp(to) })).toBeVisible()
+
+    await page.reload()
+    await expect(history.getByRole('row', { name: new RegExp(to) })).toBeVisible()
+  })
+
   test('a delivery without a recipient is refused inline, not by a browser dialog', async ({
     page,
   }) => {
@@ -72,6 +92,11 @@ test.describe('reports', () => {
     // The run is queued or already finished — either way the panel appears and
     // the status is rendered rather than swallowed.
     await expect(item.getByRole('button', { name: 'Durumu yenile' })).toBeVisible()
+
+    // And it survives a reload, because runs now come from the list endpoint.
+    await page.reload()
+    const history = page.getByRole('region', { name: 'Son çalıştırmalar' })
+    await expect(history.getByRole('row', { name: new RegExp(`E2E Rapor ${stamp}`) })).toBeVisible()
   })
 })
 

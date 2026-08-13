@@ -89,6 +89,25 @@ class ReportService:
         )
         return list(result.scalars().all())
 
+    async def list_runs(
+        self,
+        tenant_id: UUID,
+        *,
+        definition_id: UUID | None = None,
+        status: str | None = None,
+        limit: int = 50,
+    ) -> list[ReportRun]:
+        """Recent runs, newest first. Bounded for the same reason as deliveries."""
+        limit = max(1, min(limit, 200))
+        stmt = select(ReportRun).where(ReportRun.tenant_id == tenant_id)
+        if definition_id is not None:
+            stmt = stmt.where(ReportRun.definition_id == definition_id)
+        if status:
+            stmt = stmt.where(ReportRun.status == status.upper())
+        stmt = stmt.order_by(ReportRun.created_at.desc()).limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
     async def request_run(
         self,
         tenant_id: UUID,

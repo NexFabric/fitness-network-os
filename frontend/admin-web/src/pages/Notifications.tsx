@@ -57,6 +57,7 @@ export default function Notifications() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [lastDelivery, setLastDelivery] = useState<Delivery | null>(null)
+  const [deliveries, setDeliveries] = useState<Delivery[]>([])
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) {
@@ -64,7 +65,12 @@ export default function Notifications() {
       setError(null)
     }
     try {
-      setTemplates(await api<Template[]>('/api/v1/notifications/templates'))
+      const [templateRows, deliveryRows] = await Promise.all([
+        api<Template[]>('/api/v1/notifications/templates'),
+        api<Delivery[]>('/api/v1/notifications/deliveries?limit=50'),
+      ])
+      setTemplates(templateRows)
+      setDeliveries(deliveryRows)
       setError(null)
     } catch (e) {
       setError(formatApiError(e, 'Şablonlar yüklenemedi'))
@@ -139,6 +145,7 @@ export default function Notifications() {
         },
       })
       setLastDelivery(result)
+      await load({ silent: true })
     } catch (err) {
       setSendError(formatApiError(err, 'Gönderim planlanamadı'))
     } finally {
@@ -308,8 +315,7 @@ export default function Notifications() {
           </h2>
         </div>
         <p className="mt-2 text-sm text-slate-400">
-          Gönderim kuyruğa alınır; sonucu aşağıda görünür. Geçmiş listesi henüz
-          yok — API tek tek kayıt döndürüyor.
+          Gönderim kuyruğa alınır; sonucu aşağıda ve geçmiş listesinde görünür.
         </p>
         <form className="mt-4 grid gap-4 sm:grid-cols-2" onSubmit={handleSend} noValidate>
           <div>
@@ -430,6 +436,56 @@ export default function Notifications() {
             {lastDelivery.error_message && (
               <p className="mt-2 text-xs text-rose-400">{lastDelivery.error_message}</p>
             )}
+          </div>
+        )}
+      </section>
+
+      <section className="card mt-6" aria-labelledby="delivery-list-heading">
+        <div className="card-header">
+          <h2 id="delivery-list-heading" className="text-base font-semibold text-slate-100">
+            Son gönderimler
+          </h2>
+        </div>
+        {loading ? (
+          <div className="mt-4">
+            <LoadingSkeleton rows={3} />
+          </div>
+        ) : deliveries.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              title="Henüz gönderim yok"
+              description="Planlanan gönderimler burada listelenir."
+            />
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">Alıcı</th>
+                  <th className="px-3 py-2">Kanal</th>
+                  <th className="px-3 py-2">Konu</th>
+                  <th className="px-3 py-2">Durum</th>
+                  <th className="px-3 py-2">Deneme</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {deliveries.map((d) => (
+                  <tr key={d.id}>
+                    <td className="px-3 py-3 text-slate-300">{d.recipient_address ?? '—'}</td>
+                    <td className="px-3 py-3 text-slate-400">{d.channel}</td>
+                    <td className="px-3 py-3 text-slate-400">{d.subject ?? '—'}</td>
+                    <td className="px-3 py-3">
+                      <StatusBadge status={d.status} />
+                      {d.error_message && (
+                        <p className="mt-1 text-xs text-rose-400">{d.error_message}</p>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-slate-400">{d.attempt_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

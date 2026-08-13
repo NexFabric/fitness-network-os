@@ -1,0 +1,91 @@
+# Libraries
+
+- `backend/alembic/env.py`
+  - function include_object: (object, name, type_, reflected, compare_to) -> bool
+  - function run_migrations_offline: () -> None
+  - function do_run_migrations: (connection) -> None
+  - function run_migrations_online: () -> None
+  - function run_async_migrations: () -> None
+- `backend/alembic/versions/0a561fd73793_update_rbac_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/261bdee314d7_sync_usermfamethod.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/32bea30c0ed8_add_federation_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/332634d9dc20_phase_27_add_mfa_totp_fields.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/45e716039e1c_add_phase_8_membership_domain_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/62afa7f4b3b1_add_status_to_membership_renewals.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/6590aca081d6_make_expected_end_date_nullable.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/67eca287af30_add_operational_mvp_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/7558a909338a_phase_27_add_audit_events_model.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/8d4b31a89f92_add_growth_and_crm_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/8d7e354b271c_composite_tenant_fks.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/96b95a7a1de8_phase_27_add_device_auth_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/9d407d31b6cb_seed_rbac_canonical_matrix.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/a1b2c3d4e5f6_add_access_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/b3655ea622c4_add_chk_user_roles_tenant_or_org.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/b3e2852df357_add_entitlement_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/b5994ffbd643_add_membership_cancellation_and_renewal_.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/bc4033d03939_add_terms_json_fields.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/c4f9a1b2e3d0_seed_entitlement_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/c938894ffe0d_add_organization_and_tenant_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/c938894ffe0e_add_wave_1_core_gym_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/c938894ffe0f_add_wave_2_membership.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/ca8b3fd77206_add_missing_tables.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/d5e6f7a8b9c0_phase10_finance_domain.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/dd603a516953_add_users_rbac_and_finance_models.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/e0675d75481a_add_phase_8_fixes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/e6f7a8b9c0d1_seed_finance_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/f7a8b9c0d1e2_phase11_remove_money_floats.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/h1a2b3c4d5e6_phase12_idempotency_records.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/i2b3c4d5e6f7_phase13_qr_access_engine.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/j3c4d5e6f7a8_seed_access_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/k4d5e6f7a8b9_phase14_member_gym_core.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/l5e6f7a8b9c0_phase15_outbox_inbox_engine.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/m6f7a8b9c0d1_seed_outbox_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/n7a8b9c0d1e2_phase15_5_integrity_closure.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/o8b9c0d1e2f3_phase15_5b_rbac_member_user_bind.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/p9c0d1e2f3a4_phase15_5c_trust_boundaries.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/q0d1e2f3a4b5_phase16_notifications_reports.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/r1e2f3a4b5c6_seed_devices_manage_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/s2f3a4b5c6d7_trainer_assignments_and_member_read_all.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/t3a4b5c6d7e8_audit_events_rls.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/fix_tests.py` — function repl_success: (m)
+- `backend/scripts/check_no_money_floats.py`
+  - function scan_models: () -> list[str]
+  - function scan_source_ast: () -> list[str]
+  - function main: () -> int
+- `backend/scripts/check_permissions.py` — function main: ()
+- `backend/scripts/check_permissions_db.py` — function main: () -> int
+- `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
+- `backend/scripts/process_notification_due.py`
+  - function build_parser: () -> argparse.ArgumentParser
+  - function main: (argv) -> int
+  - function process_due_for_tenant: (session, tenant_id, *, limit, max_attempts) -> dict[str, int]
+- `backend/scripts/seed_active_membership.py` — function seed_active_membership: ()
+- `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
+- `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
+- `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
+- `backend/src/backend/__init__.py` — function main: () -> None
+- `frontend/admin-web/src/api/client.ts`
+  - function getBaseUrl: () => string
+  - function getTenantId: () => string | null
+  - function setAuth: (tenantId) => void
+  - function clearAuth: () => void
+  - function isAuthenticated: () => boolean
+  - function ensureCsrf: () => Promise<string>
+  - _...3 more_
+- `frontend/admin-web/src/auth/roles.ts`
+  - function homeRouteFor: (roles, isSuperuser) => string
+  - type RoleName
+  - const ROLES
+  - const FEDERATION_ROLES: RoleName[]
+  - const OPS_ROLES: RoleName[]
+  - const TRAINER_ROLES: RoleName[]
+  - _...1 more_
+- `frontend/scanner-pwa/src/api/client.ts`
+  - function getBaseUrl: () => string
+  - function getTenantId: () => string | null
+  - function setAuth: (tenantId) => void
+  - function clearAuth: () => void
+  - function getDeviceKey: () => Promise<CryptoKey | null>
+  - function authenticateDevice: (deviceId, tenantId, apiKey) => Promise<DeviceAuthResult>
+  - _...5 more_
