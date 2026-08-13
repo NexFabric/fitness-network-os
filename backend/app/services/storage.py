@@ -13,7 +13,6 @@ from uuid import UUID
 
 from app.core.config import settings
 
-
 REPORT_FILENAME = "report.csv"
 
 
