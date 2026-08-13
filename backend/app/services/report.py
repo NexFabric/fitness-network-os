@@ -234,7 +234,7 @@ class ReportService:
 
             run.row_count = 1
             run.result_url = await self.storage.save_bytes(
-                tenant_id, str(run.id), artifact, "report.csv"
+                tenant_id, run.id, artifact
             )
             run.status = REPORT_STATUS_SUCCEEDED
             run.finished_at = datetime.now(UTC)

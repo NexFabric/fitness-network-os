@@ -35,8 +35,9 @@ async def test_s3_storage_uploads_encrypted_and_presigns_tenant_key(monkeypatch)
     provider = S3StorageProvider("private-reports")
     monkeypatch.setattr(provider, "_client", lambda: fake)
 
-    uri = await provider.save_bytes(tenant_id, "run-1", b"a,b\n1,2\n", "report.csv")
-    assert uri == f"s3://private-reports/{tenant_id}/run-1/report.csv"
+    artifact_id = uuid4()
+    uri = await provider.save_bytes(tenant_id, artifact_id, b"a,b\n1,2\n")
+    assert uri == f"s3://private-reports/{tenant_id}/{artifact_id}/report.csv"
     assert fake.put is not None
     assert fake.put["ServerSideEncryption"] == "AES256"
     assert fake.put["ContentType"] == "text/csv; charset=utf-8"
@@ -47,7 +48,7 @@ async def test_s3_storage_uploads_encrypted_and_presigns_tenant_key(monkeypatch)
         "operation": "get_object",
         "Params": {
             "Bucket": "private-reports",
-            "Key": f"{tenant_id}/run-1/report.csv",
+            "Key": f"{tenant_id}/{artifact_id}/report.csv",
         },
         "ExpiresIn": 900,
     }
@@ -55,7 +56,7 @@ async def test_s3_storage_uploads_encrypted_and_presigns_tenant_key(monkeypatch)
     await provider.delete(tenant_id, uri)
     assert fake.deleted == {
         "Bucket": "private-reports",
-        "Key": f"{tenant_id}/run-1/report.csv",
+        "Key": f"{tenant_id}/{artifact_id}/report.csv",
     }
 
 

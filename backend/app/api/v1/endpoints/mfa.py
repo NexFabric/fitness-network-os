@@ -17,6 +17,7 @@ from app.api.deps import (
 from app.core.security import (
     decrypt_string,
     encrypt_string,
+    generate_session_token,
     get_password_hash,
 )
 from app.models.audit import AuditEvent
@@ -127,8 +128,20 @@ async def verify_mfa_setup(
             )
         )
     ).scalar_one()
-    session.auth_level = "full"
-    session.expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
+    session.is_revoked = True
+    raw_session_token, new_token_hash = generate_session_token()
+    expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
+    db.add(
+        UserSession(
+            user_id=current_user.id,
+            token_hash=new_token_hash,
+            expires_at=expires_at,
+            is_revoked=False,
+            ip_address=session.ip_address,
+            user_agent=session.user_agent,
+            auth_level="full",
+        )
+    )
 
     tenant_id = next(
         (
@@ -167,7 +180,7 @@ async def verify_mfa_setup(
 
     response.set_cookie(
         key=COOKIE_NAME,
-        value=token,
+        value=raw_session_token,
         httponly=True,
         samesite="lax",
         secure=settings.is_production,
