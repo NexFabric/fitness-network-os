@@ -211,5 +211,9 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
   dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
 - Privileged roller için password-only erişim kapalıdır: kısa ömürlü restricted
   setup session, TOTP kayıt UX'i ve başarılı kayıt sonrası session rotation.
-- Kullanıcı hesabı açan bir uç yok — Personel ekranı var olan kullanıcıyı bağlar.
+- Personel hesabı `POST /staff/accounts` ile açılır: tek kullanımlık parola bir kez
+  döner, hesap `must_change_password` ile işaretlenir ve login yalnızca parola
+  değiştirmeye yeten kısıtlı `password_reset` session verir. Session seviyesi tek
+  yerde (`resolve_auth_level`) kararlaştırılır; MFA kaydı rotasyonun yerine geçmez.
+  Parola teslimi ekrandan yapılır — e-posta davet akışı henüz yok.
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.

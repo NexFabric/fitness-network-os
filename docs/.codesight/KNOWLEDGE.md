@@ -31,7 +31,7 @@ current evidence in repo
 - `PRODUCTION_READINESS.md` — **Sürüm:** v1.2 Phase 27 closure
 - `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-13
 - `RBAC.md` — **Son güncelleme:** 2026-08-12
-- `REVIEW_CHECKPOINT.md` — **Main HEAD:** `2a1002d`; no open PRs
+- `REVIEW_CHECKPOINT.md` — **Main HEAD:** `837cec4`; no open PRs
 - `WAVE_5_5B_CORE_CORRECTNESS.md` — **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.
 - `ops/ASVS_L2_COMPLIANCE_REPORT.md` — **Project:** GymClubNex (Fitness Network OS)
 - `ops/ASVS_PENTEST_STATUS.md` — **Status:** **UNVERIFIED** (Phase 27 P1-11)

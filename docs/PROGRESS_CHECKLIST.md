@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-13
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Main HEAD:** `2a1002d` · **Alembic head on main:** `v5c6d7e8f9a0` · no open PRs
+**Main HEAD:** `837cec4` · **Alembic head on main:** `w6d7e8f9a0b1` · no open PRs
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -26,6 +26,7 @@
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
 | **Phase 27 production closure** | 🟢 **MERGED** (PR #49) | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
 | **Phase 27.4 final closure** | 🟢 **MERGED** (PR #55, `2a1002d`) | Privileged MFA, private report storage, real metrics, frozen image — **code** closed; external evidence gates still open |
+| **Staff account provisioning** | 🟢 **MERGED** (PR #57, `837cec4`) | `POST /staff/accounts` + one-time password + forced rotation; closes the last codeable gap (`P1-USER`) |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -37,7 +38,7 @@
 - [x] Playwright is a required GitHub CI gate against the real backend, PostgreSQL and Redis.
 - [x] CodeQL findings from the closure were resolved by opaque UUID-derived local artifact namespaces and MFA session rotation.
 
-**GitHub evidence:** CI run `31706150882` on the merged head passed backend
+**GitHub evidence (Phase 27.4):** CI run `31706150882` on the merged head passed backend
 **315 tests + 1 skip**, Playwright **36/36**, lint/type-check, security scans, SBOM,
 all frontend builds and the production image — 14/14 required jobs. A clean re-run of
 the same run produced identical counts, so the suite is not flaky. CodeQL run

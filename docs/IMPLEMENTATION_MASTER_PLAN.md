@@ -2,7 +2,7 @@
 
 **Status:** Living roadmap (Phase 0–27)  
 **Last updated:** 2026-08-13
-**Main HEAD:** `2a1002d` · **Alembic head:** `v5c6d7e8f9a0`
+**Main HEAD:** `837cec4` · **Alembic head:** `w6d7e8f9a0b1`
 
 **Hierarchy:** MASTER_SPEC → PRODUCTION_READINESS → this plan → PROGRESS_CHECKLIST → phase plans  
 
@@ -30,6 +30,7 @@
 | 27.2 | Operations console depth | 🟢 Devices, notifications, reports, staff, location edit, full membership lifecycle; Redis-backed login rate limit |
 | 27.3 | Plan catalogue + membership creation | 🟢 `/plans` (versions, publish) + `POST /memberships` — closes API-1; delivery/run history endpoints close API-2 |
 | 27.4 | Final production closure | 🟢 MERGED `2a1002d` — privileged MFA + session rotation, private S3 report storage, real Prometheus metrics, frozen non-root image, required Playwright gate; **code** closed, external evidence gates still open |
+| 27.5 | Staff account provisioning | 🟢 MERGED `837cec4` — `POST /staff/accounts` with a one-time password, forced rotation before the account is usable, ordered enrollment/rotation gates; closes `P1-USER` |
 
 **Roadmap completion (MVP vs full prod):** MVP surface area delivered on main. The production bar is **not** met — Phase 26 is open.
 
