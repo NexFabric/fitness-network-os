@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
 
-from app.models.notification import NotificationDelivery
 from app.core.config import settings
+from app.models.notification import NotificationDelivery
 
 logger = logging.getLogger(__name__)
 
