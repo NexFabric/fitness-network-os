@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String
+from sqlalchemy import JSON, Boolean, CheckConstraint, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -38,6 +38,12 @@ class User(Base):
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
+    __table_args__ = (
+        CheckConstraint(
+            "auth_level IN ('full', 'mfa_setup')",
+            name="ck_user_sessions_auth_level",
+        ),
+    )
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
