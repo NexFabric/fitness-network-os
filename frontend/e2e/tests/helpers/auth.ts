@@ -40,7 +40,7 @@ export function currentOwnerTotp(now = Date.now()): string {
 export async function completeOwnerMfaIfNeeded(page: Page, email: string) {
   if (email !== OWNER_EMAIL) return
   const field = page.locator('#mfa-code')
-  if (!(await field.isVisible().catch(() => false))) return
+  await field.waitFor({ state: 'visible', timeout: 10_000 })
   await field.fill(currentOwnerTotp())
   await page.click('button[type="submit"]')
 }
