@@ -539,6 +539,7 @@
 - hashed_password: String
 - is_active: Boolean (default)
 - is_superuser: Boolean (default)
+- must_change_password: Boolean (default)
 - _relations_: sessions: UserSession, devices: UserDevice, mfa_methods: UserMfaMethod, user_roles: UserRole
 
 ### UserSession

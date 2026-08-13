@@ -21,6 +21,7 @@
 - `GET` `/audit` params() → in: FederationScop, out: list
 - `GET` `/csrf` params() → out: CsrfResponse [auth]
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
+- `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
 - `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
@@ -73,6 +74,7 @@
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
 - `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse
+- `POST` `/accounts` params() → in: StaffLinkRequest, out: StaffResponse [cache]
 - `GET` `/public` params()
 - `GET` `/health` params() [auth, db, cache] ✓
 - `GET` `/live` params() ✓

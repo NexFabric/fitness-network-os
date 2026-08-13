@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pyotp
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -14,6 +14,7 @@ from app.api.deps import (
     get_db,
     get_mfa_enrollment_user,
 )
+from app.api.v1.endpoints.auth import resolve_auth_level, session_lifetime
 from app.core.security import (
     decrypt_string,
     encrypt_string,
@@ -26,7 +27,6 @@ from app.models.user import User, UserMfaMethod, UserSession
 router = APIRouter()
 logger = logging.getLogger(__name__)
 COOKIE_NAME = "session_token"
-SESSION_DAYS = 7
 
 
 class MfaSetupResponse(BaseModel):
@@ -41,6 +41,7 @@ class MfaVerifyRequest(BaseModel):
 
 class MfaVerifyResponse(BaseModel):
     success: bool
+    password_change_required: bool = False
 
 
 @router.post("/setup", response_model=MfaSetupResponse)
@@ -130,7 +131,13 @@ async def verify_mfa_setup(
     ).scalar_one()
     session.is_revoked = True
     raw_session_token, new_token_hash = generate_session_token()
-    expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
+    # Enrollment is not automatically the last gate. An account provisioned with
+    # a one-time password still owes a rotation, so ask for the level rather than
+    # assuming "full" — otherwise finishing MFA would skip that requirement.
+    next_level = resolve_auth_level(
+        current_user, has_active_mfa=True, privileged_mfa=True
+    )
+    expires_at = datetime.now(UTC) + session_lifetime(next_level)
     db.add(
         UserSession(
             user_id=current_user.id,
@@ -139,7 +146,7 @@ async def verify_mfa_setup(
             is_revoked=False,
             ip_address=session.ip_address,
             user_agent=session.user_agent,
-            auth_level="full",
+            auth_level=next_level,
         )
     )
 
@@ -184,7 +191,9 @@ async def verify_mfa_setup(
         httponly=True,
         samesite="lax",
         secure=settings.is_production,
-        max_age=SESSION_DAYS * 24 * 3600,
+        max_age=int(session_lifetime(next_level).total_seconds()),
         path="/",
     )
-    return MfaVerifyResponse(success=True)
+    return MfaVerifyResponse(
+        success=True, password_change_required=next_level == "password_reset"
+    )

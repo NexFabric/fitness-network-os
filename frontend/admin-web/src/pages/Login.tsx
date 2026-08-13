@@ -10,6 +10,7 @@ type LoginResponse = {
   tenant_id: string | null
   mfa_required: boolean
   mfa_enrollment_required: boolean
+  password_change_required: boolean
 }
 
 /**
@@ -78,6 +79,13 @@ export default function Login() {
 
       if (data.mfa_enrollment_required) {
         navigate('/mfa/setup', { replace: true })
+        return
+      }
+
+      // A provisioned account holds a restricted session until it rotates the
+      // one-time password, so /me/session below would only 401.
+      if (data.password_change_required) {
+        navigate('/password/change', { replace: true })
         return
       }
 

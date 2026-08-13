@@ -630,6 +630,7 @@ fk: trainer_user_id
 - `hashed_password`: String
 - `is_active`: Boolean _(default)_
 - `is_superuser`: Boolean _(default)_
+- `must_change_password`: Boolean _(default)_
 - _relations_: sessions: UserSession, devices: UserDevice, mfa_methods: UserMfaMethod, user_roles: UserRole
 
 ### UserSession
@@ -678,19 +679,18 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **42** files
-- `backend/app/models/tenant.py` — imported by **38** files
-- `backend/app/models/organization.py` — imported by **33** files
+- `backend/app/models/user.py` — imported by **43** files
+- `backend/app/models/tenant.py` — imported by **39** files
+- `backend/app/models/organization.py` — imported by **34** files
 - `backend/app/db/base.py` — imported by **32** files
 - `backend/app/models/member.py` — imported by **30** files
-- `backend/app/models/rbac.py` — imported by **26** files
-- `backend/app/db/session.py` — imported by **21** files
+- `backend/app/models/rbac.py` — imported by **27** files
+- `backend/app/db/session.py` — imported by **22** files
 - `backend/app/models/membership.py` — imported by **20** files
 - `backend/app/db/rls.py` — imported by **18** files
 - `backend/app/models/location.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `backend/app/models/access.py` — imported by **11** files
-- `backend/app/models/entitlement.py` — imported by **10** files
 
 ---
 _Back to [overview.md](./overview.md)_
