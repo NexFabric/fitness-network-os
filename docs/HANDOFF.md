@@ -76,6 +76,28 @@ kararı bu iki kanıt gelmeden verilmemelidir.
 
 ## Bilmen gereken tuzaklar
 
+### PR #55 çalışma özeti — sonraki ajan için
+
+| Alan | Yapılan |
+|---|---|
+| Auth | Privileged roller için password-only erişim kapatıldı; 10 dakikalık MFA setup session, Türkçe enrollment UI, TOTP/recovery ve başarılı kayıt sonrası yeni full session token |
+| Reports | Production local disk yasaklandı; S3/MinIO upload, SSE/KMS seçeneği, tenant-bound key, presigned download, cleanup ve opaque local dev URI |
+| Ops | Gerçek Prometheus request/dependency/outbox metrikleri; production config fail-closed notification/storage/metrics kontrolleri |
+| Image/CI | Frozen `uv.lock`, pinned base digest, non-root image, healthcheck, required image build ve real backend/Postgres/Redis Playwright gate |
+| Security | CodeQL path-expression bulgusu UUID-derived local namespace ile; cookie bulgusu MFA session rotation ile kapatıldı |
+| Truth | Phase 26 false PASS kaldırıldı; ASVS 5.0 hazırlık öz-değerlendirmesi ile dış pentest/DR kanıtı ayrıldı |
+
+**Önemli commitler:** `9b46162` ana closure, `4165034` migration metadata,
+`4859498` auth fixture/action upgrades, `703994e` MFA E2E wait, `5e47810`
+CodeQL hardening, `6dde88b` storage contract testi, `53cbb15` ve sonraki
+doküman eşitlemeleri. **Yerelde test çalıştırılmadı; yalnız GitHub CI kullanıldı.**
+
+Sonraki ajan önce PR #55 check'lerini ve review durumunu okumalı; yeşil required
+checks + bağımsız review olmadan merge etmemeli. Merge sonrası `main` SHA/Alembic
+head ve CI run linkini bu dosya, PROGRESS_CHECKLIST ve REMAINING_WORK_BOARD'a
+işlemeli. Restore/PITR, gerçek S3 staging kanıtı, scraper/alert/trace kurulumu ve
+bağımsız pentest kodla tamamlanmış sayılmamalıdır.
+
 - **`main` korumalı:** 1 onaylayan review + `enforce_admins` açık. GitHub kendi
   PR'ını onaylatmaz; merge için ya ikinci bir insan gerekir ya da review şartı
   geçici kaldırılıp **birebir** geri yüklenir (zorunlu CI kapılarına ve

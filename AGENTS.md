@@ -6,7 +6,7 @@ Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için sou
 
 **Context map:** `.codesight/wiki/index.md` — AST-derived route/model/file map, ~200 tokens to load. Read it before searching the tree; load the targeted article (e.g. `plans.md`, `devices.md`) instead of scanning the codebase. It says *where* things are, never *how* they work — always read the source before changing it. Regenerated automatically by `.git/hooks/pre-commit`; refresh manually with `npx codesight --wiki`.
 
-**Progress truth (2026-08-13):** Phase **27 / 27.1 / 27.2 / 27.3** on `main` — RBAC portals, device channel HMAC signing + nonce (ADR-044), Redis-backed login rate limit, ops console depth (devices, notifications, reports, staff, location edit, membership lifecycle), and the plan catalogue + membership creation that closed API-1. Alembic head `u4b5c6d7e8f9`. Phase **26 CORE MVP EXIT GATE is still NOT PASSED** — no external pentest, not production-ready.
+**Progress truth (2026-08-13):** Phase **27 / 27.1 / 27.2 / 27.3** is on `main` at `c015748`. Final closure PR **#55** adds privileged MFA + session rotation, private S3 reports, Prometheus metrics, frozen non-root image and required Playwright; CI/CodeQL evidence is green, independent review/merge pending. Main Alembic head `u4b5c6d7e8f9`; PR head `v5c6d7e8f9a0`. Phase **26 CORE MVP EXIT GATE remains NOT PASSED** — restore/PITR evidence and independent pentest are missing; not production-ready.
 
 ## Temel Kurallar ve Mimari Kararlar
 

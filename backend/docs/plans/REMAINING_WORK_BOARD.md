@@ -38,11 +38,11 @@
 | P0-4 | Truth docs NO production-ready |
 | P1-5 | `Settings.validate_production()` fail-closed |
 | P1-6 | No recipient PII in logs; prod blocks mock SMS/WA/PUSH |
-| P1-3 | Report writes real CSV under REPORT_STORAGE_DIR |
+| P1-3 | Initial local CSV artifact path (superseded by P1-3b object storage closure) |
 | P1-8 | CI job `public-site` build |
 | P1-9 | Marketing design targets (not fake live stats) |
 | P1-2 | Scanner offline deny-by-default |
-| P2-1 | /live, /ready (503), /metrics stub |
+| P2-1 | `/live`, `/ready` (503) and metrics endpoint foundation (superseded by PR #55 real counters) |
 | P1-4 | MFA: refuse login without code if MFA enrolled |
 | P1-10/11 | Honest UNVERIFIED status docs under `docs/ops/` |
 | P1-12 | FE builds as **required** branch checks (via `all-green` job) |

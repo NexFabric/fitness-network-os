@@ -1,9 +1,9 @@
 # Uygulama hazır — çalıştırma özeti
 
-**Tarih:** 2026-08-11  
-**main equality:** `b90b3ed` — verify `git rev-parse HEAD` == `origin/main` after pull  
-**Alembic head:** `t3a4b5c6d7e8`  
-**Production-ready?** **NO** — Phase 27 production closure in progress (architecture strong; launch gates open).
+**Tarih:** 2026-08-13
+**Main:** `c015748`; final closure PR [#55](https://github.com/NexFabric/fitness-network-os/pull/55) review/merge bekliyor.
+**Alembic head:** main `u4b5c6d7e8f9`; PR #55 `v5c6d7e8f9a0`.
+**Production-ready?** **NO** — kod kapıları hazır; restore/PITR, bağımsız pentest ve review açık.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
 ## Servis URL’leri
