@@ -3,8 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Main HEAD:** `a60d55c` · **Alembic head:** `u4b5c6d7e8f9` · Açık PR yok ·
-CI yeşil · Dependabot 0 açık alarm · Çalışma ağacı temiz.
+**Main HEAD:** `c015748` · **Alembic head:** `u4b5c6d7e8f9` · CI yeşil.
 
 ---
 
@@ -47,8 +46,8 @@ Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 
 ## Sıradaki iş (yapılabilir olanlar)
 
-1. **MFA kayıt UX'i** — backend tam (TOTP + Fernet + kurtarma kodları), eksik
-   olan yalnızca arayüz akışı. En düşük riskli, en yüksek değerli sıradaki adım.
+1. **Phase 27 closure branch'ini CI'dan geçirip merge etmek** — privileged MFA
+   enrollment, S3 rapor storage, container hardening ve required Playwright gate.
 2. **Kullanıcı hesabı açma ucu** — Personel ekranı bugün yalnızca *var olan*
    kullanıcıyı bağlayabiliyor; hesap oluşturan bir uç yok.
 3. **`/metrics`** şu an Prometheus placeholder'ı; gerçek metrik pipeline'ı bir
@@ -58,7 +57,7 @@ Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 
 | Madde | Neden |
 |---|---|
-| P1-3b imzalı object-storage URL'i + şifreleme | Gerçek S3/MinIO kovası ve kimlik bilgisi gerekiyor; raporlar özel diske CSV yazıyor |
+| P1-3b runtime doğrulaması | Adapter hazır; gerçek S3/MinIO kovası ve kimlik bilgisiyle staging kanıtı gerekiyor |
 | P2-3 QR sırları için KMS | Sağlayıcı SDK'sı + anahtar politikası gerekiyor; `qr_crypto.py` KMS referansını tanır, bilinçli `NotImplementedError` verir |
 | P1-10 yedekten dönüş tatbikatı | Gerçek altyapıda koşup kanıtlanması gereken ops prosedürü |
 | P1-11 / Phase 26 dış pentest + bağımsız onay | Tanımı gereği dışarıdan gelmeli |

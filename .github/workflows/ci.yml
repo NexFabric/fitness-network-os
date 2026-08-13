@@ -43,7 +43,7 @@ jobs:
       - name: SCA Scan (pip-audit)
         working-directory: ./backend
         run: |
-          uv export --format requirements-txt --no-hashes --no-emit-workspace > requirements.txt
+          uv export --frozen --format requirements-txt --no-hashes --no-emit-workspace > requirements.txt
           pip-audit -r requirements.txt
           
       - name: Dependency Vulnerability Scan (Safety)
@@ -91,7 +91,7 @@ jobs:
         
       - name: Install dependencies
         working-directory: ./backend
-        run: uv sync && uv pip install pyyaml
+        run: uv sync --frozen && uv pip install pyyaml
         
       - name: Lint with ruff
         working-directory: ./backend
@@ -112,6 +112,10 @@ jobs:
       - name: Architecture fitness — no money floats
         working-directory: ./backend
         run: uv run python scripts/check_no_money_floats.py
+
+      - name: Release truth documents
+        working-directory: ./backend
+        run: uv run python scripts/check_release_truth.py
 
   test:
     name: Unit & Integration Tests
@@ -159,7 +163,7 @@ jobs:
         
       - name: Install dependencies
         working-directory: ./backend
-        run: uv sync
+        run: uv sync --frozen
         
       - name: Run Migrations
         working-directory: ./backend
@@ -232,6 +236,16 @@ jobs:
           VITE_API_URL: http://localhost:8000
         run: npm run build
 
+  production-image:
+    name: Production Image Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frozen non-root backend image
+        run: docker build --file backend/Dockerfile.prod --tag fitness-network-os:${{ github.sha }} backend
+
   public-site:
     name: Public Site Build
     runs-on: ubuntu-latest
@@ -256,11 +270,108 @@ jobs:
           NEXT_PUBLIC_ADMIN_URL: http://localhost:5173
         run: npm run build
 
+  browser-e2e:
+    name: Playwright Browser E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: [test, admin-web, scanner-pwa]
+    env:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+asyncpg://app_user:app_password@localhost:5432/fitness_e2e_db
+      MIGRATOR_DATABASE_URL: postgresql+asyncpg://fitness_user:fitness_password@localhost:5432/fitness_e2e_db
+      REDIS_URL: redis://localhost:6379/0
+      RATE_LIMIT_LOGIN_MAX_REQUESTS: 500
+      ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      E2E_OWNER_TOTP_SECRET: JBSWY3DPEHPK3PXP
+      VITE_API_URL: http://localhost:8000
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: fitness_user
+          POSTGRES_PASSWORD: fitness_password
+          POSTGRES_DB: fitness_e2e_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install uv
+        run: pip install uv==0.11.21
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: uv sync --frozen
+
+      - name: Migrate and provision the RLS runtime role
+        working-directory: ./backend
+        env:
+          PGPASSWORD: fitness_password
+        run: |
+          uv run alembic upgrade head
+          psql -h localhost -U fitness_user -d fitness_e2e_db -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE app_user WITH LOGIN PASSWORD 'app_password' NOSUPERUSER NOBYPASSRLS;
+          GRANT USAGE ON SCHEMA public TO app_user;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+          GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app_user;
+          SQL
+
+      - name: Seed browser principals
+        working-directory: ./backend
+        run: uv run python scripts/seed_role_matrix.py
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/e2e/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright dependencies
+        working-directory: ./frontend/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright against the real API
+        working-directory: ./frontend/e2e
+        run: npm test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/e2e/playwright-report
+          retention-days: 7
+
   all-green:
     name: All Required Checks Passed
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [test, admin-web, scanner-pwa, public-site]
+    needs: [test, admin-web, scanner-pwa, public-site, production-image, browser-e2e]
     steps:
       - name: Ready to merge
         run: echo "All required checks passed!"

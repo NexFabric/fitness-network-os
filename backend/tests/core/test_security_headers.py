@@ -33,6 +33,7 @@ def _headers_client(*, production: bool) -> Iterator[TestClient]:
     app.add_middleware(SecurityHeadersMiddleware)
     with patch("app.main.settings") as mock_settings:
         mock_settings.is_production = production
+        mock_settings.validate_production.return_value = None
         yield TestClient(app)
 
 
@@ -82,6 +83,7 @@ def test_create_app_trusted_host_only_when_prod_and_hosts_set():
     """TrustedHostMiddleware installed only for production + non-empty ALLOWED_HOSTS."""
     with patch("app.main.settings") as mock_settings:
         mock_settings.is_production = True
+        mock_settings.validate_production.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = ["api.example.com"]
         app = create_app()
@@ -92,6 +94,7 @@ def test_create_app_trusted_host_only_when_prod_and_hosts_set():
 def test_create_app_no_trusted_host_when_hosts_empty():
     with patch("app.main.settings") as mock_settings:
         mock_settings.is_production = True
+        mock_settings.validate_production.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = []
         app = create_app()
@@ -102,6 +105,7 @@ def test_create_app_no_trusted_host_when_hosts_empty():
 def test_create_app_no_trusted_host_non_prod():
     with patch("app.main.settings") as mock_settings:
         mock_settings.is_production = False
+        mock_settings.validate_production.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = ["api.example.com"]
         app = create_app()

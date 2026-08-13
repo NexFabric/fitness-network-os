@@ -8,6 +8,8 @@ type LoginResponse = {
   user_id: string
   expires_at: string
   tenant_id: string | null
+  mfa_required: boolean
+  mfa_enrollment_required: boolean
 }
 
 /**
@@ -19,6 +21,8 @@ export default function Login() {
   const { session, refresh } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaRequired, setMfaRequired] = useState(false)
   const [tenantOverride, setTenantOverride] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -56,7 +60,11 @@ export default function Login() {
       await ensureCsrf()
       const data = await api<LoginResponse>('/api/v1/auth/login', {
         method: 'POST',
-        body: { email: em, password },
+        body: {
+          email: em,
+          password,
+          ...(mfaCode.trim() ? { mfa_code: mfaCode.trim() } : {}),
+        },
         skipAuth: true,
         skipCsrf: true,
       })
@@ -66,6 +74,11 @@ export default function Login() {
       const tenantId = override || data.tenant_id
       if (tenantId) {
         setAuth(tenantId)
+      }
+
+      if (data.mfa_enrollment_required) {
+        navigate('/mfa/setup', { replace: true })
+        return
       }
 
       // Ask the server who this is, then land on the portal that matches.
@@ -86,10 +99,19 @@ export default function Login() {
       navigate(homeRouteFor(me.roles, me.is_superuser), { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
+        if (err.status === 401 && err.message === 'mfa_required') {
+          setMfaRequired(true)
+          setError('Devam etmek için doğrulama kodunuzu girin.')
+          return
+        }
         setError(
-          err.status === 401
-            ? 'Geçersiz e-posta veya şifre.'
-            : `${err.status}: ${err.message}`,
+          err.status === 401 && err.message === 'mfa_invalid'
+            ? 'Doğrulama kodu geçersiz. Yeni kodla tekrar deneyin.'
+            : err.status === 401 && err.message === 'mfa_locked_out'
+              ? 'Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar deneyin.'
+              : err.status === 401
+                ? 'Geçersiz e-posta veya şifre.'
+                : `${err.status}: ${err.message}`,
         )
       } else if (err instanceof Error) {
         setError(err.message)
@@ -161,6 +183,26 @@ export default function Login() {
                 placeholder="ornek@kulup.com"
               />
             </div>
+
+            {mfaRequired && (
+              <div>
+                <label htmlFor="mfa-code" className="label-text">
+                  Doğrulama kodu
+                </label>
+                <input
+                  id="mfa-code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  disabled={submitting}
+                  className="input-field font-mono tracking-widest"
+                  placeholder="000000"
+                  autoFocus
+                />
+              </div>
+            )}
             <div>
               <label htmlFor="password" className="label-text">
                 Şifre

@@ -8,8 +8,6 @@ Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için sou
 
 **Progress truth (2026-08-13):** Phase **27 / 27.1 / 27.2 / 27.3** on `main` — RBAC portals, device channel HMAC signing + nonce (ADR-044), Redis-backed login rate limit, ops console depth (devices, notifications, reports, staff, location edit, membership lifecycle), and the plan catalogue + membership creation that closed API-1. Alembic head `u4b5c6d7e8f9`. Phase **26 CORE MVP EXIT GATE is still NOT PASSED** — no external pentest, not production-ready.
 
-**Progress truth (2026-08-10):** Phase **0–15.5** on `main` is CI VERIFIED / LOCKED at merge `125a8c6` (formal lock docs PR #27). Phase **16–24 MVP** MERGED via PR #26 + remaining-MVP **#37–#42** + UI brand **#44–#45** (main `541c496`; alembic head `t3a4b5c6d7e8`). Phase **25** docs MERGED. Phase **26 CORE MVP EXIT GATE is NOT PASSED** — not production-ready (see `docs/PROGRESS_CHECKLIST.md`, which is the authority here). Checklist: `docs/PROGRESS_CHECKLIST.md`. Backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`.
-
 ## Temel Kurallar ve Mimari Kararlar
 
 - Federation != Tenant.

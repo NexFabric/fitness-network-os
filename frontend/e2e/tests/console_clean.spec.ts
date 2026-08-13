@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { completeOwnerMfaIfNeeded } from './helpers/auth'
 
 /**
  * Every portal must render without console errors or failed requests.
@@ -45,6 +46,7 @@ for (const portal of PORTALS) {
     await page.fill('input[type="email"]', portal.email)
     await page.fill('input[type="password"]', PASSWORD)
     await page.click('button[type="submit"]')
+    await completeOwnerMfaIfNeeded(page, portal.email)
     await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
       timeout: 15_000,
     })

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { completeOwnerMfaIfNeeded } from './helpers/auth'
 
 /**
  * Device management, end to end against the real API.
@@ -23,6 +24,7 @@ async function login(page: Page, email: string) {
   await page.fill('input[type="email"]', email)
   await page.fill('input[type="password"]', PASSWORD)
   await page.click('button[type="submit"]')
+  await completeOwnerMfaIfNeeded(page, email)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 })
 }
 

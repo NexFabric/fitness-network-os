@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.19.1",
     "asyncpg>=0.31.0",
+    "boto3>=1.40.0,<2",
     "cryptography>=50.0.0",
     "fastapi>=0.141.1",
     "greenlet>=3.5.4",
@@ -17,6 +18,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",
     "pyotp>=2.10.0",
+    "prometheus-client>=0.23.1,<1",
     "python-dateutil>=2.9.0.post0",
     "redis>=8.1.0",
     "sqlalchemy>=2.0.51",
@@ -61,4 +63,8 @@ explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = "passlib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "boto3.*"
 ignore_missing_imports = true

@@ -17,8 +17,23 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: str = ""
 
     # EMAIL notification adapter: log | console | smtp | disabled
-    # Production requires smtp or disabled (or ALLOW_MOCK_EMAIL=true).
+    # Production requires smtp or disabled.
     NOTIFICATION_EMAIL_PROVIDER: str = "console"
+    SMTP_HOST: str = ""
+    SMTP_FROM: str = ""
+
+    # Report artifacts are local in development/test and private S3-compatible
+    # objects in production. Credentials use the standard AWS environment
+    # variables and are deliberately not represented here.
+    REPORT_STORAGE_PROVIDER: str = "local"
+    REPORT_STORAGE_DIR: str = "/tmp/fitness-network-os-reports"
+    REPORT_DOWNLOAD_URL_TTL_SECONDS: int = 900
+    S3_BUCKET_NAME: str = ""
+    S3_ENDPOINT_URL: str = ""
+    S3_REGION_NAME: str = ""
+    S3_SSE_ALGORITHM: str = "AES256"
+    S3_KMS_KEY_ID: str = ""
+    METRICS_BEARER_TOKEN: str = ""
 
     # Login rate limit budget (per identifier, sliding window). Production keeps
     # the tight default; the dev stack raises it so a parallel e2e run against a
@@ -76,11 +91,33 @@ class Settings(BaseSettings):
             errors.append(
                 "ALLOWED_HOSTS must be a non-empty comma-separated list in production"
             )
+        email_provider = self.NOTIFICATION_EMAIL_PROVIDER.strip().lower()
+        if email_provider not in {"smtp", "disabled"}:
+            errors.append(
+                "NOTIFICATION_EMAIL_PROVIDER must be smtp or disabled in production"
+            )
+        if email_provider == "smtp":
+            if not self.SMTP_HOST.strip():
+                errors.append("SMTP_HOST is required when SMTP delivery is enabled")
+            if not self.SMTP_FROM.strip():
+                errors.append("SMTP_FROM is required when SMTP delivery is enabled")
+
+        storage_provider = self.REPORT_STORAGE_PROVIDER.strip().lower()
+        if storage_provider != "s3":
+            errors.append("REPORT_STORAGE_PROVIDER must be s3 in production")
+        if not self.S3_BUCKET_NAME.strip():
+            errors.append("S3_BUCKET_NAME is required for production report storage")
+        if not 60 <= self.REPORT_DOWNLOAD_URL_TTL_SECONDS <= 3600:
+            errors.append("REPORT_DOWNLOAD_URL_TTL_SECONDS must be between 60 and 3600")
+        if self.S3_SSE_ALGORITHM not in {"AES256", "aws:kms"}:
+            errors.append("S3_SSE_ALGORITHM must be AES256 or aws:kms")
+        if self.S3_SSE_ALGORITHM == "aws:kms" and not self.S3_KMS_KEY_ID.strip():
+            errors.append("S3_KMS_KEY_ID is required when S3_SSE_ALGORITHM=aws:kms")
+        if len(self.METRICS_BEARER_TOKEN) < 32:
+            errors.append("METRICS_BEARER_TOKEN must contain at least 32 characters")
         # Cookie Secure is enforced via is_production in auth/csrf setters.
         if errors:
-            raise RuntimeError(
-                "Production configuration invalid: " + "; ".join(errors)
-            )
+            raise RuntimeError("Production configuration invalid: " + "; ".join(errors))
 
 
 settings = Settings()  # type: ignore[call-arg]

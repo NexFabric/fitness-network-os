@@ -19,6 +19,13 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command:
+        'cd ../../backend && uv run uvicorn app.main:app --host 127.0.0.1 --port 8000',
+      url: 'http://127.0.0.1:8000/ready',
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+    {
       command: 'npm --prefix ../admin-web run dev -- --port 5173',
       url: 'http://localhost:5173',
       reuseExistingServer: true,

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-12  
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Alembic head on main:** `u4b5c6d7e8f9` (Phase 27.1 device signing)
+**Alembic head on main:** `u4b5c6d7e8f9` (closure branch adds `v5c6d7e8f9a0`; not merged/CI-verified yet)
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -142,8 +142,8 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
 2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
 3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Completed)
-4. ~~Observability productization (health deps, metrics/traces/alerts)~~ (Completed `/live`, `/ready`, `/health`)
-5. ~~Backup/restore script & ASVS L2 compliance report~~ (Completed)
+4. Observability productization beyond health probes: real metrics/traces/alerts.
+5. Execute and attach a restore/PITR drill; complete independent ASVS 5.0 L2 review and pentest.
 
 Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
 

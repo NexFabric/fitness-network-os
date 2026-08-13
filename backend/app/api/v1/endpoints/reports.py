@@ -53,6 +53,15 @@ class RunRequest(BaseModel):
     dedupe_key: str | None = Field(default=None, max_length=255)
 
 
+class ArtifactCleanupRequest(BaseModel):
+    older_than_days: int = Field(ge=1, le=3650)
+    limit: int = Field(default=100, ge=1, le=200)
+
+
+class ArtifactCleanupResponse(BaseModel):
+    deleted: int
+
+
 class RunResponse(BaseModel):
     id: UUID
     tenant_id: UUID
@@ -73,13 +82,15 @@ class RunResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-def _run_response(row, *, created: bool | None = None) -> RunResponse:
+async def _run_response(
+    svc: ReportService, row, *, created: bool | None = None
+) -> RunResponse:
     return RunResponse(
         id=row.id,
         tenant_id=row.tenant_id,
         definition_id=row.definition_id,
         status=row.status,
-        result_url=row.result_url,
+        result_url=await svc.get_download_url(row.tenant_id, row),
         export_format=row.export_format,
         row_count=row.row_count,
         error_message=row.error_message,
@@ -159,7 +170,7 @@ async def request_run(
         await db.refresh(result.run)
         # 201 Created on first insert; 200 OK on dedupe hit (created=False)
         response.status_code = 201 if result.created else 200
-        return _run_response(result.run, created=result.created)
+        return await _run_response(svc, result.run, created=result.created)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -175,10 +186,11 @@ async def list_runs(
 ):
     """Recent run history, newest first."""
     _require(current_user, tenant_id, "reports:read")
-    rows = await ReportService(db).list_runs(
+    svc = ReportService(db)
+    rows = await svc.list_runs(
         tenant_id, definition_id=definition_id, status=status, limit=limit
     )
-    return [_run_response(row) for row in rows]
+    return [await _run_response(svc, row) for row in rows]
 
 
 @router.get("/runs/{run_id}", response_model=RunResponse)
@@ -189,7 +201,26 @@ async def get_run(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "reports:read")
-    row = await ReportService(db).get_run(tenant_id, run_id)
+    svc = ReportService(db)
+    row = await svc.get_run(tenant_id, run_id)
     if row is None:
         raise HTTPException(status_code=404, detail="run_not_found")
-    return _run_response(row)
+    return await _run_response(svc, row)
+
+
+@router.post("/artifacts/cleanup", response_model=ArtifactCleanupResponse)
+async def cleanup_artifacts(
+    body: ArtifactCleanupRequest,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete one bounded batch of expired artifacts for the caller's tenant."""
+    _require(current_user, tenant_id, "reports:write")
+    deleted = await ReportService(db).cleanup_artifacts(
+        tenant_id,
+        older_than_days=body.older_than_days,
+        limit=body.limit,
+    )
+    await db.commit()
+    return ArtifactCleanupResponse(deleted=deleted)

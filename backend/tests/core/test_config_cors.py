@@ -70,5 +70,23 @@ def test_production_ok_with_cors_and_hosts():
         ENVIRONMENT="production",
         CORS_ORIGINS="https://admin.example.com",
         ALLOWED_HOSTS="api.example.com",
+        NOTIFICATION_EMAIL_PROVIDER="disabled",
+        REPORT_STORAGE_PROVIDER="s3",
+        S3_BUCKET_NAME="private-reports",
+        METRICS_BEARER_TOKEN="m" * 32,
     )
     s.validate_production()  # does not raise
+
+
+def test_production_rejects_mock_notifications_and_local_reports():
+    s = _settings(
+        ENVIRONMENT="production",
+        CORS_ORIGINS="https://admin.example.com",
+        ALLOWED_HOSTS="api.example.com",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production()
+    message = str(exc_info.value)
+    assert "NOTIFICATION_EMAIL_PROVIDER" in message
+    assert "REPORT_STORAGE_PROVIDER" in message
+    assert "S3_BUCKET_NAME" in message

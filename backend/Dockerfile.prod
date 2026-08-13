@@ -5,32 +5,32 @@
 # ---------------------------------------------------------------------------
 # Stage 1: dependency install
 # ---------------------------------------------------------------------------
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36 AS builder
 
 WORKDIR /build
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
-RUN pip install --no-cache-dir uv
+RUN pip install --no-cache-dir uv==0.11.21
 
-COPY pyproject.toml .python-version ./
-# Install runtime deps into system site-packages (no venv, no dev group)
-RUN uv pip install --system --no-cache -r pyproject.toml
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 # ---------------------------------------------------------------------------
 # Stage 2: runtime (non-root, no --reload)
 # ---------------------------------------------------------------------------
-FROM python:3.12-slim AS runtime
+FROM python:3.12-slim@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36 AS runtime
 
 WORKDIR /app
 
 # Non-root user (uid/gid 1000)
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid appuser --shell /usr/sbin/nologin --create-home appuser
 
 
-# Copy installed Python packages and console scripts from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy the exact frozen virtual environment from the builder.
+COPY --from=builder /opt/venv /opt/venv
 
 # Application source only (no secrets; env injected at runtime)
 COPY --chown=appuser:appuser . .
@@ -38,10 +38,14 @@ COPY --chown=appuser:appuser . .
 USER appuser
 
 ENV ENVIRONMENT=production \
+    PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl --fail --silent http://127.0.0.1:8000/live || exit 1
 
 # No --reload in production
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

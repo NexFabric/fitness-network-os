@@ -1,50 +1,73 @@
+import hashlib
+import logging
 import secrets
+from datetime import UTC, datetime, timedelta
 
 import pyotp
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlalchemy import delete, select
+from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel, Field
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import (
+    get_current_session_token,
+    get_db,
+    get_mfa_enrollment_user,
+)
 from app.core.security import (
     decrypt_string,
     encrypt_string,
     get_password_hash,
 )
 from app.models.audit import AuditEvent
-from app.models.user import User, UserMfaMethod
+from app.models.user import User, UserMfaMethod, UserSession
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+COOKIE_NAME = "session_token"
+SESSION_DAYS = 7
+
 
 class MfaSetupResponse(BaseModel):
     secret: str
     provisioning_uri: str
     recovery_codes: list[str]
 
+
 class MfaVerifyRequest(BaseModel):
-    code: str
+    code: str = Field(min_length=6, max_length=32)
+
 
 class MfaVerifyResponse(BaseModel):
     success: bool
 
+
 @router.post("/setup", response_model=MfaSetupResponse)
 async def setup_mfa(
-    current_user: User = Depends(get_current_user),
+    response: Response,
+    current_user: User = Depends(get_mfa_enrollment_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a new TOTP secret for the user, return URI and recovery codes."""
     # Check if active MFA exists
-    result = await db.execute(select(UserMfaMethod).where(UserMfaMethod.user_id == current_user.id, UserMfaMethod.is_active == True))
+    result = await db.execute(
+        select(UserMfaMethod).where(
+            UserMfaMethod.user_id == current_user.id, UserMfaMethod.is_active == True
+        )
+    )
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="MFA is already active")
-    
+
     # Clean up any inactive ones
-    await db.execute(delete(UserMfaMethod).where(UserMfaMethod.user_id == current_user.id))
+    await db.execute(
+        delete(UserMfaMethod).where(UserMfaMethod.user_id == current_user.id)
+    )
 
     totp_secret = pyotp.random_base32()
-    provisioning_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(name=current_user.email, issuer_name="GymClubNex")
-    
+    provisioning_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(
+        name=current_user.email, issuer_name="GymClubNex"
+    )
+
     raw_recovery_codes = [secrets.token_hex(8) for _ in range(8)]
     hashed_codes = [get_password_hash(c) for c in raw_recovery_codes]
 
@@ -58,38 +81,97 @@ async def setup_mfa(
     db.add(new_mfa)
     await db.commit()
 
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+
     return MfaSetupResponse(
         secret=totp_secret,
         provisioning_uri=provisioning_uri,
         recovery_codes=raw_recovery_codes,
     )
 
+
 @router.post("/verify", response_model=MfaVerifyResponse)
 async def verify_mfa_setup(
     body: MfaVerifyRequest,
-    current_user: User = Depends(get_current_user),
+    response: Response,
+    current_user: User = Depends(get_mfa_enrollment_user),
+    token: str = Depends(get_current_session_token),
     db: AsyncSession = Depends(get_db),
 ):
     """Verify the TOTP code to activate MFA."""
-    result = await db.execute(select(UserMfaMethod).where(UserMfaMethod.user_id == current_user.id, UserMfaMethod.is_active == False))
+    result = await db.execute(
+        select(UserMfaMethod).where(
+            UserMfaMethod.user_id == current_user.id, UserMfaMethod.is_active == False
+        )
+    )
     mfa_method = result.scalars().first()
-    
+
     if not mfa_method or not mfa_method.encrypted_secret:
         raise HTTPException(status_code=400, detail="No pending MFA setup")
-    
+
     totp_secret = decrypt_string(mfa_method.encrypted_secret)
     totp = pyotp.TOTP(totp_secret)
-    if not totp.verify(body.code):
+    if not totp.verify(body.code, valid_window=1):
         raise HTTPException(status_code=400, detail="Invalid code")
-    
+
     mfa_method.is_active = True
-    
-    db.add(AuditEvent(
-        user_id=current_user.id,
-        action="mfa_enabled",
-        resource_type="user",
-        resource_id=current_user.id,
-    ))
-    
+
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    session = (
+        await db.execute(
+            select(UserSession).where(
+                UserSession.token_hash == token_hash,
+                UserSession.user_id == current_user.id,
+                UserSession.is_revoked.is_(False),
+            )
+        )
+    ).scalar_one()
+    session.auth_level = "full"
+    session.expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
+
+    tenant_id = next(
+        (
+            user_role.tenant_id
+            for user_role in current_user.user_roles
+            if user_role.tenant_id is not None
+        ),
+        None,
+    )
+    if tenant_id is not None:
+        await db.execute(
+            text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+            {"tid": str(tenant_id)},
+        )
+        db.add(
+            AuditEvent(
+                tenant_id=tenant_id,
+                user_id=current_user.id,
+                action="mfa_enabled",
+                resource_type="user",
+                resource_id=current_user.id,
+            )
+        )
+    else:
+        # The existing audit table is intentionally tenant-owned. Platform and
+        # federation principals have no tenant row to attach; keep an explicit
+        # structured security log until a global audit domain is introduced.
+        logger.info(
+            "auth.mfa_enabled scope=global user_id=%s",
+            current_user.id,
+        )
+
     await db.commit()
+
+    from app.core.config import settings
+
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.is_production,
+        max_age=SESSION_DAYS * 24 * 3600,
+        path="/",
+    )
     return MfaVerifyResponse(success=True)

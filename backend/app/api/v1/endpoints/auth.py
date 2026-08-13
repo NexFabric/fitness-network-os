@@ -16,17 +16,18 @@ from uuid import UUID
 import pyotp
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_session_token, get_current_user, get_db
 from app.core.security import decrypt_string, generate_session_token, verify_password
-from app.models.rbac import UserRole
+from app.models.rbac import Role, UserRole
 from app.models.user import User, UserMfaMethod, UserSession
 
 router = APIRouter()
 
 SESSION_DAYS = 7
+MFA_SETUP_MINUTES = 10
 COOKIE_NAME = "session_token"
 CSRF_COOKIE = "csrf_token"
 
@@ -45,6 +46,15 @@ class LoginResponse(BaseModel):
     expires_at: datetime
     tenant_id: UUID | None = None
     mfa_required: bool = False
+    mfa_enrollment_required: bool = False
+
+
+PRIVILEGED_MFA_ROLES = {
+    "PLATFORM_SUPER_ADMIN",
+    "FEDERATION_ADMIN",
+    "GYM_OWNER",
+    "SUPPORT_PRIVILEGED",
+}
 
 
 class LogoutResponse(BaseModel):
@@ -66,6 +76,7 @@ def _client_meta(request: Request) -> tuple[str | None, str | None]:
 async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
     """First tenant-scoped role for the user, or member.tenant_id for end-user members."""
     from app.models.member import Member
+
     result = await db.execute(
         select(UserRole.tenant_id)
         .where(
@@ -81,6 +92,72 @@ async def _primary_tenant_id(db: AsyncSession, user_id: UUID) -> UUID | None:
         select(Member.tenant_id).where(Member.user_id == user_id).limit(1)
     )
     return m_res.scalar_one_or_none()
+
+
+async def _requires_privileged_mfa(db: AsyncSession, user: User) -> bool:
+    if user.is_superuser:
+        return True
+    result = await db.execute(
+        select(Role.name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(
+            UserRole.user_id == user.id,
+            Role.name.in_(PRIVILEGED_MFA_ROLES),
+        )
+        .limit(1)
+    )
+    return result.scalar_one_or_none() is not None
+
+
+async def _issue_session(
+    *,
+    db: AsyncSession,
+    request: Request,
+    response: Response,
+    user: User,
+    auth_level: str,
+    lifetime: timedelta,
+) -> datetime:
+    raw_token, token_hash = generate_session_token()
+    expires_at = datetime.now(UTC) + lifetime
+    ip, ua = _client_meta(request)
+
+    if auth_level == "mfa_setup":
+        await db.execute(
+            update(UserSession)
+            .where(
+                UserSession.user_id == user.id,
+                UserSession.auth_level == "mfa_setup",
+                UserSession.is_revoked.is_(False),
+            )
+            .values(is_revoked=True)
+        )
+
+    db.add(
+        UserSession(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            is_revoked=False,
+            ip_address=ip,
+            user_agent=ua,
+            auth_level=auth_level,
+        )
+    )
+    await db.commit()
+
+    from app.core.config import settings
+
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=raw_token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.is_production,
+        max_age=int(lifetime.total_seconds()),
+        path="/",
+    )
+    return expires_at
 
 
 @router.get("/csrf", response_model=CsrfResponse)
@@ -126,16 +203,40 @@ async def login(
             detail="Invalid credentials",
         )
 
-    # MFA gate: active enrollment requires mfa_code before session cookie is issued.
-    # Full TOTP against encrypted_secret is follow-up; enrolled methods refuse empty codes.
+    # Privileged users without enrollment receive only a short-lived restricted
+    # session. It is accepted by the MFA setup endpoints and rejected everywhere
+    # else, so password-only authentication never grants application access.
     mfa_row = (
-        await db.execute(
-            select(UserMfaMethod).where(
-                UserMfaMethod.user_id == user.id,
-                UserMfaMethod.is_active.is_(True),
+        (
+            await db.execute(
+                select(UserMfaMethod).where(
+                    UserMfaMethod.user_id == user.id,
+                    UserMfaMethod.is_active.is_(True),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
+    privileged_mfa = await _requires_privileged_mfa(db, user)
+    tenant_id = await _primary_tenant_id(db, user.id)
+    if privileged_mfa and mfa_row is None:
+        expires_at = await _issue_session(
+            db=db,
+            request=request,
+            response=response,
+            user=user,
+            auth_level="mfa_setup",
+            lifetime=timedelta(minutes=MFA_SETUP_MINUTES),
+        )
+        return LoginResponse(
+            user_id=user.id,
+            expires_at=expires_at,
+            tenant_id=tenant_id,
+            mfa_required=True,
+            mfa_enrollment_required=True,
+        )
+
     if mfa_row is not None:
         code = (body.mfa_code or "").strip()
         if not code:
@@ -149,16 +250,16 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_locked_out",
             )
-        
+
         valid = False
-        
+
         # Try TOTP
         if mfa_row.encrypted_secret:
             totp_secret = decrypt_string(mfa_row.encrypted_secret)
             totp = pyotp.TOTP(totp_secret)
-            if totp.verify(code):
+            if totp.verify(code, valid_window=1):
                 valid = True
-                
+
         # Try Recovery Codes
         if not valid and mfa_row.hashed_recovery_codes:
             for idx, hcode in enumerate(mfa_row.hashed_recovery_codes):
@@ -168,7 +269,7 @@ async def login(
                     mfa_row.hashed_recovery_codes.pop(idx)
                     mfa_row.hashed_recovery_codes = list(mfa_row.hashed_recovery_codes)
                     break
-        
+
         if not valid:
             mfa_row.failed_attempts = (mfa_row.failed_attempts or 0) + 1
             if mfa_row.failed_attempts >= 5:
@@ -179,41 +280,20 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="mfa_invalid",
             )
-        
+
         # Reset failed attempts on success
         if mfa_row.failed_attempts or mfa_row.locked_until:
             mfa_row.failed_attempts = 0
             mfa_row.locked_until = None
             await db.commit()
 
-    raw_token, token_hash = generate_session_token()
-    expires_at = datetime.now(UTC) + timedelta(days=SESSION_DAYS)
-    ip, ua = _client_meta(request)
-
-    db.add(
-        UserSession(
-            user_id=user.id,
-            token_hash=token_hash,
-            expires_at=expires_at,
-            is_revoked=False,
-            ip_address=ip,
-            user_agent=ua,
-        )
-    )
-    await db.commit()
-
-    tenant_id = await _primary_tenant_id(db, user.id)
-
-    from app.core.config import settings
-
-    response.set_cookie(
-        key=COOKIE_NAME,
-        value=raw_token,
-        httponly=True,
-        samesite="lax",
-        secure=settings.is_production,
-        max_age=SESSION_DAYS * 24 * 3600,
-        path="/",
+    expires_at = await _issue_session(
+        db=db,
+        request=request,
+        response=response,
+        user=user,
+        auth_level="full",
+        lifetime=timedelta(days=SESSION_DAYS),
     )
 
     return LoginResponse(

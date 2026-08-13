@@ -45,15 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // skip the probe rather than firing a request that can only 401.
     // A stored tenant means a prior session, which is worth re-checking so a
     // returning user is bounced straight to its portal.
-    if (
-      probe &&
-      typeof window !== 'undefined' &&
-      window.location.pathname.startsWith('/login') &&
-      !getTenantId()
-    ) {
-      setSession(null)
-      setLoading(false)
-      return
+    if (probe && typeof window !== 'undefined') {
+      const path = window.location.pathname
+      if (path.startsWith('/mfa/setup') || (path.startsWith('/login') && !getTenantId())) {
+        setSession(null)
+        setLoading(false)
+        return
+      }
     }
     setLoading(true)
     setError(null)
