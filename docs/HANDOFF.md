@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Main HEAD:** `c015748` · **Alembic head:** `u4b5c6d7e8f9` · CI yeşil.
+**Main HEAD:** `c015748` · **Closure PR:** [#55](https://github.com/NexFabric/fitness-network-os/pull/55) (`codex/phase27-production-closure`) · **Closure Alembic head:** `v5c6d7e8f9a0`.
 
 ---
 
@@ -27,7 +27,13 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.3 `main`'de. Beş dalga bu oturumda girdi:
+Phase 0–27.3 `main`'de. Final production-closure kodu PR #55'te review bekliyor.
+PR #55'in GitHub CI koşusunda backend **315 passed · 1 skipped**, Playwright
+**36 passed**, tüm build/security/image kapıları yeşil oldu (run `31702800041`).
+Sonraki CodeQL hardening değişikliklerinde Python, JS/TS ve Actions analizleri de
+yeşil oldu (run `31703676406`). Yerelde test çalıştırılmadı.
+
+Önceki dalgalar:
 
 | PR | İş |
 |---|---|
@@ -37,8 +43,8 @@ Phase 0–27.3 `main`'de. Beş dalga bu oturumda girdi:
 | #52 | Operasyon konsolu: cihazlar, bildirimler, raporlar, personel, şube düzenleme, üyelik yaşam döngüsü |
 | #53 | Plan kataloğu + abonelik oluşturma (API-1), gönderim/çalıştırma geçmişi (API-2), `.codesight` haritası |
 
-**Test tabanı:** backend 309 passed · 1 skipped, Playwright 37 passed (gerçek
-Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
+**Test tabanı:** closure CI'da backend 315 passed · 1 skipped, Playwright 36 passed
+(gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 `check_tenancy`, `check_permissions`, `check_permissions_db`,
 `check_no_money_floats`, 3 frontend build, CodeQL.
 
@@ -46,12 +52,12 @@ Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 
 ## Sıradaki iş (yapılabilir olanlar)
 
-1. **Phase 27 closure branch'ini CI'dan geçirip merge etmek** — privileged MFA
-   enrollment, S3 rapor storage, container hardening ve required Playwright gate.
+1. **PR #55 için bağımsız review alıp merge etmek** — privileged MFA enrollment,
+   S3 rapor storage, metrics, container hardening ve required Playwright gate hazır.
 2. **Kullanıcı hesabı açma ucu** — Personel ekranı bugün yalnızca *var olan*
    kullanıcıyı bağlayabiliyor; hesap oluşturan bir uç yok.
-3. **`/metrics`** şu an Prometheus placeholder'ı; gerçek metrik pipeline'ı bir
-   altyapı kararı bekliyor.
+3. **Observability altyapısını bağlamak** — `/metrics` gerçek Prometheus metrikleri
+   üretir; scraper, dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
 
 ## Bu makineden kapatılamayanlar (sebebiyle)
 

@@ -15,14 +15,14 @@
 | CSRF bootstrap + cookie admin (local) | 🟢 landed |
 | Production fail-closed config | 🟢 landed |
 | Notification PII / prod mock block | 🟢 landed |
-| Report object storage | 🟡 real S3 upload + SSE + presigned URL implemented on closure branch; CI/merge pending |
+| Report object storage | 🟢 PR #55 — S3 upload + SSE + tenant-bound presigned URL + cleanup; CI/CodeQL verified, review/merge pending |
 | /live /ready /metrics | 🟢 present |
 | Public metrics honesty | 🟢 landed |
 | Public-site CI job | 🟢 added |
-| Privileged MFA enrollment | 🟡 restricted setup session + TOTP UX implemented on closure branch; CI/merge pending |
+| Privileged MFA enrollment | 🟢 PR #55 — restricted setup, TOTP UX and post-enrollment session rotation; CI/CodeQL verified, review/merge pending |
 | Scanner offline deny-by-default | 🟢 landed |
 | Scanner device auth | 🟢 landed — credentials **+ HMAC request signing + single-use nonce** (ADR-044) |
-| Playwright E2E | 🟡 37-test suite added to required GitHub CI gate; first run pending |
+| Playwright E2E | 🟢 required GitHub CI gate; 36/36 real-browser scenarios passed in run `31702800041` |
 | DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
 | Independent APPROVE | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
@@ -56,9 +56,9 @@
 | API-2 | Delivery and run history endpoints (`GET /notifications/deliveries`, `GET /reports/runs`) — bounded, filterable |
 | SEC-3 | Dead `verify_idempotency_key` middleware removed — it advertised idempotency while only checking header presence; the real path is `api/idempotency_uow.py` |
 | P0-1 | Main Unit & Integration CI green at `c015748` (GitHub Actions run `31676689167`) |
-| P1-3b | Real S3/MinIO upload, server-side encryption, tenant-key validation, short-lived presigned downloads and bounded cleanup implemented; merge/CI pending |
-| P1-4 | Privileged password login is restricted to MFA setup until TOTP enrollment succeeds; admin enrollment UX implemented; merge/CI pending |
-| P1-7 | Playwright suite wired into `all-green`; merge/CI pending |
+| P1-3b | Real S3/MinIO upload, server-side encryption, tenant-key validation, short-lived presigned downloads and bounded cleanup implemented; PR #55 CI + CodeQL verified, review/merge pending |
+| P1-4 | Privileged password login is restricted to MFA setup until TOTP enrollment succeeds; admin enrollment UX and session rotation implemented; PR #55 CI + CodeQL verified, review/merge pending |
+| P1-7 | Playwright suite wired into `all-green`; 36/36 passed on PR #55 |
 | P1-PKG | Frozen `uv.lock`, pinned `uv`, base-image digest, `.dockerignore`, non-root runtime and HEALTHCHECK; image build added to CI |
 
 ---
@@ -70,7 +70,7 @@
 | P1-10 | Actual restore drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
 | P2-3 | KMS QR secrets | A-QR |
-| P2-OBS | Metrics counters landed on closure branch; traces, alert rules and queue-depth gauges remain | A-OPS |
+| P2-OBS | Prometheus request/dependency/outbox metrics landed in PR #55; scraper/dashboard, traces and alert rules remain | A-OPS |
 
 ---
 
