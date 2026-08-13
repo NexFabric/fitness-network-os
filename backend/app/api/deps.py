@@ -31,9 +31,14 @@ def get_current_session_token(request: Request) -> str:
 async def get_current_user(
     token: str = Depends(get_current_session_token), db: AsyncSession = Depends(get_db)
 ) -> User:
-    """
-    Retrieve the current user from the session token.
-    """
+    """Retrieve a fully authenticated user from the session token."""
+    return await _get_user_for_session(token, db, allowed_auth_levels={"full"})
+
+
+async def _get_user_for_session(
+    token: str, db: AsyncSession, *, allowed_auth_levels: set[str]
+) -> User:
+    """Resolve a server session and enforce its authentication assurance."""
     import hashlib
     from datetime import datetime
 
@@ -44,6 +49,7 @@ async def get_current_user(
             UserSession.token_hash == token_hash,
             UserSession.is_revoked == False,
             UserSession.expires_at > datetime.now(UTC),
+            UserSession.auth_level.in_(allowed_auth_levels),
         )
     )
     session = result.scalars().first()
@@ -67,6 +73,16 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User inactive or not found")
 
     return user
+
+
+async def get_mfa_enrollment_user(
+    token: str = Depends(get_current_session_token),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Allow a full session or a short-lived MFA-enrollment-only session."""
+    return await _get_user_for_session(
+        token, db, allowed_auth_levels={"full", "mfa_setup"}
+    )
 
 
 async def _audit_superuser_tenant_access(
@@ -264,7 +280,9 @@ async def _verify_device_signature(
     try:
         sent_at = int(timestamp)
     except ValueError:
-        raise HTTPException(status_code=401, detail="device_timestamp_invalid") from None
+        raise HTTPException(
+            status_code=401, detail="device_timestamp_invalid"
+        ) from None
 
     now = datetime.now(UTC)
     if abs(int(now.timestamp()) - sent_at) > MAX_CLOCK_SKEW_SECONDS:
@@ -282,7 +300,9 @@ async def _verify_device_signature(
             body,
         )
     except QrCryptoError:
-        raise HTTPException(status_code=401, detail="device_signature_invalid") from None
+        raise HTTPException(
+            status_code=401, detail="device_signature_invalid"
+        ) from None
     if not ok:
         raise HTTPException(status_code=401, detail="device_signature_invalid")
 

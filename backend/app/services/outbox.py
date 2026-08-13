@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.event_types import validate_event_type
 from app.core.events import build_event_envelope, is_envelope, validate_envelope
+from app.core.metrics import OUTBOX_DISPATCH
 from app.models.outbox import InboxEvent, OutboxEvent
 
 Handler = Callable[[AsyncSession, InboxEvent], Awaitable[None]]
@@ -331,6 +332,10 @@ class OutboxService:
                 if str(ve) != "lease_ownership_lost":
                     raise
                 failed += 1
+        if published:
+            OUTBOX_DISPATCH.labels("published").inc(published)
+        if failed:
+            OUTBOX_DISPATCH.labels("failed").inc(failed)
         return {"published": published, "failed": failed}
 
     # ----- inbox -----

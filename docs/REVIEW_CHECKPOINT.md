@@ -1,7 +1,7 @@
 # Review Checkpoint — Main status
 
 **Date:** 2026-08-13  
-**Main HEAD:** `a60d55c` (PR #53) — no open PRs  
+**Main HEAD:** `c015748`; open closure PR [#55](https://github.com/NexFabric/fitness-network-os/pull/55)
 **Alembic head:** `u4b5c6d7e8f9`
 
 ## Merged on main (truth)
@@ -23,22 +23,24 @@
 | Item | Status |
 |------|--------|
 | PR #29 docs truth polish | may still open — optional |
+| PR #55 final production closure | CI/CodeQL evidence green; independent review/merge pending |
 | Phase 26 exit gate | **NOT PASSED** |
 | Production-ready | **NO** |
 
 ## Current position
 
 ```text
-main = 15.5 + 16–26 MVP + 27/27.1 production closure
-Next = production depth (providers, full security/ops, exit PASS)
+main = 15.5 + 16–26 MVP + 27/27.1/27.2/27.3
+PR #55 = privileged MFA + private report storage + metrics + container/CI closure
+Next = independent review/merge + restore/PITR + pentest evidence
 ```
 
-## Health (last control — 2026-08-12, local)
+## Health (last control — 2026-08-13, GitHub only)
 
-- `pytest` 309 passed · 1 skipped (local **and** CI on `a60d55c`)  
-- Playwright e2e **37 passed** (real Chromium, real backend), zero console errors across all 5 portals  
+- PR #55 CI run `31702800041`: backend **315 passed · 1 skipped**; Playwright **36 passed** against real Chromium/backend/Postgres/Redis.
+- CodeQL run `31703676406`: Python, JavaScript/TypeScript and Actions analyses passed after closure security fixes.
 - ruff, mypy (85 files), `alembic check` (no drift), `check_permissions`, `check_permissions_db`, `check_tenancy`, `check_no_money_floats` PASS  
 - admin-web + scanner-pwa builds PASS  
-- CI on PR #49: every required check green. CodeQL carries one dismissed alert (`py/weak-sensitive-data-hashing` on `_hash_api_key`) — false positive for a 256-bit server-minted token, reasoning in the docstring  
+- PR #55 remains blocked only by required independent review plus the latest documentation-only head verification.
 - Dependabot: all 10 open alerts (vite/esbuild) are already fixed on this branch (vite 6.4.3, esbuild 0.25.12); they close when PR #49 lands  
 - See `backend/docs/plans/CONTROL_HEALTH_REPORT.md`  

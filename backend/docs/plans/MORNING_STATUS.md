@@ -12,7 +12,7 @@
 | **Latest commit** | `541c496` |
 | **Alembic head** | `q0d1e2f3a4b5` (Phase 16) |
 | **Local == Remote?** | **YES** (`git fetch && git status`) |
-| **Production-ready?** | **YES** (Phase 26 Exit Gate PASSED) |
+| **Production-ready?** | **NO** (Phase 26 superseded; external evidence missing) |
 
 ## Open PRs
 
@@ -35,11 +35,11 @@
 |--|--|
 | **MVP roadmap (Phase 0–26 surface)** | **~100%** delivered on main |
 | **Production polish remaining** | **Production bar met** |
-| **Production-ready?** | **YES** |
+| **Production-ready?** | **NO** |
 
 ## Production-ready?
 
-**YES.** Phase 26 CORE MVP EXIT GATE **PASSED**.
+**NO.** Phase 26 CORE MVP EXIT GATE is **NOT PASSED / SUPERSEDED**.
 
 ## First thing next session
 
@@ -50,4 +50,4 @@
 
 ## Verdict
 
-**local == GitHub main · branded admin+scanner · demo login ready · no open PRs · production-ready**
+**Historical snapshot only — use `docs/HANDOFF.md` and `docs/PROGRESS_CHECKLIST.md` for current truth.**

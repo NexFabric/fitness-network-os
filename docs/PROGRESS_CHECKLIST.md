@@ -1,8 +1,8 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-12  
+**Last updated:** 2026-08-13
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Alembic head on main:** `u4b5c6d7e8f9` (Phase 27.1 device signing)
+**Alembic head on main:** `u4b5c6d7e8f9` (PR #55 adds `v5c6d7e8f9a0`; CI/CodeQL verified, review/merge pending)
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -26,6 +26,21 @@
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
 | **Phase 27 production closure** | 🟢 **MERGED** (PR #49) | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
+
+### Phase 27.4 — Final production closure (PR #55, review/merge pending)
+
+- [x] Privileged roles cannot obtain application access with password only; MFA setup uses a short restricted session and successful enrollment rotates it into a new full session.
+- [x] Reports use private S3/MinIO storage in production with server-side encryption, tenant-bound keys, short-lived presigned downloads and bounded cleanup; local storage is forbidden in production.
+- [x] `/metrics` exports protected Prometheus request, dependency and outbox metrics; production configuration fails closed when required secrets/providers are absent.
+- [x] Production backend image uses frozen dependencies, pinned base digest, non-root runtime, healthcheck and a required CI build.
+- [x] Playwright is a required GitHub CI gate against the real backend, PostgreSQL and Redis.
+- [x] CodeQL findings from the closure were resolved by opaque UUID-derived local artifact namespaces and MFA session rotation.
+
+**GitHub evidence:** CI run `31702800041` passed backend **315 tests + 1 skip**,
+Playwright **36/36**, lint/type-check, security scans, SBOM, all frontend builds and
+production image. CodeQL run `31703676406` passed Python, JavaScript/TypeScript and
+Actions analyses after the security fixes. Final PR head remains subject to required
+independent review; no production-ready claim is made.
 
 ---
 
@@ -142,8 +157,8 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
 2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
 3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Completed)
-4. ~~Observability productization (health deps, metrics/traces/alerts)~~ (Completed `/live`, `/ready`, `/health`)
-5. ~~Backup/restore script & ASVS L2 compliance report~~ (Completed)
+4. Observability productization beyond health probes: real metrics/traces/alerts.
+5. Execute and attach a restore/PITR drill; complete independent ASVS 5.0 L2 review and pentest.
 
 Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
 

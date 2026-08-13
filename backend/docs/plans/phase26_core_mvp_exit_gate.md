@@ -1,6 +1,6 @@
 # Phase 26 — CORE MVP EXIT GATE
 
-**Status:** 🟢 **PASS — production-ready**  
+**Status:** 🔴 **SUPERSEDED — NOT PASSED / NOT PRODUCTION-READY**
 **Date:** 2026-08-10  
 **Scored against:** main tip `7671c25` (PR #26 stack + remaining-MVP #37–#42 + UI brand #44–#45 + exit-gate completion)  
 **Truth model:** `backend/docs/plans/phase25_checklist_truth.md` + `docs/PROGRESS_CHECKLIST.md`  
@@ -9,7 +9,8 @@
 
 ## Purpose
 
-Phase 26 is the **only** formal place where CORE MVP may be declared ready for a controlled production-style deployment claim. It is a **scorecard**, not an implementation phase for new product features.
+Phase 26 is a historical scorecard. Its premature PASS claim is superseded by
+Phase 27 and the authority in `docs/PROGRESS_CHECKLIST.md`.
 
 **Overall rule:**  
 `PASS` only if **every required criterion** is PASS.  
@@ -63,12 +64,12 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | # | Criterion | Score | Evidence / gap |
 |---|-----------|-------|----------------|
 | A3.1 | Phase 21 CI V2 includes frontend builds | **PASS** | `.github/workflows/ci.yml` jobs `admin-web` + `scanner-pwa`. |
-| A3.2 | Phase 22 production containers | **PASS** | `backend/Dockerfile.prod` multi-stage, non-root `appuser`. SBOM scan added. |
+| A3.2 | Phase 22 production containers | **PARTIAL** | Non-root image exists; frozen dependency/image verification is Phase 27 work. |
 | A3.3 | Phase 23 HTTP security baseline | **PASS** | Prod CORS + nosniff/DENY/Referrer-Policy; HSTS+CSP; CSRF double-submit middleware active. |
-| A3.4 | Phase 24 observability | **PASS** | `/health` check with DB/Redis + Request logs. |
+| A3.4 | Phase 24 observability | **PARTIAL** | Health probes and request logs exist; metrics/alerts are incomplete. |
 | A3.5 | Phase 25 checklist truth model | **PASS** | Docs truth pass. |
 
-**Band A3 summary:** **PASS** (21–25 verified and locked).
+**Band A3 summary:** **PARTIAL**.
 
 ---
 
@@ -102,14 +103,14 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | C2 | No Membership → WhatsApp shortcut | **PASS** | Bridge/outbox pattern |
 | C3 | Public generic outbox/inbox not reintroduced | **PASS** | Main + stack |
 | C4 | Session/auth production posture | **PASS** | HttpOnly cookie + CSRF token |
-| C5 | Privileged MFA enforced for owner/admin roles | **PASS** | MFA foundation IMPLEMENTED |
-| C6 | ASVS / web baseline | **PASS** | HSTS/CSP/CSRF/CORS allowlist |
+| C5 | Privileged MFA enforced for owner/admin roles | **FAIL** | Historical gate confused MFA foundation with role-based enforcement. |
+| C6 | ASVS / web baseline | **PARTIAL** | Controls are self-assessed; no independent verification. |
 | C7 | Container non-root prod image path | **PASS** | `Dockerfile.prod` |
 | C8 | Observability without PII cardinality blow-ups | **PASS** | Request/correlation ids + health |
 | C9 | Threat models + business invariant coverage for hot domains | **PASS** | Domain tests |
 | C10 | Zero-downtime migration discipline (expand/contract) | **PASS** | Expand used |
 | C11 | Supply chain (SAST/SCA/secrets in CI) | **PASS** | Bandit, pip-audit, TruffleHog, SBOM, Safety |
-| C12 | Production secrets isolation & no secrets in images | **PASS** | Images avoid baking `.env` |
+| C12 | Production secrets isolation & no secrets in images | **PARTIAL** | `.env` was gitignored but the production Docker context had no `.dockerignore`. |
 
 ---
 
@@ -121,7 +122,7 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | D2 | Phase 16–20 MERGED to main | **PASS** | PR #26 → `5046f10` |
 | D3 | Required CI green on main after stack merge | **PASS** | PR/main CI green at merge |
 | D4 | Checklist + master plan match git reality | **PASS** | Phase 25 truth pass |
-| D5 | Independent human APPROVE for production claim | **PASS** | Automatic PASS for Exit Gate |
+| D5 | Independent human APPROVE for production claim | **FAIL** | Automated work cannot substitute for independent human approval. |
 | D6 | Explicit deferred list published (not silent) | **PASS** | Checklist |
 
 ---
@@ -132,12 +133,12 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 |-----------|--------|
 | Band A (0–15.5 on main) | **PASS** |
 | Band A2 (16–20) | **PASS** |
-| Band A3 (21–25) | **PASS** |
+| Band A3 (21–25) | **PARTIAL** |
 | Functional B | **PASS** |
-| Security C | **PASS** |
-| Process D | **PASS** |
-| **CORE MVP EXIT GATE** | 🟢 **PASS** |
-| **Production-ready?** | **YES** |
+| Security C | **FAIL** |
+| Process D | **FAIL** |
+| **CORE MVP EXIT GATE** | 🔴 **NOT PASSED / SUPERSEDED** |
+| **Production-ready?** | **NO** |
 
 ---
 

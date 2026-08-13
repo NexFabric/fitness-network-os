@@ -42,6 +42,7 @@ async def _seed_user(
     password: str,
     with_tenant: bool = True,
     active: bool = True,
+    role_name: str = "GYM_MANAGER",
 ) -> tuple[User, Tenant | None]:
     user = User(
         email=email.lower(),
@@ -69,10 +70,10 @@ async def _seed_user(
         await db.flush()
 
         role = (
-            await db.execute(select(Role).where(Role.name == "GYM_OWNER"))
+            await db.execute(select(Role).where(Role.name == role_name))
         ).scalar_one_or_none()
         if role is None:
-            role = Role(name=f"auth-role-{uuid4().hex[:8]}", description="auth test")
+            role = Role(name=role_name, description="auth test")
             db.add(role)
             await db.flush()
 
@@ -185,13 +186,17 @@ async def test_logout_revokes_session(api_client, pg_session_maker):
 
     async with pg_session_maker() as db:
         active = (
-            await db.execute(
-                select(UserSession).where(
-                    UserSession.user_id == user.id,
-                    UserSession.is_revoked.is_(False),
+            (
+                await db.execute(
+                    select(UserSession).where(
+                        UserSession.user_id == user.id,
+                        UserSession.is_revoked.is_(False),
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert active == []
 
     again = await api_client.post(
@@ -207,7 +212,14 @@ async def test_login_mfa_required(api_client, pg_session_maker):
     password = "MfaPassword1!"
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
+        db.add(
+            UserMfaMethod(
+                user_id=user.id,
+                encrypted_secret=encrypt_string(pyotp.random_base32()),
+                provider_id="totp",
+                is_active=True,
+            )
+        )
         await db.commit()
 
     res = await api_client.post(
@@ -224,7 +236,14 @@ async def test_login_mfa_invalid(api_client, pg_session_maker):
     password = "MfaPassword1!"
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(pyotp.random_base32()), provider_id="totp", is_active=True))
+        db.add(
+            UserMfaMethod(
+                user_id=user.id,
+                encrypted_secret=encrypt_string(pyotp.random_base32()),
+                provider_id="totp",
+                is_active=True,
+            )
+        )
         await db.commit()
 
     res = await api_client.post(
@@ -242,7 +261,14 @@ async def test_login_mfa_success(api_client, pg_session_maker):
     totp_secret = pyotp.random_base32()
     async with pg_session_maker() as db:
         user, _ = await _seed_user(db, email=email, password=password)
-        db.add(UserMfaMethod(user_id=user.id, encrypted_secret=encrypt_string(totp_secret), provider_id="totp", is_active=True))
+        db.add(
+            UserMfaMethod(
+                user_id=user.id,
+                encrypted_secret=encrypt_string(totp_secret),
+                provider_id="totp",
+                is_active=True,
+            )
+        )
         await db.commit()
 
     totp = pyotp.TOTP(totp_secret)
@@ -252,3 +278,86 @@ async def test_login_mfa_success(api_client, pg_session_maker):
     )
     assert res.status_code == 200
 
+
+@pytest.mark.asyncio
+async def test_privileged_login_without_enrollment_gets_restricted_session(
+    api_client, pg_session_maker
+):
+    email = f"mfa-enroll-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        user, tenant = await _seed_user(
+            db,
+            email=email,
+            password=password,
+            role_name="GYM_OWNER",
+        )
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200, login.text
+    assert login.json()["mfa_enrollment_required"] is True
+    assert login.json()["tenant_id"] == str(tenant.id)
+    token = login.cookies["session_token"]
+
+    denied = await api_client.get(
+        "/api/v1/me/session",
+        cookies={"session_token": token},
+        headers={"X-Tenant-ID": str(tenant.id)},
+    )
+    assert denied.status_code == 401
+
+    async with pg_session_maker() as db:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        row = (
+            await db.execute(
+                select(UserSession).where(UserSession.token_hash == token_hash)
+            )
+        ).scalar_one()
+        assert row.user_id == user.id
+        assert row.auth_level == "mfa_setup"
+
+
+@pytest.mark.asyncio
+async def test_privileged_mfa_enrollment_promotes_restricted_session(
+    api_client, pg_session_maker
+):
+    email = f"mfa-promote-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        _user, tenant = await _seed_user(
+            db,
+            email=email,
+            password=password,
+            role_name="GYM_OWNER",
+        )
+
+    csrf = await api_client.get("/api/v1/auth/csrf")
+    csrf_token = csrf.json()["csrf_token"]
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.json()["mfa_enrollment_required"] is True
+
+    setup = await api_client.post(
+        "/api/v1/auth/mfa/setup",
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert setup.status_code == 200, setup.text
+    code = pyotp.TOTP(setup.json()["secret"]).now()
+
+    verify = await api_client.post(
+        "/api/v1/auth/mfa/verify",
+        json={"code": code},
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert verify.status_code == 200, verify.text
+
+    me = await api_client.get(
+        "/api/v1/me/session",
+        headers={"X-Tenant-ID": str(tenant.id)},
+    )
+    assert me.status_code == 200, me.text

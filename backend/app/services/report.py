@@ -1,9 +1,10 @@
-"""Phase 16/27 report service — definitions + async run lifecycle + local artifacts."""
+"""Phase 16/27 report service — definitions + private artifact storage."""
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -23,6 +24,9 @@ from app.models.report import (
     ReportRun,
 )
 from app.services.outbox import OutboxService
+from app.services.storage import StorageProvider, get_storage_provider
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,8 +36,9 @@ class RunRequestResult:
 
 
 class ReportService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, *, storage: StorageProvider | None = None):
         self.db = db
+        self.storage = storage or get_storage_provider()
 
     async def create_definition(
         self,
@@ -182,11 +187,10 @@ class ReportService:
         *,
         redrive: bool = False,
     ) -> ReportRun:
-        """Execute run and write a real local artifact under REPORT_STORAGE_DIR.
+        """Execute a run and save the artifact through the storage provider.
 
-        Artifact is a CSV file on private disk (not public object storage).
-        ``result_url`` is a ``file://`` path for operators; production should
-        swap this for signed object-storage URLs (Phase 27 P2).
+        ``result_url`` stores a private storage URI. HTTP responses exchange it
+        for a short-lived download URL; durable presigned URLs are never saved.
 
         Terminal statuses SUCCEEDED/CANCELLED always no-op.
         FAILED is terminal unless ``redrive=True``.
@@ -211,42 +215,79 @@ class ReportService:
 
         try:
             import csv
-            import os
-            import tempfile
+            import io
 
-            storage_dir = os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
-            tenant_dir = os.path.join(storage_dir, str(tenant_id))
-            os.makedirs(tenant_dir, exist_ok=True)
-
-            filepath = os.path.join(tenant_dir, f"{run.id}.csv")
-
-            with open(filepath, "w", newline="", encoding="utf-8") as csvfile:  # noqa: ASYNC230
-                writer = csv.writer(csvfile)
-                writer.writerow(["run_id", "tenant_id", "status", "exported_at"])
-                writer.writerow(
-                    [
-                        str(run.id),
-                        str(tenant_id),
-                        "SUCCEEDED",
-                        datetime.now(UTC).isoformat(),
-                    ]
-                )
-
-            if not os.path.isfile(filepath) or os.path.getsize(filepath) <= 0:
+            buffer = io.StringIO(newline="")
+            writer = csv.writer(buffer)
+            writer.writerow(["run_id", "tenant_id", "status", "exported_at"])
+            writer.writerow(
+                [
+                    str(run.id),
+                    str(tenant_id),
+                    "SUCCEEDED",
+                    datetime.now(UTC).isoformat(),
+                ]
+            )
+            artifact = buffer.getvalue().encode("utf-8")
+            if not artifact:
                 raise RuntimeError("artifact_write_failed")
 
             run.row_count = 1
-            run.result_url = f"file://{filepath}"
+            run.result_url = await self.storage.save_bytes(
+                tenant_id, run.id, artifact
+            )
             run.status = REPORT_STATUS_SUCCEEDED
             run.finished_at = datetime.now(UTC)
             run.error_message = None
-        except Exception as e:  # pragma: no cover - defensive
+        except Exception:  # pragma: no cover - defensive
+            logger.exception(
+                "report.artifact_failed tenant_id=%s run_id=%s",
+                tenant_id,
+                run.id,
+            )
             run.status = REPORT_STATUS_FAILED
-            run.error_message = str(e)[:2000]
+            run.error_message = "artifact_generation_failed"
             run.finished_at = datetime.now(UTC)
             run.result_url = None
         await self.db.flush()
         return run
+
+    async def get_download_url(self, tenant_id: UUID, run: ReportRun) -> str | None:
+        if run.status != REPORT_STATUS_SUCCEEDED or not run.result_url:
+            return None
+        from app.core.config import settings
+
+        return await self.storage.generate_download_url(
+            tenant_id,
+            run.result_url,
+            settings.REPORT_DOWNLOAD_URL_TTL_SECONDS,
+        )
+
+    async def cleanup_artifacts(
+        self, tenant_id: UUID, *, older_than_days: int, limit: int = 100
+    ) -> int:
+        """Delete a bounded batch of expired tenant artifacts idempotently."""
+        cutoff = datetime.now(UTC) - timedelta(days=max(1, older_than_days))
+        limit = max(1, min(limit, 200))
+        result = await self.db.execute(
+            select(ReportRun)
+            .where(
+                ReportRun.tenant_id == tenant_id,
+                ReportRun.finished_at < cutoff,
+                ReportRun.result_url.is_not(None),
+            )
+            .order_by(ReportRun.finished_at)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        rows = list(result.scalars().all())
+        for row in rows:
+            if row.result_url:
+                await self.storage.delete(tenant_id, row.result_url)
+                row.result_url = None
+        if rows:
+            await self.db.flush()
+        return len(rows)
 
     async def get_run(self, tenant_id: UUID, run_id: UUID) -> ReportRun | None:
         result = await self.db.execute(

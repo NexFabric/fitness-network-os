@@ -23,6 +23,7 @@ from uuid import UUID
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 PASSWORD = "E2ePortal123!"  # local seed fixture, never a real secret
+OWNER_TOTP_SECRET = os.environ.get("E2E_OWNER_TOTP_SECRET", "JBSWY3DPEHPK3PXP")
 
 ORG_NAME = "E2E Federation"
 TENANT_NAME = "E2E Club"
@@ -204,13 +205,13 @@ async def seed() -> dict[str, object]:
         create_async_engine,
     )
 
-    from app.core.security import get_password_hash
+    from app.core.security import encrypt_string, get_password_hash
     from app.models.member import Member
     from app.models.organization import Organization
     from app.models.rbac import Role, UserRole
     from app.models.tenant import Tenant
     from app.models.trainer_assignment import TrainerAssignment
-    from app.models.user import User
+    from app.models.user import User, UserMfaMethod
 
     engine = create_async_engine(_engine_url(), pool_pre_ping=True, echo=False)
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -300,6 +301,36 @@ async def seed() -> dict[str, object]:
                     "role": role_name,
                     "user_id": str(user.id),
                 }
+
+                if role_name == "GYM_OWNER":
+                    mfa = (
+                        (
+                            await session.execute(
+                                select(UserMfaMethod).where(
+                                    UserMfaMethod.user_id == user.id,
+                                    UserMfaMethod.provider_id == "totp",
+                                )
+                            )
+                        )
+                        .scalars()
+                        .first()
+                    )
+                    if mfa is None:
+                        session.add(
+                            UserMfaMethod(
+                                user_id=user.id,
+                                encrypted_secret=encrypt_string(OWNER_TOTP_SECRET),
+                                provider_id="totp",
+                                is_active=True,
+                                hashed_recovery_codes=[],
+                            )
+                        )
+                    else:
+                        mfa.encrypted_secret = encrypt_string(OWNER_TOTP_SECRET)
+                        mfa.is_active = True
+                        mfa.failed_attempts = 0
+                        mfa.locked_until = None
+                    await session.flush()
 
             await _set_tenant_rls(session, tenant.id)
 

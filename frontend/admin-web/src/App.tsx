@@ -5,6 +5,7 @@ import RequireRole from './components/RequireRole'
 import Dashboard from './pages/Dashboard'
 import Locations from './pages/Locations'
 import Login from './pages/Login'
+import MfaSetup from './pages/MfaSetup'
 import Members from './pages/Members'
 import Devices from './pages/Devices'
 import Notifications from './pages/Notifications'
@@ -49,6 +50,7 @@ export default function App() {
         <ReloadPrompt />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/mfa/setup" element={<MfaSetup />} />
 
           {/* Gateway: needs a session, but no particular role — it shows the
               caller which portals its roles unlock. */}
