@@ -1,3 +1,6 @@
+import tempfile
+from pathlib import Path
+
 from pydantic import PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,7 +29,9 @@ class Settings(BaseSettings):
     # objects in production. Credentials use the standard AWS environment
     # variables and are deliberately not represented here.
     REPORT_STORAGE_PROVIDER: str = "local"
-    REPORT_STORAGE_DIR: str = "/tmp/fitness-network-os-reports"
+    REPORT_STORAGE_DIR: str = str(
+        Path(tempfile.gettempdir()) / "fitness-network-os-reports"
+    )
     REPORT_DOWNLOAD_URL_TTL_SECONDS: int = 900
     S3_BUCKET_NAME: str = ""
     S3_ENDPOINT_URL: str = ""
