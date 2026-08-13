@@ -1,6 +1,6 @@
 # Remaining Work Board
 
-**Date:** 2026-08-13 (post PR #55 merge, `main` = `2a1002d`)  
+**Date:** 2026-08-13 (post PR #57 merge, `main` = `837cec4`)  
 **Program:** Phase 27 — Final Production Closure  
 **Production-ready?** **NO** (architecture strong; external evidence gates still open)
 **Phase 26 PASS?** **NO / NOT VERIFIED**
@@ -22,7 +22,7 @@
 | Privileged MFA enrollment | 🟢 merged (PR #55) — restricted setup session, TOTP UX and post-enrollment session rotation |
 | Scanner offline deny-by-default | 🟢 landed |
 | Scanner device auth | 🟢 landed — credentials **+ HMAC request signing + single-use nonce** (ADR-044) |
-| Playwright E2E | 🟢 required GitHub CI gate; 36/36 real-browser scenarios passed in run `31706150882` |
+| Playwright E2E | 🟢 required GitHub CI gate; 36/36 real-browser scenarios passed in run `31732326181` |
 | DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
 | Independent APPROVE | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
@@ -55,11 +55,12 @@
 | API-1 | Plan catalogue (`/plans`, versions, publish) + membership creation (`POST /memberships`) — the lifecycle surface can now be driven end to end |
 | API-2 | Delivery and run history endpoints (`GET /notifications/deliveries`, `GET /reports/runs`) — bounded, filterable |
 | SEC-3 | Dead `verify_idempotency_key` middleware removed — it advertised idempotency while only checking header presence; the real path is `api/idempotency_uow.py` |
-| P0-1 | Main Unit & Integration CI green at `2a1002d` (GitHub Actions run `31706150882`) |
+| P0-1 | Main Unit & Integration CI green at `837cec4` — 325 passed · 1 skipped (GitHub Actions run `31732326181`) |
 | P1-3b | Real S3/MinIO upload, server-side encryption, tenant-key validation, short-lived presigned downloads and bounded cleanup **implemented and merged**. Code path is closed; runtime proof against a real bucket is still open below. |
 | P1-4 | Privileged password login is restricted to MFA setup until TOTP enrollment succeeds; admin enrollment UX and session rotation merged |
 | P1-7 | Playwright suite wired into `all-green`; 36/36 passed, merged |
 | P1-PKG | Frozen `uv.lock`, pinned `uv`, base-image digest, `.dockerignore`, non-root runtime and HEALTHCHECK; image build added to CI |
+| P1-USER | `POST /staff/accounts` creates a login and links it to the tenant in one transaction, returning a one-time password once. `must_change_password` plus a restricted `password_reset` session force rotation before the account can be used, and `resolve_auth_level()` orders enrollment ahead of rotation so finishing MFA can no longer skip it (PR #57) |
 
 ---
 
@@ -72,7 +73,6 @@
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
 | P2-3 | KMS QR secrets — `qr_crypto.py` recognises the KMS reference and raises a deliberate `NotImplementedError` | A-QR |
 | P2-OBS | Prometheus request/dependency/outbox metrics merged; scraper/dashboard, traces and alert rules remain | A-OPS |
-| P1-USER | No endpoint creates a user account — the staff screen can only link an existing user | A-API |
 
 ---
 

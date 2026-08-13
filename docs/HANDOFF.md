@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Main HEAD:** `2a1002d` · **Alembic head:** `v5c6d7e8f9a0` · **Açık PR yok.**
+**Main HEAD:** `837cec4` · **Alembic head:** `w6d7e8f9a0b1` · **Açık PR yok.**
 
 ---
 
@@ -27,20 +27,21 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 `main`'de — final production-closure kodu 2026-08-13'te merge edildi.
-Merge edilen head üzerinde CI: backend **315 passed · 1 skipped**, Playwright
-**36 passed**, CodeQL (Python/JS-TS/Actions) ve tüm build/security/image kapıları
-yeşil — **14/14 job** (run `31706150882`, CodeQL run `31706145455`). Aynı koşunun
-temiz tekrarında sayılar birebir aynı çıktı, yani süit flaky değil.
+Phase 0–27.4 `main`'de; üstüne personel hesabı açma (PR #57) eklendi. Merge edilen
+head üzerinde CI: backend **325 passed · 1 skipped**, Playwright **36 passed**,
+CodeQL (Python/JS-TS/Actions) ve tüm build/security/image kapıları yeşil —
+**14/14 job** (run `31732326181`). Kodla kapatılabilir iş listesi bitti.
 
-**Yerelde hiç test çalıştırılmadı; bütün kanıt GitHub CI'dan.** Uygulama gerçek
-bir ortamda elle hiç çalıştırılmadı — sıradaki iş bu.
+**Kanıt durumu:** PR #57'nin süiti hem GitHub CI'da hem yerelde gerçek Postgres'e
+karşı koştu ve iki ortamda da **325 passed · 1 skipped** çıktı. Buna rağmen
+**uygulama gerçek bir ortamda elle hiç kullanılmadı** — hiçbir ekran tarayıcıda
+uçtan uca denenmedi. Sıradaki iş bu, ve yeni özellik yazmaktan önce gelir.
 
-> **Merge notu (dürüstlük kaydı):** PR #55 bağımsız insan onayı olmadan merge
-> edildi. Repoda tek collaborator var, dolayısıyla "1 approving review" kuralı
-> tanımı gereği karşılanamıyordu. Merge için branch koruması geçici olarak
-> gevşetildi (`required_approving_review_count` 1→0), merge sonrası birebir geri
-> yüklendi ve doğrulandı: review 1, `enforce_admins` true, `strict` true, 3 required
+> **Merge notu (dürüstlük kaydı):** PR #55, #56 ve #57 bağımsız insan onayı
+> olmadan merge edildi. Repoda tek collaborator var, dolayısıyla "1 approving
+> review" kuralı tanımı gereği karşılanamıyordu. Her merge için branch koruması
+> geçici gevşetildi (`required_approving_review_count` 1→0), merge sonrası birebir
+> geri yüklendi ve doğrulandı: review 1, `enforce_admins` true, `strict` true, 3 required
 > check, force-push ve deletion kapalı. `enforce_admins` ve CI kapılarına
 > dokunulmadı. Bu bir kod kalite kanıtı değildir — sadece sürecin ne olduğunu kayda
 > geçirir.
@@ -55,6 +56,7 @@ bir ortamda elle hiç çalıştırılmadı — sıradaki iş bu.
 | #52 | Operasyon konsolu: cihazlar, bildirimler, raporlar, personel, şube düzenleme, üyelik yaşam döngüsü |
 | #53 | Plan kataloğu + abonelik oluşturma (API-1), gönderim/çalıştırma geçmişi (API-2), `.codesight` haritası |
 | #55 | Phase 27.4 final closure: privileged MFA, private S3 rapor storage, gerçek metrics, frozen non-root image, required Playwright gate |
+| #57 | Personel hesabı açma ucu + tek kullanımlık parola, zorunlu rotasyon (`password_reset` session), enrollment/rotation sıralaması |
 
 **Test tabanı:** closure CI'da backend 315 passed · 1 skipped, Playwright 36 passed
 (gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
@@ -69,10 +71,11 @@ bir ortamda elle hiç çalıştırılmadı — sıradaki iş bu.
    geliyor; hiç kimse ürünü tarayıcıda uçtan uca kullanmadı. `READY_TO_RUN.md` ile
    stack'i kaldır, en az şu akışları geç: privileged login → MFA enrollment →
    üyelik oluşturma → QR ile giriş → rapor çalıştırma ve indirme.
-2. **Kullanıcı hesabı açma ucu** — Personel ekranı bugün yalnızca *var olan*
-   kullanıcıyı bağlayabiliyor; hesap oluşturan bir uç yok.
-3. **Observability altyapısını bağlamak** — `/metrics` gerçek Prometheus metrikleri
+2. **Observability altyapısını bağlamak** — `/metrics` gerçek Prometheus metrikleri
    üretir; scraper, dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
+3. **E-posta davet akışı** — hesap açma bugün tek kullanımlık parolayı ekranda
+   gösteriyor ve yönetici parolayı elden iletiyor. Token tablosu + şablon + public
+   uç ile davet bağlantısına çevrilebilir; çalışan akışı bozmayan bir iyileştirme.
 
 ## Bu makineden kapatılamayanlar (sebebiyle)
 

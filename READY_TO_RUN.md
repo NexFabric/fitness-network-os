@@ -1,8 +1,8 @@
 # Uygulama hazır — çalıştırma özeti
 
 **Tarih:** 2026-08-13
-**Main:** `2a1002d` — final closure PR #55 merge edildi, açık PR yok.
-**Alembic head:** `v5c6d7e8f9a0`.
+**Main:** `837cec4` — PR #55 ve #57 merge edildi, açık PR yok.
+**Alembic head:** `w6d7e8f9a0b1`.
 **Production-ready?** **NO** — kod kapıları kapandı; restore/PITR tatbikatı, gerçek S3 staging kanıtı ve bağımsız pentest açık.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 

@@ -1,8 +1,8 @@
 # Review Checkpoint — Main status
 
 **Date:** 2026-08-13  
-**Main HEAD:** `2a1002d`; no open PRs
-**Alembic head:** `v5c6d7e8f9a0`
+**Main HEAD:** `837cec4`; no open PRs
+**Alembic head:** `w6d7e8f9a0b1`
 
 ## Merged on main (truth)
 
@@ -18,6 +18,7 @@
 | Phase 27.3 plan catalogue | PR #53 → `a60d55c` — `/plans` + `POST /memberships` (API-1), delivery/run history (API-2) |
 | Phase 27.1 device hardening | PR #49 → `8b2904e` — HMAC request signing + single-use nonce on the device channel (ADR-044), non-extractable `CryptoKey` on the scanner, CodeQL closure |
 | Phase 27.4 production closure | PR #55 → `2a1002d` — privileged MFA enrollment + session rotation, private S3/MinIO report storage, real Prometheus metrics, frozen non-root image, required Playwright gate |
+| Staff account provisioning | PR #57 → `837cec4` — `POST /staff/accounts`, one-time password, forced rotation via a restricted `password_reset` session, ordered enrollment/rotation gates |
 
 ## Open / residual
 
@@ -30,13 +31,14 @@
 ## Current position
 
 ```text
-main = 15.5 + 16–26 MVP + 27/27.1/27.2/27.3/27.4
+main = 15.5 + 16–26 MVP + 27/27.1/27.2/27.3/27.4 + staff provisioning
 Next = restore/PITR drill + real S3 staging proof + independent pentest evidence
 ```
 
 ## Health (last control — 2026-08-13, GitHub only)
 
-- Pre-merge CI run `31706150882` on `a9cb4ed` (clean re-run): backend **315 passed · 1 skipped**; Playwright **36 passed** against real Chromium/backend/Postgres/Redis. Two independent runs produced identical counts — no flake.
+- Latest CI run `31732326181` (PR #57 head, merged as `837cec4`): backend **325 passed · 1 skipped**; Playwright **36 passed** against real Chromium/backend/Postgres/Redis; 14/14 jobs. The same suite run locally against real Postgres produced identical counts.
+- Earlier closure evidence, CI run `31706150882` on `a9cb4ed`: backend **315 passed · 1 skipped**, Playwright **36 passed**. Two independent runs produced identical counts — no flake.
 - CodeQL run `31706145455`: Python, JavaScript/TypeScript and Actions analyses passed after closure security fixes.
 - ruff, mypy (85 files), `alembic check` (no drift), `check_permissions`, `check_permissions_db`, `check_tenancy`, `check_no_money_floats` PASS  
 - admin-web + scanner-pwa builds PASS  
