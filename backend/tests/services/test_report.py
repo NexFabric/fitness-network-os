@@ -127,7 +127,7 @@ async def test_execute_run_succeeded_with_result_url(db_session, tenant):
 
     assert run.status == REPORT_STATUS_SUCCEEDED
     assert run.result_url is not None
-    assert run.result_url.endswith(f"/{tenant.id}/{run.id}/report.csv")
+    assert run.result_url == f"local://{tenant.id}/{run.id}"
     assert run.started_at is not None
     assert run.finished_at is not None
     assert run.row_count >= 0
