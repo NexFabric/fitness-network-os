@@ -14,14 +14,14 @@ The Infra subsystem handles **6 routes** and touches: auth, db, cache.
   `backend/app/main.py`
 - `GET` `/ready` [auth, db, cache]
   `backend/app/main.py`
-- `GET` `/metrics`
+- `GET` `/metrics` [auth]
   `backend/app/main.py`
 - `GET` `/ping`
   `backend/tests/core/test_security_headers.py`
 
 ## High-Impact Files
 
-- `backend/app/main.py` — imported by 16 files
+- `backend/app/main.py` — imported by 17 files
 
 ## Source Files
 

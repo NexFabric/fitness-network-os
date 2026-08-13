@@ -642,6 +642,7 @@ fk: user_id
 - `user_agent`: String _(nullable)_
 - `expires_at`: DateTime
 - `is_revoked`: Boolean _(default)_
+- `auth_level`: String _(default)_
 - _relations_: user: User
 
 ### UserDevice

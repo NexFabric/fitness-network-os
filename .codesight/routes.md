@@ -63,8 +63,8 @@
 - `POST` `/{membership_id}/renew` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/{membership_id}/expire` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/{membership_id}/past-due` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
-- `POST` `/setup` params() → in: Use, out: MfaSetupResponse [db]
-- `POST` `/verify` params() → in: Use, out: MfaSetupResponse [db]
+- `POST` `/setup` params() → out: MfaSetupResponse [db, cache]
+- `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
@@ -72,9 +72,10 @@
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
+- `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/public` params()
 - `GET` `/health` params() [auth, db, cache] ✓
-- `GET` `/live` params()
+- `GET` `/live` params() ✓
 - `GET` `/ready` params() [auth, db, cache]
-- `GET` `/metrics` params()
+- `GET` `/metrics` params() [auth] ✓
 - `GET` `/ping` params() ✓

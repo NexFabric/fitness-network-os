@@ -202,14 +202,14 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
   süreç-içi pencereye düşer** — yani çok süreçli kurulumda limit süreç sayısı kadar
   çarpılır. Bilinçli fail-open (login cache kesintisinde kapanmasın), `rate_limit.redis_*`
   uyarısıyla loglanır.
-- PR #55 üretimde özel S3/MinIO storage, server-side encryption, tenant-bound key,
-  kısa ömürlü presigned URL ve bounded cleanup getirir; staging kanıtı için gerçek
-  kova ve kimlik bilgisi gerekir.
+- Üretimde raporlar özel S3/MinIO storage'a yazılır: server-side encryption,
+  tenant-bound key, kısa ömürlü presigned URL, bounded cleanup. Kod `main`'de;
+  **gerçek bir kovaya hiç yazmadı** — staging kanıtı için kova ve kimlik bilgisi gerekir.
 - QR imza sırları için KMS çözümü yok — `qr_crypto.py` KMS referansını tanır ama
   bilinçli olarak `NotImplementedError` verir; üretimde `local:hmac:` kullanılır.
-- PR #55 `/metrics` üzerinde request/dependency/outbox Prometheus metriklerini
-  üretir; scraper, dashboard, alert ve trace backend'i dış altyapı olarak açıktır.
-- PR #55 privileged MFA kayıt UX'i, restricted setup session ve başarılı kayıt
-  sonrası session rotation getirir; merge için bağımsız review gerekir.
+- `/metrics` gerçek request/dependency/outbox Prometheus metrikleri üretir; scraper,
+  dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
+- Privileged roller için password-only erişim kapalıdır: kısa ömürlü restricted
+  setup session, TOTP kayıt UX'i ve başarılı kayıt sonrası session rotation.
 - Kullanıcı hesabı açan bir uç yok — Personel ekranı var olan kullanıcıyı bağlar.
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.

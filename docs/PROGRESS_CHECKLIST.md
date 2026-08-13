@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-13
 **Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Alembic head on main:** `u4b5c6d7e8f9` (PR #55 adds `v5c6d7e8f9a0`; CI/CodeQL verified, review/merge pending)
+**Main HEAD:** `2a1002d` · **Alembic head on main:** `v5c6d7e8f9a0` · no open PRs
 
 **Truth rules:**
 - Prefer **MERGED on main** after green **required** CI over vague “done”.
@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · MERGED on main (PR #49, `8b2904e`) · CI GREEN · PRODUCTION **NO-GO** (Phase 26 exit gate)
+**Maturity:** IMPLEMENTED · MERGED on main (PR #55, `2a1002d`) · CI GREEN · PRODUCTION **NO-GO** (Phase 26 exit gate)
 
 ---
 
@@ -25,9 +25,10 @@
 | Phase 21–24 hardening MVP | 🟢 MERGED code / CI green | CSRF narrowed; SBOM flake isolated from the gate |
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
 | **Phase 27 production closure** | 🟢 **MERGED** (PR #49) | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
+| **Phase 27.4 final closure** | 🟢 **MERGED** (PR #55, `2a1002d`) | Privileged MFA, private report storage, real metrics, frozen image — **code** closed; external evidence gates still open |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
-### Phase 27.4 — Final production closure (PR #55, review/merge pending)
+### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
 
 - [x] Privileged roles cannot obtain application access with password only; MFA setup uses a short restricted session and successful enrollment rotates it into a new full session.
 - [x] Reports use private S3/MinIO storage in production with server-side encryption, tenant-bound keys, short-lived presigned downloads and bounded cleanup; local storage is forbidden in production.
@@ -36,11 +37,18 @@
 - [x] Playwright is a required GitHub CI gate against the real backend, PostgreSQL and Redis.
 - [x] CodeQL findings from the closure were resolved by opaque UUID-derived local artifact namespaces and MFA session rotation.
 
-**GitHub evidence:** CI run `31702800041` passed backend **315 tests + 1 skip**,
-Playwright **36/36**, lint/type-check, security scans, SBOM, all frontend builds and
-production image. CodeQL run `31703676406` passed Python, JavaScript/TypeScript and
-Actions analyses after the security fixes. Final PR head remains subject to required
-independent review; no production-ready claim is made.
+**GitHub evidence:** CI run `31706150882` on the merged head passed backend
+**315 tests + 1 skip**, Playwright **36/36**, lint/type-check, security scans, SBOM,
+all frontend builds and the production image — 14/14 required jobs. A clean re-run of
+the same run produced identical counts, so the suite is not flaky. CodeQL run
+`31706145455` passed Python, JavaScript/TypeScript and Actions analyses.
+
+**What this does and does not mean:** the *code* for Phase 27.4 is closed and merged.
+It was merged without an independent human approval, because this repository has a
+single collaborator and the required-review rule is therefore unsatisfiable; branch
+protection was relaxed for the merge and verified restored immediately afterwards.
+**No production-ready claim is made** — Phase 26's exit gate still needs the
+restore/PITR drill, real-bucket S3 proof and an external pentest.
 
 ---
 

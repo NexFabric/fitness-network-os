@@ -48,6 +48,7 @@
 - `backend/alembic/versions/s2f3a4b5c6d7_trainer_assignments_and_member_read_all.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/t3a4b5c6d7e8_audit_events_rls.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/v5c6d7e8f9a0_privileged_mfa_session_level.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -55,6 +56,10 @@
   - function main: () -> int
 - `backend/scripts/check_permissions.py` — function main: ()
 - `backend/scripts/check_permissions_db.py` — function main: () -> int
+- `backend/scripts/check_release_truth.py`
+  - function require: (path, *needles) -> list[str]
+  - function forbid: (path, *needles) -> list[str]
+  - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/process_notification_due.py`
   - function build_parser: () -> argparse.ArgumentParser
