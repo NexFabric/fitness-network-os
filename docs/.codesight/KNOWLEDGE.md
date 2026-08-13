@@ -1,7 +1,7 @@
 # Knowledge Map — docs
-> 18 notes · 2 decisions · 0 open questions
+> 19 notes · 2 decisions · 0 open questions
 
-> **AI Primer:** This knowledge base has 18 notes. Key topics: current evidence in repo. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
+> **AI Primer:** This knowledge base has 19 notes. Key topics: current evidence in repo. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
 
 ## Key Decisions (2)
 - Federation-scope reads are served **without changing any existing RLS policy and
@@ -13,7 +13,7 @@ current evidence in repo
 ## Hub Notes (most referenced)
 - `plans/SHELF_NU_ADAPTATION_REFERENCE.md` — **2** incoming references — Shelf.nu Reference and Fitness Network OS Adaptation Plan
 
-## Note Index (18)
+## Note Index (19)
 
 ### Decision Records (2)
 - `adr/ADR-043-federation-scope-reads.md` — **Status:** Accepted
@@ -22,15 +22,16 @@ current evidence in repo
 ### Specs & PRDs (1)
 - `plans/phase11_money_floats.md` — **Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)
 
-### General Notes (15)
+### General Notes (16)
 - `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-12
 - `CORE_GATE_CLOSURE.md` — **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.
+- `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 - `IMPLEMENTATION_MASTER_PLAN.md` — **Status:** Living roadmap (Phase 0–27)
 - `MASTER_SPEC.md` — └── DedicatedDatabase
 - `PRODUCTION_READINESS.md` — **Sürüm:** v1.2 Phase 27 closure
-- `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-12
+- `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-13
 - `RBAC.md` — **Son güncelleme:** 2026-08-12
-- `REVIEW_CHECKPOINT.md` — **Main HEAD:** `a7ee6d9` (PR #52) + open PR for 27.3
+- `REVIEW_CHECKPOINT.md` — **Main HEAD:** `2a1002d`; no open PRs
 - `WAVE_5_5B_CORE_CORRECTNESS.md` — **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.
 - `ops/ASVS_L2_COMPLIANCE_REPORT.md` — **Project:** GymClubNex (Fitness Network OS)
 - `ops/ASVS_PENTEST_STATUS.md` — **Status:** **UNVERIFIED** (Phase 27 P1-11)

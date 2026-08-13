@@ -548,6 +548,7 @@
 - user_agent: String (nullable)
 - expires_at: DateTime
 - is_revoked: Boolean (default)
+- auth_level: String (default)
 - _relations_: user: User
 
 ### UserDevice

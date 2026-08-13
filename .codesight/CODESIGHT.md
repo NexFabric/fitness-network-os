@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 85 routes | 71 models | 36 components | 57 lib files | 23 env vars | 5 middleware | 42% test coverage
-> **Token savings:** this file is ~11,500 tokens. Without it, AI exploration would cost ~111,800 tokens. **Saves ~100,300 tokens per conversation.**
-> **Last scanned:** 2026-08-13 07:04 — re-run after significant changes
+> 86 routes | 71 models | 37 components | 59 lib files | 17 env vars | 6 middleware | 43% test coverage
+> **Token savings:** this file is ~11,600 tokens. Without it, AI exploration would cost ~112,600 tokens. **Saves ~101,000 tokens per conversation.**
+> **Last scanned:** 2026-08-13 18:17 — re-run after significant changes
 
 ---
 
@@ -74,8 +74,8 @@
 - `POST` `/{membership_id}/renew` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/{membership_id}/expire` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/{membership_id}/past-due` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
-- `POST` `/setup` params() → in: Use, out: MfaSetupResponse [db]
-- `POST` `/verify` params() → in: Use, out: MfaSetupResponse [db]
+- `POST` `/setup` params() → out: MfaSetupResponse [db, cache]
+- `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
@@ -83,11 +83,12 @@
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
+- `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/public` params()
 - `GET` `/health` params() [auth, db, cache] ✓
-- `GET` `/live` params()
+- `GET` `/live` params() ✓
 - `GET` `/ready` params() [auth, db, cache]
-- `GET` `/metrics` params()
+- `GET` `/metrics` params() [auth] ✓
 - `GET` `/ping` params() ✓
 
 ---
@@ -642,6 +643,7 @@
 - user_agent: String (nullable)
 - expires_at: DateTime
 - is_revoked: Boolean (default)
+- auth_level: String (default)
 - _relations_: user: User
 
 ### UserDevice
@@ -685,6 +687,7 @@
 - **Login** — `frontend/admin-web/src/pages/Login.tsx`
 - **MemberPortal** — `frontend/admin-web/src/pages/MemberPortal.tsx`
 - **Members** — `frontend/admin-web/src/pages/Members.tsx`
+- **MfaSetup** — `frontend/admin-web/src/pages/MfaSetup.tsx`
 - **Notifications** — `frontend/admin-web/src/pages/Notifications.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
@@ -759,6 +762,7 @@
 - `backend/alembic/versions/s2f3a4b5c6d7_trainer_assignments_and_member_read_all.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/t3a4b5c6d7e8_audit_events_rls.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/v5c6d7e8f9a0_privileged_mfa_session_level.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -766,6 +770,10 @@
   - function main: () -> int
 - `backend/scripts/check_permissions.py` — function main: ()
 - `backend/scripts/check_permissions_db.py` — function main: () -> int
+- `backend/scripts/check_release_truth.py`
+  - function require: (path, *needles) -> list[str]
+  - function forbid: (path, *needles) -> list[str]
+  - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/process_notification_due.py`
   - function build_parser: () -> argparse.ArgumentParser
@@ -808,21 +816,15 @@
 ## Environment Variables
 
 - `ALLOW_DESTRUCTIVE_TEST_RESET` **required** — backend/tests/conftest.py
-- `ALLOW_MOCK_EMAIL` **required** — backend/app/services/notification_providers.py
-- `ALLOW_MOCK_SMS_WA_PUSH` **required** — backend/app/services/notification_providers.py
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
+- `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
 - `ENCRYPTION_KEY` **required** — backend/app/core/security.py
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example
-- `REPORT_STORAGE_DIR` (has default) — backend/app/services/report.py
-- `S3_BUCKET_NAME` **required** — backend/app/services/storage.py
-- `S3_ENDPOINT_URL` **required** — backend/app/services/storage.py
-- `SMTP_FROM` (has default) — backend/app/services/notification_providers.py
-- `SMTP_HOST` **required** — backend/app/services/notification_providers.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
@@ -849,6 +851,7 @@
 - csrf — `backend/app/api/middleware/csrf.py`
 - request_logging — `backend/app/api/middleware/request_logging.py`
 - test_rate_limit — `backend/tests/api/test_rate_limit.py`
+- auth — `frontend/e2e/tests/helpers/auth.ts`
 
 ## rate-limit
 - rate_limit — `backend/app/api/middleware/rate_limit.py`
@@ -866,16 +869,16 @@
 - `backend/app/models/tenant.py` — imported by **38** files
 - `backend/app/models/organization.py` — imported by **33** files
 - `backend/app/db/base.py` — imported by **32** files
-- `backend/app/api/deps.py` — imported by **30** files
+- `backend/app/api/deps.py` — imported by **31** files
 - `backend/app/models/member.py` — imported by **30** files
 - `backend/app/models/rbac.py` — imported by **26** files
 - `backend/app/db/session.py` — imported by **21** files
 - `backend/app/models/membership.py` — imported by **20** files
 - `backend/app/db/rls.py` — imported by **18** files
 - `backend/app/core/authorization.py` — imported by **18** files
-- `frontend/admin-web/src/api/client.ts` — imported by **17** files
-- `backend/app/main.py` — imported by **16** files
-- `backend/app/core/config.py` — imported by **12** files
+- `frontend/admin-web/src/api/client.ts` — imported by **18** files
+- `backend/app/main.py` — imported by **17** files
+- `backend/app/core/config.py` — imported by **16** files
 - `backend/app/models/location.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **12** files
@@ -889,7 +892,7 @@
 - `backend/app/models/tenant.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py`, `backend/app/workers/report.py` +33 more
 - `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +28 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/consent.py`, `backend/app/models/entitlement.py` +27 more
-- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +25 more
+- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +26 more
 - `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py`, `backend/app/services/federation.py`, `backend/app/services/finance.py` +25 more
 - `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py`, `backend/app/services/notification.py` +21 more
 - `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +16 more
@@ -900,8 +903,8 @@
 
 # Test Coverage
 
-> **42%** of routes and models are covered by tests
-> 68 test files found
+> **43%** of routes and models are covered by tests
+> 71 test files found
 
 ## Covered Routes
 
@@ -911,6 +914,8 @@
 - GET:
 - GET:/member
 - GET:/health
+- GET:/live
+- GET:/metrics
 - GET:/ping
 
 ## Covered Models
@@ -983,35 +988,42 @@
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
-| CI | push, pull_request | 8 | — | — |
+| CI | push, pull_request | 10 | — | — |
 
 ### CI
 
 > `.github/workflows/ci.yml`
 
 - **security** on `ubuntu-latest` — 7 steps
-  - `actions/checkout@v4`
+  - `actions/checkout@v5`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
-  - `actions/setup-python@v5`
+  - `actions/setup-python@v6`
 - **sbom** on `ubuntu-latest` — 2 steps
-  - `actions/checkout@v4`
+  - `actions/checkout@v5`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
-- **lint** on `ubuntu-latest` — 9 steps
-  - `actions/checkout@v4`
-  - `actions/setup-python@v5`
+- **lint** on `ubuntu-latest` — 10 steps
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
-  - `actions/checkout@v4`
-  - `actions/setup-python@v5`
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
 - **admin-web** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
 - **scanner-pwa** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
+- **production-image** on `ubuntu-latest` — 2 steps
+  - `actions/checkout@v5`
 - **public-site** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
-- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site)
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
+- **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
+  - `actions/setup-node@v5`
+  - `actions/upload-artifact@v4`
+- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site, production-image, browser-e2e)
 
 ---
 _Source: .github/workflows/ci.yml_

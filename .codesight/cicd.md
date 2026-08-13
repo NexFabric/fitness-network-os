@@ -4,35 +4,42 @@
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
-| CI | push, pull_request | 8 | — | — |
+| CI | push, pull_request | 10 | — | — |
 
 ### CI
 
 > `.github/workflows/ci.yml`
 
 - **security** on `ubuntu-latest` — 7 steps
-  - `actions/checkout@v4`
+  - `actions/checkout@v5`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
-  - `actions/setup-python@v5`
+  - `actions/setup-python@v6`
 - **sbom** on `ubuntu-latest` — 2 steps
-  - `actions/checkout@v4`
+  - `actions/checkout@v5`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
-- **lint** on `ubuntu-latest` — 9 steps
-  - `actions/checkout@v4`
-  - `actions/setup-python@v5`
+- **lint** on `ubuntu-latest` — 10 steps
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
-  - `actions/checkout@v4`
-  - `actions/setup-python@v5`
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
 - **admin-web** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
 - **scanner-pwa** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
+- **production-image** on `ubuntu-latest` — 2 steps
+  - `actions/checkout@v5`
 - **public-site** on `ubuntu-latest` — 4 steps
-  - `actions/checkout@v4`
-  - `actions/setup-node@v4`
-- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site)
+  - `actions/checkout@v5`
+  - `actions/setup-node@v5`
+- **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
+  - `actions/checkout@v5`
+  - `actions/setup-python@v6`
+  - `actions/setup-node@v5`
+  - `actions/upload-artifact@v4`
+- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site, production-image, browser-e2e)
 
 ---
 _Source: .github/workflows/ci.yml_

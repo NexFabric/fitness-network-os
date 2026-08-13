@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Mfa subsystem handles **1 routes** and touches: db.
+The Mfa subsystem handles **1 routes** and touches: db, cache.
 
 ## Routes
 
-- `POST` `/setup` → in: Use, out: MfaSetupResponse [db]
+- `POST` `/setup` → out: MfaSetupResponse [db, cache]
   `backend/app/api/v1/endpoints/mfa.py`
 
 ## Source Files

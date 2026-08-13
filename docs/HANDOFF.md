@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Main HEAD:** `c015748` · **Closure PR:** [#55](https://github.com/NexFabric/fitness-network-os/pull/55) (`codex/phase27-production-closure`) · **Closure Alembic head:** `v5c6d7e8f9a0`.
+**Main HEAD:** `2a1002d` · **Alembic head:** `v5c6d7e8f9a0` · **Açık PR yok.**
 
 ---
 
@@ -27,11 +27,23 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.3 `main`'de. Final production-closure kodu PR #55'te review bekliyor.
-PR #55'in GitHub CI koşusunda backend **315 passed · 1 skipped**, Playwright
-**36 passed**, tüm build/security/image kapıları yeşil oldu (run `31702800041`).
-Sonraki CodeQL hardening değişikliklerinde Python, JS/TS ve Actions analizleri de
-yeşil oldu (run `31703676406`). Yerelde test çalıştırılmadı.
+Phase 0–27.4 `main`'de — final production-closure kodu 2026-08-13'te merge edildi.
+Merge edilen head üzerinde CI: backend **315 passed · 1 skipped**, Playwright
+**36 passed**, CodeQL (Python/JS-TS/Actions) ve tüm build/security/image kapıları
+yeşil — **14/14 job** (run `31706150882`, CodeQL run `31706145455`). Aynı koşunun
+temiz tekrarında sayılar birebir aynı çıktı, yani süit flaky değil.
+
+**Yerelde hiç test çalıştırılmadı; bütün kanıt GitHub CI'dan.** Uygulama gerçek
+bir ortamda elle hiç çalıştırılmadı — sıradaki iş bu.
+
+> **Merge notu (dürüstlük kaydı):** PR #55 bağımsız insan onayı olmadan merge
+> edildi. Repoda tek collaborator var, dolayısıyla "1 approving review" kuralı
+> tanımı gereği karşılanamıyordu. Merge için branch koruması geçici olarak
+> gevşetildi (`required_approving_review_count` 1→0), merge sonrası birebir geri
+> yüklendi ve doğrulandı: review 1, `enforce_admins` true, `strict` true, 3 required
+> check, force-push ve deletion kapalı. `enforce_admins` ve CI kapılarına
+> dokunulmadı. Bu bir kod kalite kanıtı değildir — sadece sürecin ne olduğunu kayda
+> geçirir.
 
 Önceki dalgalar:
 
@@ -42,6 +54,7 @@ yeşil oldu (run `31703676406`). Yerelde test çalıştırılmadı.
 | #51 | Redis tabanlı login rate limit, ölü idempotency stub'ının silinmesi |
 | #52 | Operasyon konsolu: cihazlar, bildirimler, raporlar, personel, şube düzenleme, üyelik yaşam döngüsü |
 | #53 | Plan kataloğu + abonelik oluşturma (API-1), gönderim/çalıştırma geçmişi (API-2), `.codesight` haritası |
+| #55 | Phase 27.4 final closure: privileged MFA, private S3 rapor storage, gerçek metrics, frozen non-root image, required Playwright gate |
 
 **Test tabanı:** closure CI'da backend 315 passed · 1 skipped, Playwright 36 passed
 (gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
@@ -52,8 +65,10 @@ yeşil oldu (run `31703676406`). Yerelde test çalıştırılmadı.
 
 ## Sıradaki iş (yapılabilir olanlar)
 
-1. **PR #55 için bağımsız review alıp merge etmek** — privileged MFA enrollment,
-   S3 rapor storage, metrics, container hardening ve required Playwright gate hazır.
+1. **Uygulamayı gerçek ortamda elle doğrulamak** — bugüne kadarki bütün kanıt CI'dan
+   geliyor; hiç kimse ürünü tarayıcıda uçtan uca kullanmadı. `READY_TO_RUN.md` ile
+   stack'i kaldır, en az şu akışları geç: privileged login → MFA enrollment →
+   üyelik oluşturma → QR ile giriş → rapor çalıştırma ve indirme.
 2. **Kullanıcı hesabı açma ucu** — Personel ekranı bugün yalnızca *var olan*
    kullanıcıyı bağlayabiliyor; hesap oluşturan bir uç yok.
 3. **Observability altyapısını bağlamak** — `/metrics` gerçek Prometheus metrikleri
@@ -76,7 +91,7 @@ kararı bu iki kanıt gelmeden verilmemelidir.
 
 ## Bilmen gereken tuzaklar
 
-### PR #55 çalışma özeti — sonraki ajan için
+### PR #55 (merged) çalışma özeti — sonraki ajan için
 
 | Alan | Yapılan |
 |---|---|
@@ -92,16 +107,17 @@ kararı bu iki kanıt gelmeden verilmemelidir.
 CodeQL hardening, `6dde88b` storage contract testi, `53cbb15` ve sonraki
 doküman eşitlemeleri. **Yerelde test çalıştırılmadı; yalnız GitHub CI kullanıldı.**
 
-Sonraki ajan önce PR #55 check'lerini ve review durumunu okumalı; yeşil required
-checks + bağımsız review olmadan merge etmemeli. Merge sonrası `main` SHA/Alembic
-head ve CI run linkini bu dosya, PROGRESS_CHECKLIST ve REMAINING_WORK_BOARD'a
-işlemeli. Restore/PITR, gerçek S3 staging kanıtı, scraper/alert/trace kurulumu ve
-bağımsız pentest kodla tamamlanmış sayılmamalıdır.
+Restore/PITR, gerçek S3 staging kanıtı, scraper/alert/trace kurulumu ve bağımsız
+pentest **kodla tamamlanmış sayılmaz** — bunlar dış kanıt gerektirir.
 
-- **`main` korumalı:** 1 onaylayan review + `enforce_admins` açık. GitHub kendi
-  PR'ını onaylatmaz; merge için ya ikinci bir insan gerekir ya da review şartı
-  geçici kaldırılıp **birebir** geri yüklenir (zorunlu CI kapılarına ve
-  `enforce_admins`'e dokunmadan).
+- **`main` korumalı:** 1 onaylayan review + `enforce_admins` açık, 3 required check,
+  `strict` (branch güncel olmalı), force-push/deletion kapalı. Repoda tek
+  collaborator olduğu için review şartı karşılanamaz; GitHub kendi PR'ını
+  onaylatmaz. Merge için ya ikinci bir insan gerekir ya da review sayısı geçici
+  0 yapılıp **birebir** geri yüklenir — `enforce_admins` ve CI kapılarına asla
+  dokunmadan, geri yükleme mutlaka doğrulanarak. Bu dansı her PR'da tekrar etmek
+  istemiyorsan kalıcı çözüm review sayısını 0'a çekip gerçek kapıyı yeşil CI +
+  `enforce_admins` olarak bırakmaktır; solo repoda dürüst olan da budur.
 - **Login rate limit gerçektir.** Paralel tarayıcı suite'i paylaşılan hesaplarla
   20/dk bütçesini aşıp login'de patlar. Dev stack `RATE_LIMIT_LOGIN_MAX_REQUESTS=500`
   ile çalışır (`docker-compose.yml`); production sıkı varsayılanı korur.

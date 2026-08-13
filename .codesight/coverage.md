@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **42%** of routes and models are covered by tests
-> 68 test files found
+> **43%** of routes and models are covered by tests
+> 71 test files found
 
 ## Covered Routes
 
@@ -11,6 +11,8 @@
 - GET:
 - GET:/member
 - GET:/health
+- GET:/live
+- GET:/metrics
 - GET:/ping
 
 ## Covered Models
