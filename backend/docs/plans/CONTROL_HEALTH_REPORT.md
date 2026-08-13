@@ -4,13 +4,13 @@
 
 | Check | Result |
 |-------|--------|
-| Local `main` == `origin/main` | **YES** at `8b2904e` |
+| Local `main` == `origin/main` | **YES** at `a60d55c` |
 | Open PRs | **0** |
 | Branch protection reviews | **1** required, `enforce_admins` on |
 | Alembic head | `u4b5c6d7e8f9` |
 | `GET /health` | **200** (when stack up) |
 | Admin `:5173` / Scanner `:5174` | Runnable (Vite host) |
-| Full local pytest | **311 passed · 1 skipped** (2026-08-13) |
+| Full local pytest | **309 passed · 1 skipped** (2026-08-13), matches CI |
 
 ## Merged waves (truth)
 
@@ -22,7 +22,7 @@
 | UI brand | #44–#45 | Scanner Access + Admin teal brand |
 | Docs | #43 + docs truth pass | SHA / checklist aligned |
 | Phase 27 + 27.1 | **#49 merged** | RBAC portals, PWA icons, CSRF narrowing, device HMAC signing (ADR-044) |
-| Phase 27.2 + 27.3 | **#52 merged, 27.3 in PR** | Ops console depth, plan catalogue + membership creation, history endpoints |
+| Phase 27.2 + 27.3 | **#52 + #53 merged** | Ops console depth, plan catalogue + membership creation, history endpoints |
 
 ## Phase matrix
 

@@ -2,6 +2,8 @@
 
 Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için source of truth'tur. Bütün geliştirme adımlarında bu belgelere uygunluk esastır.
 
+**Devralıyorsan buradan başla: `docs/HANDOFF.md`** — tek giriş noktası: nerede ne var, ne yapıldı, sırada ne var, hangi tuzaklar seni bekliyor.
+
 **Context map:** `.codesight/wiki/index.md` — AST-derived route/model/file map, ~200 tokens to load. Read it before searching the tree; load the targeted article (e.g. `plans.md`, `devices.md`) instead of scanning the codebase. It says *where* things are, never *how* they work — always read the source before changing it. Regenerated automatically by `.git/hooks/pre-commit`; refresh manually with `npx codesight --wiki`.
 
 **Progress truth (2026-08-13):** Phase **27 / 27.1 / 27.2 / 27.3** on `main` — RBAC portals, device channel HMAC signing + nonce (ADR-044), Redis-backed login rate limit, ops console depth (devices, notifications, reports, staff, location edit, membership lifecycle), and the plan catalogue + membership creation that closed API-1. Alembic head `u4b5c6d7e8f9`. Phase **26 CORE MVP EXIT GATE is still NOT PASSED** — no external pentest, not production-ready.

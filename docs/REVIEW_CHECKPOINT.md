@@ -1,7 +1,7 @@
 # Review Checkpoint — Main status
 
-**Date:** 2026-08-12  
-**Main HEAD:** `a7ee6d9` (PR #52) + open PR for 27.3  
+**Date:** 2026-08-13  
+**Main HEAD:** `a60d55c` (PR #53) — no open PRs  
 **Alembic head:** `u4b5c6d7e8f9`
 
 ## Merged on main (truth)
@@ -15,7 +15,7 @@
 | Health docs | PR #28 → `398e858` |
 | Phase 27 UI/RBAC closure | PR #49 → `8b2904e` — role-guarded portals, `/me/session`, trainer assignment scope, federation `/admin/*`, PWA icon set, CSRF Bearer narrowing |
 | Phase 27.2 ops console depth | PR #52 → `a7ee6d9` — devices, notifications, reports, staff, location edit, membership lifecycle |
-| Phase 27.3 plan catalogue | open PR — `/plans` + `POST /memberships` (API-1), history endpoints (API-2) |
+| Phase 27.3 plan catalogue | PR #53 → `a60d55c` — `/plans` + `POST /memberships` (API-1), delivery/run history (API-2) |
 | Phase 27.1 device hardening | PR #49 → `8b2904e` — HMAC request signing + single-use nonce on the device channel (ADR-044), non-extractable `CryptoKey` on the scanner, CodeQL closure |
 
 ## Open / residual
@@ -35,7 +35,7 @@ Next = production depth (providers, full security/ops, exit PASS)
 
 ## Health (last control — 2026-08-12, local)
 
-- `pytest` 311 passed · 1 skipped (local)  
+- `pytest` 309 passed · 1 skipped (local **and** CI on `a60d55c`)  
 - Playwright e2e **37 passed** (real Chromium, real backend), zero console errors across all 5 portals  
 - ruff, mypy (85 files), `alembic check` (no drift), `check_permissions`, `check_permissions_db`, `check_tenancy`, `check_no_money_floats` PASS  
 - admin-web + scanner-pwa builds PASS  
