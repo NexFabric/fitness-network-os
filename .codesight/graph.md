@@ -15,7 +15,7 @@
 - `frontend/admin-web/src/api/client.ts` — imported by **19** files
 - `backend/app/core/authorization.py` — imported by **18** files
 - `backend/app/main.py` — imported by **18** files
-- `backend/app/core/config.py` — imported by **16** files
+- `backend/app/core/config.py` — imported by **17** files
 - `backend/app/models/location.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **12** files

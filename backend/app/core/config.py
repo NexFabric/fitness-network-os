@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     S3_SSE_ALGORITHM: str = "AES256"
     S3_KMS_KEY_ID: str = ""
     METRICS_BEARER_TOKEN: str = ""
+    ENCRYPTION_KEY: str = ""
 
     # Login rate limit budget (per identifier, sliding window). Production keeps
     # the tight default; the dev stack raises it so a parallel e2e run against a

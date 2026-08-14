@@ -5,7 +5,7 @@
 
 > 88 routes | 73 models | 38 components | 63 lib files | 17 env vars | 6 middleware | 43% test coverage
 > **Token savings:** this file is ~12,100 tokens. Without it, AI exploration would cost ~115,800 tokens. **Saves ~103,800 tokens per conversation.**
-> **Last scanned:** 2026-08-14 19:40 — re-run after significant changes
+> **Last scanned:** 2026-08-14 20:03 — re-run after significant changes
 
 ---
 
@@ -852,7 +852,7 @@
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
-- `ENCRYPTION_KEY` **required** — backend/app/core/security.py
+- `ENCRYPTION_KEY` (has default) — backend/.env
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
@@ -911,7 +911,7 @@
 - `frontend/admin-web/src/api/client.ts` — imported by **19** files
 - `backend/app/core/authorization.py` — imported by **18** files
 - `backend/app/main.py` — imported by **18** files
-- `backend/app/core/config.py` — imported by **16** files
+- `backend/app/core/config.py` — imported by **17** files
 - `backend/app/models/location.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **12** files

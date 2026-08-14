@@ -52,7 +52,6 @@ Changes to these files have the widest blast radius across the codebase:
 
 - `ALLOW_DESTRUCTIVE_TEST_RESET` — `backend/tests/conftest.py`
 - `CI` — `frontend/e2e/playwright.config.ts`
-- `ENCRYPTION_KEY` — `backend/app/core/security.py`
 - `ENVIRONMENT` — `backend/app/core/security.py`
 - `NEXT_PUBLIC_ADMIN_URL` — `frontend/public-site/src/components/Cta.tsx`
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`

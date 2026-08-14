@@ -43,7 +43,9 @@ from cryptography.fernet import Fernet
 
 
 def get_fernet() -> Fernet:
-    key = os.environ.get("ENCRYPTION_KEY")
+    from app.core.config import settings
+
+    key = os.environ.get("ENCRYPTION_KEY") or settings.ENCRYPTION_KEY
     if not key:
         # Generate a dummy key for tests if not provided
         if os.getenv("ENVIRONMENT") == "test":
