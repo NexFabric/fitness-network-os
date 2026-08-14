@@ -77,22 +77,28 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Yasal</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <span
-                  className="text-sm text-ink-muted/60"
-                  title="Yakında"
+                <Link
+                  href="/privacy"
+                  className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Gizlilik politikası
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-ink-muted/60" title="Yakında">
+                <Link
+                  href="/terms"
+                  className="text-sm text-ink-muted transition-colors hover:text-brand"
+                >
                   Hizmet şartları
-                </span>
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-ink-muted/60" title="Yakında">
+                <Link
+                  href="/kvkk"
+                  className="text-sm text-ink-muted transition-colors hover:text-brand"
+                >
                   KVKK metni
-                </span>
+                </Link>
               </li>
             </ul>
           </div>
@@ -108,7 +114,7 @@ export function Footer() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
             </span>
             <span className="font-mono text-xs text-ink-muted">
-              Tüm sistemler operasyonel
+              Platform Altyapısı · Aktif
             </span>
           </div>
         </div>

@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 88 routes | 73 models | 38 components | 63 lib files | 17 env vars | 6 middleware | 43% test coverage
-> **Token savings:** this file is ~12,100 tokens. Without it, AI exploration would cost ~115,800 tokens. **Saves ~103,800 tokens per conversation.**
-> **Last scanned:** 2026-08-14 20:03 — re-run after significant changes
+> 90 routes | 73 models | 41 components | 64 lib files | 17 env vars | 6 middleware | 42% test coverage
+> **Token savings:** this file is ~12,200 tokens. Without it, AI exploration would cost ~118,100 tokens. **Saves ~105,900 tokens per conversation.**
+> **Last scanned:** 2026-08-14 20:47 — re-run after significant changes
 
 ---
 
@@ -61,6 +61,8 @@
 - `GET` `/entitlements` params() → in: AsyncSessio, out: MeSessionResponse [auth]
 - `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
@@ -724,8 +726,11 @@
 - **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
 - **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
+- **KvkkPage** — `frontend/public-site/src/app/kvkk/page.tsx`
 - **RootLayout** — `frontend/public-site/src/app/layout.tsx`
 - **Home** — `frontend/public-site/src/app/page.tsx`
+- **PrivacyPage** — `frontend/public-site/src/app/privacy/page.tsx`
+- **TermsPage** — `frontend/public-site/src/app/terms/page.tsx`
 - **Architecture** [client] — `frontend/public-site/src/components/Architecture.tsx`
 - **BrandMark** — props: size, showWordmark — `frontend/public-site/src/components/BrandMark.tsx`
 - **Cta** [client] — `frontend/public-site/src/components/Cta.tsx`
@@ -796,6 +801,7 @@
 - `backend/alembic/versions/x1a2b3c4d5e6_tenant_lifecycle_status.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x2b3c4d5e6f7_break_glass_sessions.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x3c4d5e6f7a8_data_retention_policies.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x4d5e6f7a8b9_seed_finance_read_self.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -936,7 +942,7 @@
 
 # Test Coverage
 
-> **43%** of routes and models are covered by tests
+> **42%** of routes and models are covered by tests
 > 75 test files found
 
 ## Covered Routes

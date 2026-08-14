@@ -8,7 +8,7 @@
 
 ## Scale
 
-88 API routes · 73 database models · 38 UI components · 63 library files · 6 middleware layers · 17 environment variables
+90 API routes · 73 database models · 41 UI components · 64 library files · 6 middleware layers · 17 environment variables
 
 ## Subsystems
 
@@ -19,7 +19,7 @@
 - **[Entitlements](./entitlements.md)** — 2 routes — touches: auth
 - **[Finance](./finance.md)** — 14 routes
 - **[Locations](./locations.md)** — 4 routes
-- **[Me](./me.md)** — 7 routes — touches: auth, db
+- **[Me](./me.md)** — 9 routes — touches: auth, db
 - **[Members](./members.md)** — 10 routes — touches: db
 - **[Memberships](./memberships.md)** — 6 routes — touches: auth
 - **[Mfa](./mfa.md)** — 1 routes — touches: db, cache
@@ -33,9 +33,9 @@
 
 **Database:** sqlalchemy, 73 models — see [database.md](./database.md)
 
-**UI:** 38 components (react) — see [ui.md](./ui.md)
+**UI:** 41 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 63 files — see [libraries.md](./libraries.md)
+**Libraries:** 64 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 

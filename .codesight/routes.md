@@ -50,6 +50,8 @@
 - `GET` `/entitlements` params() → in: AsyncSessio, out: MeSessionResponse [auth]
 - `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse

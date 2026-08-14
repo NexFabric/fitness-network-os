@@ -181,6 +181,7 @@ roles:
       - "entitlements:read:self"
       - "entitlements:check:self"
       - "access:issue:self"
+      - "finance:read:self"
 
 permissions:
   - id: "federation:read"
@@ -233,6 +234,8 @@ permissions:
     description: "Manage discounts and finance configuration"
   - id: "finance:reconcile"
     description: "Run payment reconciliation"
+  - id: "finance:read:self"
+    description: "Read own invoices and payment history via /me (bound member)"
   - id: "profile:read"
     description: "Read own profile"
   - id: "profile:write"
