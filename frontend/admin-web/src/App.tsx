@@ -14,6 +14,7 @@ import Plans from './pages/Plans'
 import Reports from './pages/Reports'
 import Staff from './pages/Staff'
 import Finance from './pages/Finance'
+import Reception from './pages/Reception'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { AuthProvider } from './auth/AuthContext'
 import {
@@ -103,6 +104,7 @@ export default function App() {
             }
           >
             <Route index element={<Dashboard />} />
+            <Route path="reception" element={<Reception />} />
             <Route path="members" element={<Members />} />
             <Route path="locations" element={<Locations />} />
             <Route path="finance" element={<Finance />} />

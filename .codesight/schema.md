@@ -37,6 +37,7 @@
 - denial_reason: String (nullable)
 - jti: String (nullable, index)
 - method: String (nullable, default)
+- snapshot_data: with_variant (nullable)
 - timestamp: DateTime (default)
 - _relations_: member: Member, device: Device
 

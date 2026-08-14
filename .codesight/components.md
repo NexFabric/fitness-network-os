@@ -20,6 +20,7 @@
 - **PasswordChange** — `frontend/admin-web/src/pages/PasswordChange.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
+- **Reception** — `frontend/admin-web/src/pages/Reception.tsx`
 - **Reports** — `frontend/admin-web/src/pages/Reports.tsx`
 - **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
 - **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`

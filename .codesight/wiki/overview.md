@@ -8,13 +8,14 @@
 
 ## Scale
 
-90 API routes · 73 database models · 41 UI components · 64 library files · 6 middleware layers · 17 environment variables
+94 API routes · 73 database models · 42 UI components · 65 library files · 6 middleware layers · 17 environment variables
 
 ## Subsystems
 
 - **[Auth](./auth.md)** — 6 routes — touches: auth, db
 - **[Access](./access.md)** — 5 routes — touches: auth
 - **[Admin](./admin.md)** — 5 routes
+- **[Dashboard](./dashboard.md)** — 1 routes — touches: auth, db
 - **[Devices](./devices.md)** — 2 routes — touches: auth, db
 - **[Entitlements](./entitlements.md)** — 2 routes — touches: auth
 - **[Finance](./finance.md)** — 14 routes
@@ -25,6 +26,7 @@
 - **[Mfa](./mfa.md)** — 1 routes — touches: db, cache
 - **[Notifications](./notifications.md)** — 5 routes — touches: db
 - **[Plans](./plans.md)** — 3 routes
+- **[Reception](./reception.md)** — 3 routes — touches: auth, db
 - **[Reports](./reports.md)** — 6 routes
 - **[Staff](./staff.md)** — 2 routes — touches: cache
 - **[Telemetry](./telemetry.md)** — 1 routes
@@ -33,20 +35,20 @@
 
 **Database:** sqlalchemy, 73 models — see [database.md](./database.md)
 
-**UI:** 41 components (react) — see [ui.md](./ui.md)
+**UI:** 42 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 64 files — see [libraries.md](./libraries.md)
+**Libraries:** 65 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **45** files
-- `backend/app/models/tenant.py` — imported by **43** files
-- `backend/app/models/organization.py` — imported by **37** files
+- `backend/app/models/user.py` — imported by **48** files
+- `backend/app/models/tenant.py` — imported by **44** files
+- `backend/app/models/organization.py` — imported by **38** files
 - `backend/app/db/base.py` — imported by **34** files
-- `backend/app/api/deps.py` — imported by **32** files
-- `backend/app/models/member.py` — imported by **30** files
+- `backend/app/api/deps.py` — imported by **34** files
+- `backend/app/models/member.py` — imported by **33** files
 
 ## Required Environment Variables
 

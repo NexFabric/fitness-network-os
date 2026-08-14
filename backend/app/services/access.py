@@ -269,6 +269,15 @@ class AccessService:
                     status=AccessStatus.DENIED,
                     reason=ent.get("reason") or "entitlement_denied",
                     device_id=device_id,
+                    snapshot_data={
+                        "action": action,
+                        "quantity": quantity,
+                        "consume": consume,
+                        "remaining": remaining,
+                        "entitlement_state": ent.get("last_known_state"),
+                        "denial_reason": ent.get("reason") or "entitlement_denied",
+                        "policy_version": "v1.0",
+                    },
                 )
                 return ValidateQrResult(
                     granted=False,
@@ -286,6 +295,13 @@ class AccessService:
             status=AccessStatus.GRANTED,
             reason=None,
             device_id=device_id,
+            snapshot_data={
+                "action": action,
+                "quantity": quantity,
+                "consume": consume,
+                "remaining": remaining,
+                "policy_version": "v1.0",
+            },
         )
         checkin_id = None
         if location_id is None:
@@ -340,6 +356,7 @@ class AccessService:
         reason: str,
         *,
         device_id: UUID | None = None,
+        snapshot_data: dict | None = None,
     ) -> ValidateQrResult:
         attempt = await self._record_attempt(
             tenant_id,
@@ -348,6 +365,7 @@ class AccessService:
             status=AccessStatus.DENIED,
             reason=reason,
             device_id=device_id,
+            snapshot_data=snapshot_data or {"denial_reason": reason, "policy_version": "v1.0"},
         )
         return ValidateQrResult(
             granted=False,
@@ -366,6 +384,7 @@ class AccessService:
         status: AccessStatus,
         reason: str | None,
         device_id: UUID | None,
+        snapshot_data: dict | None = None,
     ) -> AccessAttempt:
         attempt = AccessAttempt(
             tenant_id=tenant_id,
@@ -375,6 +394,7 @@ class AccessService:
             denial_reason=reason,
             jti=jti,
             method="QR_SCAN",
+            snapshot_data=snapshot_data,
             timestamp=datetime.now(UTC),
         )
         self.db.add(attempt)

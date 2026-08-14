@@ -152,8 +152,8 @@ export default function MemberPortal() {
         const myConsents = await api<MeConsent[]>('/api/v1/me/consents')
         setConsents(myConsents)
       }
-    } catch (err) {
-      console.error('Tab verisi yüklenemedi:', err)
+    } catch {
+      // Handled silently
     }
   }, [])
 
@@ -364,7 +364,7 @@ export default function MemberPortal() {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Faturalar
+                Ödemeler
               </button>
               <button
                 type="button"

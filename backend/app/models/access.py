@@ -135,6 +135,9 @@ class AccessAttempt(TenantMixin, Base):
     denial_reason: Mapped[str | None] = mapped_column(String(128), nullable=True)
     jti: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     method: Mapped[str | None] = mapped_column(String(32), nullable=True, default="QR_SCAN")
+    snapshot_data: Mapped[dict | None] = mapped_column(
+        JSONB().with_variant(JSON, "sqlite"), nullable=True
+    )
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

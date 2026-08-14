@@ -21,7 +21,7 @@ The Infra subsystem handles **6 routes** and touches: auth, db, cache.
 
 ## High-Impact Files
 
-- `backend/app/main.py` — imported by 18 files
+- `backend/app/main.py` — imported by 19 files
 
 ## Source Files
 

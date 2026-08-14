@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     access,
     admin,
     auth,
+    dashboard,
     devices,
     entitlements,
     finance,
@@ -14,6 +15,7 @@ from app.api.v1.endpoints import (
     mfa,
     notifications,
     plans,
+    reception,
     reports,
     staff,
     telemetry,
@@ -24,6 +26,8 @@ api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(mfa.router, prefix="/auth/mfa", tags=["mfa"])
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+api_router.include_router(reception.router, prefix="/reception", tags=["reception"])
 api_router.include_router(plans.router, prefix="/plans", tags=["plans"])
 # Creation sits with the catalogue it depends on, but keeps the /memberships path.
 api_router.include_router(
