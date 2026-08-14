@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 73 models
+**sqlalchemy** — 78 models
 
 ### Base
 
@@ -129,6 +129,29 @@ pk: `id` (UUID)
 - `source`: String _(nullable)_
 - `ip_address`: String _(nullable)_
 
+### DataImportBatch
+
+- `filename`: String
+- `status`: String _(default)_
+- `total_rows`: Integer _(default)_
+- `valid_rows`: Integer _(default)_
+- `invalid_rows`: Integer _(default)_
+- `imported_rows`: Integer _(default)_
+- `created_by_user_id`: UUID
+- `created_at`: DateTime _(default)_
+- `completed_at`: DateTime _(nullable)_
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+
+- `batch_id`: UUID _(index)_
+- `row_number`: Integer
+- `status`: String _(default)_
+- `raw_data`: with_variant
+- `parsed_data`: with_variant _(nullable)_
+- `error_message`: Text _(nullable)_
+- _relations_: batch: DataImportBatch
+
 ### EntitlementDefinition
 
 - `code`: String
@@ -226,6 +249,8 @@ fk: user_id
 - `total_amount_minor`: Integer _(default)_
 - `paid_amount_minor`: Integer _(default)_
 - `discount_amount_minor`: Integer _(default)_
+- `retry_count`: Integer _(default)_
+- `next_retry_at`: DateTime _(nullable)_
 - `idempotency_key`: String _(nullable)_
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -327,6 +352,29 @@ fk: user_id
 - `currency`: String _(default)_
 - `status`: String _(default)_
 - `matched_payment_id`: unknown _(nullable)_
+
+### PaymentAttempt
+
+- `invoice_id`: UUID _(index)_
+- `billing_account_id`: UUID _(index)_
+- `attempt_number`: Integer _(default)_
+- `amount_minor`: Integer
+- `currency`: String _(default)_
+- `status`: String _(default)_
+- `gateway_provider`: String _(nullable)_
+- `gateway_attempt_ref`: String _(nullable)_
+- `error_code`: String _(nullable)_
+- `error_message`: Text _(nullable)_
+- `attempted_at`: DateTime _(default)_
+
+### DunningPolicy
+
+- `name`: String _(default)_
+- `grace_period_days`: Integer _(default)_
+- `max_retry_attempts`: Integer _(default)_
+- `retry_interval_days`: Integer _(default)_
+- `block_access_on_failure`: Boolean _(default)_
+- `is_active`: Boolean _(default)_
 
 ### Lead
 
@@ -532,6 +580,13 @@ fk: recipient_user_id
 - `correlation_id`: String _(nullable)_
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+
+- `current_stage`: String _(default)_
+- `step_data`: with_variant
+- `is_completed`: Boolean _(default)_
+- `completed_at`: DateTime _(nullable)_
+
 ### Organization
 
 - `name`: String
@@ -707,14 +762,14 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **48** files
-- `backend/app/models/tenant.py` — imported by **44** files
-- `backend/app/models/organization.py` — imported by **38** files
-- `backend/app/db/base.py` — imported by **34** files
-- `backend/app/models/member.py` — imported by **33** files
-- `backend/app/models/rbac.py` — imported by **29** files
-- `backend/app/db/session.py` — imported by **23** files
-- `backend/app/models/membership.py` — imported by **23** files
+- `backend/app/models/user.py` — imported by **51** files
+- `backend/app/models/tenant.py` — imported by **45** files
+- `backend/app/models/organization.py` — imported by **39** files
+- `backend/app/db/base.py` — imported by **36** files
+- `backend/app/models/member.py` — imported by **35** files
+- `backend/app/models/rbac.py` — imported by **30** files
+- `backend/app/db/session.py` — imported by **24** files
+- `backend/app/models/membership.py` — imported by **24** files
 - `backend/app/db/rls.py` — imported by **19** files
 - `backend/app/models/access.py` — imported by **14** files
 - `backend/app/models/location.py` — imported by **14** files

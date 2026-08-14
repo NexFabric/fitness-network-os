@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     admin,
     auth,
     dashboard,
+    data_import,
     devices,
     entitlements,
     finance,
@@ -14,6 +15,7 @@ from app.api.v1.endpoints import (
     memberships,
     mfa,
     notifications,
+    onboarding,
     plans,
     reception,
     reports,
@@ -49,5 +51,6 @@ api_router.include_router(
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(telemetry.router, prefix="/telemetry", tags=["telemetry"])
 api_router.include_router(trainers.router, prefix="/trainers", tags=["trainers"])
-# Phase 15.5C: generic /outbox HTTP ingress removed — OutboxService is in-process only.
+api_router.include_router(data_import.router, prefix="/import", tags=["import"])
+api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 api_router.include_router(me.router, prefix="/me", tags=["me"])

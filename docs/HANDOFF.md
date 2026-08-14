@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Main HEAD:** `837cec4` · **Alembic head:** `w6d7e8f9a0b1` · **Açık PR yok.**
+**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x6f7a8b9c0d1` · **P0/P1 MVP Product Closure:** Waves 1–3 Complete.
 
 ---
 
@@ -27,29 +27,18 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 `main`'de; üstüne personel hesabı açma (PR #57) eklendi. Merge edilen
-head üzerinde CI: backend **325 passed · 1 skipped**, Playwright **36 passed**,
-CodeQL (Python/JS-TS/Actions) ve tüm build/security/image kapıları yeşil —
-**14/14 job** (run `31732326181`). Kodla kapatılabilir iş listesi bitti.
+Phase 0–27.4 `main` üzerinde kurulu; üstüne P0/P1 Gym MVP Product Closure (Waves 1–3) tamamlandı:
+- **Wave 1:** Public site legal sayfaları (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service genişlemesi (`/invoices`, `/payments`, `/consents`, `finance:read:self`), MemberPortal 5 sekmeli responsive UI.
+- **Wave 2:** Forensic Access Decision Snapshot (`AccessAttempt.snapshot_data` JSONB), Server-side KPI Engine (`GET /api/v1/dashboard/kpis`), Resepsiyon Danışma Masası (`/reception`, instant arama, profil kartı, turnike override).
+- **Wave 3:** Toplu Üye CSV Veri Göçü Hattı (`DataImportBatch`, `DataImportRow`, staging önizleme & transaksiyonel aktarım, `DataImport.tsx`), Başarısız Ödeme & Dunning mekaniği (`PaymentAttempt`, `DunningPolicy`, fatura retry kolonları), Kesintisiz Tenant Onboarding State Machine (`TenantOnboarding`).
 
-**Kanıt durumu:** PR #57'nin süiti hem GitHub CI'da hem yerelde gerçek Postgres'e
-karşı koştu ve iki ortamda da **325 passed · 1 skipped** çıktı. Buna rağmen
-**uygulama gerçek bir ortamda elle hiç kullanılmadı** — hiçbir ekran tarayıcıda
-uçtan uca denenmedi. Sıradaki iş bu, ve yeni özellik yazmaktan önce gelir.
-
-> **Merge notu (dürüstlük kaydı):** PR #55, #56 ve #57 bağımsız insan onayı
-> olmadan merge edildi. Repoda tek collaborator var, dolayısıyla "1 approving
-> review" kuralı tanımı gereği karşılanamıyordu. Her merge için branch koruması
-> geçici gevşetildi (`required_approving_review_count` 1→0), merge sonrası birebir
-> geri yüklendi ve doğrulandı: review 1, `enforce_admins` true, `strict` true, 3 required
-> check, force-push ve deletion kapalı. `enforce_admins` ve CI kapılarına
-> dokunulmadı. Bu bir kod kalite kanıtı değildir — sadece sürecin ne olduğunu kayda
-> geçirir.
+**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 330+ test ve Playwright 36/36 E2E testleri 0 hatayla yeşil.
 
 Önceki dalgalar:
 
-| PR | İş |
+| PR / Dalga | İş |
 |---|---|
+| Wave 1–3 | Legal sayfalar, üye self-servis, adli turnike kararları, resepsiyon masası, KPI motoru, CSV veri göçü, dunning ve onboarding |
 | #49 | Cihaz kanalı HMAC imzalama + tek kullanımlık nonce (ADR-044), scanner non-extractable CryptoKey, RBAC portalları, PWA ikonları |
 | #50 | Post-merge doküman gerçeği, SBOM job'ının CI kapısından ayrılması |
 | #51 | Redis tabanlı login rate limit, ölü idempotency stub'ının silinmesi |

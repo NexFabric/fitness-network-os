@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**42 components** (react)
+**43 components** (react)
 
 ## Client Components
 
@@ -25,6 +25,7 @@
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
+- **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
 - **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
 - **Locations** — `frontend/admin-web/src/pages/Locations.tsx`

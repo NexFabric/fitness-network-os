@@ -24,6 +24,10 @@
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
+- `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
+- `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `GET` `/batch/{batch_id}` params(batch_id) → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `POST` `/batch/{batch_id}/commit` params(batch_id) → in: CsvUploadRequest, out: ImportBatchResponse [auth]
 - `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
 - `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
 - `POST` `/revoke` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
@@ -71,6 +75,8 @@
 - `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
+- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
+- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db]
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
 - `GET` `/versions` params() → in: UUI, out: PlanResponse
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse

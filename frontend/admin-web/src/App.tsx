@@ -15,6 +15,7 @@ import Reports from './pages/Reports'
 import Staff from './pages/Staff'
 import Finance from './pages/Finance'
 import Reception from './pages/Reception'
+import DataImport from './pages/DataImport'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { AuthProvider } from './auth/AuthContext'
 import {
@@ -106,6 +107,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="reception" element={<Reception />} />
             <Route path="members" element={<Members />} />
+            <Route path="import" element={<DataImport />} />
             <Route path="locations" element={<Locations />} />
             <Route path="finance" element={<Finance />} />
             {/* devices:manage is held only by GYM_OWNER/GYM_ADMIN — the API is

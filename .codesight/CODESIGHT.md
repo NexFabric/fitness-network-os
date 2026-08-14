@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 94 routes | 73 models | 42 components | 65 lib files | 17 env vars | 6 middleware | 41% test coverage
-> **Token savings:** this file is ~12,400 tokens. Without it, AI exploration would cost ~120,800 tokens. **Saves ~108,400 tokens per conversation.**
-> **Last scanned:** 2026-08-14 21:00 — re-run after significant changes
+> 100 routes | 78 models | 43 components | 66 lib files | 17 env vars | 6 middleware | 40% test coverage
+> **Token savings:** this file is ~13,000 tokens. Without it, AI exploration would cost ~126,400 tokens. **Saves ~113,400 tokens per conversation.**
+> **Last scanned:** 2026-08-14 21:26 — re-run after significant changes
 
 ---
 
@@ -35,6 +35,10 @@
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
+- `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
+- `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `GET` `/batch/{batch_id}` params(batch_id) → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `POST` `/batch/{batch_id}/commit` params(batch_id) → in: CsvUploadRequest, out: ImportBatchResponse [auth]
 - `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
 - `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
 - `POST` `/revoke` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
@@ -82,6 +86,8 @@
 - `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
+- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
+- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db]
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
 - `GET` `/versions` params() → in: UUI, out: PlanResponse
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
@@ -212,6 +218,27 @@
 - source: String (nullable)
 - ip_address: String (nullable)
 
+### DataImportBatch
+- filename: String
+- status: String (default)
+- total_rows: Integer (default)
+- valid_rows: Integer (default)
+- invalid_rows: Integer (default)
+- imported_rows: Integer (default)
+- created_by_user_id: UUID
+- created_at: DateTime (default)
+- completed_at: DateTime (nullable)
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+- batch_id: UUID (index)
+- row_number: Integer
+- status: String (default)
+- raw_data: with_variant
+- parsed_data: with_variant (nullable)
+- error_message: Text (nullable)
+- _relations_: batch: DataImportBatch
+
 ### EntitlementDefinition
 - code: String
 - name: String
@@ -295,6 +322,8 @@
 - total_amount_minor: Integer (default)
 - paid_amount_minor: Integer (default)
 - discount_amount_minor: Integer (default)
+- retry_count: Integer (default)
+- next_retry_at: DateTime (nullable)
 - idempotency_key: String (nullable)
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -385,6 +414,27 @@
 - currency: String (default)
 - status: String (default)
 - matched_payment_id: unknown (nullable)
+
+### PaymentAttempt
+- invoice_id: UUID (index)
+- billing_account_id: UUID (index)
+- attempt_number: Integer (default)
+- amount_minor: Integer
+- currency: String (default)
+- status: String (default)
+- gateway_provider: String (nullable)
+- gateway_attempt_ref: String (nullable)
+- error_code: String (nullable)
+- error_message: Text (nullable)
+- attempted_at: DateTime (default)
+
+### DunningPolicy
+- name: String (default)
+- grace_period_days: Integer (default)
+- max_retry_attempts: Integer (default)
+- retry_interval_days: Integer (default)
+- block_access_on_failure: Boolean (default)
+- is_active: Boolean (default)
 
 ### Lead
 - first_name: String
@@ -563,6 +613,12 @@
 - correlation_id: String (nullable)
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+- current_stage: String (default)
+- step_data: with_variant
+- is_completed: Boolean (default)
+- completed_at: DateTime (nullable)
+
 ### Organization
 - name: String
 - domain: String (unique, nullable)
@@ -716,6 +772,7 @@
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
+- **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
 - **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
 - **Locations** — `frontend/admin-web/src/pages/Locations.tsx`
@@ -809,6 +866,11 @@
 - `backend/alembic/versions/x3c4d5e6f7a8_data_retention_policies.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x4d5e6f7a8b9_seed_finance_read_self.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x5e6f7a8b9c0_access_attempt_snapshot.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x6f7a8b9c0d1_wave3_migration_dunning_onboarding.py`
+  - function enable_rls: (table_name) -> None
+  - function disable_rls: (table_name) -> None
+  - function upgrade: () -> None
+  - function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -911,46 +973,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **48** files
-- `backend/app/models/tenant.py` — imported by **44** files
-- `backend/app/models/organization.py` — imported by **38** files
-- `backend/app/db/base.py` — imported by **34** files
-- `backend/app/api/deps.py` — imported by **34** files
-- `backend/app/models/member.py` — imported by **33** files
-- `backend/app/models/rbac.py` — imported by **29** files
-- `backend/app/db/session.py` — imported by **23** files
-- `backend/app/models/membership.py` — imported by **23** files
-- `backend/app/core/authorization.py` — imported by **20** files
-- `frontend/admin-web/src/api/client.ts` — imported by **20** files
+- `backend/app/models/user.py` — imported by **51** files
+- `backend/app/models/tenant.py` — imported by **45** files
+- `backend/app/models/organization.py` — imported by **39** files
+- `backend/app/db/base.py` — imported by **36** files
+- `backend/app/api/deps.py` — imported by **36** files
+- `backend/app/models/member.py` — imported by **35** files
+- `backend/app/models/rbac.py` — imported by **30** files
+- `backend/app/db/session.py` — imported by **24** files
+- `backend/app/models/membership.py` — imported by **24** files
+- `backend/app/core/authorization.py` — imported by **22** files
+- `frontend/admin-web/src/api/client.ts` — imported by **21** files
+- `backend/app/main.py` — imported by **20** files
 - `backend/app/db/rls.py` — imported by **19** files
-- `backend/app/main.py` — imported by **19** files
 - `backend/app/core/config.py` — imported by **17** files
 - `backend/app/models/access.py` — imported by **14** files
 - `backend/app/models/location.py` — imported by **14** files
-- `frontend/admin-web/src/components/ui/index.ts` — imported by **13** files
+- `frontend/admin-web/src/components/ui/index.ts` — imported by **14** files
 - `backend/app/models/entitlement.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `backend/app/models/finance.py` — imported by **11** files
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/devices.py` +43 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +39 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +33 more
-- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/break_glass.py`, `backend/app/models/consent.py` +29 more
-- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/devices.py` +29 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +28 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py`, `backend/app/services/notification.py` +24 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +18 more
-- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/entitlement.py`, `backend/app/services/federation.py` +18 more
-- `backend/app/core/authorization.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py`, `backend/app/api/v1/endpoints/finance.py` +15 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py` +46 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +40 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +34 more
+- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/break_glass.py`, `backend/app/models/consent.py` +31 more
+- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py` +31 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +30 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py`, `backend/app/services/notification.py` +25 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +19 more
+- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/data_import.py`, `backend/app/services/entitlement.py` +19 more
+- `backend/app/core/authorization.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +17 more
 
 ---
 
 # Test Coverage
 
-> **41%** of routes and models are covered by tests
-> 76 test files found
+> **40%** of routes and models are covered by tests
+> 77 test files found
 
 ## Covered Routes
 
@@ -977,6 +1039,7 @@
 - AuditEvent
 - ConsentDefinition
 - ConsentRecord
+- DataImportBatch
 - EntitlementDefinition
 - MembershipEntitlement
 - EntitlementWallet
@@ -1010,6 +1073,7 @@
 - MembershipRenewal
 - NotificationTemplate
 - NotificationDelivery
+- TenantOnboarding
 - Organization
 - OutboxEvent
 - InboxEvent

@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **41%** of routes and models are covered by tests
-> 76 test files found
+> **40%** of routes and models are covered by tests
+> 77 test files found
 
 ## Covered Routes
 
@@ -28,6 +28,7 @@
 - AuditEvent
 - ConsentDefinition
 - ConsentRecord
+- DataImportBatch
 - EntitlementDefinition
 - MembershipEntitlement
 - EntitlementWallet
@@ -61,6 +62,7 @@
 - MembershipRenewal
 - NotificationTemplate
 - NotificationDelivery
+- TenantOnboarding
 - Organization
 - OutboxEvent
 - InboxEvent

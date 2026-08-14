@@ -2,12 +2,14 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Infra subsystem handles **6 routes** and touches: auth, db, cache.
+The Infra subsystem handles **7 routes** and touches: auth, db, cache.
 
 ## Routes
 
 - `GET` `/` → in: UUI, out: ProvisionDeviceResponse [auth, db]
   `backend/app/api/v1/endpoints/devices.py`
+- `GET` `/status` → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
+  `backend/app/api/v1/endpoints/onboarding.py`
 - `GET` `/health` [auth, db, cache]
   `backend/app/main.py`
 - `GET` `/live`
@@ -21,12 +23,13 @@ The Infra subsystem handles **6 routes** and touches: auth, db, cache.
 
 ## High-Impact Files
 
-- `backend/app/main.py` — imported by 19 files
+- `backend/app/main.py` — imported by 20 files
 
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
 - `backend/app/api/v1/endpoints/devices.py`
+- `backend/app/api/v1/endpoints/onboarding.py`
 - `backend/app/main.py`
 - `backend/tests/core/test_security_headers.py`
 

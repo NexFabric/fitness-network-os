@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import (
@@ -111,6 +111,10 @@ class Invoice(TenantMixin, Base):
     total_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     paid_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     discount_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_retry_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     _model_table_args = (
@@ -459,3 +463,53 @@ class ReconciliationItem(TenantMixin, Base):
         ),
         CheckConstraint("amount_minor != 0", name="ck_recon_items_amount_nonzero"),
     )
+
+
+class PaymentAttemptStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
+class PaymentAttempt(TenantMixin, Base):
+    __tablename__ = "payment_attempts"
+
+    invoice_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    billing_account_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=PaymentAttemptStatus.PENDING.value
+    )
+    gateway_provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    gateway_attempt_ref: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    _model_table_args = (
+        ForeignKeyConstraint(
+            ["tenant_id", "invoice_id"], ["invoices.tenant_id", "invoices.id"]
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "billing_account_id"],
+            ["billing_accounts.tenant_id", "billing_accounts.id"],
+        ),
+    )
+
+
+class DunningPolicy(TenantMixin, Base):
+    __tablename__ = "dunning_policies"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False, default="Default Dunning")
+    grace_period_days: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    max_retry_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    retry_interval_days: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    block_access_on_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+

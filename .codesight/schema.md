@@ -109,6 +109,27 @@
 - source: String (nullable)
 - ip_address: String (nullable)
 
+### DataImportBatch
+- filename: String
+- status: String (default)
+- total_rows: Integer (default)
+- valid_rows: Integer (default)
+- invalid_rows: Integer (default)
+- imported_rows: Integer (default)
+- created_by_user_id: UUID
+- created_at: DateTime (default)
+- completed_at: DateTime (nullable)
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+- batch_id: UUID (index)
+- row_number: Integer
+- status: String (default)
+- raw_data: with_variant
+- parsed_data: with_variant (nullable)
+- error_message: Text (nullable)
+- _relations_: batch: DataImportBatch
+
 ### EntitlementDefinition
 - code: String
 - name: String
@@ -192,6 +213,8 @@
 - total_amount_minor: Integer (default)
 - paid_amount_minor: Integer (default)
 - discount_amount_minor: Integer (default)
+- retry_count: Integer (default)
+- next_retry_at: DateTime (nullable)
 - idempotency_key: String (nullable)
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -282,6 +305,27 @@
 - currency: String (default)
 - status: String (default)
 - matched_payment_id: unknown (nullable)
+
+### PaymentAttempt
+- invoice_id: UUID (index)
+- billing_account_id: UUID (index)
+- attempt_number: Integer (default)
+- amount_minor: Integer
+- currency: String (default)
+- status: String (default)
+- gateway_provider: String (nullable)
+- gateway_attempt_ref: String (nullable)
+- error_code: String (nullable)
+- error_message: Text (nullable)
+- attempted_at: DateTime (default)
+
+### DunningPolicy
+- name: String (default)
+- grace_period_days: Integer (default)
+- max_retry_attempts: Integer (default)
+- retry_interval_days: Integer (default)
+- block_access_on_failure: Boolean (default)
+- is_active: Boolean (default)
 
 ### Lead
 - first_name: String
@@ -459,6 +503,12 @@
 - source_event_id: String (nullable)
 - correlation_id: String (nullable)
 - _relations_: template: NotificationTemplate, recipient: User
+
+### TenantOnboarding
+- current_stage: String (default)
+- step_data: with_variant
+- is_completed: Boolean (default)
+- completed_at: DateTime (nullable)
 
 ### Organization
 - name: String
