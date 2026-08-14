@@ -141,10 +141,22 @@ async def get_tenant_id(
             status_code=400, detail="Invalid X-Tenant-ID header format. Must be a UUID."
         )
 
+    async def _verify_tenant_status(t_id: UUID) -> None:
+        from app.models.tenant import Tenant, TenantStatus
+
+        tenant_result = await db.execute(select(Tenant).where(Tenant.id == t_id))
+        tenant = tenant_result.scalars().first()
+        if tenant:
+            if tenant.status == TenantStatus.SUSPENDED:
+                raise HTTPException(status_code=403, detail="Tenant is suspended")
+            if tenant.status == TenantStatus.CLOSED:
+                raise HTTPException(status_code=403, detail="Tenant is closed")
+
     if user.is_superuser:
         current_tenant_id_var.set(tenant_id)
         await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
         await _audit_superuser_tenant_access(db, user, tenant_id)
+        await _verify_tenant_status(tenant_id)
         return tenant_id
 
     # Temporarily set the RLS context so we can read the UserRole for this tenant
@@ -164,6 +176,8 @@ async def get_tenant_id(
         raise HTTPException(
             status_code=403, detail="User does not have access to this tenant"
         )
+
+    await _verify_tenant_status(tenant_id)
 
     current_tenant_id_var.set(tenant_id)
     return tenant_id

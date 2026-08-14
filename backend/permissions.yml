@@ -285,5 +285,7 @@ permissions:
     description: "Create and manage report definitions (tenant staff)"
   - id: "reports:run"
     description: "Request report runs (tenant staff)"
+  - id: "admin:break_glass"
+    description: "Emergency tenant access"
   - id: "*"
     description: "Superuser wildcard"

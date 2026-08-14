@@ -77,6 +77,17 @@
 - ip_address: String (nullable)
 - user_agent: String (nullable)
 
+### BreakGlassSession
+- actor_id: UUID (index)
+- target_tenant_id: UUID (index)
+- reason: Text
+- ticket_reference: String
+- status: String (default)
+- granted_at: DateTime
+- expires_at: DateTime
+- revoked_at: DateTime (nullable)
+- actions_taken: Text (nullable)
+
 ### ConsentDefinition
 - name: String
 - consent_type: String
@@ -518,6 +529,15 @@
 - finished_at: DateTime (nullable)
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+- data_category: String
+- description: Text
+- retention_days: Integer (nullable)
+- deletion_method: String (default)
+- legal_basis: String (nullable)
+- is_active: Boolean (default)
+- requires_legal_review: Boolean (default)
+
 ### Staff
 - user_id: UUID (fk, index)
 - location_id: unknown (nullable)
@@ -527,6 +547,11 @@
 - name: String
 - organization_id: UUID (fk)
 - location_code: String (unique)
+- status: String (default)
+- suspended_at: DateTime (nullable)
+- closed_at: DateTime (nullable)
+- suspension_reason: Text (nullable)
+- closure_reason: Text (nullable)
 - _relations_: organization: Organization
 
 ### TrainerAssignment

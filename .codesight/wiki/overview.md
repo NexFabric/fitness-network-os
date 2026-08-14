@@ -8,7 +8,7 @@
 
 ## Scale
 
-88 API routes · 71 database models · 38 UI components · 60 library files · 6 middleware layers · 17 environment variables
+88 API routes · 73 database models · 38 UI components · 63 library files · 6 middleware layers · 17 environment variables
 
 ## Subsystems
 
@@ -31,21 +31,21 @@
 - **[Trainers](./trainers.md)** — 3 routes — touches: auth, db
 - **[Infra](./infra.md)** — 6 routes — touches: auth, db, cache
 
-**Database:** sqlalchemy, 71 models — see [database.md](./database.md)
+**Database:** sqlalchemy, 73 models — see [database.md](./database.md)
 
 **UI:** 38 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 60 files — see [libraries.md](./libraries.md)
+**Libraries:** 63 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **43** files
-- `backend/app/models/tenant.py` — imported by **39** files
-- `backend/app/models/organization.py` — imported by **34** files
-- `backend/app/db/base.py` — imported by **32** files
-- `backend/app/api/deps.py` — imported by **31** files
+- `backend/app/models/user.py` — imported by **45** files
+- `backend/app/models/tenant.py` — imported by **43** files
+- `backend/app/models/organization.py` — imported by **37** files
+- `backend/app/db/base.py` — imported by **34** files
+- `backend/app/api/deps.py` — imported by **32** files
 - `backend/app/models/member.py` — imported by **30** files
 
 ## Required Environment Variables
@@ -60,4 +60,4 @@ Changes to these files have the widest blast radius across the codebase:
 - `TEST_DATABASE_URL` — `backend/scripts/check_permissions_db.py`
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-08-13_
+_Back to [index.md](./index.md) · Generated 2026-08-14_

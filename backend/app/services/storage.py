@@ -54,9 +54,7 @@ class LocalStorageProvider(StorageProvider):
     def __init__(self, base_dir: str | None = None):
         self.base_dir = Path(base_dir or settings.REPORT_STORAGE_DIR).resolve()
 
-    async def save_bytes(
-        self, tenant_id: UUID, artifact_id: UUID, data: bytes
-    ) -> str:
+    async def save_bytes(self, tenant_id: UUID, artifact_id: UUID, data: bytes) -> str:
         tenant_dir = self.base_dir / _local_namespace(tenant_id)
         artifact_dir = tenant_dir / _local_namespace(artifact_id)
         artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -110,16 +108,20 @@ class S3StorageProvider(StorageProvider):
 
     def _client(self):
         import boto3
+        from botocore.config import Config  # type: ignore[import-untyped]
 
         return boto3.client(
             "s3",
             endpoint_url=self.endpoint_url,
             region_name=settings.S3_REGION_NAME or None,
+            config=Config(
+                connect_timeout=settings.S3_CONNECT_TIMEOUT,
+                read_timeout=settings.S3_READ_TIMEOUT,
+                retries={"max_attempts": 2, "mode": "standard"},
+            ),
         )
 
-    async def save_bytes(
-        self, tenant_id: UUID, artifact_id: UUID, data: bytes
-    ) -> str:
+    async def save_bytes(self, tenant_id: UUID, artifact_id: UUID, data: bytes) -> str:
         key = f"{tenant_id}/{artifact_id}/{REPORT_FILENAME}"
         put_args: dict[str, object] = {
             "Bucket": self.bucket_name,

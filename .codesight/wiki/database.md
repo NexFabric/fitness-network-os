@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 71 models
+**sqlalchemy** — 73 models
 
 ### Base
 
@@ -92,6 +92,18 @@ pk: `id` (UUID)
 - `new_state`: JSON _(nullable)_
 - `ip_address`: String _(nullable)_
 - `user_agent`: String _(nullable)_
+
+### BreakGlassSession
+
+- `actor_id`: UUID _(index)_
+- `target_tenant_id`: UUID _(index)_
+- `reason`: Text
+- `ticket_reference`: String
+- `status`: String _(default)_
+- `granted_at`: DateTime
+- `expires_at`: DateTime
+- `revoked_at`: DateTime _(nullable)_
+- `actions_taken`: Text _(nullable)_
 
 ### ConsentDefinition
 
@@ -599,6 +611,16 @@ fk: user_id, role_id, tenant_id, organization_id
 - `finished_at`: DateTime _(nullable)_
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+
+- `data_category`: String
+- `description`: Text
+- `retention_days`: Integer _(nullable)_
+- `deletion_method`: String _(default)_
+- `legal_basis`: String _(nullable)_
+- `is_active`: Boolean _(default)_
+- `requires_legal_review`: Boolean _(default)_
+
 ### Staff
 
 fk: user_id
@@ -614,6 +636,11 @@ fk: organization_id
 - `name`: String
 - `organization_id`: UUID _(fk)_
 - `location_code`: String _(unique)_
+- `status`: String _(default)_
+- `suspended_at`: DateTime _(nullable)_
+- `closed_at`: DateTime _(nullable)_
+- `suspension_reason`: Text _(nullable)_
+- `closure_reason`: Text _(nullable)_
 - _relations_: organization: Organization
 
 ### TrainerAssignment
@@ -679,15 +706,15 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **43** files
-- `backend/app/models/tenant.py` — imported by **39** files
-- `backend/app/models/organization.py` — imported by **34** files
-- `backend/app/db/base.py` — imported by **32** files
+- `backend/app/models/user.py` — imported by **45** files
+- `backend/app/models/tenant.py` — imported by **43** files
+- `backend/app/models/organization.py` — imported by **37** files
+- `backend/app/db/base.py` — imported by **34** files
 - `backend/app/models/member.py` — imported by **30** files
-- `backend/app/models/rbac.py` — imported by **27** files
+- `backend/app/models/rbac.py` — imported by **28** files
 - `backend/app/db/session.py` — imported by **22** files
 - `backend/app/models/membership.py` — imported by **20** files
-- `backend/app/db/rls.py` — imported by **18** files
+- `backend/app/db/rls.py` — imported by **19** files
 - `backend/app/models/location.py` — imported by **12** files
 - `backend/app/models/outbox.py` — imported by **12** files
 - `backend/app/models/access.py` — imported by **11** files
