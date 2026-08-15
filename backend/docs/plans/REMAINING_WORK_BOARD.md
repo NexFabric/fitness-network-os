@@ -65,6 +65,8 @@
 | WAVE-2 | Forensic Access Snapshot (`AccessAttempt.snapshot_data`), Front Desk Reception workspace (`/reception`, instant search, manual override checkin), Server-side KPI Engine (`GET /dashboard/kpis`) |
 | WAVE-3 | CSV Data Migration Pipeline (`DataImportBatch`, `DataImportRow`, `DataImport.tsx`), Payment Attempts & Dunning policy (`PaymentAttempt`, `DunningPolicy`, invoice retry columns), Tenant Onboarding state machine (`TenantOnboarding`) |
 | FED-HQ | 6-tab Federation HQ Console (`SuperAdminPortal.tsx`), Gym Lifecycle (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), Roaming Passport Matrix (`PassportConfig`), Compliance & Audit Registry (`ComplianceRecord`), Network Alert Broadcasts (`NetworkAlert`), Cross-Tenant Analytics (`AnalyticsOverview`), Alembic migration `x9c0d1e2f3a4` |
+| P2-3 | AWS KMS envelope encryption (`kms:enc:`) with `GenerateDataKey` & `Decrypt`, fail-closed boot validation in `core/config.py` |
+| MILESTONE-B1 | Group Class & PT Booking Engine: 6 RLS tables (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`), Alembic `xa2b3c4d5e6f`, `SELECT ... FOR UPDATE` write lock concurrency, monotonic FIFO waitlist auto-promotion, Admin Visual Calendar & Attendee Roster Drawer (`Classes.tsx`), Trainer Portal live attendance ledger (`TrainerPortal.tsx`), 6-tab Member Portal (`MemberPortal.tsx`), real PostgreSQL concurrency pytest suite, and Playwright E2E suite (`classes_and_booking_flows.spec.ts`) |
 
 ---
 
@@ -75,8 +77,7 @@
 | P1-3b-RT | S3/MinIO **runtime** proof — real bucket + credentials in staging; the adapter is merged but has never written to a live bucket | A-OPS |
 | P1-10 | Actual restore/PITR drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
-| P2-3 | KMS QR secrets — `qr_crypto.py` recognises the KMS reference and raises a deliberate `NotImplementedError` | A-QR |
-| P2-OBS | Prometheus request/dependency/outbox metrics merged; scraper/dashboard, traces and alert rules remain | A-OPS |
+| P2-OBS | Prometheus request/dependency/outbox metrics merged; scraper/dashboard, traces and alert rules remain as external infra | A-OPS |
 
 ---
 
