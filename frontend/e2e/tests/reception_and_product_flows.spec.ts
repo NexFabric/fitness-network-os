@@ -31,9 +31,7 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
     // Open reception workspace
     await page.goto('/reception');
     await expect(page.locator('body')).toContainText('Resepsiyon & Danışma Masası');
-    await expect(
-      page.locator('input[placeholder*="İsim, telefon, e-posta veya üye no"]')
-    ).toBeVisible();
+    await expect(page.locator('#member-search')).toBeVisible();
   });
 
   test('data migration import page loads with CSV template guidelines', async ({
@@ -55,6 +53,7 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
     await expect(page.getByRole('button', { name: 'Giriş QR', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Paketler', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Geçmiş', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Finans', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ödemeler', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'İletişim', exact: true })).toBeVisible();
   });
 });
