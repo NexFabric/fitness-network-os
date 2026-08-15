@@ -81,9 +81,7 @@ class StaffService:
             if loc.scalars().first() is None:
                 raise ValueError("location_not_found")
 
-        existing = await self.db.execute(
-            select(User).where(User.email == normalized)
-        )
+        existing = await self.db.execute(select(User).where(User.email == normalized))
         if existing.scalars().first() is not None:
             raise ValueError("email_already_registered")
 

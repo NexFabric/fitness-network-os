@@ -161,7 +161,9 @@ async def get_reception_member_detail(
     tags = list(tags_res.scalars().all())
 
     notes_res = await db.execute(
-        select(Note.content).where(Note.tenant_id == tenant_id, Note.member_id == member_id)
+        select(Note.content).where(
+            Note.tenant_id == tenant_id, Note.member_id == member_id
+        )
     )
     notes = list(notes_res.scalars().all())
 
@@ -191,7 +193,7 @@ async def get_reception_member_detail(
     wallets = [
         {
             "id": str(w.id),
-            "entitlement_type_id": str(w.entitlement_type_id),
+            "entitlement_id": str(w.entitlement_id),
             "allocated": w.allocated,
             "remaining": w.remaining,
             "expires_at": w.expires_at.isoformat() if w.expires_at else None,
@@ -302,7 +304,7 @@ async def manual_checkin_override(
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """Manual turnstile/access override performed by front desk staff."""
-    AuthorizationService.require_tenant(current_user, "checkins:write", tenant_id)
+    AuthorizationService.require_tenant(current_user, "access:override", tenant_id)
 
     member = await db.get(Member, member_id)
     if member is None or member.tenant_id != tenant_id:
@@ -345,11 +347,31 @@ async def manual_checkin_override(
             "override_reason": body.reason,
             "checkin_id": str(checkin.id),
             "location_id": str(body.location_id),
+            "device_id": str(body.device_id) if body.device_id else None,
             "timestamp": now.isoformat(),
         },
         timestamp=now,
     )
     db.add(attempt)
+
+    # 3. Create Immutable Audit Event
+    from app.models.audit import AuditEvent
+
+    audit_event = AuditEvent(
+        tenant_id=tenant_id,
+        user_id=current_user.id,
+        action="access.manual_override",
+        resource_type="member",
+        resource_id=member_id,
+        new_state={
+            "override_reason": body.reason,
+            "checkin_id": str(checkin.id),
+            "location_id": str(body.location_id),
+            "device_id": str(body.device_id) if body.device_id else None,
+        },
+    )
+    db.add(audit_event)
+
     await db.commit()
     await db.refresh(checkin)
 

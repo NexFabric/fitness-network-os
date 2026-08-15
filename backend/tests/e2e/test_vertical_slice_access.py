@@ -283,10 +283,14 @@ async def test_vertical_slice_org_member_qr_issue_validate(db_session: AsyncSess
     assert result.checkin_id is not None
 
     attempts = (
-        await db_session.execute(
-            select(AccessAttempt).where(AccessAttempt.tenant_id == tenant.id)
+        (
+            await db_session.execute(
+                select(AccessAttempt).where(AccessAttempt.tenant_id == tenant.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(attempts) == 1
     assert attempts[0].status == AccessStatus.GRANTED
     assert attempts[0].member_id == member.id
@@ -399,19 +403,27 @@ async def test_vertical_slice_optional_notification_bridge(
     assert scheduled.outbox_event_id is not None
 
     outbox_row = (
-        await db_session.execute(
-            select(OutboxEvent).where(OutboxEvent.id == scheduled.outbox_event_id)
+        (
+            await db_session.execute(
+                select(OutboxEvent).where(OutboxEvent.id == scheduled.outbox_event_id)
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     assert outbox_row is not None
     assert outbox_row.event_type == NOTIFICATION_REQUESTED_V1
     assert outbox_row.tenant_id == tenant.id
 
     deliveries = (
-        await db_session.execute(
-            select(NotificationDelivery).where(
-                NotificationDelivery.tenant_id == tenant.id
+        (
+            await db_session.execute(
+                select(NotificationDelivery).where(
+                    NotificationDelivery.tenant_id == tenant.id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(deliveries) == 1

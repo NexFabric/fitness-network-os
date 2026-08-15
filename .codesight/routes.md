@@ -23,6 +23,9 @@
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
+- `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
+- `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
 - `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
 - `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]

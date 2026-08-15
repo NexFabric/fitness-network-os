@@ -233,9 +233,7 @@ class ReportService:
                 raise RuntimeError("artifact_write_failed")
 
             run.row_count = 1
-            run.result_url = await self.storage.save_bytes(
-                tenant_id, run.id, artifact
-            )
+            run.result_url = await self.storage.save_bytes(tenant_id, run.id, artifact)
             run.status = REPORT_STATUS_SUCCEEDED
             run.finished_at = datetime.now(UTC)
             run.error_message = None

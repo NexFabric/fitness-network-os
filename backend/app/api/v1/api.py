@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     access,
     admin,
     auth,
+    break_glass,
     dashboard,
     data_import,
     devices,
@@ -26,6 +27,9 @@ from app.api.v1.endpoints import (
 
 api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(
+    break_glass.router, prefix="/admin/break-glass", tags=["break-glass"]
+)
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(mfa.router, prefix="/auth/mfa", tags=["mfa"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])

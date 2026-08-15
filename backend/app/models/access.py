@@ -57,7 +57,9 @@ class SigningKey(TenantMixin, Base):
         nullable=False,
         default=KeyStatus.ACTIVE,
     )
-    algorithm: Mapped[str] = mapped_column(String(32), nullable=False, default="HMAC_SHA256")
+    algorithm: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="HMAC_SHA256"
+    )
     key_material: Mapped[str] = mapped_column(String(512), nullable=False)
 
     _model_table_args = (
@@ -92,7 +94,9 @@ class Device(TenantMixin, Base):
     )
 
     location = relationship("Location")
-    sessions: Mapped[list["DeviceSession"]] = relationship("DeviceSession", back_populates="device", cascade="all, delete-orphan")
+    sessions: Mapped[list["DeviceSession"]] = relationship(
+        "DeviceSession", back_populates="device", cascade="all, delete-orphan"
+    )
 
 
 class DeviceSession(TenantMixin, Base):
@@ -105,9 +109,13 @@ class DeviceSession(TenantMixin, Base):
     __tablename__ = "device_sessions"
 
     device_id: Mapped[UUID] = mapped_column(nullable=False)
-    token_hash: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_revoked: Mapped[bool] = mapped_column(default=False)
     # Second half of the device credential: the request-signing secret, held as
     # a `local:hmac:…` reference. The token above travels in a cookie and the
@@ -134,7 +142,9 @@ class AccessAttempt(TenantMixin, Base):
     )
     denial_reason: Mapped[str | None] = mapped_column(String(128), nullable=True)
     jti: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    method: Mapped[str | None] = mapped_column(String(32), nullable=True, default="QR_SCAN")
+    method: Mapped[str | None] = mapped_column(
+        String(32), nullable=True, default="QR_SCAN"
+    )
     snapshot_data: Mapped[dict | None] = mapped_column(
         JSONB().with_variant(JSON, "sqlite"), nullable=True
     )
@@ -227,7 +237,10 @@ class DeviceNonce(TenantMixin, Base):
 
     _model_table_args = (
         UniqueConstraint(
-            "tenant_id", "device_session_id", "nonce", name="uq_device_nonces_session_nonce"
+            "tenant_id",
+            "device_session_id",
+            "nonce",
+            name="uq_device_nonces_session_nonce",
         ),
     )
 
@@ -240,7 +253,9 @@ class QrJtiReplay(TenantMixin, Base):
     jti: Mapped[str] = mapped_column(String(64), nullable=False)
     member_id: Mapped[UUID | None] = mapped_column(nullable=True)
     credential_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     consumed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

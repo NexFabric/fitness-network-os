@@ -407,9 +407,7 @@ async def match_reconciliation_item(
     _require(current_user, tenant_id, "finance:reconcile")
     svc = FinanceService(db)
     try:
-        item = await svc.match_reconciliation_item(
-            tenant_id, item_id, body.payment_id
-        )
+        item = await svc.match_reconciliation_item(tenant_id, item_id, body.payment_id)
         await db.commit()
         return {
             "id": str(item.id),

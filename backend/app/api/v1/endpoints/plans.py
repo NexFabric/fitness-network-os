@@ -93,7 +93,9 @@ async def create_plan(
 ):
     _require(current_user, tenant_id, "memberships:write")
     svc = MembershipService(db)
-    plan = await svc.create_plan(tenant_id, name=body.name, description=body.description)
+    plan = await svc.create_plan(
+        tenant_id, name=body.name, description=body.description
+    )
     await db.commit()
     await db.refresh(plan)
     return plan

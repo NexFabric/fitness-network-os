@@ -139,7 +139,11 @@ async def auth_device(
 ):
     """Public: Device authenticates with ID, Tenant ID and API key to receive a session."""
     from sqlalchemy import text
-    await db.execute(text("SELECT set_config('app.current_tenant_id', :tid, true)"), {"tid": str(body.tenant_id)})
+
+    await db.execute(
+        text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+        {"tid": str(body.tenant_id)},
+    )
 
     result = await db.execute(select(Device).where(Device.id == body.device_id))
     device = result.scalar_one_or_none()

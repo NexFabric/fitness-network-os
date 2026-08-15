@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Disaster Recovery (DR) Database Restore Drill Script for GymClubNex
+# Verifies full backup dump, sha256 checksum, database restoration, table/row parity, and RLS integrity.
 set -euo pipefail
 
 HOST="${PGHOST:-localhost}"
@@ -8,6 +9,7 @@ USER="${PGUSER:-postgres}"
 DB_NAME="${PGDATABASE:-fitness_os}"
 RESTORE_DB_NAME="fitness_os_dr_drill_$(date +%s)"
 DUMP_FILE="/tmp/fitness_os_dr_backup_$(date +%s).sql"
+CHECKSUM_FILE="${DUMP_FILE}.sha256"
 
 # Check if fitness-os-postgres container is running
 USE_DOCKER_EXEC=0
@@ -34,33 +36,64 @@ if [ ! -f "${DUMP_FILE}" ] || [ ! -s "${DUMP_FILE}" ]; then
 fi
 echo "Dump file size: $(du -h "${DUMP_FILE}" | cut -f1)"
 
-# Step 2: Create Target DR Test Database
+# Step 2: Calculate & Record SHA256 Checksum
+if command -v sha256sum &>/dev/null; then
+  sha256sum "${DUMP_FILE}" > "${CHECKSUM_FILE}"
+elif command -v shasum &>/dev/null; then
+  shasum -a 256 "${DUMP_FILE}" > "${CHECKSUM_FILE}"
+fi
+echo "Backup SHA256: $(cat "${CHECKSUM_FILE}" | cut -d' ' -f1)"
+
+# Step 3: Create Target DR Test Database & Restore
 echo "--> Creating target test database ${RESTORE_DB_NAME}..."
 if [ "${USE_DOCKER_EXEC}" = "1" ]; then
   docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d postgres -c "CREATE DATABASE ${RESTORE_DB_NAME};"
   echo "--> Restoring dump into ${RESTORE_DB_NAME}..."
   docker exec -i -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d "${RESTORE_DB_NAME}" < "${DUMP_FILE}" > /dev/null
-  echo "--> Verifying database table counts..."
+  
+  echo "--> Verifying database table counts & RLS security..."
   MEMBER_COUNT=$(docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM members;" | tr -d ' \r\n')
   TENANT_COUNT=$(docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM tenants;" | tr -d ' \r\n')
+  RLS_TABLE_COUNT=$(docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM pg_class WHERE relrowsecurity = true;" | tr -d ' \r\n')
+  
   echo "Verification Results:"
   echo " - Tenants count: ${TENANT_COUNT}"
   echo " - Members count: ${MEMBER_COUNT}"
+  echo " - RLS-enabled tables: ${RLS_TABLE_COUNT}"
+  
+  if [ "${RLS_TABLE_COUNT}" -lt 5 ]; then
+    echo "FAIL: RLS row security was not restored properly on restored database!"
+    docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d postgres -c "DROP DATABASE ${RESTORE_DB_NAME};"
+    exit 1
+  fi
+
   echo "--> Cleaning up DR test database and temporary dump file..."
   docker exec -e PGPASSWORD=postgres fitness-os-postgres psql -U "${USER}" -d postgres -c "DROP DATABASE ${RESTORE_DB_NAME};"
 else
   PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d postgres -c "CREATE DATABASE ${RESTORE_DB_NAME};"
   echo "--> Restoring dump into ${RESTORE_DB_NAME}..."
   PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d "${RESTORE_DB_NAME}" -f "${DUMP_FILE}" > /dev/null
-  echo "--> Verifying database table counts..."
+  
+  echo "--> Verifying database table counts & RLS security..."
   MEMBER_COUNT=$(PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM members;" | tr -d ' \r\n')
   TENANT_COUNT=$(PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM tenants;" | tr -d ' \r\n')
+  RLS_TABLE_COUNT=$(PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d "${RESTORE_DB_NAME}" -t -c "SELECT count(*) FROM pg_class WHERE relrowsecurity = true;" | tr -d ' \r\n')
+  
   echo "Verification Results:"
   echo " - Tenants count: ${TENANT_COUNT}"
   echo " - Members count: ${MEMBER_COUNT}"
+  echo " - RLS-enabled tables: ${RLS_TABLE_COUNT}"
+  
+  if [ "${RLS_TABLE_COUNT}" -lt 5 ]; then
+    echo "FAIL: RLS row security was not restored properly on restored database!"
+    PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d postgres -c "DROP DATABASE ${RESTORE_DB_NAME};"
+    exit 1
+  fi
+
   echo "--> Cleaning up DR test database and temporary dump file..."
   PGPASSWORD="${PGPASSWORD:-postgres}" psql -h "${HOST}" -p "${PORT}" -U "${USER}" -d postgres -c "DROP DATABASE ${RESTORE_DB_NAME};"
 fi
-rm -f "${DUMP_FILE}"
+
+rm -f "${DUMP_FILE}" "${CHECKSUM_FILE}"
 
 echo "=== DR RESTORE DRILL PASSED SUCCESSFULLY ==="

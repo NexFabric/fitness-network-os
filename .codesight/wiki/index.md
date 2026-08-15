@@ -1,6 +1,6 @@
 # GymClubNex — Wiki
 
-_Generated 2026-08-14 — re-run `npx codesight --wiki` if the codebase has changed._
+_Generated 2026-08-15 — re-run `npx codesight --wiki` if the codebase has changed._
 
 Structural map compiled from source code via AST. No LLM — deterministic, 200ms.
 
@@ -13,6 +13,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Auth](./auth.md)
 - [Access](./access.md)
 - [Admin](./admin.md)
+- [Break_glass](./break_glass.md)
 - [Dashboard](./dashboard.md)
 - [Data_import](./data_import.md)
 - [Devices](./devices.md)
@@ -37,7 +38,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **100**
+- Routes: **103**
 - Models: **78**
 - Components: **43**
 - Env vars: **7** required, **10** with defaults
@@ -67,4 +68,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-08-14 · 27 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-08-15 · 28 articles · [codesight](https://github.com/Houseofmvps/codesight)_

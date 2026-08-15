@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,7 +56,9 @@ class CsvUploadRequest(BaseModel):
     csv_content: str
 
 
-@router.post("/upload", response_model=ImportBatchResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload", response_model=ImportBatchResponse, status_code=status.HTTP_201_CREATED
+)
 async def upload_csv_preview(
     req: CsvUploadRequest,
     db: AsyncSession = Depends(get_db),
@@ -129,17 +131,29 @@ async def get_import_batch_detail(
     )
     rows = list(rows_res.scalars().all())
 
+    row_responses = [
+        ImportRowResponse(
+            id=r.id,
+            row_number=r.row_number,
+            status=ImportRowStatus(r.status),
+            raw_data=r.raw_data or {},
+            parsed_data=r.parsed_data,
+            error_message=r.error_message,
+        )
+        for r in rows
+    ]
+
     return ImportBatchDetailResponse(
         id=batch.id,
         filename=batch.filename,
-        status=batch.status,
+        status=ImportBatchStatus(batch.status),
         total_rows=batch.total_rows,
         valid_rows=batch.valid_rows,
         invalid_rows=batch.invalid_rows,
         imported_rows=batch.imported_rows,
         created_at=batch.created_at,
         completed_at=batch.completed_at,
-        rows=rows,
+        rows=row_responses,
     )
 
 

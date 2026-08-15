@@ -26,9 +26,8 @@ except ImportError:  # pragma: no cover
 
 
 def _sync_dsn(url: str) -> str:
-    return (
-        url.replace("postgresql+asyncpg://", "postgresql://")
-        .replace("postgresql+psycopg://", "postgresql://")
+    return url.replace("postgresql+asyncpg://", "postgresql://").replace(
+        "postgresql+psycopg://", "postgresql://"
     )
 
 
@@ -54,7 +53,10 @@ def main() -> int:
         or ""
     )
     if not dsn:
-        print("DATABASE_URL / TEST_DATABASE_URL / MIGRATOR_DATABASE_URL required", file=sys.stderr)
+        print(
+            "DATABASE_URL / TEST_DATABASE_URL / MIGRATOR_DATABASE_URL required",
+            file=sys.stderr,
+        )
         return 2
 
     errors: list[str] = []
@@ -64,7 +66,9 @@ def main() -> int:
         missing_in_db = yaml_perms - db_perms
         extra_in_db = db_perms - yaml_perms - {"*"}
         if missing_in_db:
-            errors.append(f"permissions in YAML missing from DB: {sorted(missing_in_db)}")
+            errors.append(
+                f"permissions in YAML missing from DB: {sorted(missing_in_db)}"
+            )
         if extra_in_db:
             errors.append(f"permissions in DB not in YAML: {sorted(extra_in_db)}")
 
@@ -87,9 +91,7 @@ def main() -> int:
             actual = db_grants.get(role_name, set())
             missing = expected - actual
             if missing:
-                errors.append(
-                    f"role {role_name} missing DB grants: {sorted(missing)}"
-                )
+                errors.append(f"role {role_name} missing DB grants: {sorted(missing)}")
             extra = actual - expected
             if extra:
                 errors.append(

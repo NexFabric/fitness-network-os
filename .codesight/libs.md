@@ -60,6 +60,7 @@
   - function disable_rls: (table_name) -> None
   - function upgrade: () -> None
   - function downgrade: () -> None
+- `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]

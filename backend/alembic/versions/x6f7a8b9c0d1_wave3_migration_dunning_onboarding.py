@@ -6,17 +6,18 @@ Create Date: 2026-08-15 00:02:00.000000
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
 revision: str = "x6f7a8b9c0d1"
-down_revision: Union[str, None] = "x5e6f7a8b9c0"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "x5e6f7a8b9c0"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def enable_rls(table_name: str) -> None:
@@ -54,17 +55,31 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("filename", sa.String(length=255), nullable=False),
-        sa.Column("status", sa.String(length=32), server_default="PREVIEW", nullable=False),
+        sa.Column(
+            "status", sa.String(length=32), server_default="PREVIEW", nullable=False
+        ),
         sa.Column("total_rows", sa.Integer(), server_default="0", nullable=False),
         sa.Column("valid_rows", sa.Integer(), server_default="0", nullable=False),
         sa.Column("invalid_rows", sa.Integer(), server_default="0", nullable=False),
         sa.Column("imported_rows", sa.Integer(), server_default="0", nullable=False),
         sa.Column("created_by_user_id", sa.Uuid(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("tenant_id", "id", name="uq_data_import_batches_tenant_id_id"),
+        sa.UniqueConstraint(
+            "tenant_id", "id", name="uq_data_import_batches_tenant_id_id"
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
     )
     enable_rls("data_import_batches")
@@ -75,14 +90,31 @@ def upgrade() -> None:
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("batch_id", sa.Uuid(), nullable=False),
         sa.Column("row_number", sa.Integer(), nullable=False),
-        sa.Column("status", sa.String(length=32), server_default="VALID", nullable=False),
+        sa.Column(
+            "status", sa.String(length=32), server_default="VALID", nullable=False
+        ),
         sa.Column("raw_data", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-        sa.Column("parsed_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "parsed_data", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["tenant_id", "batch_id"], ["data_import_batches.tenant_id", "data_import_batches.id"]),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "batch_id"],
+            ["data_import_batches.tenant_id", "data_import_batches.id"],
+        ),
     )
     enable_rls("data_import_rows")
 
@@ -95,18 +127,42 @@ def upgrade() -> None:
         sa.Column("billing_account_id", sa.Uuid(), nullable=False),
         sa.Column("attempt_number", sa.Integer(), server_default="1", nullable=False),
         sa.Column("amount_minor", sa.Integer(), nullable=False),
-        sa.Column("currency", sa.String(length=3), server_default="TRY", nullable=False),
-        sa.Column("status", sa.String(length=20), server_default="PENDING", nullable=False),
+        sa.Column(
+            "currency", sa.String(length=3), server_default="TRY", nullable=False
+        ),
+        sa.Column(
+            "status", sa.String(length=20), server_default="PENDING", nullable=False
+        ),
         sa.Column("gateway_provider", sa.String(length=64), nullable=True),
         sa.Column("gateway_attempt_ref", sa.String(length=128), nullable=True),
         sa.Column("error_code", sa.String(length=64), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("attempted_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "attempted_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["tenant_id", "invoice_id"], ["invoices.tenant_id", "invoices.id"]),
-        sa.ForeignKeyConstraint(["tenant_id", "billing_account_id"], ["billing_accounts.tenant_id", "billing_accounts.id"]),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "invoice_id"], ["invoices.tenant_id", "invoices.id"]
+        ),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "billing_account_id"],
+            ["billing_accounts.tenant_id", "billing_accounts.id"],
+        ),
     )
     enable_rls("payment_attempts")
 
@@ -114,14 +170,40 @@ def upgrade() -> None:
         "dunning_policies",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.Column("name", sa.String(length=100), server_default="Default Dunning", nullable=False),
-        sa.Column("grace_period_days", sa.Integer(), server_default="3", nullable=False),
-        sa.Column("max_retry_attempts", sa.Integer(), server_default="3", nullable=False),
-        sa.Column("retry_interval_days", sa.Integer(), server_default="2", nullable=False),
-        sa.Column("block_access_on_failure", sa.Boolean(), server_default="true", nullable=False),
+        sa.Column(
+            "name",
+            sa.String(length=100),
+            server_default="Default Dunning",
+            nullable=False,
+        ),
+        sa.Column(
+            "grace_period_days", sa.Integer(), server_default="3", nullable=False
+        ),
+        sa.Column(
+            "max_retry_attempts", sa.Integer(), server_default="3", nullable=False
+        ),
+        sa.Column(
+            "retry_interval_days", sa.Integer(), server_default="2", nullable=False
+        ),
+        sa.Column(
+            "block_access_on_failure",
+            sa.Boolean(),
+            server_default="true",
+            nullable=False,
+        ),
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
     )
@@ -132,12 +214,32 @@ def upgrade() -> None:
         "tenant_onboardings",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
-        sa.Column("current_stage", sa.String(length=32), server_default="ORG_CREATED", nullable=False),
-        sa.Column("step_data", postgresql.JSONB(astext_type=sa.Text()), server_default="{}", nullable=False),
+        sa.Column(
+            "current_stage",
+            sa.String(length=32),
+            server_default="ORG_CREATED",
+            nullable=False,
+        ),
+        sa.Column(
+            "step_data",
+            postgresql.JSONB(astext_type=sa.Text()),
+            server_default="{}",
+            nullable=False,
+        ),
         sa.Column("is_completed", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
     )

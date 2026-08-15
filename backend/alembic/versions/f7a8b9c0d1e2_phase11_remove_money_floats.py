@@ -22,6 +22,7 @@ PRE-PRODUCTION MIGRATION EXCEPTION:
   The EXPAND/CONTRACT *shape* establishes the production standard; this
   revision does not claim zero-downtime dual-write coexistence.
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa

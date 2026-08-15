@@ -47,8 +47,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_LOGIN_MAX_REQUESTS: int = 20
     RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = 60
 
+    COMPONENT_NAME: str = "web"
     DATABASE_URL: PostgresDsn
-    MIGRATOR_DATABASE_URL: PostgresDsn
+    MIGRATOR_DATABASE_URL: PostgresDsn | None = None
     REDIS_URL: RedisDsn
 
     # Database connection pool
@@ -105,14 +106,22 @@ class Settings(BaseSettings):
         if not self.is_production:
             return
         errors: list[str] = []
-        if not self.cors_origins_list:
-            errors.append(
-                "CORS_ORIGINS must be a non-empty comma-separated list in production"
-            )
-        if not self.allowed_hosts_list:
-            errors.append(
-                "ALLOWED_HOSTS must be a non-empty comma-separated list in production"
-            )
+        is_web = self.COMPONENT_NAME == "web"
+
+        if is_web:
+            if not self.cors_origins_list:
+                errors.append(
+                    "CORS_ORIGINS must be a non-empty comma-separated list in production"
+                )
+            if not self.allowed_hosts_list:
+                errors.append(
+                    "ALLOWED_HOSTS must be a non-empty comma-separated list in production"
+                )
+            if len(self.METRICS_BEARER_TOKEN) < 32:
+                errors.append(
+                    "METRICS_BEARER_TOKEN must contain at least 32 characters"
+                )
+
         email_provider = self.NOTIFICATION_EMAIL_PROVIDER.strip().lower()
         if email_provider not in {"smtp", "disabled"}:
             errors.append(
@@ -135,9 +144,7 @@ class Settings(BaseSettings):
             errors.append("S3_SSE_ALGORITHM must be AES256 or aws:kms")
         if self.S3_SSE_ALGORITHM == "aws:kms" and not self.S3_KMS_KEY_ID.strip():
             errors.append("S3_KMS_KEY_ID is required when S3_SSE_ALGORITHM=aws:kms")
-        if len(self.METRICS_BEARER_TOKEN) < 32:
-            errors.append("METRICS_BEARER_TOKEN must contain at least 32 characters")
-        # Cookie Secure is enforced via is_production in auth/csrf setters.
+
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))
 

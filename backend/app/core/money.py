@@ -29,9 +29,7 @@ def major_to_minor(
     except (InvalidOperation, ValueError) as e:
         raise ValueError(f"invalid money amount: {major!r}") from e
 
-    quantized = (d * Decimal(minor_factor)).quantize(
-        Decimal(1), rounding=ROUND_HALF_UP
-    )
+    quantized = (d * Decimal(minor_factor)).quantize(Decimal(1), rounding=ROUND_HALF_UP)
     return int(quantized)
 
 

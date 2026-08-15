@@ -61,9 +61,7 @@ async def list_organizations(
     db: AsyncSession = Depends(get_db),
 ):
     orgs = await FederationService(db).list_organizations(scope.org_ids)
-    return [
-        OrganizationSummary(id=o.id, name=o.name, domain=o.domain) for o in orgs
-    ]
+    return [OrganizationSummary(id=o.id, name=o.name, domain=o.domain) for o in orgs]
 
 
 @router.get("/tenants", response_model=list[TenantSummary])

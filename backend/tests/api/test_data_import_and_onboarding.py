@@ -10,9 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.db.session import get_db
 from app.main import app
-from app.models.data_import import DataImportBatch, ImportBatchStatus, ImportRowStatus
 from app.models.member import Member
-from app.models.onboarding import OnboardingStage, TenantOnboarding
 from app.models.organization import Organization
 from app.models.rbac import Permission, Role, UserRole
 from app.models.tenant import Tenant
@@ -164,9 +162,7 @@ async def test_csv_import_pipeline_e2e(api_client, pg_engine):
 
     # 4. Verify members created in DB
     async with maker() as db:
-        res = await db.execute(
-            select(Member).where(Member.tenant_id == tenant.id)
-        )
+        res = await db.execute(select(Member).where(Member.tenant_id == tenant.id))
         members = list(res.scalars().all())
         assert len(members) == 2
         names = {m.first_name for m in members}
@@ -205,7 +201,41 @@ async def test_tenant_onboarding_state_machine(api_client, pg_engine):
     assert data["current_stage"] == "ORG_CREATED"
     assert data["is_completed"] is False
 
-    # 2. Advance to PLANS_DEFINED with step metadata
+    # 2. Advance without Location should fail with 400
+    adv_fail = await api_client.post(
+        "/api/v1/onboarding/advance",
+        headers=headers,
+        json={
+            "next_stage": "PLANS_DEFINED",
+            "stage_data": {"plans_count": 3},
+        },
+    )
+    assert adv_fail.status_code == 400
+    assert "şube" in adv_fail.json()["detail"].lower()
+
+    # Create Location and published PlanVersion in DB
+    from app.models.location import Location
+    from app.models.membership import Plan, PlanVersion
+
+    async with maker() as db:
+        loc = Location(id=uuid4(), tenant_id=tenant.id, name="Merkez Şube")
+        db.add(loc)
+        plan = Plan(id=uuid4(), tenant_id=tenant.id, name="Standart Üyelik")
+        db.add(plan)
+        pv = PlanVersion(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            plan_id=plan.id,
+            version=1,
+            price_amount_minor=100000,
+            currency="TRY",
+            billing_cycle_months=1,
+            is_published=True,
+        )
+        db.add(pv)
+        await db.commit()
+
+    # 3. Advance to PLANS_DEFINED with step metadata
     adv_resp = await api_client.post(
         "/api/v1/onboarding/advance",
         headers=headers,
@@ -219,7 +249,7 @@ async def test_tenant_onboarding_state_machine(api_client, pg_engine):
     assert adv_data["current_stage"] == "PLANS_DEFINED"
     assert "PLANS_DEFINED" in adv_data["step_data"]
 
-    # 3. Complete onboarding
+    # 4. Complete onboarding
     comp_resp = await api_client.post(
         "/api/v1/onboarding/advance",
         headers=headers,

@@ -6,13 +6,16 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed one using Argon2."""
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password: str) -> str:
     """Hash a plain password using Argon2."""
     return pwd_context.hash(password)
+
 
 def generate_session_token() -> tuple[str, str]:
     """
@@ -26,16 +29,20 @@ def generate_session_token() -> tuple[str, str]:
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
     return raw_token, token_hash
 
+
 def get_session_token_from_cookie(request: Request) -> str | None:
     """
     Extracts the session token from the secure HttpOnly cookie or Authorization Bearer header.
     """
     token = request.cookies.get("session_token")
     if not token:
-        auth = request.headers.get("Authorization") or request.headers.get("authorization")
+        auth = request.headers.get("Authorization") or request.headers.get(
+            "authorization"
+        )
         if auth and auth.startswith(("Bearer ", "bearer ")):
             return auth.split(" ")[1].strip()
     return token
+
 
 import os
 
@@ -55,11 +62,13 @@ def get_fernet() -> Fernet:
             raise RuntimeError("ENCRYPTION_KEY environment variable is not set")
     return Fernet(key.encode())
 
+
 def encrypt_string(plain_text: str) -> str:
     if not plain_text:
         return plain_text
     f = get_fernet()
     return f.encrypt(plain_text.encode()).decode()
+
 
 def decrypt_string(cipher_text: str) -> str:
     if not cipher_text:

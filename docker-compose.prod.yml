@@ -50,6 +50,10 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
+      - NOTIFICATION_EMAIL_PROVIDER=disabled
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-default}
     restart: unless-stopped
     depends_on:
       backend:
@@ -65,11 +69,15 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
       - NOTIFICATION_EMAIL_PROVIDER=smtp
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-default}
     restart: unless-stopped
     depends_on:
       backend:
@@ -85,6 +93,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
+      - NOTIFICATION_EMAIL_PROVIDER=disabled
       - REPORT_STORAGE_PROVIDER=s3
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
       - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}

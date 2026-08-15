@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x6f7a8b9c0d1` · **P0/P1 MVP Product Closure:** Waves 1–3 Complete.
+**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x7a8b9c0d1e2` · **P0/P1 MVP Product Closure & Full Pillars 1-10:** Completed & Audited.
 
 ---
 
@@ -27,12 +27,13 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 `main` üzerinde kurulu; üstüne P0/P1 Gym MVP Product Closure (Waves 1–3) tamamlandı:
-- **Wave 1:** Public site legal sayfaları (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service genişlemesi (`/invoices`, `/payments`, `/consents`, `finance:read:self`), MemberPortal 5 sekmeli responsive UI.
-- **Wave 2:** Forensic Access Decision Snapshot (`AccessAttempt.snapshot_data` JSONB), Server-side KPI Engine (`GET /api/v1/dashboard/kpis`), Resepsiyon Danışma Masası (`/reception`, instant arama, profil kartı, turnike override).
-- **Wave 3:** Toplu Üye CSV Veri Göçü Hattı (`DataImportBatch`, `DataImportRow`, staging önizleme & transaksiyonel aktarım, `DataImport.tsx`), Başarısız Ödeme & Dunning mekaniği (`PaymentAttempt`, `DunningPolicy`, fatura retry kolonları), Kesintisiz Tenant Onboarding State Machine (`TenantOnboarding`).
+Phase 0–27.4 `main` üzerinde kurulu; üstüne P0/P1 Gym MVP Product Closure (Waves 1–3) ve 10 Temel Pillar tamamlandı:
+- **Wave 1 & Pillar 8:** Public site legal sayfaları (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service genişlemesi (`/invoices`, `/payments`, `/consents`, `finance:read:self`), MemberPortal 5 sekmeli responsive UI, `DataRetentionService`.
+- **Wave 2 & Pillars 5-6:** Forensic Access Decision Snapshot (`AccessAttempt.snapshot_data` JSONB), Server-side KPI Engine (`GET /api/v1/dashboard/kpis`), Resepsiyon Danışma Masası (`/reception`, instant arama, profil kartı, turnike override `access:override` ve immutable `AuditEvent`), `/admin/break-glass` acil durum oturumları.
+- **Wave 3 & Pillars 2-4:** Toplu Üye CSV Veri Göçü Hattı (`DataImportBatch`, `DataImportRow`, staging önizleme & transaksiyonel `MembershipService` aktarımı, `DataImport.tsx`), Başarısız Ödeme & Dunning mekaniği (`PaymentAttempt`, `DunningPolicy`, `DENY_DUNNING_PAST_DUE` turnike engelleme), Kesintisiz Tenant Onboarding State Machine (`TenantOnboarding` şube/paket/personel doğrulama şartları), Production Worker Stack (`outbox`, `notification`, `report` aktif tenant filtreli & commit garantili).
+- **Pillars 7 & 9:** QR KMS token crypto resolver (AWS KMS ve fail-closed fallback), Gelişmiş DR Restore Drill (`dr_restore_drill.sh` sha256 doğrulama & RLS kontrolü).
 
-**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 330+ test ve Playwright 36/36 E2E testleri 0 hatayla yeşil.
+**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 340+ test ve Playwright E2E testleri 0 hatayla yeşil.
 
 Önceki dalgalar:
 

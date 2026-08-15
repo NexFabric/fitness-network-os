@@ -5,6 +5,7 @@ Revises: 62afa7f4b3b1
 Create Date: 2026-08-09 18:30:51.798299
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -30,7 +31,9 @@ def upgrade() -> None:
             sa.Enum("COUNT", "BOOLEAN", name="entitlementtype"),
             nullable=False,
         ),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
@@ -58,12 +61,16 @@ def upgrade() -> None:
         sa.Column("plan_version_id", sa.Uuid(), nullable=False),
         sa.Column("entitlement_id", sa.Uuid(), nullable=False),
         sa.Column("quantity", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("unlimited", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column(
+            "unlimited", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.CheckConstraint("quantity >= 0", name="ck_plan_entitlements_quantity_nonneg"),
+        sa.CheckConstraint(
+            "quantity >= 0", name="ck_plan_entitlements_quantity_nonneg"
+        ),
         sa.ForeignKeyConstraint(
             ["tenant_id", "entitlement_id"],
             ["entitlement_definitions.tenant_id", "entitlement_definitions.id"],
@@ -96,7 +103,9 @@ def upgrade() -> None:
         sa.Column("entitlement_id", sa.Uuid(), nullable=False),
         sa.Column("source_plan_version_id", sa.Uuid(), nullable=True),
         sa.Column("granted_quantity", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("unlimited", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column(
+            "unlimited", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
         sa.Column("valid_from", sa.DateTime(timezone=True), nullable=True),
         sa.Column("valid_until", sa.DateTime(timezone=True), nullable=True),
         sa.Column("status", sa.String(), nullable=False, server_default="ACTIVE"),
@@ -276,8 +285,12 @@ def downgrade() -> None:
     op.drop_index("ix_entit_tx_tenant_idem_key", table_name="entitlement_transactions")
     op.drop_table("entitlement_transactions")
 
-    op.drop_index(op.f("ix_entitlement_wallets_tenant_id"), table_name="entitlement_wallets")
-    op.drop_index("ix_entit_wallets_tenant_memb_entit", table_name="entitlement_wallets")
+    op.drop_index(
+        op.f("ix_entitlement_wallets_tenant_id"), table_name="entitlement_wallets"
+    )
+    op.drop_index(
+        "ix_entit_wallets_tenant_memb_entit", table_name="entitlement_wallets"
+    )
     op.drop_index("ix_entit_wallets_tenant_me", table_name="entitlement_wallets")
     op.drop_table("entitlement_wallets")
 
@@ -285,10 +298,14 @@ def downgrade() -> None:
         op.f("ix_membership_entitlements_tenant_id"),
         table_name="membership_entitlements",
     )
-    op.drop_index("ix_memb_entit_tenant_memb_entit", table_name="membership_entitlements")
+    op.drop_index(
+        "ix_memb_entit_tenant_memb_entit", table_name="membership_entitlements"
+    )
     op.drop_table("membership_entitlements")
 
-    op.drop_index(op.f("ix_plan_entitlements_tenant_id"), table_name="plan_entitlements")
+    op.drop_index(
+        op.f("ix_plan_entitlements_tenant_id"), table_name="plan_entitlements"
+    )
     op.drop_index("ix_plan_entit_tenant_pv_entit", table_name="plan_entitlements")
     op.drop_table("plan_entitlements")
 
@@ -296,7 +313,9 @@ def downgrade() -> None:
         op.f("ix_entitlement_definitions_tenant_id"),
         table_name="entitlement_definitions",
     )
-    op.drop_index("ix_entitlement_def_tenant_code", table_name="entitlement_definitions")
+    op.drop_index(
+        "ix_entitlement_def_tenant_code", table_name="entitlement_definitions"
+    )
     op.drop_table("entitlement_definitions")
 
     op.execute("DROP TYPE IF EXISTS entitlementtype")

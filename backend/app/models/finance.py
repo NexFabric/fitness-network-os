@@ -63,7 +63,9 @@ class ReconciliationItemStatus(str, enum.Enum):
 class BillingAccount(TenantMixin, Base):
     __tablename__ = "billing_accounts"
 
-    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    user_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
     member_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     status: Mapped[str] = mapped_column(String, nullable=False, default="ACTIVE")
@@ -110,7 +112,9 @@ class Invoice(TenantMixin, Base):
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     total_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     paid_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    discount_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    discount_amount_minor: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     next_retry_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -179,9 +183,7 @@ class InvoiceItem(TenantMixin, Base):
         ),
         CheckConstraint("quantity > 0", name="ck_invoice_items_qty_pos"),
         CheckConstraint("amount_minor >= 0", name="ck_invoice_items_amount_nonneg"),
-        CheckConstraint(
-            "unit_amount_minor >= 0", name="ck_invoice_items_unit_nonneg"
-        ),
+        CheckConstraint("unit_amount_minor >= 0", name="ck_invoice_items_unit_nonneg"),
     )
 
     invoice: Mapped["Invoice"] = relationship("Invoice", back_populates="items")
@@ -192,7 +194,9 @@ class Payment(TenantMixin, Base):
 
     billing_account_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
-    refunded_amount_minor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    refunded_amount_minor: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
     status: Mapped[str] = mapped_column(
         String, nullable=False, default=PaymentStatus.SUCCEEDED.value
@@ -344,7 +348,9 @@ class CreditNote(TenantMixin, Base):
             ["billing_accounts.tenant_id", "billing_accounts.id"],
         ),
         CheckConstraint("amount_minor > 0", name="ck_credit_notes_amount_pos"),
-        CheckConstraint("remaining_minor >= 0", name="ck_credit_notes_remaining_nonneg"),
+        CheckConstraint(
+            "remaining_minor >= 0", name="ck_credit_notes_remaining_nonneg"
+        ),
         CheckConstraint(
             "remaining_minor <= amount_minor",
             name="ck_credit_notes_remaining_lte_amount",
@@ -432,7 +438,9 @@ class ReconciliationRun(TenantMixin, Base):
         String, nullable=False, default=ReconciliationStatus.OPEN.value
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -506,10 +514,13 @@ class PaymentAttempt(TenantMixin, Base):
 class DunningPolicy(TenantMixin, Base):
     __tablename__ = "dunning_policies"
 
-    name: Mapped[str] = mapped_column(String(100), nullable=False, default="Default Dunning")
+    name: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="Default Dunning"
+    )
     grace_period_days: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     max_retry_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     retry_interval_days: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
-    block_access_on_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    block_access_on_failure: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-

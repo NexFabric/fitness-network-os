@@ -5,6 +5,7 @@ Revises: h1a2b3c4d5e6
 Create Date: 2026-08-09 22:30:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -53,9 +54,7 @@ def upgrade() -> None:
         "access_attempts",
         sa.Column("method", sa.String(length=32), nullable=True),
     )
-    op.create_index(
-        "ix_access_attempts_jti", "access_attempts", ["jti"], unique=False
-    )
+    op.create_index("ix_access_attempts_jti", "access_attempts", ["jti"], unique=False)
 
     # --- qr_jti_replays ---
     op.create_table(

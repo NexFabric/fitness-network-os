@@ -20,17 +20,20 @@ from app.services.membership import MembershipService
 
 router = APIRouter()
 
+
 @router.post("/{membership_id}/freeze", response_model=MembershipFreezeResponse)
 async def freeze_membership(
     membership_id: UUID,
     freeze_in: MembershipFreezeCreate,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
-        
+
     service = MembershipService(db)
     try:
         freeze = await service.freeze_membership(
@@ -38,7 +41,7 @@ async def freeze_membership(
             start_date=freeze_in.start_date,
             expected_end_date=freeze_in.expected_end_date,
             reason=freeze_in.reason,
-            changed_by_user_id=current_user.id
+            changed_by_user_id=current_user.id,
         )
         await db.commit()
         await db.refresh(freeze)
@@ -52,16 +55,17 @@ async def unfreeze_membership(
     membership_id: UUID,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
 
     service = MembershipService(db)
     try:
         membership = await service.unfreeze_membership(
-            membership_id=membership_id,
-            changed_by_user_id=current_user.id
+            membership_id=membership_id, changed_by_user_id=current_user.id
         )
         await db.commit()
         await db.refresh(membership)
@@ -69,24 +73,27 @@ async def unfreeze_membership(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/{membership_id}/cancel", response_model=MembershipCancellationResponse)
 async def cancel_membership(
     membership_id: UUID,
     cancel_in: MembershipCancellationCreate,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
-        
+
     service = MembershipService(db)
     try:
         cancellation = await service.cancel_membership(
             membership_id=membership_id,
             effective_date=cancel_in.effective_date,
             reason=cancel_in.reason,
-            changed_by_user_id=current_user.id
+            changed_by_user_id=current_user.id,
         )
         await db.commit()
         await db.refresh(cancellation)
@@ -101,18 +108,20 @@ async def renew_membership(
     renew_in: MembershipRenewalCreate,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
-        
+
     service = MembershipService(db)
     try:
         renewal = await service.renew_membership(
             membership_id=membership_id,
             next_plan_version_id=renew_in.next_plan_version_id,
             renewal_date=renew_in.renewal_date,
-            changed_by_user_id=current_user.id
+            changed_by_user_id=current_user.id,
         )
         await db.commit()
         await db.refresh(renewal)
@@ -126,16 +135,17 @@ async def expire_membership(
     membership_id: UUID,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
-        
+
     service = MembershipService(db)
     try:
         membership = await service.expire_membership(
-            membership_id=membership_id,
-            changed_by_user_id=current_user.id
+            membership_id=membership_id, changed_by_user_id=current_user.id
         )
         await db.commit()
         await db.refresh(membership)
@@ -149,16 +159,17 @@ async def mark_past_due(
     membership_id: UUID,
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    if not AuthorizationService.is_authorized(user=current_user, permission="memberships:write", resource_tenant_id=tenant_id):
+    if not AuthorizationService.is_authorized(
+        user=current_user, permission="memberships:write", resource_tenant_id=tenant_id
+    ):
         raise SecurityException()
-        
+
     service = MembershipService(db)
     try:
         membership = await service.mark_past_due(
-            membership_id=membership_id,
-            changed_by_user_id=current_user.id
+            membership_id=membership_id, changed_by_user_id=current_user.id
         )
         await db.commit()
         await db.refresh(membership)

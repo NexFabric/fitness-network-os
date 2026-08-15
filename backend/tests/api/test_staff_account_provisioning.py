@@ -290,9 +290,7 @@ async def test_email_case_does_not_create_a_duplicate(api_client, pg_engine):
     email, first = await _create_account(api_client, tenant_id, token)
     assert first.status_code == 201
 
-    _, second = await _create_account(
-        api_client, tenant_id, token, email=email.upper()
-    )
+    _, second = await _create_account(api_client, tenant_id, token, email=email.upper())
     assert second.status_code == 409
 
 

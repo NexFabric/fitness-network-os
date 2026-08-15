@@ -1,8 +1,8 @@
-"""seed finance:read:self permission
+"""seed access:override permission
 
-Revision ID: x4d5e6f7a8b9
-Revises: x3c4d5e6f7a8
-Create Date: 2026-08-14 23:23:00.000000
+Revision ID: x7a8b9c0d1e2
+Revises: x6f7a8b9c0d1
+Create Date: 2026-08-15 01:10:00.000000
 
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "x4d5e6f7a8b9"
-down_revision: str | None = "x3c4d5e6f7a8"
+revision: str = "x7a8b9c0d1e2"
+down_revision: str | None = "x6f7a8b9c0d1"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -27,13 +27,13 @@ def upgrade() -> None:
         sa.text(
             """
             INSERT INTO permissions (id, name, description, created_at, updated_at)
-            VALUES (gen_random_uuid(), 'finance:read:self', 'Read own invoices and payment history via /me (bound member)', now(), now())
+            VALUES (gen_random_uuid(), 'access:override', 'Manual turnstile check-in override for reception and staff', now(), now())
             ON CONFLICT (name) DO NOTHING;
             """
         )
     )
 
-    # 2. Grant to MEMBER and PLATFORM_SUPER_ADMIN
+    # 2. Grant to GYM_OWNER, GYM_ADMIN, GYM_MANAGER, FRONT_DESK, and PLATFORM_SUPER_ADMIN
     conn.execute(
         sa.text(
             """
@@ -41,8 +41,8 @@ def upgrade() -> None:
             SELECT r.id, p.id
             FROM roles r
             CROSS JOIN permissions p
-            WHERE r.name IN ('MEMBER', 'PLATFORM_SUPER_ADMIN')
-              AND p.name = 'finance:read:self'
+            WHERE r.name IN ('GYM_OWNER', 'GYM_ADMIN', 'GYM_MANAGER', 'FRONT_DESK', 'PLATFORM_SUPER_ADMIN')
+              AND p.name = 'access:override'
             ON CONFLICT DO NOTHING;
             """
         )
@@ -55,9 +55,9 @@ def downgrade() -> None:
         sa.text(
             """
             DELETE FROM role_permissions
-            WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'finance:read:self');
+            WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'access:override');
             
-            DELETE FROM permissions WHERE name = 'finance:read:self';
+            DELETE FROM permissions WHERE name = 'access:override';
             """
         )
     )

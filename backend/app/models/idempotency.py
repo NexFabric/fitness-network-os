@@ -27,14 +27,18 @@ class IdempotencyKey(Base, TenantMixin):
 
     __tablename__ = "idempotency_keys"
 
-    key: Mapped[str] = mapped_column(String(255), index=True, nullable=False, unique=True)
+    key: Mapped[str] = mapped_column(
+        String(255), index=True, nullable=False, unique=True
+    )
     request_path: Mapped[str] = mapped_column(String(255), nullable=False)
     request_params: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     response_status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     response_body: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class IdempotencyRecord(TenantMixin, Base):
@@ -61,7 +65,9 @@ class IdempotencyRecord(TenantMixin, Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     locked_until: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

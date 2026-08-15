@@ -370,7 +370,9 @@ class FinanceService:
                 InvoiceStatus.OPEN.value,
                 InvoiceStatus.PARTIALLY_PAID.value,
             ):
-                raise ValueError(f"Cannot allocate to invoice in status {invoice.status}")
+                raise ValueError(
+                    f"Cannot allocate to invoice in status {invoice.status}"
+                )
 
             remaining = invoice.total_amount_minor - invoice.paid_amount_minor
             if amount > remaining:
@@ -459,13 +461,17 @@ class FinanceService:
         self, tenant_id: UUID, allocation: PaymentAllocation
     ) -> int:
         rev = (
-            await self.session.execute(
-                select(PaymentAllocationReversal.amount_minor).where(
-                    PaymentAllocationReversal.tenant_id == tenant_id,
-                    PaymentAllocationReversal.allocation_id == allocation.id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocationReversal.amount_minor).where(
+                        PaymentAllocationReversal.tenant_id == tenant_id,
+                        PaymentAllocationReversal.allocation_id == allocation.id,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return allocation.amount_minor - sum(rev)
 
     async def _unwind_allocations_for_refund(
@@ -478,16 +484,20 @@ class FinanceService:
     ) -> None:
         """LIFO reverse allocations via append-only PaymentAllocationReversal rows."""
         allocs = (
-            await self.session.execute(
-                select(PaymentAllocation)
-                .where(
-                    PaymentAllocation.tenant_id == tenant_id,
-                    PaymentAllocation.payment_id == payment.id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocation)
+                    .where(
+                        PaymentAllocation.tenant_id == tenant_id,
+                        PaymentAllocation.payment_id == payment.id,
+                    )
+                    .order_by(PaymentAllocation.created_at.desc())
+                    .with_for_update()
                 )
-                .order_by(PaymentAllocation.created_at.desc())
-                .with_for_update()
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         remaining_refund = refund_amount
         for alloc in allocs:
@@ -604,7 +614,9 @@ class FinanceService:
             InvoiceStatus.OPEN.value,
             InvoiceStatus.PARTIALLY_PAID.value,
         ):
-            raise ValueError(f"Cannot apply credit to invoice in status {invoice.status}")
+            raise ValueError(
+                f"Cannot apply credit to invoice in status {invoice.status}"
+            )
 
         remaining = invoice.total_amount_minor - invoice.paid_amount_minor
         if amount_minor > remaining:
@@ -792,13 +804,13 @@ class FinanceService:
     ) -> tuple[list[Invoice], int]:
         from sqlalchemy import func
         from sqlalchemy.orm import selectinload
-        
+
         stmt = select(Invoice).where(Invoice.tenant_id == tenant_id)
         if member_id:
             stmt = stmt.join(
                 BillingAccount, Invoice.billing_account_id == BillingAccount.id
             ).where(BillingAccount.member_id == member_id)
-            
+
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await self.session.execute(count_stmt)).scalar_one()
 
@@ -820,13 +832,13 @@ class FinanceService:
         member_id: UUID | None = None,
     ) -> tuple[list[Payment], int]:
         from sqlalchemy import func
-        
+
         stmt = select(Payment).where(Payment.tenant_id == tenant_id)
         if member_id:
             stmt = stmt.join(
                 BillingAccount, Payment.billing_account_id == BillingAccount.id
             ).where(BillingAccount.member_id == member_id)
-            
+
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await self.session.execute(count_stmt)).scalar_one()
 
@@ -877,13 +889,17 @@ class FinanceService:
     async def _payment_allocated_total(self, tenant_id: UUID, payment_id: UUID) -> int:
         """Net allocated = sum(allocations) - sum(reversals for those allocations)."""
         allocs = (
-            await self.session.execute(
-                select(PaymentAllocation).where(
-                    PaymentAllocation.tenant_id == tenant_id,
-                    PaymentAllocation.payment_id == payment_id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocation).where(
+                        PaymentAllocation.tenant_id == tenant_id,
+                        PaymentAllocation.payment_id == payment_id,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         total = 0
         for alloc in allocs:
             total += await self._allocation_remaining(tenant_id, alloc)

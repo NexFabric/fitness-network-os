@@ -69,7 +69,7 @@ async def _seed_admin_and_device(api_client, pg_session_maker):
         from sqlalchemy.orm import selectinload
 
         from app.models.rbac import Permission, Role, UserRole
-        
+
         # devices:manage is seeded by migration r1e2f3a4b5c6, so get-or-create.
         perm = (
             await db.execute(
@@ -80,15 +80,23 @@ async def _seed_admin_and_device(api_client, pg_session_maker):
             perm = Permission(name="devices:manage", description="Manage devices")
             db.add(perm)
             await db.flush()
-        
+
         # User role is created in _seed_user, let's just find it
-        role_row = (await db.execute(select(UserRole).where(UserRole.user_id == user.id))).scalar_one()
-        role = (await db.execute(select(Role).options(selectinload(Role.permissions)).where(Role.id == role_row.role_id))).scalar_one()
+        role_row = (
+            await db.execute(select(UserRole).where(UserRole.user_id == user.id))
+        ).scalar_one()
+        role = (
+            await db.execute(
+                select(Role)
+                .options(selectinload(Role.permissions))
+                .where(Role.id == role_row.role_id)
+            )
+        ).scalar_one()
         # The seeded role may already hold it (migration r1e2f3a4b5c6).
         if perm.id not in {p.id for p in role.permissions}:
             role.permissions.append(perm)
         await db.commit()
-        
+
     # Login as admin
     login = await api_client.post(
         "/api/v1/auth/login",
@@ -96,14 +104,18 @@ async def _seed_admin_and_device(api_client, pg_session_maker):
     )
     assert login.status_code == 200
     admin_cookie = login.cookies["session_token"]
-    
+
     # 2. Provision device
     # Create location first
     async with pg_session_maker() as db:
         from sqlalchemy import text
 
         from app.models.location import Location
-        await db.execute(text("SELECT set_config('app.current_tenant_id', :tid, true)"), {"tid": str(tenant.id)})
+
+        await db.execute(
+            text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+            {"tid": str(tenant.id)},
+        )
         location = Location(tenant_id=tenant.id, name="Test Location")
         db.add(location)
         await db.commit()
@@ -136,18 +148,29 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
     device_tenant_id = seeded["device_tenant_id"]
     api_key = seeded["api_key"]
 
-
     # Check audit log for provision
     async with pg_session_maker() as db:
         from sqlalchemy import text
-        await db.execute(text("SELECT set_config('app.current_tenant_id', :t, true)"), {"t": str(device_tenant_id)})
-        audit = (await db.execute(select(AuditEvent).where(AuditEvent.resource_id == device_id))).scalar_one()
+
+        await db.execute(
+            text("SELECT set_config('app.current_tenant_id', :t, true)"),
+            {"t": str(device_tenant_id)},
+        )
+        audit = (
+            await db.execute(
+                select(AuditEvent).where(AuditEvent.resource_id == device_id)
+            )
+        ).scalar_one()
         assert audit.action == "device_provisioned"
-    
+
     # 3. Authenticate device
     auth_res = await api_client.post(
         "/api/v1/devices/auth",
-        json={"device_id": device_id, "tenant_id": device_tenant_id, "api_key": api_key},
+        json={
+            "device_id": device_id,
+            "tenant_id": device_tenant_id,
+            "api_key": api_key,
+        },
     )
     assert auth_res.status_code == 200
     assert "device_session" in auth_res.cookies
@@ -160,24 +183,32 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
     assert auth_data["max_clock_skew_seconds"] == MAX_CLOCK_SKEW_SECONDS
     assert len(auth_data["signing_secret"]) >= 32
     assert auth_data["session_id"]
-    
+
     # Check device is online
     async with pg_session_maker() as db:
         from sqlalchemy import text
-        await db.execute(text("SELECT set_config('app.current_tenant_id', :t, true)"), {"t": str(device_tenant_id)})
-        device = (await db.execute(select(Device).where(Device.id == device_id))).scalar_one()
+
+        await db.execute(
+            text("SELECT set_config('app.current_tenant_id', :t, true)"),
+            {"t": str(device_tenant_id)},
+        )
+        device = (
+            await db.execute(select(Device).where(Device.id == device_id))
+        ).scalar_one()
         assert device.status == DeviceStatus.ONLINE
-    
+
     # 4. Scanner cannot hit staff API
     staff_res = await api_client.get(
         "/api/v1/devices/",
         headers={"X-Tenant-ID": str(tenant.id)},
-        cookies={"session_token": device_cookie}, # Passing device cookie as if it was a user session
+        cookies={
+            "session_token": device_cookie
+        },  # Passing device cookie as if it was a user session
     )
     # The deps.py expects "session_token" for user. If we pass it, it should fail
     # because the device token hash won't be in `user_sessions`.
     assert staff_res.status_code == 401
-    
+
     # 5. Revoke device
     revoke_res = await api_client.post(
         "/api/v1/devices/revoke",
@@ -186,7 +217,7 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
         json={"device_id": device_id},
     )
     assert revoke_res.status_code == 200
-    
+
     # Check audit log for revoke
     async with pg_session_maker() as db:
         from sqlalchemy import text
@@ -197,13 +228,24 @@ async def test_device_provisioning_and_auth(api_client, pg_session_maker):
             text("SELECT set_config('app.current_tenant_id', :tid, true)"),
             {"tid": str(tenant.id)},
         )
-        audit = (await db.execute(select(AuditEvent).where(AuditEvent.resource_id == device_id, AuditEvent.action == "device_revoked"))).scalar_one()
+        audit = (
+            await db.execute(
+                select(AuditEvent).where(
+                    AuditEvent.resource_id == device_id,
+                    AuditEvent.action == "device_revoked",
+                )
+            )
+        ).scalar_one()
         assert audit.action == "device_revoked"
-        
+
     # 6. Authenticate device should fail now
     auth_res2 = await api_client.post(
         "/api/v1/devices/auth",
-        json={"device_id": device_id, "tenant_id": device_tenant_id, "api_key": api_key},
+        json={
+            "device_id": device_id,
+            "tenant_id": device_tenant_id,
+            "api_key": api_key,
+        },
     )
     assert auth_res2.status_code == 401
 

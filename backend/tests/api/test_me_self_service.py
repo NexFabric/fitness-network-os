@@ -199,9 +199,13 @@ async def test_me_profile_member_memberships_bound_allow(api_client, pg_engine):
     """MEMBER with user↔member binding ALLOW on /me/profile, /member, /memberships."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, user, token, member, membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            user,
+            token,
+            member,
+            membership,
+        ) = await _seed_bound_member_with_membership(db)
         await db.commit()
         tenant_id = tenant.id
         member_id = member.id
@@ -247,9 +251,13 @@ async def test_me_entitlements_list_bound(api_client, pg_engine):
     """GET /me/entitlements returns wallet snapshot for bound member only."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, _user, token, member, membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            _user,
+            token,
+            member,
+            membership,
+        ) = await _seed_bound_member_with_membership(db)
         ent = EntitlementDefinition(
             id=uuid4(),
             tenant_id=tenant.id,
@@ -372,9 +380,13 @@ async def test_me_checkins_list_bound(api_client, pg_engine):
     """GET /me/checkins lists only bound member checkins."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, _user, token, member, _membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            _user,
+            token,
+            member,
+            _membership,
+        ) = await _seed_bound_member_with_membership(db)
         loc = Location(tenant_id=tenant.id, name="Main", timezone="UTC")
         db.add(loc)
         await db.flush()
@@ -607,9 +619,7 @@ async def test_me_no_client_member_id_path_and_staff_path_unchanged(
     }
 
     # Staff path: MEMBER lacks members:read → 403
-    r_staff = await api_client.get(
-        f"/api/v1/members/{member_b_id}", headers=headers_a
-    )
+    r_staff = await api_client.get(f"/api/v1/members/{member_b_id}", headers=headers_a)
     assert r_staff.status_code == 403
 
     # Self path returns A only
@@ -868,4 +878,3 @@ async def test_me_consents_flow(api_client, pg_engine):
     consents = r_get.json()
     assert len(consents) == 1
     assert consents[0]["consent_type"] == "MARKETING_SMS"
-

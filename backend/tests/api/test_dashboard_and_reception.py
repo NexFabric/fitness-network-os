@@ -10,11 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.db.session import get_db
 from app.main import app
 from app.models.access import Checkin
-from app.models.entitlement import (
-    EntitlementDefinition,
-    EntitlementType,
-    EntitlementWallet,
-)
 from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.location import Location
 from app.models.member import Member, Note, Tag
@@ -27,12 +22,14 @@ from app.models.user import User, UserSession
 
 def _token_pair() -> tuple[str, str]:
     import hashlib
+
     raw = f"tok_{uuid4().hex}"
     return raw, hashlib.sha256(raw.encode()).hexdigest()
 
 
 async def _ensure_perms(db: AsyncSession, names: list[str]) -> list[Permission]:
     from sqlalchemy import select
+
     out: list[Permission] = []
     for name in names:
         row = (
@@ -46,7 +43,9 @@ async def _ensure_perms(db: AsyncSession, names: list[str]) -> list[Permission]:
     return out
 
 
-async def _staff_user(db: AsyncSession, tenant_id, role_name="GYM_ADMIN") -> tuple[User, str]:
+async def _staff_user(
+    db: AsyncSession, tenant_id, role_name="GYM_ADMIN"
+) -> tuple[User, str]:
     raw, th = _token_pair()
     user = User(
         email=f"staff-{uuid4().hex[:8]}@example.com",
@@ -62,6 +61,7 @@ async def _staff_user(db: AsyncSession, tenant_id, role_name="GYM_ADMIN") -> tup
         "members:write",
         "checkins:read",
         "checkins:write",
+        "access:override",
         "reports:read",
     ]
     perms = await _ensure_perms(db, perms_needed)
@@ -75,7 +75,13 @@ async def _staff_user(db: AsyncSession, tenant_id, role_name="GYM_ADMIN") -> tup
     await db.flush()
 
     db.add(UserRole(user_id=user.id, role_id=role.id, tenant_id=tenant_id))
-    db.add(UserSession(user_id=user.id, token_hash=th, expires_at=datetime.now(UTC) + timedelta(days=1)))
+    db.add(
+        UserSession(
+            user_id=user.id,
+            token_hash=th,
+            expires_at=datetime.now(UTC) + timedelta(days=1),
+        )
+    )
     await db.flush()
     return user, raw
 
@@ -87,7 +93,9 @@ async def api_client(pg_session_maker):
             yield db
 
     app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         yield client
     app.dependency_overrides.clear()
 
@@ -135,7 +143,9 @@ async def test_dashboard_kpis_aggregation(api_client, pg_engine):
         await db.flush()
 
         # Plan and Plan Version
-        plan = Plan(id=uuid4(), tenant_id=tenant.id, name="Standard Plan", is_active=True)
+        plan = Plan(
+            id=uuid4(), tenant_id=tenant.id, name="Standard Plan", is_active=True
+        )
         db.add(plan)
         await db.flush()
 
@@ -254,7 +264,7 @@ async def test_reception_search_and_override_checkin(api_client, pg_engine):
         db.add(tenant)
         await db.flush()
 
-        staff_user, token = await _staff_user(db, tenant.id)
+        _staff_user_inst, token = await _staff_user(db, tenant.id)
 
         loc = Location(id=uuid4(), tenant_id=tenant.id, name="Central Branch")
         db.add(loc)
@@ -273,7 +283,13 @@ async def test_reception_search_and_override_checkin(api_client, pg_engine):
         await db.flush()
 
         db.add(Tag(tenant_id=tenant.id, member_id=m.id, name="VIP"))
-        db.add(Note(tenant_id=tenant.id, member_id=m.id, content="Antrenör eşliğinde çalışıyor"))
+        db.add(
+            Note(
+                tenant_id=tenant.id,
+                member_id=m.id,
+                content="Antrenör eşliğinde çalışıyor",
+            )
+        )
 
         await db.commit()
         tenant_id = tenant.id

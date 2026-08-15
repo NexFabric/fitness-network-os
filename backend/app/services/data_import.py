@@ -1,11 +1,14 @@
 import csv
 import io
+import logging
 import re
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger("data-import")
 
 from app.models.data_import import (
     DataImportBatch,
@@ -14,7 +17,7 @@ from app.models.data_import import (
     ImportRowStatus,
 )
 from app.models.member import Member
-from app.models.membership import Membership, PlanVersion
+from app.models.membership import PlanVersion
 
 
 def _normalize_header(header: str) -> str:
@@ -57,7 +60,9 @@ class DataImportService:
 
         headers = [_normalize_header(h) for h in raw_headers]
         if "first_name" not in headers or "last_name" not in headers:
-            raise ValueError("CSV dosyasında en azından 'first_name'/'ad' ve 'last_name'/'soyad' sütunları bulunmalıdır.")
+            raise ValueError(
+                "CSV dosyasında en azından 'first_name'/'ad' ve 'last_name'/'soyad' sütunları bulunmalıdır."
+            )
 
         batch = DataImportBatch(
             id=uuid4(),
@@ -143,7 +148,9 @@ class DataImportService:
         if not batch or batch.tenant_id != tenant_id:
             raise ValueError("İçe aktarma grubu bulunamadı.")
         if batch.status != ImportBatchStatus.PREVIEW:
-            raise ValueError("Bu içe aktarma grubu zaten işlendi veya geçersiz durumda.")
+            raise ValueError(
+                "Bu içe aktarma grubu zaten işlendi veya geçersiz durumda."
+            )
 
         batch.status = ImportBatchStatus.PROCESSING
         await db.commit()
@@ -190,33 +197,51 @@ class DataImportService:
             db.add(member)
             await db.flush()
 
-            # If plan_id given, attach membership if plan version exists
+            # If plan_id given, attach membership via MembershipService
             if parsed.get("plan_id"):
                 try:
                     plan_uuid = UUID(parsed["plan_id"])
                     pv = (
-                        await db.execute(
-                            select(PlanVersion)
-                            .where(
-                                PlanVersion.tenant_id == tenant_id,
-                                PlanVersion.plan_id == plan_uuid,
+                        (
+                            await db.execute(
+                                select(PlanVersion)
+                                .where(
+                                    PlanVersion.tenant_id == tenant_id,
+                                    PlanVersion.plan_id == plan_uuid,
+                                    PlanVersion.is_published.is_(True),
+                                )
+                                .order_by(PlanVersion.version.desc())
                             )
-                            .order_by(PlanVersion.version.desc())
                         )
-                    ).scalars().first()
+                        .scalars()
+                        .first()
+                    )
 
                     if pv:
-                        membership = Membership(
-                            id=uuid4(),
-                            tenant_id=tenant_id,
+                        start_dt = datetime.now(UTC)
+                        if parsed.get("start_date"):
+                            try:
+                                start_dt = datetime.fromisoformat(
+                                    str(parsed["start_date"])
+                                )
+                                if start_dt.tzinfo is None:
+                                    start_dt = start_dt.replace(tzinfo=UTC)
+                            except Exception:
+                                start_dt = datetime.now(UTC)
+
+                        from app.services.membership import MembershipService
+
+                        mem_svc = MembershipService(db)
+                        await mem_svc.start_membership(
                             member_id=member.id,
                             plan_version_id=pv.id,
-                            status="ACTIVE",
-                            start_date=datetime.now(UTC),
+                            start_date=start_dt,
+                            tenant_id=tenant_id,
                         )
-                        db.add(membership)
-                except Exception:
-                    pass
+                except Exception as ex:
+                    logger.warning(
+                        f"Failed to attach imported membership for member {member.id}: {ex}"
+                    )
 
             row.status = ImportRowStatus.IMPORTED
             imported_count += 1

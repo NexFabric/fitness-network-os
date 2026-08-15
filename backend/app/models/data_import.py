@@ -4,7 +4,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     DateTime,
-    Enum,
     ForeignKeyConstraint,
     Integer,
     String,
@@ -64,9 +63,7 @@ class DataImportBatch(TenantMixin, Base):
     )
 
     _model_table_args = (
-        UniqueConstraint(
-            "tenant_id", "id", name="uq_data_import_batches_tenant_id_id"
-        ),
+        UniqueConstraint("tenant_id", "id", name="uq_data_import_batches_tenant_id_id"),
     )
 
 

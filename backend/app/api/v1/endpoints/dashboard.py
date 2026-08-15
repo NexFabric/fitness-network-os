@@ -82,7 +82,9 @@ async def get_dashboard_kpis(
     res_past_due = await db.execute(
         select(
             func.count(Invoice.id),
-            func.coalesce(func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0),
+            func.coalesce(
+                func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
+            ),
         ).where(
             Invoice.tenant_id == tenant_id,
             Invoice.status == "OPEN",
@@ -106,7 +108,11 @@ async def get_dashboard_kpis(
 
     # 6. Total Outstanding Debt
     res_total_debt = await db.execute(
-        select(func.coalesce(func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0)).where(
+        select(
+            func.coalesce(
+                func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
+            )
+        ).where(
             Invoice.tenant_id == tenant_id,
             Invoice.status.in_(["OPEN", "PARTIALLY_PAID"]),
         )

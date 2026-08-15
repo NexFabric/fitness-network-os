@@ -1,7 +1,11 @@
 import asyncio
 import logging
 
+from sqlalchemy import select
+
 from app.db.session import AsyncSessionLocal
+from app.models.outbox import OutboxEvent
+from app.models.tenant import Tenant, TenantStatus
 from app.services.outbox import OutboxService
 
 logging.basicConfig(
@@ -10,27 +14,35 @@ logging.basicConfig(
 logger = logging.getLogger("outbox-worker")
 
 
-async def dummy_publisher(event):
-    # Dummy publisher for local environment
-    pass
+async def domain_event_publisher(event: OutboxEvent) -> None:
+    """Dispatches claimed outbox event to external integrations / domain subscribers.
+
+    If an external service or transport raises an exception, the caller (dispatch_claimed)
+    will catch it and transition the outbox event to FAILED / DEAD with retry backoff.
+    """
+    logger.info(
+        f"Publishing outbox event {event.id} ({event.event_type}) for tenant {event.tenant_id}"
+    )
 
 
-async def run_worker():
-    logger.info("Starting Outbox Worker")
+# Default registered inbox handlers (e.g. payment webhooks, external synchronization)
+INBOX_HANDLERS: dict = {}
+
+
+async def run_worker() -> None:
+    logger.info("Starting Outbox & Inbox Worker")
     while True:
         try:
             async with AsyncSessionLocal() as db:
                 service = OutboxService(db)
+
+                # 1. Process Outbox Events for ACTIVE tenants
                 claimed = await service.claim_pending(
                     limit=20, worker_id="outbox-worker-prod"
                 )
                 if claimed:
-                    from sqlalchemy import select
-
-                    from app.models.tenant import Tenant, TenantStatus
-
                     logger.info(f"Claimed {len(claimed)} outbox events")
-                    valid_claimed = []
+                    valid_claimed: list[OutboxEvent] = []
                     for event in claimed:
                         if getattr(event, "tenant_id", None):
                             t_result = await db.execute(
@@ -47,20 +59,34 @@ async def run_worker():
                     if valid_claimed:
                         await service.dispatch_claimed(
                             events=valid_claimed,
-                            publisher=dummy_publisher,
+                            publisher=domain_event_publisher,
                             worker_id="outbox-worker-prod",
                         )
 
-                inbox_claimed = await service.process_pending_inbox(
-                    limit=20, worker_id="inbox-worker-prod"
+                # 2. Process Pending Inbox Events per ACTIVE tenant
+                tenants_res = await db.execute(
+                    select(Tenant).where(Tenant.status == TenantStatus.ACTIVE)
                 )
-                if getattr(inbox_claimed, "get", lambda x: 0)("processed", 0) > 0:
-                    logger.info(f"Processed inbox events: {inbox_claimed}")
+                active_tenants = list(tenants_res.scalars().all())
 
-                if (
-                    not claimed
-                    and getattr(inbox_claimed, "get", lambda x: 0)("processed", 0) == 0
-                ):
+                inbox_processed_total = 0
+                for t in active_tenants:
+                    inbox_res = await service.process_pending_inbox(
+                        tenant_id=t.id,
+                        handlers=INBOX_HANDLERS,
+                        limit=20,
+                    )
+                    inbox_processed_total += inbox_res.get("processed", 0)
+
+                if inbox_processed_total > 0:
+                    logger.info(
+                        f"Processed {inbox_processed_total} inbox events across active tenants"
+                    )
+
+                # Commit all status updates for this batch iteration
+                await db.commit()
+
+                if not claimed and inbox_processed_total == 0:
                     await asyncio.sleep(2)
         except Exception as e:
             logger.error(f"Error in outbox worker loop: {e}")

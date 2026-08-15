@@ -292,9 +292,7 @@ async def list_my_memberships(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    rows = await MembershipService(db).list_memberships_for_member(
-        tenant_id, member.id
-    )
+    rows = await MembershipService(db).list_memberships_for_member(tenant_id, member.id)
     return rows
 
 
@@ -312,9 +310,7 @@ async def list_my_entitlements(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    wallets = await EntitlementService.list_wallets_for_member(
-        db, tenant_id, member.id
-    )
+    wallets = await EntitlementService.list_wallets_for_member(db, tenant_id, member.id)
     return MeEntitlementsSummaryResponse(
         member_id=member.id,
         wallets=[
@@ -511,4 +507,3 @@ async def record_my_consent(
     await db.commit()
     await db.refresh(record)
     return record
-

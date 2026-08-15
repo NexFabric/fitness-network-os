@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -85,6 +85,62 @@ async def advance_onboarding_stage(
         )
         db.add(onboarding)
         await db.flush()
+
+    # Verify stage prerequisites before advancing
+    from fastapi import HTTPException
+    from sqlalchemy import func
+
+    from app.models.location import Location
+    from app.models.membership import PlanVersion
+    from app.models.rbac import UserRole
+
+    if req.next_stage in {
+        OnboardingStage.PLANS_DEFINED,
+        OnboardingStage.STAFF_INVITED,
+        OnboardingStage.COMPLETED,
+    }:
+        loc_count = (
+            await db.execute(
+                select(func.count(Location.id)).where(Location.tenant_id == tenant_id)
+            )
+        ).scalar() or 0
+        if loc_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Önce en az bir şube (location) tanımlamalısınız.",
+            )
+
+    if req.next_stage in {
+        OnboardingStage.STAFF_INVITED,
+        OnboardingStage.COMPLETED,
+    }:
+        plan_count = (
+            await db.execute(
+                select(func.count(PlanVersion.id)).where(
+                    PlanVersion.tenant_id == tenant_id,
+                    PlanVersion.is_published.is_(True),
+                )
+            )
+        ).scalar() or 0
+        if plan_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Önce en az bir yayınlanmış üyelik paketi (plan) oluşturmalısınız.",
+            )
+
+    if req.next_stage == OnboardingStage.COMPLETED:
+        staff_count = (
+            await db.execute(
+                select(func.count(UserRole.user_id)).where(
+                    UserRole.tenant_id == tenant_id
+                )
+            )
+        ).scalar() or 0
+        if staff_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Önce en az bir personel veya yetkili kullanıcı atamalısınız.",
+            )
 
     # Merge step data
     updated_data = dict(onboarding.step_data or {})

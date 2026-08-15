@@ -24,7 +24,7 @@ export default function App() {
     () => !getTenantId(),
   )
 
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null)
 
   useEffect(() => {
     function handleOnline() { setIsOnline(true) }

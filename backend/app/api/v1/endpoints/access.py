@@ -218,7 +218,9 @@ async def rotate_key(
     key = await svc.rotate_signing_key(tenant_id)
     await db.commit()
     return RotateKeyResponse(
-        kid=key.kid, status=key.status.value if hasattr(key.status, "value") else str(key.status), algorithm=key.algorithm
+        kid=key.kid,
+        status=key.status.value if hasattr(key.status, "value") else str(key.status),
+        algorithm=key.algorithm,
     )
 
 

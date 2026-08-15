@@ -128,6 +128,18 @@ async def _audit_superuser_tenant_access(
     await db.flush()
 
 
+async def _verify_tenant_status(db: AsyncSession, tenant_id: UUID) -> None:
+    from app.models.tenant import Tenant, TenantStatus
+
+    tenant_result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = tenant_result.scalars().first()
+    if tenant:
+        if tenant.status == TenantStatus.SUSPENDED:
+            raise HTTPException(status_code=403, detail="Tenant is suspended")
+        if tenant.status == TenantStatus.CLOSED:
+            raise HTTPException(status_code=403, detail="Tenant is closed")
+
+
 async def get_tenant_id(
     x_tenant_id: str = Header(..., alias="X-Tenant-ID"),
     user: User = Depends(get_current_user),
@@ -141,22 +153,11 @@ async def get_tenant_id(
             status_code=400, detail="Invalid X-Tenant-ID header format. Must be a UUID."
         )
 
-    async def _verify_tenant_status(t_id: UUID) -> None:
-        from app.models.tenant import Tenant, TenantStatus
-
-        tenant_result = await db.execute(select(Tenant).where(Tenant.id == t_id))
-        tenant = tenant_result.scalars().first()
-        if tenant:
-            if tenant.status == TenantStatus.SUSPENDED:
-                raise HTTPException(status_code=403, detail="Tenant is suspended")
-            if tenant.status == TenantStatus.CLOSED:
-                raise HTTPException(status_code=403, detail="Tenant is closed")
-
     if user.is_superuser:
         current_tenant_id_var.set(tenant_id)
         await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
         await _audit_superuser_tenant_access(db, user, tenant_id)
-        await _verify_tenant_status(tenant_id)
+        await _verify_tenant_status(db, tenant_id)
         return tenant_id
 
     # Temporarily set the RLS context so we can read the UserRole for this tenant
@@ -177,7 +178,7 @@ async def get_tenant_id(
             status_code=403, detail="User does not have access to this tenant"
         )
 
-    await _verify_tenant_status(tenant_id)
+    await _verify_tenant_status(db, tenant_id)
 
     current_tenant_id_var.set(tenant_id)
     return tenant_id
@@ -382,6 +383,7 @@ async def get_current_device(request: Request, db: AsyncSession = Depends(get_db
     # tenant-owned table.
     current_tenant_id_var.set(session.tenant_id)
     await db.execute(text(f"SET LOCAL app.current_tenant_id = '{session.tenant_id}';"))
+    await _verify_tenant_status(db, session.tenant_id)
 
     result_device = await db.execute(
         select(Device).where(
