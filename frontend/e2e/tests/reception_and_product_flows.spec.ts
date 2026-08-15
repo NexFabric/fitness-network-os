@@ -30,7 +30,7 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
 
     // Open reception workspace
     await page.goto('/reception');
-    await expect(page.locator('body')).toContainText('Danışma & Resepsiyon');
+    await expect(page.locator('body')).toContainText('Resepsiyon & Danışma Masası');
     await expect(
       page.locator('input[placeholder*="İsim, telefon, e-posta veya üye no"]')
     ).toBeVisible();
@@ -43,8 +43,8 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
 
     // Open CSV import page
     await page.goto('/import');
-    await expect(page.locator('body')).toContainText('CSV Veri İçe Aktarma');
-    await expect(page.locator('body')).toContainText('first_name, last_name, email, phone');
+    await expect(page.locator('body')).toContainText('Veri Göçü & CSV İçe Aktarma');
+    await expect(page.locator('body')).toContainText('first_name/ad, last_name/soyad, email, phone');
   });
 
   test('member portal self-service renders multi-tab layout', async ({ page }) => {
@@ -52,9 +52,9 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
 
     // Verify member portal self-service tabs
     await expect(page.locator('body')).toContainText('Sporcu Portalı');
-    await expect(page.getByRole('button', { name: 'Giriş QR' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Paketler' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Geçmiş' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Finans' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Giriş QR', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Paketler', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Geçmiş', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Finans', exact: true })).toBeVisible();
   });
 });
