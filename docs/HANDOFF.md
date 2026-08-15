@@ -27,14 +27,14 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı:
-- **Outbox & Worker RLS İzolasyonu:** Outbox event handler registry (`notification.requested.v1`, `report.run.requested.v1`), tüm worker'larda (`outbox`, `notification`, `report`, `retention`) tenant RLS bağlamı (`current_tenant_id_var` + `SET LOCAL app.current_tenant_id`).
-- **QR KMS Zarf Şifreleme:** `kms:enc:` ile `GenerateDataKey` & `Decrypt` deterministik anahtar çözümü, production ayar doğrulama kontrolü.
+Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı ve `main`e merge edildi (PR #60, SHA `f6c9a77`):
+- **Outbox & Worker RLS İzolasyonu:** Outbox event handler registry (`notification.requested.v1`, `report.run.requested.v1`), tüm worker'larda (`outbox`, `notification`, `report`, `retention`) tenant RLS bağlamı (`current_tenant_id_var` + `SET LOCAL app.current_tenant_id`), `claim_pending(tenant_id=...)` ve iç `begin_nested()` savepoint'leri.
+- **QR KMS Zarf Şifreleme:** `kms:enc:` ile `GenerateDataKey` & `Decrypt` deterministik anahtar çözümü, production fail-closed boot doğrulama kontrolü.
 - **Break-Glass Yetki Denetimi:** `deps.py:get_tenant_id` içinde doğrudan UserRole'ü olmayan superuser erişimlerinde aktif `BreakGlassSession` zorunluluğu ve audit kaydı.
 - **Dunning & Ödeme Denemeleri:** `FinanceService` içinde `PaymentAttempt` kaydı, `DunningPolicy` otomatik yeniden deneme takvimi ve aşım yönetimi.
 - **Periyodik Veri İmha Worker'ı:** `app.workers.retention` ve `docker-compose.prod.yml` entegrasyonu ile otomatik KVKK/GDPR veri anonimleştirme/silme.
-- **Sözleşme & Scanner Uyumu:** `terms/page.tsx` içinde offline turnike fail-closed (erişim kapalı) mimari teyidi.
-- **Genişletilmiş E2E Testleri:** Resepsiyon arama/override, CSV veri göçü yükleme/önizleme ve 5 sekmeli üye portalı Playwright akışları.
+- **Sözleşme & Scanner Uyumu:** `terms/page.tsx` içinde veri saklama/imha politikaları ve offline turnike fail-closed mimari teyidi.
+- **Genişletilmiş E2E Testleri:** Resepsiyon arama/override, CSV veri göçü yükleme/önizleme/aktarma ve 5 sekmeli üye portalı Playwright akışları.
 
 **Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 357 test passed · 1 skipped ve Playwright E2E testleri 39/39 (0 hata) ile yeşil.
 
@@ -42,6 +42,7 @@ Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı:
 
 | PR / Dalga | İş |
 |---|---|
+| #60 | Production hardening, outbox RLS worker, fail-closed KMS, reception override & CSV import E2E |
 | Wave 1–3 | Legal sayfalar, üye self-servis, adli turnike kararları, resepsiyon masası, KPI motoru, CSV veri göçü, dunning ve onboarding |
 | #49 | Cihaz kanalı HMAC imzalama + tek kullanımlık nonce (ADR-044), scanner non-extractable CryptoKey, RBAC portalları, PWA ikonları |
 | #50 | Post-merge doküman gerçeği, SBOM job'ının CI kapısından ayrılması |
@@ -51,7 +52,7 @@ Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı:
 | #55 | Phase 27.4 final closure: privileged MFA, private S3 rapor storage, gerçek metrics, frozen non-root image, required Playwright gate |
 | #57 | Personel hesabı açma ucu + tek kullanımlık parola, zorunlu rotasyon (`password_reset` session), enrollment/rotation sıralaması |
 
-**Test tabanı:** closure CI'da backend 315 passed · 1 skipped, Playwright 36 passed
+**Test tabanı:** GitHub CI ve lokalde backend 357 passed · 1 skipped, Playwright 39 passed
 (gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 `check_tenancy`, `check_permissions`, `check_permissions_db`,
 `check_no_money_floats`, 3 frontend build, CodeQL.
