@@ -132,13 +132,13 @@ export function Features() {
             </div>
           </motion.div>
 
-          {/* Bento Card 4 (Span 2 cols on Desktop): Minor Unit Financial Engine */}
+          {/* Bento Card 4: Minor Unit Financial Engine */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.16 }}
-            className="enterprise-card sm:col-span-2 rounded-2xl p-7 flex flex-col justify-between"
+            className="enterprise-card rounded-2xl p-7 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -149,15 +149,44 @@ export function Features() {
                   Sıfır Yuvarlama Hatası
                 </span>
               </div>
+              <h3 className="mt-5 text-lg font-bold text-white">
+                Kuruş Hassasiyetinde Finans
+              </h3>
+              <p className="mt-2.5 text-sm leading-relaxed text-ink-muted">
+                Tüm mali hesaplamalar tamsayı kuruş ile yapılır. Otomatik dunning hatırlatmaları ve anlık mutabakat geçmişi.
+              </p>
+            </div>
+            <div className="mt-6 font-mono text-xs text-accent">
+              ✓ %100 Tamsayı Kuruş
+            </div>
+          </motion.div>
+
+          {/* Bento Card 5 (Span 2 cols on Desktop): Group Class & PT Booking Engine */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="enterprise-card sm:col-span-2 rounded-2xl p-7 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-accent/30 bg-accent/10">
+                  <BarChart3 className="h-5 w-5 text-accent" aria-hidden="true" />
+                </div>
+                <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 font-mono text-xs text-accent">
+                  Pessimistic Concurrency Lock
+                </span>
+              </div>
               <h3 className="mt-5 text-xl font-bold text-white">
-                Kuruş Hassasiyetinde Finans ve Dunning Motoru
+                Grup Dersi & PT Takvimi, Dinamik Yedek Sırası & Canlı Yoklama
               </h3>
               <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-ink-muted">
-                Tüm mali hesaplamalar tamsayı alt birimlerle (minor units) yapılır. Otomatik dunning hatırlatmaları, başarısız ödeme yönetimi ve anlık mutabakat geçmişi.
+                Sıfır çifte rezervasyon garantisi. Kontenjan dolduğunda otomatik FIFO yedek sırası, iptallerde anında asil listeye terfi, antrenör canlı yoklama defteri ve 1-on-1 PT randevu yönetimi.
               </p>
             </div>
             <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-border/50">
-              {["Tamsayı Kuruş Hesabı", "Otomatik Dunning", "E-Fatura Entegrasyonu", "Ödeme Girişim İzi"].map((tag) => (
+              {["Pessimistic Lock (SELECT FOR UPDATE)", "Otomatik Yedek Terfisi", "Kayan Yoklama Çekmecesi", "1-on-1 PT Planlama"].map((tag) => (
                 <span key={tag} className="rounded-md border border-border bg-surface-raised/80 px-2.5 py-1 text-xs text-slate-300 font-mono">
                   {tag}
                 </span>

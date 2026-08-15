@@ -62,6 +62,9 @@
   - function downgrade: () -> None
 - `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x9c0d1e2f3a4_seed_federation_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa1b2c3d4e5f_add_federation_performance_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa2b3c4d5e6f_add_class_and_pt_booking_engine.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]

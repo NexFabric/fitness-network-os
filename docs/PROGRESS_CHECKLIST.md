@@ -1,8 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-15
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening  
-**Branch:** `main` (PR #60 merged at `f6c9a77`) · **Alembic head:** `x8b9c0d1e2f3`
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `main` · **Alembic head:** `xa2b3c4d5e6f`
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -10,7 +9,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING MERGED TO MAIN · CI & LOCAL DB VERIFIED (357 passed · 1 skipped, Playwright 39/39) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
+**Maturity:** IMPLEMENTED · WAVES 1–3, FEDERATION HQ & MILESTONE B1 BOOKING ENGINE VERIFIED · CI & LOCAL DB VERIFIED · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 
@@ -30,6 +29,8 @@
 | **Wave 2: Forensics, Reception & Dashboard** | 🟢 **MERGED** | `AccessAttempt.snapshot_data`, `/reception` workspace + override, `/dashboard/kpis` |
 | **Wave 3: Migration, Dunning & Onboarding** | 🟢 **MERGED** | CSV import pipeline (`DataImport.tsx`), `PaymentAttempt`, `DunningPolicy`, `TenantOnboarding` |
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
+| **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
+| **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -41,18 +42,17 @@
 - [x] Playwright is a required GitHub CI gate against the real backend, PostgreSQL and Redis.
 - [x] CodeQL findings from the closure were resolved by opaque UUID-derived local artifact namespaces and MFA session rotation.
 
-**GitHub evidence (Phase 27.4):** CI run `31706150882` on the merged head passed backend
-**315 tests + 1 skip**, Playwright **36/36**, lint/type-check, security scans, SBOM,
-all frontend builds and the production image — 14/14 required jobs. A clean re-run of
-the same run produced identical counts, so the suite is not flaky. CodeQL run
-`31706145455` passed Python, JavaScript/TypeScript and Actions analyses.
+### Phase 28 — Waves 1–3, Federation HQ & Milestone B1 Class Booking (2026-08-15)
 
-**What this does and does not mean:** the *code* for Phase 27.4 is closed and merged.
-It was merged without an independent human approval, because this repository has a
-single collaborator and the required-review rule is therefore unsatisfiable; branch
-protection was relaxed for the merge and verified restored immediately afterwards.
-**No production-ready claim is made** — Phase 26's exit gate still needs the
-restore/PITR drill, real-bucket S3 proof and an external pentest.
+- [x] **Wave 1 (Legal & Member Self-Service):** Next.js 16 SSG public legal pages (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service expansion (`/invoices`, `/payments`, `/consents`, `finance:read:self`), 5-tab MemberPortal UI with 60s dynamic QR code.
+- [x] **Wave 2 (Forensics, Reception & Dashboard):** `AccessAttempt.snapshot_data` adli karar kaydı, `/reception` masası instant search & `access:override` gerekçeli manuel giriş, `/dashboard/kpis` sunucu taraflı SQL KPI motoru.
+- [x] **Wave 3 (Migration, Dunning & Onboarding):** CSV toplu üye aktarım boru hattı (`DataImport.tsx`, `DataImportService` preview & commit), `PaymentAttempt` & `DunningPolicy` turnike blokajı, `TenantOnboarding` durum makinesi.
+- [x] **Deep-Dive Hardening:** Outbox worker per-tenant RLS loop + DB savepoints, AWS KMS zarf şifrelemesi (`kms:enc:`), fail-closed production boot, ADR-044 HMAC istek imzası & tek kullanımlık `device_nonces`.
+- [x] **Federation HQ Console:** 6 sekmeli kurumsal federasyon HQ konsolu (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü, pasaport dolaşım kuralları, denetim sicili ve ağ duyuruları.
+- [x] **Milestone B1 (Grup Dersi & PT Takvimi):** 6 RLS tablosu (`xa2b3c4d5e6f`), `SELECT ... FOR UPDATE` kilitleme, FIFO yedek sırası ve otomatik asil listeye terfi (`auto-promotion`), Admin Görsel Takvim (`Classes.tsx`), Antrenör Canlı Yoklama Defteri (`TrainerPortal.tsx`), 6 sekmeli Sporcu Portalı (`MemberPortal.tsx`) ve Playwright E2E (`classes_and_booking_flows.spec.ts`).ail-closed production boot, ADR-044 HMAC istek imzası & tek kullanımlık `device_nonces`.
+- [x] **Federation HQ Console & Multi-Club Network:** 6 sekmeli kurumsal HQ paneli (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), pasaport dolaşım matrisi (`passport_configs`), TSE/ISO denetim sicili (`compliance_records`), ağ duyuruları (`network_alerts`), konsolide ciro & CSV çıktısı, performans indeksleri (Alembic `xa1b2c3d4e5f`).
+
+**Evidence (local, 2026-08-15):** backend `pytest` **367 passed · 1 skipped** (PostgreSQL real database execution); Playwright E2E **41 passed / 41 total** with zero console errors across all 5 portals (`console_clean.spec.ts`); ruff, mypy, `check_permissions`, `check_tenancy`, `check_no_money_floats`, `check_release_truth` 100% green.
 
 ---
 

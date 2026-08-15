@@ -2,6 +2,10 @@
 
 ## CRUD Resources
 
+- **`/tenants`** GET | POST | GET/:id → Tenant
+- **`/alerts`** GET | POST | GET/:id | DELETE/:id → Alert
+- **`/types`** GET | POST | GET/:id | PUT/:id → Type
+- **`/schedules`** GET | POST | GET/:id | PUT/:id → Schedule
 - **``** GET | POST | GET/:id | PATCH/:id
 - **`/deliveries`** GET | POST | GET/:id → Deliverie
 - **`/runs`** GET | POST | GET/:id → Run
@@ -15,10 +19,16 @@
 - `POST` `/keys/rotate` params() → in: IssueQrRequest, out: IssueQrResponse
 - `GET` `/keys` params() → in: UUI, out: IssueQrResponse
 - `GET` `/organizations` params() → in: FederationScop, out: list
-- `GET` `/tenants` params() → in: FederationScop, out: list
-- `GET` `/tenants/{tenant_id}` params(tenant_id) → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/suspend` params(tenant_id) → in: TenantCreateRequest, out: list
+- `POST` `/tenants/{tenant_id}/reactivate` params(tenant_id) → in: TenantCreateRequest, out: list
 - `GET` `/federation/summary` params() → in: FederationScop, out: list
 - `GET` `/audit` params() → in: FederationScop, out: list
+- `GET` `/passport/configs` params() → in: FederationScop, out: list [auth]
+- `GET` `/tenants/{tenant_id}/passport` params(tenant_id) → in: FederationScop, out: list [auth]
+- `PUT` `/tenants/{tenant_id}/passport` params(tenant_id) → in: UUID, out: list [auth]
+- `GET` `/compliance` params() → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/compliance` params(tenant_id) → in: TenantCreateRequest, out: list
+- `GET` `/analytics/overview` params() → in: FederationScop, out: list
 - `GET` `/csrf` params() → out: CsrfResponse [auth]
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
@@ -26,6 +36,15 @@
 - `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
 - `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
+- `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
+- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list
+- `POST` `/bookings/{booking_id}/cancel` params(booking_id) → in: ClassTypeCreate, out: list
+- `GET` `/trainers/availability` params() → in: AsyncSessio, out: list
+- `POST` `/trainers/availability` params() → in: ClassTypeCreate, out: list
+- `GET` `/pt/appointments` params() → in: AsyncSessio, out: list
+- `POST` `/pt/appointments` params() → in: ClassTypeCreate, out: list
+- `POST` `/pt/appointments/{appointment_id}/cancel` params(appointment_id) → in: ClassTypeCreate, out: list
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
 - `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
 - `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
@@ -60,6 +79,10 @@
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `POST` `/classes/sessions/{session_id}/book` params(session_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `POST` `/classes/bookings/{booking_id}/cancel` params(booking_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/bookings` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse

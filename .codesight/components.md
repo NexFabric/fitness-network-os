@@ -8,6 +8,7 @@
 - **ReloadPrompt** — `frontend/admin-web/src/components/ReloadPrompt.tsx`
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
+- **Classes** — `frontend/admin-web/src/pages/Classes.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
 - **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`

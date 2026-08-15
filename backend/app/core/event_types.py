@@ -37,6 +37,12 @@ CHECKIN_CREATED_V1 = "checkin.created.v1"
 NOTIFICATION_REQUESTED_V1 = "notification.requested.v1"
 NOTIFICATION_EMAIL_V1 = "notification.email.v1"
 REPORT_RUN_REQUESTED_V1 = "report.run.requested.v1"
+CLASS_BOOKING_CONFIRMED_V1 = "class.booking_confirmed.v1"
+CLASS_BOOKING_WAITLISTED_V1 = "class.booking_waitlisted.v1"
+CLASS_BOOKING_PROMOTED_V1 = "class.booking_promoted.v1"
+CLASS_BOOKING_CANCELLED_V1 = "class.booking_cancelled.v1"
+PT_APPOINTMENT_CONFIRMED_V1 = "pt.appointment_confirmed.v1"
+PT_APPOINTMENT_CANCELLED_V1 = "pt.appointment_cancelled.v1"
 TEST_JOB_V1 = "test.job.v1"
 TEST_EVENT_V1 = "test.event.v1"
 
@@ -53,6 +59,12 @@ _EVENT_TYPE_SPECS: Final[tuple[EventTypeSpec, ...]] = (
     EventTypeSpec(NOTIFICATION_REQUESTED_V1),
     EventTypeSpec(NOTIFICATION_EMAIL_V1),
     EventTypeSpec(REPORT_RUN_REQUESTED_V1),
+    EventTypeSpec(CLASS_BOOKING_CONFIRMED_V1),
+    EventTypeSpec(CLASS_BOOKING_WAITLISTED_V1),
+    EventTypeSpec(CLASS_BOOKING_PROMOTED_V1),
+    EventTypeSpec(CLASS_BOOKING_CANCELLED_V1),
+    EventTypeSpec(PT_APPOINTMENT_CONFIRMED_V1),
+    EventTypeSpec(PT_APPOINTMENT_CANCELLED_V1),
     EventTypeSpec(TEST_JOB_V1),
     EventTypeSpec(TEST_EVENT_V1),
 )

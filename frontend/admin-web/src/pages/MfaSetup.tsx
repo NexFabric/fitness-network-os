@@ -31,18 +31,22 @@ export default function MfaSetup() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    if (!setup) {
+    if (!setup?.provisioning_uri) {
       setQrDataUrl(null)
       return
     }
     let active = true
-    void QRCode.toDataURL(setup.provisioning_uri, {
+    QRCode.toDataURL(setup.provisioning_uri, {
       width: 220,
       margin: 1,
       errorCorrectionLevel: 'M',
-    }).then((url) => {
-      if (active) setQrDataUrl(url)
     })
+      .then((url) => {
+        if (active) setQrDataUrl(url)
+      })
+      .catch((err) => {
+        console.error('QR toDataURL error:', err)
+      })
     return () => {
       active = false
     }
@@ -58,6 +62,16 @@ export default function MfaSetup() {
         skipAuth: true,
       })
       setSetup(data)
+      try {
+        const url = await QRCode.toDataURL(data.provisioning_uri, {
+          width: 220,
+          margin: 1,
+          errorCorrectionLevel: 'M',
+        })
+        setQrDataUrl(url)
+      } catch {
+        // Fallback to useEffect or manual key
+      }
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 401
@@ -126,15 +140,27 @@ export default function MfaSetup() {
           </button>
         ) : (
           <form onSubmit={verify} className="mt-6 space-y-5">
-            <div className="rounded-card bg-white p-4 text-center">
+            <div className="rounded-2xl bg-white p-6 text-center flex flex-col items-center justify-center">
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
                   alt="Doğrulama uygulaması kurulum QR kodu"
-                  className="mx-auto"
+                  className="mx-auto h-[220px] w-[220px] rounded-lg shadow-sm block"
                 />
               ) : (
-                <p className="text-sm text-slate-700">QR kodu hazırlanıyor…</p>
+                <div className="flex h-[220px] w-[220px] items-center justify-center text-sm text-slate-500 font-medium">
+                  QR kodu yükleniyor…
+                </div>
+              )}
+              {setup.secret && (
+                <div className="mt-4 w-full border-t border-slate-100 pt-3">
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                    Manuel Kurulum Anahtarı
+                  </span>
+                  <code className="font-mono text-xs font-bold text-slate-800 select-all tracking-wider bg-slate-100 px-2 py-1 rounded">
+                    {setup.secret}
+                  </code>
+                </div>
               )}
             </div>
 

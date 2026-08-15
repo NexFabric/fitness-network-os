@@ -64,6 +64,7 @@
 | WAVE-1 | Legal pages (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service expansion (`/invoices`, `/payments`, `/consents`, `finance:read:self`), 5-tab MemberPortal UI |
 | WAVE-2 | Forensic Access Snapshot (`AccessAttempt.snapshot_data`), Front Desk Reception workspace (`/reception`, instant search, manual override checkin), Server-side KPI Engine (`GET /dashboard/kpis`) |
 | WAVE-3 | CSV Data Migration Pipeline (`DataImportBatch`, `DataImportRow`, `DataImport.tsx`), Payment Attempts & Dunning policy (`PaymentAttempt`, `DunningPolicy`, invoice retry columns), Tenant Onboarding state machine (`TenantOnboarding`) |
+| FED-HQ | 6-tab Federation HQ Console (`SuperAdminPortal.tsx`), Gym Lifecycle (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), Roaming Passport Matrix (`PassportConfig`), Compliance & Audit Registry (`ComplianceRecord`), Network Alert Broadcasts (`NetworkAlert`), Cross-Tenant Analytics (`AnalyticsOverview`), Alembic migration `x9c0d1e2f3a4` |
 
 ---
 

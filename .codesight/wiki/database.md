@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 78 models
+**sqlalchemy** — 84 models
 
 ### Base
 
@@ -93,6 +93,84 @@ pk: `id` (UUID)
 - `new_state`: JSON _(nullable)_
 - `ip_address`: String _(nullable)_
 - `user_agent`: String _(nullable)_
+
+### ClassType
+
+- `name`: String
+- `category`: String _(default)_
+- `duration_minutes`: Integer _(default)_
+- `default_capacity`: Integer _(default)_
+- `color_hex`: String _(default)_
+- `required_entitlement_type`: String _(nullable)_
+- `cancellation_cutoff_minutes`: Integer _(default)_
+- `is_active`: Boolean _(default)_
+
+### ClassSchedule
+
+fk: trainer_user_id
+
+- `location_id`: UUID
+- `class_type_id`: UUID
+- `trainer_user_id`: UUID _(fk, index)_
+- `day_of_week`: SmallInteger
+- `start_time`: Time
+- `end_time`: Time
+- `room_name`: String _(nullable)_
+- `capacity`: Integer
+- `is_active`: Boolean _(default)_
+
+### ClassSession
+
+fk: trainer_user_id
+
+- `location_id`: UUID
+- `class_type_id`: UUID
+- `schedule_id`: unknown _(nullable)_
+- `trainer_user_id`: UUID _(fk, index)_
+- `start_time_utc`: DateTime _(index)_
+- `end_time_utc`: DateTime
+- `room_name`: String _(nullable)_
+- `capacity`: Integer
+- `status`: ClassSessionStatus _(default)_
+
+### ClassBooking
+
+- `session_id`: UUID
+- `member_id`: UUID
+- `status`: ClassBookingStatus _(default)_
+- `waitlist_position`: Integer _(nullable)_
+- `booked_at`: DateTime
+- `attended_at`: DateTime _(nullable)_
+- `cancelled_at`: DateTime _(nullable)_
+- `cancellation_reason`: String _(nullable)_
+- `is_late_cancellation`: Boolean _(default)_
+
+### TrainerAvailability
+
+fk: trainer_user_id
+
+- `trainer_user_id`: UUID _(fk, index)_
+- `location_id`: UUID
+- `day_of_week`: SmallInteger
+- `start_time`: Time
+- `end_time`: Time
+- `slot_duration_minutes`: Integer _(default)_
+- `is_active`: Boolean _(default)_
+
+### PtAppointment
+
+fk: trainer_user_id
+
+- `trainer_user_id`: UUID _(fk, index)_
+- `member_id`: UUID
+- `location_id`: UUID
+- `start_time_utc`: DateTime _(index)_
+- `end_time_utc`: DateTime
+- `status`: PtAppointmentStatus _(default)_
+- `notes`: Text _(nullable)_
+- `booked_at`: DateTime
+- `attended_at`: DateTime _(nullable)_
+- `cancelled_at`: DateTime _(nullable)_
 
 ### BreakGlassSession
 
@@ -762,18 +840,18 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **54** files
-- `backend/app/models/tenant.py` — imported by **51** files
-- `backend/app/models/organization.py` — imported by **44** files
-- `backend/app/db/base.py` — imported by **36** files
-- `backend/app/models/member.py` — imported by **35** files
-- `backend/app/models/rbac.py` — imported by **31** files
+- `backend/app/models/user.py` — imported by **58** files
+- `backend/app/models/tenant.py` — imported by **53** files
+- `backend/app/models/organization.py` — imported by **46** files
+- `backend/app/db/base.py` — imported by **37** files
+- `backend/app/models/member.py` — imported by **37** files
+- `backend/app/models/rbac.py` — imported by **33** files
+- `backend/app/db/session.py` — imported by **27** files
 - `backend/app/models/membership.py` — imported by **27** files
-- `backend/app/db/session.py` — imported by **25** files
-- `backend/app/db/rls.py` — imported by **19** files
-- `backend/app/models/access.py` — imported by **17** files
-- `backend/app/models/location.py` — imported by **17** files
-- `backend/app/models/outbox.py` — imported by **15** files
+- `backend/app/db/rls.py` — imported by **20** files
+- `backend/app/models/location.py` — imported by **20** files
+- `backend/app/models/access.py` — imported by **18** files
+- `backend/app/models/outbox.py` — imported by **16** files
 - `backend/app/models/finance.py` — imported by **13** files
 
 ---

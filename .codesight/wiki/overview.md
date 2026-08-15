@@ -8,21 +8,22 @@
 
 ## Scale
 
-103 API routes · 78 database models · 43 UI components · 68 library files · 6 middleware layers · 18 environment variables
+134 API routes · 84 database models · 44 UI components · 71 library files · 6 middleware layers · 18 environment variables
 
 ## Subsystems
 
 - **[Auth](./auth.md)** — 6 routes — touches: auth, db
 - **[Access](./access.md)** — 5 routes — touches: auth
-- **[Admin](./admin.md)** — 5 routes
+- **[Admin](./admin.md)** — 17 routes — touches: auth, db
 - **[Break_glass](./break_glass.md)** — 3 routes — touches: auth, db
+- **[Classes](./classes.md)** — 15 routes — touches: auth
 - **[Dashboard](./dashboard.md)** — 1 routes — touches: auth, db
 - **[Data_import](./data_import.md)** — 4 routes — touches: auth, upload, db
 - **[Devices](./devices.md)** — 2 routes — touches: auth, db
 - **[Entitlements](./entitlements.md)** — 2 routes — touches: auth
 - **[Finance](./finance.md)** — 14 routes
 - **[Locations](./locations.md)** — 4 routes
-- **[Me](./me.md)** — 9 routes — touches: auth, db
+- **[Me](./me.md)** — 13 routes — touches: auth, db
 - **[Members](./members.md)** — 10 routes — touches: db
 - **[Memberships](./memberships.md)** — 6 routes — touches: auth
 - **[Mfa](./mfa.md)** — 1 routes — touches: db, cache
@@ -36,22 +37,22 @@
 - **[Trainers](./trainers.md)** — 3 routes — touches: auth, db
 - **[Infra](./infra.md)** — 7 routes — touches: auth, db, cache
 
-**Database:** sqlalchemy, 78 models — see [database.md](./database.md)
+**Database:** sqlalchemy, 84 models — see [database.md](./database.md)
 
-**UI:** 43 components (react) — see [ui.md](./ui.md)
+**UI:** 44 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 68 files — see [libraries.md](./libraries.md)
+**Libraries:** 71 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **54** files
-- `backend/app/models/tenant.py` — imported by **51** files
-- `backend/app/models/organization.py` — imported by **44** files
-- `backend/app/api/deps.py` — imported by **43** files
-- `backend/app/db/base.py` — imported by **36** files
-- `backend/app/models/member.py` — imported by **35** files
+- `backend/app/models/user.py` — imported by **58** files
+- `backend/app/models/tenant.py` — imported by **53** files
+- `backend/app/models/organization.py` — imported by **46** files
+- `backend/app/api/deps.py` — imported by **44** files
+- `backend/app/db/base.py` — imported by **37** files
+- `backend/app/models/member.py` — imported by **37** files
 
 ## Required Environment Variables
 

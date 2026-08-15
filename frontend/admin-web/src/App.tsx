@@ -16,6 +16,7 @@ import Staff from './pages/Staff'
 import Finance from './pages/Finance'
 import Reception from './pages/Reception'
 import DataImport from './pages/DataImport'
+import Classes from './pages/Classes'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { AuthProvider } from './auth/AuthContext'
 import {
@@ -106,6 +107,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="reception" element={<Reception />} />
+            <Route path="classes" element={<Classes />} />
             <Route path="members" element={<Members />} />
             <Route path="import" element={<DataImport />} />
             <Route path="locations" element={<Locations />} />

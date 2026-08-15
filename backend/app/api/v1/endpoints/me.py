@@ -21,10 +21,20 @@ from app.api.deps import (
 )
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.access import Checkin
+from app.models.booking import ClassBooking
 from app.models.consent import ConsentRecord
 from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.user import User
+from app.schemas.booking import (
+    ClassBookingCancelRequest,
+    ClassBookingResponse,
+    ClassSessionResponse,
+    PtAppointmentCancelRequest,
+    PtAppointmentCreate,
+    PtAppointmentResponse,
+)
 from app.schemas.membership import MembershipResponse
+from app.services.booking import ClassBookingService, PtBookingService
 from app.services.entitlement import EntitlementService
 from app.services.member import MemberService
 from app.services.membership import MembershipService
@@ -507,3 +517,222 @@ async def record_my_consent(
     await db.commit()
     await db.refresh(record)
     return record
+
+
+# ---------------------------------------------------------
+# Group Classes Self-Service
+# ---------------------------------------------------------
+
+
+@router.get("/classes/sessions", response_model=list[ClassSessionResponse])
+async def list_my_available_classes(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+    location_id: UUID | None = Query(None),
+    class_type_id: UUID | None = Query(None),
+    start_time: datetime | None = Query(None),
+    end_time: datetime | None = Query(None),
+) -> list[ClassSessionResponse]:
+    """List class timetable enriched with current user's booking status."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    return await ClassBookingService.list_sessions(
+        db,
+        tenant_id=tenant_id,
+        location_id=location_id,
+        class_type_id=class_type_id,
+        start_time=start_time,
+        end_time=end_time,
+        member_id=member.id,
+    )
+
+
+@router.post(
+    "/classes/sessions/{session_id}/book",
+    response_model=ClassBookingResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def book_my_class_session(
+    session_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> ClassBookingResponse:
+    """Reserve a spot or waitlist in a class session for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    booking = await ClassBookingService.book_session(
+        db,
+        tenant_id=tenant_id,
+        session_id=session_id,
+        member_id=member.id,
+    )
+    await db.commit()
+    await db.refresh(booking)
+    return ClassBookingResponse.model_validate(booking)
+
+
+@router.post(
+    "/classes/bookings/{booking_id}/cancel",
+    response_model=ClassBookingResponse,
+)
+async def cancel_my_class_booking(
+    booking_id: UUID,
+    body: ClassBookingCancelRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> ClassBookingResponse:
+    """Cancel own class booking and automatically promote waitlisted member if applicable."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    booking = await ClassBookingService.cancel_booking(
+        db,
+        tenant_id=tenant_id,
+        booking_id=booking_id,
+        member_id=member.id,
+        reason=body.cancellation_reason,
+        is_staff=False,
+    )
+    await db.commit()
+    await db.refresh(booking)
+    return ClassBookingResponse.model_validate(booking)
+
+
+@router.get("/classes/bookings", response_model=list[ClassBookingResponse])
+async def list_my_class_bookings(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> list[ClassBookingResponse]:
+    """List own booking history for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    stmt = (
+        select(ClassBooking)
+        .where(
+            ClassBooking.tenant_id == tenant_id,
+            ClassBooking.member_id == member.id,
+        )
+        .order_by(ClassBooking.booked_at.desc())
+    )
+    res = await db.execute(stmt)
+    return [ClassBookingResponse.model_validate(b) for b in res.scalars().all()]
+
+
+# ---------------------------------------------------------
+# Personal Training (PT) Self-Service
+# ---------------------------------------------------------
+
+
+@router.get("/pt/appointments", response_model=list[PtAppointmentResponse])
+async def list_my_pt_appointments(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> list[PtAppointmentResponse]:
+    """List own 1-on-1 PT appointments for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appts = await PtBookingService.list_appointments(
+        db, tenant_id=tenant_id, member_id=member.id
+    )
+    return [PtAppointmentResponse.model_validate(a) for a in appts]
+
+
+@router.post(
+    "/pt/appointments",
+    response_model=PtAppointmentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def book_my_pt_appointment(
+    body: PtAppointmentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> PtAppointmentResponse:
+    """Book a 1-on-1 PT appointment for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appt = await PtBookingService.book_appointment(
+        db,
+        tenant_id=tenant_id,
+        trainer_user_id=body.trainer_user_id,
+        member_id=member.id,
+        location_id=body.location_id,
+        start_time_utc=body.start_time_utc,
+        end_time_utc=body.end_time_utc,
+        notes=body.notes,
+    )
+    await db.commit()
+    await db.refresh(appt)
+    return PtAppointmentResponse.model_validate(appt)
+
+
+@router.post(
+    "/pt/appointments/{appointment_id}/cancel",
+    response_model=PtAppointmentResponse,
+)
+async def cancel_my_pt_appointment(
+    appointment_id: UUID,
+    body: PtAppointmentCancelRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> PtAppointmentResponse:
+    """Cancel own 1-on-1 PT appointment."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appt = await PtBookingService.cancel_appointment(
+        db,
+        tenant_id=tenant_id,
+        appointment_id=appointment_id,
+        member_id=member.id,
+        is_staff=False,
+    )
+    await db.commit()
+    await db.refresh(appt)
+    return PtAppointmentResponse.model_validate(appt)

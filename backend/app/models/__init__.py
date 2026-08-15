@@ -9,6 +9,17 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.audit import AuditEvent
+from app.models.booking import (
+    ClassBooking,
+    ClassBookingStatus,
+    ClassSchedule,
+    ClassSession,
+    ClassSessionStatus,
+    ClassType,
+    PtAppointment,
+    PtAppointmentStatus,
+    TrainerAvailability,
+)
 from app.models.break_glass import BreakGlassSession, BreakGlassStatus
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
 from app.models.data_import import (
@@ -79,6 +90,12 @@ __all__ = [
     "BreakGlassSession",
     "BreakGlassStatus",
     "Checkin",
+    "ClassBooking",
+    "ClassBookingStatus",
+    "ClassSchedule",
+    "ClassSession",
+    "ClassSessionStatus",
+    "ClassType",
     "ComplianceRecord",
     "ConsentDefinition",
     "ConsentRecord",
@@ -135,6 +152,8 @@ __all__ = [
     "Plan",
     "PlanEntitlement",
     "PlanVersion",
+    "PtAppointment",
+    "PtAppointmentStatus",
     "QrJtiReplay",
     "ReconciliationItem",
     "ReconciliationRun",
@@ -151,6 +170,7 @@ __all__ = [
     "Tenant",
     "TenantOnboarding",
     "TrainerAssignment",
+    "TrainerAvailability",
     "User",
     "UserDevice",
     "UserMfaMethod",

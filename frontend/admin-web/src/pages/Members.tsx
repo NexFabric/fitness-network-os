@@ -48,6 +48,17 @@ function formatApiError(e: unknown, fallback: string): string {
   return fallback
 }
 
+function generateMemberNumber(existing: Member[]): string {
+  const nums = existing
+    .map((m) => {
+      const match = m.member_number.match(/\d+/)
+      return match ? parseInt(match[0], 10) : 0
+    })
+    .filter((n) => !isNaN(n))
+  const max = nums.length > 0 ? Math.max(...nums) : 100
+  return `MEM-${max + 1}`
+}
+
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,6 +97,16 @@ export default function Members() {
     void loadMembers()
   }, [loadMembers])
 
+  const toggleCreate = () => {
+    setShowCreate((prev) => {
+      const next = !prev
+      if (next && !form.member_number) {
+        setForm((f) => ({ ...f, member_number: generateMemberNumber(members) }))
+      }
+      return next
+    })
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return members
@@ -100,12 +121,12 @@ export default function Members() {
     setFormError(null)
     setFormSuccess(null)
 
-    const member_number = form.member_number.trim()
+    const member_number = form.member_number.trim() || generateMemberNumber(members)
     const first_name = form.first_name.trim()
     const last_name = form.last_name.trim()
 
-    if (!member_number || !first_name || !last_name) {
-      setFormError('Üye Numarası, Ad ve Soyad gereklidir.')
+    if (!first_name || !last_name) {
+      setFormError('Ad ve Soyad alanları zorunludur.')
       return
     }
 
@@ -191,7 +212,7 @@ export default function Members() {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => setShowCreate((v) => !v)}
+            onClick={toggleCreate}
           >
             {showCreate ? 'Formu gizle' : 'Üye oluştur'}
           </button>
@@ -229,15 +250,15 @@ export default function Members() {
         >
           <div>
             <label htmlFor="member_number" className="label-text">
-              Üye Numarası <span className="text-teal-500">*</span>
+              Üye Numarası <span className="text-xs text-ink-muted font-normal">(Otomatik)</span>
             </label>
             <input
               id="member_number"
               name="member_number"
               type="text"
-              required
               maxLength={64}
               autoComplete="off"
+              placeholder="Otomatik üretilir (örn. MEM-104)"
               value={form.member_number}
               onChange={(ev) =>
                 setForm((f) => ({ ...f, member_number: ev.target.value }))

@@ -382,7 +382,18 @@ export default function App() {
                   <h2 className="text-2xl font-bold">Reddedildi</h2>
                 </div>
                 <div className="p-6 text-slate-900 text-center">
-                  <p className="text-sm font-medium text-rose-700">{result.reason ?? 'Geçiş yetkisi yok'}</p>
+                  <p className="text-sm font-medium text-rose-700">
+                    {{
+                      unknown_kid: 'Farklı kulüp anahtarı (Farklı Kulüp / Tenant QR Kodu)',
+                      tenant_mismatch: 'Yetkisiz kulüp geçişi',
+                      token_expired: 'QR kod süresi dolmuş — Sporcudan yeni QR almasını isteyin',
+                      key_revoked: 'Geçersiz güvenlik anahtarı',
+                      no_active_membership: 'Aktif üyelik veya geçerli paket bulunamadı',
+                      past_due_block: 'Gecikmiş ödeme nedeniyle geçiş engellendi',
+                      insufficient_wallet_balance: 'Kullanım hakkı tükendi',
+                      device_unauthorized: 'Yetkisiz turnike cihazı',
+                    }[result.reason ?? ''] ?? (result.reason || 'Geçiş yetkisi yok')}
+                  </p>
                   <button onClick={() => setResult(null)} onTouchEnd={(e) => { e.preventDefault(); setResult(null) }} className="mt-6 w-full rounded-xl bg-slate-900 py-3 font-bold text-white">Geri Dön</button>
                 </div>
               </div>

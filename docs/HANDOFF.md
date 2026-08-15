@@ -1,9 +1,9 @@
-# Devir Notu — 2026-08-13
+# Devir Notu — 2026-08-15
 
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/production-readiness-deep-dive-hardening` · **Alembic head:** `x8b9c0d1e2f3` · **Deep-Dive Production Hardening & Full Pillars 1-10:** Completed & Audited.
+**Branch:** `feat/class-and-pt-booking-engine` · **Alembic head:** `xa2b3c4d5e6f` · **Group Class & PT Booking Engine (Milestone B1):** Completed, Audited & Verified.
 
 ---
 
@@ -27,21 +27,21 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı ve `main`e merge edildi (PR #60, SHA `f6c9a77`):
-- **Outbox & Worker RLS İzolasyonu:** Outbox event handler registry (`notification.requested.v1`, `report.run.requested.v1`), tüm worker'larda (`outbox`, `notification`, `report`, `retention`) tenant RLS bağlamı (`current_tenant_id_var` + `SET LOCAL app.current_tenant_id`), `claim_pending(tenant_id=...)` ve iç `begin_nested()` savepoint'leri.
-- **QR KMS Zarf Şifreleme:** `kms:enc:` ile `GenerateDataKey` & `Decrypt` deterministik anahtar çözümü, production fail-closed boot doğrulama kontrolü.
-- **Break-Glass Yetki Denetimi:** `deps.py:get_tenant_id` içinde doğrudan UserRole'ü olmayan superuser erişimlerinde aktif `BreakGlassSession` zorunluluğu ve audit kaydı.
-- **Dunning & Ödeme Denemeleri:** `FinanceService` içinde `PaymentAttempt` kaydı, `DunningPolicy` otomatik yeniden deneme takvimi ve aşım yönetimi.
-- **Periyodik Veri İmha Worker'ı:** `app.workers.retention` ve `docker-compose.prod.yml` entegrasyonu ile otomatik KVKK/GDPR veri anonimleştirme/silme.
-- **Sözleşme & Scanner Uyumu:** `terms/page.tsx` içinde veri saklama/imha politikaları ve offline turnike fail-closed mimari teyidi.
-- **Genişletilmiş E2E Testleri:** Resepsiyon arama/override, CSV veri göçü yükleme/önizleme/aktarma ve 5 sekmeli üye portalı Playwright akışları.
-
-**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 357 test passed · 1 skipped ve Playwright E2E testleri 39/39 (0 hata) ile yeşil.
+Grup Dersi & PT Takvimi / Rezervasyon Motoru (Milestone B1) ve Phase 0–27.4 + Waves 1–3 tamamlandı:
+- **Veritabanı & RLS Güvenliği (`xa2b3c4d5e6f`):** 6 yeni tablo (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`) `TenantMixin` ve PostgreSQL RLS politikaları ile izole edildi. 11 yeni RBAC izni tanımlandı.
+- **Pessimistik Eşzamanlılık & Rezervasyon Motoru:** `SELECT ... FOR UPDATE` ile kapasite aşımını önleme, FIFO ardışık yedek sırası, iptal anında 1. sıradaki yedeğin otomatik asil listeye terfi edilmesi (`auto-promotion`), 1-on-1 PT randevu çakışma önleme kilidi ve Outbox event yayını.
+- **Frontend Arayüzleri:**
+  1. `📅 Grup Dersi & PT Takvimi (Classes.tsx)`: 4 sekmeli takvim, görsel seans kartları, doluluk çubuğu, seans planlama modalları ve kayan yoklama çekmecesi (Attendee Roster Drawer).
+  2. `🏋️ Antrenör Portalı (TrainerPortal.tsx)`: Grup dersleri ve birebir PT seansları canlı yoklama defteri.
+  3. `📱 Sporcu Portalı (MemberPortal.tsx)`: 6 sekmeli portal, 7 günlük seans filtreleri, kontenjan durumu, tek tıkla rezervasyon, yedek sırası takibi ve PT randevusu alma.
+- **Doğrulama & Testler:** Gerçek PostgreSQL concurrency pytest testleri (5/5), Playwright E2E (`classes_and_booking_flows.spec.ts`, `console_clean.spec.ts`) ve 7/7 statik araçlar (0 hata) ile yeşil.
 
 Önceki dalgalar:
 
 | PR / Dalga | İş |
 |---|---|
+| Milestone B1 | Grup Dersi & PT Takvimi, kapasite yönetimi, dinamik yedek sırası, yoklama çekmecesi |
+| Fed HQ | 6 sekmeli kurumsal federasyon HQ konsolu, kulüp yaşam döngüsü, pasaport dolaşımı, denetim & duyurular |
 | #60 | Production hardening, outbox RLS worker, fail-closed KMS, reception override & CSV import E2E |
 | Wave 1–3 | Legal sayfalar, üye self-servis, adli turnike kararları, resepsiyon masası, KPI motoru, CSV veri göçü, dunning ve onboarding |
 | #49 | Cihaz kanalı HMAC imzalama + tek kullanımlık nonce (ADR-044), scanner non-extractable CryptoKey, RBAC portalları, PWA ikonları |

@@ -109,7 +109,7 @@ async def issue_qr(
 
 @router.post("/qr/issue-self", response_model=IssueQrResponse)
 async def issue_qr_self(
-    body: IssueSelfQrRequest,
+    body: IssueSelfQrRequest = IssueSelfQrRequest(),
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 103 routes | 78 models | 43 components | 68 lib files | 18 env vars | 6 middleware | 39% test coverage
-> **Token savings:** this file is ~13,200 tokens. Without it, AI exploration would cost ~128,600 tokens. **Saves ~115,400 tokens per conversation.**
-> **Last scanned:** 2026-08-15 12:13 — re-run after significant changes
+> 134 routes | 84 models | 44 components | 71 lib files | 18 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~14,400 tokens. Without it, AI exploration would cost ~148,200 tokens. **Saves ~133,800 tokens per conversation.**
+> **Last scanned:** 2026-08-15 20:06 — re-run after significant changes
 
 ---
 
@@ -13,6 +13,10 @@
 
 ## CRUD Resources
 
+- **`/tenants`** GET | POST | GET/:id → Tenant
+- **`/alerts`** GET | POST | GET/:id | DELETE/:id → Alert
+- **`/types`** GET | POST | GET/:id | PUT/:id → Type
+- **`/schedules`** GET | POST | GET/:id | PUT/:id → Schedule
 - **``** GET | POST | GET/:id | PATCH/:id
 - **`/deliveries`** GET | POST | GET/:id → Deliverie
 - **`/runs`** GET | POST | GET/:id → Run
@@ -26,10 +30,16 @@
 - `POST` `/keys/rotate` params() → in: IssueQrRequest, out: IssueQrResponse
 - `GET` `/keys` params() → in: UUI, out: IssueQrResponse
 - `GET` `/organizations` params() → in: FederationScop, out: list
-- `GET` `/tenants` params() → in: FederationScop, out: list
-- `GET` `/tenants/{tenant_id}` params(tenant_id) → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/suspend` params(tenant_id) → in: TenantCreateRequest, out: list
+- `POST` `/tenants/{tenant_id}/reactivate` params(tenant_id) → in: TenantCreateRequest, out: list
 - `GET` `/federation/summary` params() → in: FederationScop, out: list
 - `GET` `/audit` params() → in: FederationScop, out: list
+- `GET` `/passport/configs` params() → in: FederationScop, out: list [auth]
+- `GET` `/tenants/{tenant_id}/passport` params(tenant_id) → in: FederationScop, out: list [auth]
+- `PUT` `/tenants/{tenant_id}/passport` params(tenant_id) → in: UUID, out: list [auth]
+- `GET` `/compliance` params() → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/compliance` params(tenant_id) → in: TenantCreateRequest, out: list
+- `GET` `/analytics/overview` params() → in: FederationScop, out: list
 - `GET` `/csrf` params() → out: CsrfResponse [auth]
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
@@ -37,6 +47,15 @@
 - `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
 - `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
+- `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
+- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list
+- `POST` `/bookings/{booking_id}/cancel` params(booking_id) → in: ClassTypeCreate, out: list
+- `GET` `/trainers/availability` params() → in: AsyncSessio, out: list
+- `POST` `/trainers/availability` params() → in: ClassTypeCreate, out: list
+- `GET` `/pt/appointments` params() → in: AsyncSessio, out: list
+- `POST` `/pt/appointments` params() → in: ClassTypeCreate, out: list
+- `POST` `/pt/appointments/{appointment_id}/cancel` params(appointment_id) → in: ClassTypeCreate, out: list
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
 - `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
 - `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
@@ -71,6 +90,10 @@
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `POST` `/classes/sessions/{session_id}/book` params(session_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `POST` `/classes/bookings/{booking_id}/cancel` params(booking_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/bookings` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
@@ -189,6 +212,70 @@
 - new_state: JSON (nullable)
 - ip_address: String (nullable)
 - user_agent: String (nullable)
+
+### ClassType
+- name: String
+- category: String (default)
+- duration_minutes: Integer (default)
+- default_capacity: Integer (default)
+- color_hex: String (default)
+- required_entitlement_type: String (nullable)
+- cancellation_cutoff_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### ClassSchedule
+- location_id: UUID
+- class_type_id: UUID
+- trainer_user_id: UUID (fk, index)
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- room_name: String (nullable)
+- capacity: Integer
+- is_active: Boolean (default)
+
+### ClassSession
+- location_id: UUID
+- class_type_id: UUID
+- schedule_id: unknown (nullable)
+- trainer_user_id: UUID (fk, index)
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- room_name: String (nullable)
+- capacity: Integer
+- status: ClassSessionStatus (default)
+
+### ClassBooking
+- session_id: UUID
+- member_id: UUID
+- status: ClassBookingStatus (default)
+- waitlist_position: Integer (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
+- cancellation_reason: String (nullable)
+- is_late_cancellation: Boolean (default)
+
+### TrainerAvailability
+- trainer_user_id: UUID (fk, index)
+- location_id: UUID
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- slot_duration_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### PtAppointment
+- trainer_user_id: UUID (fk, index)
+- member_id: UUID
+- location_id: UUID
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- status: PtAppointmentStatus (default)
+- notes: Text (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
 
 ### BreakGlassSession
 - actor_id: UUID (index)
@@ -774,6 +861,7 @@
 - **ReloadPrompt** — `frontend/admin-web/src/components/ReloadPrompt.tsx`
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
+- **Classes** — `frontend/admin-web/src/pages/Classes.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
 - **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
@@ -876,6 +964,9 @@
   - function downgrade: () -> None
 - `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x9c0d1e2f3a4_seed_federation_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa1b2c3d4e5f_add_federation_performance_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa2b3c4d5e6f_add_class_and_pt_booking_engine.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -979,46 +1070,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **54** files
-- `backend/app/models/tenant.py` — imported by **51** files
-- `backend/app/models/organization.py` — imported by **44** files
-- `backend/app/api/deps.py` — imported by **43** files
-- `backend/app/db/base.py` — imported by **36** files
-- `backend/app/models/member.py` — imported by **35** files
-- `backend/app/models/rbac.py` — imported by **31** files
+- `backend/app/models/user.py` — imported by **58** files
+- `backend/app/models/tenant.py` — imported by **53** files
+- `backend/app/models/organization.py` — imported by **46** files
+- `backend/app/api/deps.py` — imported by **44** files
+- `backend/app/db/base.py` — imported by **37** files
+- `backend/app/models/member.py` — imported by **37** files
+- `backend/app/models/rbac.py` — imported by **33** files
+- `backend/app/db/session.py` — imported by **27** files
 - `backend/app/models/membership.py` — imported by **27** files
-- `backend/app/db/session.py` — imported by **25** files
-- `backend/app/core/authorization.py` — imported by **22** files
-- `frontend/admin-web/src/api/client.ts` — imported by **21** files
-- `backend/app/main.py` — imported by **20** files
-- `backend/app/db/rls.py` — imported by **19** files
+- `backend/app/core/authorization.py` — imported by **23** files
+- `backend/app/main.py` — imported by **22** files
+- `frontend/admin-web/src/api/client.ts` — imported by **22** files
+- `backend/app/db/rls.py` — imported by **20** files
+- `backend/app/models/location.py` — imported by **20** files
 - `backend/app/core/config.py` — imported by **18** files
-- `backend/app/models/access.py` — imported by **17** files
-- `backend/app/models/location.py` — imported by **17** files
-- `backend/app/models/outbox.py` — imported by **15** files
-- `frontend/admin-web/src/components/ui/index.ts` — imported by **14** files
+- `backend/app/models/access.py` — imported by **18** files
+- `backend/app/models/outbox.py` — imported by **16** files
+- `frontend/admin-web/src/components/ui/index.ts` — imported by **15** files
 - `backend/app/models/finance.py` — imported by **13** files
-- `backend/app/core/event_types.py` — imported by **12** files
+- `backend/app/core/event_types.py` — imported by **13** files
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/dashboard.py` +49 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +46 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +39 more
-- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/dashboard.py` +38 more
-- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/break_glass.py`, `backend/app/models/consent.py` +31 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +30 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +26 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +53 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +48 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +41 more
+- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +39 more
+- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +32 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +32 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +28 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +22 more
 - `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +22 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +20 more
-- `backend/app/core/authorization.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +17 more
+- `backend/app/core/authorization.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/classes.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py`, `backend/app/api/v1/endpoints/devices.py` +18 more
 
 ---
 
 # Test Coverage
 
-> **39%** of routes and models are covered by tests
-> 85 test files found
+> **33%** of routes and models are covered by tests
+> 89 test files found
 
 ## Covered Routes
 
@@ -1043,6 +1134,9 @@
 - OfflineSnapshot
 - QrJtiReplay
 - AuditEvent
+- ClassType
+- ClassSession
+- ClassBooking
 - ConsentDefinition
 - ConsentRecord
 - EntitlementDefinition
