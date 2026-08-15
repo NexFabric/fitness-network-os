@@ -3,11 +3,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Hizmet Şartları",
   description: "GymClubNex SaaS platform kullanım ve hizmet sözleşmesi şartları.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
+    <article className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
       <div className="mx-auto max-w-4xl">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Hizmet ve Kullanım Şartları
@@ -60,6 +63,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-    </main>
+    </article>
   );
 }

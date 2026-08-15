@@ -3,11 +3,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Gizlilik Politikası",
   description: "GymClubNex veri işleme, gizlilik ve çerez ilkeleri.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
+    <article className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
       <div className="mx-auto max-w-4xl">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Gizlilik Politikası ve Çerez İlkeleri
@@ -70,7 +73,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-foreground">6. İletişim</h2>
             <p className="mt-2">
               Gizlilik politikamızla ilgili soru ve talepleriniz için{" "}
-              <a href="mailto:privacy@gymclubnex.com" className="text-brand underline hover:text-brand-dark">
+              <a href="mailto:privacy@gymclubnex.com" className="text-brand underline hover:text-brand-deep">
                 privacy@gymclubnex.com
               </a>{" "}
               adresi üzerinden bizimle iletişime geçebilirsiniz.
@@ -78,6 +81,6 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
-    </main>
+    </article>
   );
 }

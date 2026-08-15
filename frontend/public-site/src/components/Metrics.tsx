@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 
 /** Honest design targets — not live production measurements. */
 const stats = [
-  { name: "Uptime hedefi", value: "99.9%" },
-  { name: "Veri kaybı hedefi", value: "Sıfır" },
-  { name: "Ölçek hedefi", value: "Yüksek hacim" },
+  { name: "Uptime Hedefi", value: "99.9%" },
+  { name: "Veri Kaybı Toleransı", value: "Sıfır" },
+  { name: "Yatay Ölçeklenme", value: "Yüksek Hacim" },
 ];
 
 export function Metrics() {
   return (
-    <section className="relative overflow-hidden border-t border-border bg-background py-20 sm:py-28">
+    <section className="relative overflow-hidden border-t border-border bg-background py-24 sm:py-32">
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/10 blur-[100px]"
         aria-hidden="true"
@@ -19,23 +19,23 @@ export function Metrics() {
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <motion.div
+          <motion.p
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-sm font-medium text-brand-light"
+            className="text-xs font-mono uppercase tracking-[0.1em] text-brand-light"
           >
-            Tasarım hedefleri
-          </motion.div>
+            MÜHENDİSLİK ÇITALARI
+          </motion.p>
 
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="text-3xl font-bold tracking-tight sm:text-4xl"
+            className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl text-white"
           >
-            Operasyon için tasarlandı
+            Operasyonel Güvenilirlik
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -44,9 +44,8 @@ export function Metrics() {
             transition={{ delay: 0.1 }}
             className="mt-4 text-lg text-ink-muted"
           >
-            Aşağıdaki rakamlar canlı ölçüm değil; platformun hedeflediği
-            mühendislik çıtalarıdır. Canlı telemetri ayrı bir gözlemlenebilirlik
-            hattı ile gelir.
+            Aşağıdaki değerler platformun mimari tasarım hedefleridir.
+            Canlı operasyonel telemetri izole Prometheus ve denetim hatlarıyla takip edilir.
           </motion.p>
         </div>
 
@@ -58,12 +57,12 @@ export function Metrics() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.06 }}
-              className="group relative overflow-hidden rounded-xl border border-brand/20 bg-background/60 p-8 text-center backdrop-blur-sm transition-all hover:border-brand/45"
+              className="enterprise-card rounded-2xl p-8 text-center transition-all hover:border-brand/50"
             >
-              <dt className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+              <dt className="text-xs font-mono uppercase tracking-wider text-ink-muted">
                 {stat.name}
               </dt>
-              <dd className="mt-3 text-3xl font-bold tracking-tight text-foreground transition-colors group-hover:text-brand sm:text-4xl">
+              <dd className="mt-3 text-3xl font-bold font-mono tracking-tight text-white sm:text-4xl">
                 {stat.value}
               </dd>
             </motion.div>

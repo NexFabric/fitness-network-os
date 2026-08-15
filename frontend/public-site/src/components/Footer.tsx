@@ -7,12 +7,16 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2">
-            <Link href="/" className="inline-block focus-visible:outline-none">
+            <Link
+              href="/"
+              className="inline-block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label="GymClubNex Ana Sayfa"
+            >
               <BrandMark size="sm" />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-muted">
-              Yeni nesil spor kulüpleri için tasarlanmış, kesintisiz işletim
-              sistemi. Operasyonu bize bırakın, performansa odaklanın.
+              Yeni nesil spor kulüpleri ve federasyonlar için tasarlanmış, kesintisiz işletim
+              sistemi. Operasyonu otomatikleştirin, performansa odaklanın.
             </p>
           </div>
           <div>
@@ -20,7 +24,7 @@ export function Footer() {
             <ul className="mt-4 space-y-3">
               <li>
                 <a
-                  href="#features"
+                  href="/#features"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Özellikler
@@ -28,7 +32,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#architecture"
+                  href="/#architecture"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Mimari
@@ -36,7 +40,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#pricing"
+                  href="/#pricing"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Fiyatlandırma
@@ -44,7 +48,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="#demo"
+                  href="/#demo"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Demo
@@ -109,10 +113,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} GymClubNex. Tüm hakları saklıdır.
           </p>
           <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-            </span>
+            <span className="h-2 w-2 rounded-full bg-accent" />
             <span className="font-mono text-xs text-ink-muted">
               Platform Altyapısı · Aktif
             </span>
