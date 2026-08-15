@@ -3,6 +3,7 @@
 ## Environment Variables
 
 - `ALLOW_DESTRUCTIVE_TEST_RESET` **required** — backend/tests/conftest.py
+- `AWS_KMS_KEY_ID` **required** — backend/app/core/qr_crypto.py
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py

@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     S3_CONNECT_TIMEOUT: int = 10
     S3_READ_TIMEOUT: int = 30
 
+    # QR KMS settings
+    QR_KMS_MODE: str = "local"
+    AWS_KMS_KEY_ID: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True, extra="ignore"
     )
@@ -144,6 +148,10 @@ class Settings(BaseSettings):
             errors.append("S3_SSE_ALGORITHM must be AES256 or aws:kms")
         if self.S3_SSE_ALGORITHM == "aws:kms" and not self.S3_KMS_KEY_ID.strip():
             errors.append("S3_KMS_KEY_ID is required when S3_SSE_ALGORITHM=aws:kms")
+
+        qr_kms_mode = self.QR_KMS_MODE.strip().lower()
+        if qr_kms_mode not in {"aws_kms", "local"}:
+            errors.append("QR_KMS_MODE must be aws_kms or local in production")
 
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))

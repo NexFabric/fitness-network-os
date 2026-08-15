@@ -106,4 +106,24 @@ services:
       backend:
         condition: service_healthy
 
+  retention-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fitness-os-retention-worker-prod
+    command: ["python", "-m", "app.workers.retention"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
+      - NOTIFICATION_EMAIL_PROVIDER=disabled
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-default}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+
 

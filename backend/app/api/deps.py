@@ -153,17 +153,10 @@ async def get_tenant_id(
             status_code=400, detail="Invalid X-Tenant-ID header format. Must be a UUID."
         )
 
-    if user.is_superuser:
-        current_tenant_id_var.set(tenant_id)
-        await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
-        await _audit_superuser_tenant_access(db, user, tenant_id)
-        await _verify_tenant_status(db, tenant_id)
-        return tenant_id
-
     # Temporarily set the RLS context so we can read the UserRole for this tenant
     await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
 
-    # Verify user belongs to the requested tenant via UserRole
+    # 1. Verify user belongs to the requested tenant via UserRole
     result = await db.execute(
         select(UserRole).where(
             UserRole.user_id == user.id, UserRole.tenant_id == tenant_id
@@ -171,17 +164,37 @@ async def get_tenant_id(
     )
     user_role = result.scalars().first()
 
-    if not user_role:
-        # Reset RLS if unauthorized
-        await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
-        raise HTTPException(
-            status_code=403, detail="User does not have access to this tenant"
+    if user_role:
+        await _verify_tenant_status(db, tenant_id)
+        current_tenant_id_var.set(tenant_id)
+        return tenant_id
+
+    # 2. If not a member, check if superuser with active Break-Glass session
+    if user.is_superuser:
+        from app.services.break_glass import BreakGlassService
+
+        bg_service = BreakGlassService(db)
+        active_bg = await bg_service.check_active_session(
+            actor_id=user.id, tenant_id=tenant_id
         )
+        if not active_bg:
+            await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
+            raise HTTPException(
+                status_code=403,
+                detail="Bu işletmeye erişmek için aktif bir acil durum (break-glass) oturumu gereklidir.",
+            )
 
-    await _verify_tenant_status(db, tenant_id)
+        # Active break-glass session exists: audit, verify status, and allow
+        await _audit_superuser_tenant_access(db, user, tenant_id)
+        await _verify_tenant_status(db, tenant_id)
+        current_tenant_id_var.set(tenant_id)
+        return tenant_id
 
-    current_tenant_id_var.set(tenant_id)
-    return tenant_id
+    # 3. Non-superuser and not a member: forbid
+    await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
+    raise HTTPException(
+        status_code=403, detail="User does not have access to this tenant"
+    )
 
 
 async def get_optional_tenant_id(

@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **38%** of routes and models are covered by tests
-> 78 test files found
+> **39%** of routes and models are covered by tests
+> 83 test files found
 
 ## Covered Routes
 
@@ -43,6 +43,7 @@
 - Refund
 - Discount
 - ReconciliationItem
+- PaymentAttempt
 - Lead
 - Opportunity
 - Task

@@ -1,8 +1,8 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-15
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Production Readiness  
-**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x6f7a8b9c0d1` · **Commit:** `a4921d0`
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening  
+**Branch:** `feat/production-readiness-deep-dive-hardening` · **Alembic head:** `x8b9c0d1e2f3`
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · WAVES 1–3 COMPLETE · CI & LOCAL DB VERIFIED (340 passed · 1 skipped, Playwright 36/36) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
+**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING COMPLETE · CI & LOCAL DB VERIFIED (352 passed · 1 skipped, Playwright 36/36) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 

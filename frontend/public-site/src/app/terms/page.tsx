@@ -41,7 +41,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground">4. Hizmet Seviyesi (SLA) ve Kesintisizlik</h2>
             <p className="mt-2">
-              GymClubNex, platformun yıllık bazda %99.9 erişilebilirlik (SLA) standardında çalışmasını hedefler. Planlı bakım çalışmaları önceden bildirilir. Ağ veya sunucu kesintileri durumunda turnikeler ve erişim cihazları, güvenliği korumak amacıyla fail-closed mimaride yerel imza doğrulama ve önbellek politikasıyla güvenli geçiş denetimine devam eder.
+              GymClubNex, platformun yıllık bazda %99.9 erişilebilirlik (SLA) standardında çalışmasını hedefler. Planlı bakım çalışmaları önceden bildirilir. Ağ veya sunucu bağlantısının bulunmadığı durumlarda turnikeler ve erişim cihazları, tesis güvenliğini korumak amacıyla fail-closed (erişim kapalı) mimaride çalışır ve yetkisiz geçişlere izin verilmez.
             </p>
           </section>
 
