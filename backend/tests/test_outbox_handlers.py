@@ -7,7 +7,6 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.event_types import (
-    NOTIFICATION_REQUESTED_V1,
     REPORT_RUN_REQUESTED_V1,
 )
 from app.models.organization import Organization
@@ -39,8 +38,9 @@ async def test_domain_event_publisher_routes_notification(db_session: AsyncSessi
     db_session.add(tenant)
     await db_session.flush()
 
-    from app.services.notification import NotificationService
     from sqlalchemy import select
+
+    from app.services.notification import NotificationService
 
     notif_svc = NotificationService(db_session)
     res = await notif_svc.schedule_delivery(
@@ -77,8 +77,9 @@ async def test_domain_event_publisher_routes_report(db_session: AsyncSession):
     db_session.add(tenant)
     await db_session.flush()
 
-    from app.services.report import ReportService
     from sqlalchemy import select
+
+    from app.services.report import ReportService
 
     report_svc = ReportService(db_session)
     await report_svc.create_definition(
@@ -135,4 +136,3 @@ async def test_domain_event_publisher_routes_domain_event(db_session: AsyncSessi
 
     # Dispatch via domain_event_publisher
     await domain_event_publisher(db_session, general_event)
-

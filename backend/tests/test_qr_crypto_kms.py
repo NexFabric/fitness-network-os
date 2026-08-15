@@ -5,7 +5,6 @@ from uuid import uuid4
 import pytest
 
 from app.core.qr_crypto import (
-    DEFAULT_ALGORITHM,
     LOCAL_HMAC_PREFIX,
     QrCryptoError,
     build_payload,
