@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-15
 **Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening  
-**Branch:** `feat/production-readiness-deep-dive-hardening` · **Alembic head:** `x8b9c0d1e2f3`
+**Branch:** `main` (PR #60 merged at `f6c9a77`) · **Alembic head:** `x8b9c0d1e2f3`
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING COMPLETE · CI & LOCAL DB VERIFIED (357 passed · 1 skipped, Playwright 39/39) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
+**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING MERGED TO MAIN · CI & LOCAL DB VERIFIED (357 passed · 1 skipped, Playwright 39/39) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 
@@ -26,9 +26,10 @@
 | Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | External pentest & live AWS bucket open |
 | **Phase 27 production closure** | 🟢 **MERGED** | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
 | **Staff account provisioning** | 🟢 **MERGED** | `POST /staff/accounts` + one-time password + forced rotation (`P1-USER`) |
-| **Wave 1: Legal & Member Self-Service** | 🟢 **IMPLEMENTED & VERIFIED** | `/privacy`, `/terms`, `/kvkk`, `/me` invoices/payments/consents, 5-tab MemberPortal |
-| **Wave 2: Forensics, Reception & Dashboard** | 🟢 **IMPLEMENTED & VERIFIED** | `AccessAttempt.snapshot_data`, `/reception` workspace + override, `/dashboard/kpis` |
-| **Wave 3: Migration, Dunning & Onboarding** | 🟢 **IMPLEMENTED & VERIFIED** | CSV import pipeline (`DataImport.tsx`), `PaymentAttempt`, `DunningPolicy`, `TenantOnboarding` |
+| **Wave 1: Legal & Member Self-Service** | 🟢 **MERGED** | `/privacy`, `/terms`, `/kvkk`, `/me` invoices/payments/consents, 5-tab MemberPortal |
+| **Wave 2: Forensics, Reception & Dashboard** | 🟢 **MERGED** | `AccessAttempt.snapshot_data`, `/reception` workspace + override, `/dashboard/kpis` |
+| **Wave 3: Migration, Dunning & Onboarding** | 🟢 **MERGED** | CSV import pipeline (`DataImport.tsx`), `PaymentAttempt`, `DunningPolicy`, `TenantOnboarding` |
+| **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
