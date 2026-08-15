@@ -1,155 +1,212 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, getTenantId } from '../api/client'
-import { PageHeader } from '../components/ui'
+import { LoadingSkeleton, PageHeader } from '../components/ui'
 
-type CountState = number | null
+type DashboardKPIs = {
+  active_members_count: number
+  expiring_memberships_count: number
+  today_checkins_count: number
+  past_due_invoices_count: number
+  past_due_invoices_amount_minor: number
+  month_collected_amount_minor: number
+  total_outstanding_debt_minor: number
+  currency: string
+}
 
 export default function Dashboard() {
   const tenantId = getTenantId()
-  const [memberCount, setMemberCount] = useState<CountState>(null)
-  const [locationCount, setLocationCount] = useState<CountState>(null)
-  const [countsReady, setCountsReady] = useState(false)
+  const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadCounts() {
-      const [membersResult, locationsResult] = await Promise.allSettled([
-        api<unknown[]>('/api/v1/members'),
-        api<unknown[]>('/api/v1/locations'),
-      ])
-
-      if (cancelled) return
-
-      if (membersResult.status === 'fulfilled' && Array.isArray(membersResult.value)) {
-        setMemberCount(membersResult.value.length)
+    async function loadKPIs() {
+      try {
+        const data = await api<DashboardKPIs>('/api/v1/dashboard/kpis')
+        if (!cancelled) {
+          setKpis(data)
+        }
+      } catch {
+        // Handled silently
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      if (
-        locationsResult.status === 'fulfilled' &&
-        Array.isArray(locationsResult.value)
-      ) {
-        setLocationCount(locationsResult.value.length)
-      }
-      setCountsReady(true)
     }
 
-    void loadCounts()
+    void loadKPIs()
     return () => {
       cancelled = true
     }
   }, [])
 
-  function formatCount(n: CountState): string {
-    if (!countsReady) return '…'
-    if (n === null) return '—'
-    return String(n)
-  }
+  const formatMinor = (minor: number) =>
+    (minor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
 
   return (
     <div>
       <PageHeader
-        title="Operasyonlar"
-        subtitle="Tekrar hoş geldiniz. Bu salona ait üyeleri, şubeleri ve finansı yönetin."
+        title="Operasyonlar & Gösterge Paneli"
+        subtitle="Kulüp operasyonel verileri, anlık turnike geçişleri ve finansal göstergeler."
       />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          to="/members"
-          className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Üyeler
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight text-ink tabular-nums">
-                {formatCount(memberCount)}
-              </p>
-              <p className="mt-1 text-sm text-ink-muted">Aktif üye listesi</p>
-            </div>
-            <span
-              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
-              aria-hidden="true"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0z" />
-              </svg>
-            </span>
-          </div>
-          <p className="mt-4 text-sm font-medium text-brand">Üyeleri görüntüle →</p>
-        </Link>
+      {loading && (
+        <div className="mt-6">
+          <LoadingSkeleton rows={4} />
+        </div>
+      )}
 
-        <Link
-          to="/locations"
-          className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Şubeler
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight text-ink tabular-nums">
-                {formatCount(locationCount)}
-              </p>
-              <p className="mt-1 text-sm text-ink-muted">Bağlı lokasyonlar</p>
-            </div>
-            <span
-              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
-              aria-hidden="true"
+      {!loading && kpis && (
+        <>
+          {/* Main Operational KPI Cards */}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              to="/members"
+              className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-            </span>
-          </div>
-          <p className="mt-4 text-sm font-medium text-brand">Şubeleri görüntüle →</p>
-        </Link>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    Aktif Üyeler
+                  </p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-ink tabular-nums">
+                    {kpis.active_members_count}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">Sistemde kayıtlı aktif üye</p>
+                </div>
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
+                  aria-hidden="true"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0z" />
+                  </svg>
+                </span>
+              </div>
+              <p className="mt-4 text-xs font-medium text-brand">Üyeleri görüntüle →</p>
+            </Link>
 
-        <Link
-          to="/finance"
-          className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand sm:col-span-2 lg:col-span-1"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Finans
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight text-ink">
-                Faturalar
-              </p>
-              <p className="mt-1 text-sm text-ink-muted">Ödemeler ve mutabakat</p>
-            </div>
-            <span
-              className="flex h-10 w-10 items-center justify-center rounded-control bg-teal-900/30 text-teal-400 transition group-hover:bg-brand group-hover:text-white"
-              aria-hidden="true"
+            <Link
+              to="/reception"
+              className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </span>
-          </div>
-          <p className="mt-4 text-sm font-medium text-brand">Finansa git →</p>
-        </Link>
-      </div>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    Bugünkü Girişler
+                  </p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-400 tabular-nums">
+                    {kpis.today_checkins_count}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">Turnike & manuel geçiş</p>
+                </div>
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-control bg-emerald-900/30 text-emerald-400 transition group-hover:bg-brand group-hover:text-white"
+                  aria-hidden="true"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </div>
+              <p className="mt-4 text-xs font-medium text-brand">Resepsiyona git →</p>
+            </Link>
 
+            <Link
+              to="/members"
+              className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    Yenileme Bekleyen (30g)
+                  </p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-amber-400 tabular-nums">
+                    {kpis.expiring_memberships_count}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">Süresi dolmak üzere olan paket</p>
+                </div>
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-control bg-amber-900/30 text-amber-400 transition group-hover:bg-brand group-hover:text-white"
+                  aria-hidden="true"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </div>
+              <p className="mt-4 text-xs font-medium text-brand">Abonelikleri incele →</p>
+            </Link>
+
+            <Link
+              to="/finance"
+              className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    Gecikmiş Ödemeler
+                  </p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-rose-400 tabular-nums">
+                    {kpis.past_due_invoices_count}
+                  </p>
+                  <p className="mt-1 text-xs text-rose-400 font-semibold">{formatMinor(kpis.past_due_invoices_amount_minor)}</p>
+                </div>
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-control bg-rose-900/30 text-rose-400 transition group-hover:bg-brand group-hover:text-white"
+                  aria-hidden="true"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                </span>
+              </div>
+              <p className="mt-4 text-xs font-medium text-brand">Gecikmeleri gör →</p>
+            </Link>
+          </div>
+
+          {/* Financial Summary Strip */}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="card border-slate-800 bg-slate-900/80 p-5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Bu Ay Tahsil Edilen</span>
+              <div className="mt-2 text-2xl font-extrabold text-emerald-400">
+                {formatMinor(kpis.month_collected_amount_minor)}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">Ay başından itibaren tamamlanan başarılı tahsilatlar</p>
+            </div>
+
+            <div className="card border-slate-800 bg-slate-900/80 p-5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Toplam Açık Alacak</span>
+              <div className="mt-2 text-2xl font-extrabold text-amber-400">
+                {formatMinor(kpis.total_outstanding_debt_minor)}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">Açık ve kısmen ödenmiş faturaların kalan bakiye toplamı</p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Quick Action Navigation */}
       <section className="card mt-6" aria-labelledby="quick-heading">
         <h2
           id="quick-heading"
           className="text-sm font-semibold uppercase tracking-wide text-ink-muted"
         >
-          Hızlı işlemler
+          Hızlı Operasyon İşlemleri
         </h2>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          <Link to="/reception" className="btn-primary">
+            Resepsiyon Masası
+          </Link>
           <Link to="/members" className="btn-secondary">
-            Üye ekle
+            Üye Yönetimi
           </Link>
           <Link to="/locations" className="btn-secondary">
-            Şube ekle
+            Şubeler
           </Link>
           <Link to="/finance" className="btn-secondary">
-            Faturaları gör
+            Finans & Faturalar
           </Link>
         </div>
         {tenantId && (

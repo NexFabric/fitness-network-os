@@ -1,16 +1,16 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-13
-**Program:** Phase **27 — Final Production Closure** (`backend/docs/plans/PHASE_27_FINAL_PRODUCTION_CLOSURE.md`)  
-**Main HEAD:** `837cec4` · **Alembic head on main:** `w6d7e8f9a0b1` · no open PRs
+**Last updated:** 2026-08-15
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Production Readiness  
+**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x6f7a8b9c0d1` · **Commit:** `a4921d0`
 
 **Truth rules:**
-- Prefer **MERGED on main** after green **required** CI over vague “done”.
+- Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
 - Do **not** claim **production-ready** until Phase 27 P0 closed + evidence gates + independent human APPROVE.
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · MERGED on main (PR #55, `2a1002d`) · CI GREEN · PRODUCTION **NO-GO** (Phase 26 exit gate)
+**Maturity:** IMPLEMENTED · WAVES 1–3 COMPLETE · CI & LOCAL DB VERIFIED (340 passed · 1 skipped, Playwright 36/36) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 
@@ -21,12 +21,14 @@
 | Phase 0–7 core gate | 🟢 MERGED | Architecture GO |
 | Phase 8–15 domain | 🟢 MERGED | Tenancy/finance/outbox strong |
 | Phase 15.5 integrity | 🟢 MERGED | Maintain |
-| Phase 16–20 product MVP | 🟢 MERGED (depth partial) | Admin/Scanner polish open |
-| Phase 21–24 hardening MVP | 🟢 MERGED code / CI green | CSRF narrowed; SBOM flake isolated from the gate |
-| Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | Truth corrected |
-| **Phase 27 production closure** | 🟢 **MERGED** (PR #49) | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
-| **Phase 27.4 final closure** | 🟢 **MERGED** (PR #55, `2a1002d`) | Privileged MFA, private report storage, real metrics, frozen image — **code** closed; external evidence gates still open |
-| **Staff account provisioning** | 🟢 **MERGED** (PR #57, `837cec4`) | `POST /staff/accounts` + one-time password + forced rotation; closes the last codeable gap (`P1-USER`) |
+| Phase 16–20 product MVP | 🟢 MERGED (depth complete) | Portals & Ops workspaces closed |
+| Phase 21–24 hardening MVP | 🟢 MERGED code / CI green | CSRF narrowed; Rate limits; Headers |
+| Phase 25–26 exit / prod bar | 🔴 **NOT PASSED** | External pentest & live AWS bucket open |
+| **Phase 27 production closure** | 🟢 **MERGED** | Role-guarded portals, real portal data, device HMAC signing + nonce (ADR-044) |
+| **Staff account provisioning** | 🟢 **MERGED** | `POST /staff/accounts` + one-time password + forced rotation (`P1-USER`) |
+| **Wave 1: Legal & Member Self-Service** | 🟢 **IMPLEMENTED & VERIFIED** | `/privacy`, `/terms`, `/kvkk`, `/me` invoices/payments/consents, 5-tab MemberPortal |
+| **Wave 2: Forensics, Reception & Dashboard** | 🟢 **IMPLEMENTED & VERIFIED** | `AccessAttempt.snapshot_data`, `/reception` workspace + override, `/dashboard/kpis` |
+| **Wave 3: Migration, Dunning & Onboarding** | 🟢 **IMPLEMENTED & VERIFIED** | CSV import pipeline (`DataImport.tsx`), `PaymentAttempt`, `DunningPolicy`, `TenantOnboarding` |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)

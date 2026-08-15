@@ -146,7 +146,9 @@ async def test_publish_failure_retries(db_session, tenant):
     await db_session.commit()
     assert stats["failed"] == 1
     row = (
-        await db_session.execute(select(OutboxEvent).where(OutboxEvent.tenant_id == tenant.id))
+        await db_session.execute(
+            select(OutboxEvent).where(OutboxEvent.tenant_id == tenant.id)
+        )
     ).scalar_one()
     assert row.status == "FAILED"
     assert row.available_at is not None
@@ -167,12 +169,8 @@ async def test_cross_tenant_inbox_same_event_id(db_session, tenant):
     await db_session.commit()
 
     svc = OutboxService(db_session)
-    a = await svc.receive_inbox(
-        tenant.id, event_id="same", event_type="x", payload={}
-    )
-    b = await svc.receive_inbox(
-        t2.id, event_id="same", event_type="x", payload={}
-    )
+    a = await svc.receive_inbox(tenant.id, event_id="same", event_type="x", payload={})
+    b = await svc.receive_inbox(t2.id, event_id="same", event_type="x", payload={})
     await db_session.commit()
     assert a.is_duplicate is False
     assert b.is_duplicate is False

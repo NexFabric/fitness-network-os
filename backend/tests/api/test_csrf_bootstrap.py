@@ -83,9 +83,7 @@ async def test_csrf_bootstrap_returns_token_and_cookie(api_client):
 
 
 @pytest.mark.asyncio
-async def test_post_members_without_csrf_header_forbidden(
-    api_client, pg_session_maker
-):
+async def test_post_members_without_csrf_header_forbidden(api_client, pg_session_maker):
     email = f"csrf-{uuid4().hex[:8]}@example.com"
     password = "CsrfPass99!"
     async with pg_session_maker() as db:

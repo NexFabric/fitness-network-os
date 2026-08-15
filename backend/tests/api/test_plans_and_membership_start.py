@@ -26,7 +26,9 @@ async def api_client(pg_session_maker):
             yield db
 
     app.dependency_overrides[get_db] = override_get_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         yield client
     app.dependency_overrides.clear()
 
@@ -186,7 +188,9 @@ async def test_plan_catalogue_and_membership_start(api_client, pg_session_maker)
 
     # And the lifecycle surface now has something to act on.
     listed = await api_client.get(
-        f"/api/v1/members/{ctx['member_id']}/memberships", headers=headers, cookies=cookies
+        f"/api/v1/members/{ctx['member_id']}/memberships",
+        headers=headers,
+        cookies=cookies,
     )
     assert listed.status_code == 200
     assert len(listed.json()) == 1

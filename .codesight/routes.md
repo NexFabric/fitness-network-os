@@ -23,6 +23,14 @@
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
+- `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
+- `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
+- `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
+- `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `GET` `/batch/{batch_id}` params(batch_id) → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `POST` `/batch/{batch_id}/commit` params(batch_id) → in: CsvUploadRequest, out: ImportBatchResponse [auth]
 - `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
 - `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
 - `POST` `/revoke` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
@@ -50,6 +58,8 @@
 - `GET` `/entitlements` params() → in: AsyncSessio, out: MeSessionResponse [auth]
 - `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
@@ -68,9 +78,14 @@
 - `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
+- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
+- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db]
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
 - `GET` `/versions` params() → in: UUI, out: PlanResponse
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
+- `GET` `/search` params() → in: Annotated, out: list [auth, db]
+- `GET` `/member/{member_id}` params(member_id) → in: Annotated, out: list [auth, db]
+- `POST` `/checkin/{member_id}/override` params(member_id) → in: UUID, out: list [auth]
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
 - `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse

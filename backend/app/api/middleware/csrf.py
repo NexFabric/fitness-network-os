@@ -59,9 +59,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             and request.url.path not in self.EXEMPT_PATHS
         ):
             csrf_header = request.headers.get(self.HEADER_NAME)
-            if (
-                not csrf_header
-                or not hmac.compare_digest(str(csrf_header), str(csrf_cookie))
+            if not csrf_header or not hmac.compare_digest(
+                str(csrf_header), str(csrf_cookie)
             ):
                 resp = JSONResponse(
                     status_code=403,

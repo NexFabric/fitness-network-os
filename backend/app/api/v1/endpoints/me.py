@@ -4,7 +4,7 @@ Pattern matches POST /access/qr/issue-self (Phase 15.5B/C):
 current_user.id → members.user_id binding → server-owned member_id.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -21,6 +21,8 @@ from app.api.deps import (
 )
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.access import Checkin
+from app.models.consent import ConsentRecord
+from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.user import User
 from app.schemas.membership import MembershipResponse
 from app.services.entitlement import EntitlementService
@@ -120,6 +122,51 @@ class MeCheckinResponse(BaseModel):
     checkout_time: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MeInvoiceResponse(BaseModel):
+    id: UUID
+    invoice_number: str | None = None
+    status: str
+    total_amount_minor: int
+    paid_amount_minor: int
+    discount_amount_minor: int
+    currency: str
+    due_date: datetime | None = None
+    issued_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MePaymentResponse(BaseModel):
+    id: UUID
+    amount_minor: int
+    refunded_amount_minor: int = 0
+    currency: str
+    status: str
+    method: str
+    paid_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeConsentRecordResponse(BaseModel):
+    id: UUID
+    consent_type: str
+    document_version: str
+    status: str
+    given_at: datetime | None = None
+    withdrawn_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeConsentRecordRequest(BaseModel):
+    consent_type: str
+    document_version: str = "v1.0"
+    status: str = "GIVEN"
 
 
 async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID):
@@ -245,9 +292,7 @@ async def list_my_memberships(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    rows = await MembershipService(db).list_memberships_for_member(
-        tenant_id, member.id
-    )
+    rows = await MembershipService(db).list_memberships_for_member(tenant_id, member.id)
     return rows
 
 
@@ -265,9 +310,7 @@ async def list_my_entitlements(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    wallets = await EntitlementService.list_wallets_for_member(
-        db, tenant_id, member.id
-    )
+    wallets = await EntitlementService.list_wallets_for_member(db, tenant_id, member.id)
     return MeEntitlementsSummaryResponse(
         member_id=member.id,
         wallets=[
@@ -350,3 +393,117 @@ async def check_my_entitlement(
         remaining=result.get("remaining"),
         member_id=member.id,
     )
+
+
+@router.get("/invoices", response_model=list[MeInvoiceResponse])
+async def list_my_invoices(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List invoices for the bound member's billing account."""
+    AuthorizationService.require_self(
+        current_user,
+        "finance:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(Invoice)
+        .join(BillingAccount, Invoice.billing_account_id == BillingAccount.id)
+        .where(
+            Invoice.tenant_id == tenant_id,
+            BillingAccount.member_id == member.id,
+        )
+        .order_by(Invoice.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/payments", response_model=list[MePaymentResponse])
+async def list_my_payments(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List payments for the bound member's billing account."""
+    AuthorizationService.require_self(
+        current_user,
+        "finance:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(Payment)
+        .join(BillingAccount, Payment.billing_account_id == BillingAccount.id)
+        .where(
+            Payment.tenant_id == tenant_id,
+            BillingAccount.member_id == member.id,
+        )
+        .order_by(Payment.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/consents", response_model=list[MeConsentRecordResponse])
+async def list_my_consents(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List consent records for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(ConsentRecord)
+        .where(
+            ConsentRecord.tenant_id == tenant_id,
+            ConsentRecord.member_id == member.id,
+        )
+        .order_by(ConsentRecord.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.post("/consents", response_model=MeConsentRecordResponse)
+async def record_my_consent(
+    body: MeConsentRecordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Record or withdraw a consent decision for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:write",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    now = datetime.now(UTC)
+    given_at = now if body.status == "GIVEN" else None
+    withdrawn_at = now if body.status == "WITHDRAWN" else None
+
+    record = ConsentRecord(
+        tenant_id=tenant_id,
+        member_id=member.id,
+        consent_type=body.consent_type,
+        document_version=body.document_version,
+        status=body.status,
+        given_at=given_at,
+        withdrawn_at=withdrawn_at,
+        source="MEMBER_PORTAL",
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record

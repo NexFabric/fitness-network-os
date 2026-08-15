@@ -35,11 +35,11 @@ class QrCryptoError(ValueError):
 def new_local_hmac_ref() -> str:
     """Generate a local HMAC secret reference (never log the returned value)."""
     mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
-    
+
     if mode == "kms":
         # In a real implementation this would create/refer to a KMS key
         return KMS_PREFIX + f"qr-key-{uuid4().hex[:8]}"
-        
+
     # Local or mock
     raw = secrets.token_bytes(32)
     return LOCAL_HMAC_PREFIX + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
@@ -47,14 +47,20 @@ def new_local_hmac_ref() -> str:
 
 def resolve_hmac_secret(key_material: str) -> bytes:
     if key_material.startswith(KMS_PREFIX):
-        # Stub for KMS resolution
-        # E.g., fetch plaintext data key from AWS KMS / HashiCorp Vault
-        # For mock/local fallback during dev:
-        if os.environ.get("QR_KMS_MODE") == "mock":
-            # Deterministic mock key based on the reference for testing
-            return hashlib.sha256(key_material.encode()).digest()
-        raise NotImplementedError("Real KMS resolution requires provider SDK (e.g. boto3)")
-        
+        kms_mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
+        if kms_mode in {"mock", "local", "test"}:
+            return hashlib.sha256(key_material.encode("utf-8")).digest()
+        if kms_mode == "aws_kms":
+            import boto3
+
+            client = boto3.client("kms")
+            key_id = key_material[len(KMS_PREFIX) :]
+            resp = client.generate_data_key(KeyId=key_id, KeySpec="AES_256")
+            return resp["Plaintext"]  # type: ignore[no-any-return]
+        raise QrCryptoError(
+            f"Unsupported KMS mode '{kms_mode}' for key material resolution"
+        )
+
     if not key_material.startswith(LOCAL_HMAC_PREFIX):
         raise QrCryptoError("unsupported_key_material_ref")
     b64 = key_material[len(LOCAL_HMAC_PREFIX) :]

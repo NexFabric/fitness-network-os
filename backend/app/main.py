@@ -119,7 +119,11 @@ def create_app() -> FastAPI:
 
         # Check Redis
         try:
-            r = Redis.from_url(str(settings.REDIS_URL))
+            r = Redis.from_url(
+                str(settings.REDIS_URL),
+                socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
+            )
             await r.ping()
             await r.aclose()
             checks["redis"] = "up"
@@ -151,7 +155,11 @@ def create_app() -> FastAPI:
 
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
-            r = Redis.from_url(str(settings.REDIS_URL))
+            r = Redis.from_url(
+                str(settings.REDIS_URL),
+                socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
+            )
             await r.ping()
             await r.aclose()
             return Response(content="OK", status_code=200, media_type="text/plain")

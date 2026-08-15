@@ -8,24 +8,30 @@ services:
     container_name: fitness-os-backend-prod
     ports:
       - "8000:8000"
-    volumes:
-      - report_storage:/tmp/reports
     environment:
-      # P1-1: Use the local volume as object storage substitute
-      - REPORT_STORAGE_DIR=/tmp/reports
       - ENVIRONMENT=production
       - CORS_ORIGINS=https://admin.gymclubnex.com,https://scanner.gymclubnex.com
       - ALLOWED_HOSTS=api.gymclubnex.com
       - NOTIFICATION_EMAIL_PROVIDER=smtp
+      # Report storage — S3 required in production (validate_production enforces)
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
+      - S3_REGION_NAME=${S3_REGION_NAME:-}
+      - S3_SSE_ALGORITHM=${S3_SSE_ALGORITHM:-AES256}
+      - S3_KMS_KEY_ID=${S3_KMS_KEY_ID:-}
       # Require external PostgreSQL / Redis for true production
       - DATABASE_URL=${DATABASE_URL}
       - MIGRATOR_DATABASE_URL=${MIGRATOR_DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
+      # Metrics
+      - METRICS_BEARER_TOKEN=${METRICS_BEARER_TOKEN}
       # Real SMTP credentials should be injected via .env
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/live"]
       interval: 30s
@@ -44,6 +50,10 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
+      - NOTIFICATION_EMAIL_PROVIDER=disabled
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-default}
     restart: unless-stopped
     depends_on:
       backend:
@@ -59,11 +69,15 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
+      - COMPONENT_NAME=worker
       - NOTIFICATION_EMAIL_PROVIDER=smtp
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-default}
     restart: unless-stopped
     depends_on:
       backend:
@@ -75,18 +89,21 @@ services:
       dockerfile: Dockerfile.prod
     container_name: fitness-os-report-worker-prod
     command: ["python", "-m", "app.workers.report"]
-    volumes:
-      - report_storage:/tmp/reports
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - ENVIRONMENT=production
-      - REPORT_STORAGE_DIR=/tmp/reports
+      - COMPONENT_NAME=worker
+      - NOTIFICATION_EMAIL_PROVIDER=disabled
+      - REPORT_STORAGE_PROVIDER=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
+      - S3_REGION_NAME=${S3_REGION_NAME:-}
+      - S3_SSE_ALGORITHM=${S3_SSE_ALGORITHM:-AES256}
+      - S3_KMS_KEY_ID=${S3_KMS_KEY_ID:-}
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
 
-volumes:
-  report_storage:
 

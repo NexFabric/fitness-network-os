@@ -167,9 +167,7 @@ async def _two_organizations(pg_engine):
 
 
 @pytest.mark.asyncio
-async def test_federation_analyst_sees_only_its_own_organization(
-    api_client, pg_engine
-):
+async def test_federation_analyst_sees_only_its_own_organization(api_client, pg_engine):
     s = await _two_organizations(pg_engine)
     headers = {"Authorization": f"Bearer {s['fed_a_token']}"}
 
@@ -230,9 +228,7 @@ async def test_aggregate_loop_clears_tenant_context(api_client, pg_engine):
     s = await _two_organizations(pg_engine)
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        await FederationService(db).metrics_for_tenants(
-            [s["tenant_a"], s["tenant_b"]]
-        )
+        await FederationService(db).metrics_for_tenants([s["tenant_a"], s["tenant_b"]])
         leftover = (
             await db.execute(
                 text("SELECT current_setting('app.current_tenant_id', true)")

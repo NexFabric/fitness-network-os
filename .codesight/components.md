@@ -9,6 +9,7 @@
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
+- **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
 - **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
 - **Locations** — `frontend/admin-web/src/pages/Locations.tsx`
@@ -20,12 +21,16 @@
 - **PasswordChange** — `frontend/admin-web/src/pages/PasswordChange.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
+- **Reception** — `frontend/admin-web/src/pages/Reception.tsx`
 - **Reports** — `frontend/admin-web/src/pages/Reports.tsx`
 - **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
 - **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
+- **KvkkPage** — `frontend/public-site/src/app/kvkk/page.tsx`
 - **RootLayout** — `frontend/public-site/src/app/layout.tsx`
 - **Home** — `frontend/public-site/src/app/page.tsx`
+- **PrivacyPage** — `frontend/public-site/src/app/privacy/page.tsx`
+- **TermsPage** — `frontend/public-site/src/app/terms/page.tsx`
 - **Architecture** [client] — `frontend/public-site/src/components/Architecture.tsx`
 - **BrandMark** — props: size, showWordmark — `frontend/public-site/src/components/BrandMark.tsx`
 - **Cta** [client] — `frontend/public-site/src/components/Cta.tsx`

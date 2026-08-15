@@ -28,7 +28,9 @@ from app.services.entitlement import EntitlementService
 
 @pytest_asyncio.fixture
 async def db_session(pg_engine) -> AsyncGenerator[AsyncSession, None]:
-    async_session = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        pg_engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with async_session() as session:
         yield session
 
@@ -205,13 +207,17 @@ async def test_entitlement_consume_success(db_session, setup_tenant):
     assert wallet.consumed == 1
 
     txs = (
-        await db_session.execute(
-            select(EntitlementTransaction).where(
-                EntitlementTransaction.tenant_id == setup_tenant.id,
-                EntitlementTransaction.idempotency_key == "idem-ok",
+        (
+            await db_session.execute(
+                select(EntitlementTransaction).where(
+                    EntitlementTransaction.tenant_id == setup_tenant.id,
+                    EntitlementTransaction.idempotency_key == "idem-ok",
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(txs) == 1
     assert txs[0].transaction_type == EntitlementTransactionType.CONSUME.value
     assert txs[0].membership_id == membership.id
@@ -240,18 +246,24 @@ async def test_entitlement_idempotent_replay(db_session, setup_tenant):
     assert wallet.consumed == 1
 
     count = (
-        await db_session.execute(
-            select(EntitlementTransaction).where(
-                EntitlementTransaction.tenant_id == setup_tenant.id,
-                EntitlementTransaction.idempotency_key == "same-key",
+        (
+            await db_session.execute(
+                select(EntitlementTransaction).where(
+                    EntitlementTransaction.tenant_id == setup_tenant.id,
+                    EntitlementTransaction.idempotency_key == "same-key",
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(count) == 1
 
 
 @pytest.mark.asyncio
-async def test_entitlement_concurrent_double_consume(pg_engine, setup_tenant, db_session):
+async def test_entitlement_concurrent_double_consume(
+    pg_engine, setup_tenant, db_session
+):
     """Two separate DB sessions compete for remaining=1."""
     member, _, _, _ = await _seed_membership_wallet(
         db_session, setup_tenant, remaining=1
@@ -277,26 +289,34 @@ async def test_entitlement_concurrent_double_consume(pg_engine, setup_tenant, db
 
     async with maker() as session:
         wallet = (
-            await session.execute(
-                select(EntitlementWallet).where(
-                    EntitlementWallet.tenant_id == tenant_id,
-                    EntitlementWallet.member_id == member_id,
+            (
+                await session.execute(
+                    select(EntitlementWallet).where(
+                        EntitlementWallet.tenant_id == tenant_id,
+                        EntitlementWallet.member_id == member_id,
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         assert wallet is not None
         assert wallet.remaining == 0
         assert wallet.consumed == 1
 
         txs = (
-            await session.execute(
-                select(EntitlementTransaction).where(
-                    EntitlementTransaction.tenant_id == tenant_id,
-                    EntitlementTransaction.transaction_type
-                    == EntitlementTransactionType.CONSUME.value,
+            (
+                await session.execute(
+                    select(EntitlementTransaction).where(
+                        EntitlementTransaction.tenant_id == tenant_id,
+                        EntitlementTransaction.transaction_type
+                        == EntitlementTransactionType.CONSUME.value,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(txs) == 1
 
 
@@ -362,18 +382,14 @@ async def test_tenant_rls_isolation_wallets(
     member_a, _, _, wallet_a = await _seed_membership_wallet(
         db_session, setup_tenant, remaining=5, code="PT_A"
     )
-    await _seed_membership_wallet(
-        db_session, setup_tenant_b, remaining=9, code="PT_B"
-    )
+    await _seed_membership_wallet(db_session, setup_tenant_b, remaining=9, code="PT_B")
 
     async with pg_session_maker() as session:
         await session.execute(
             text("SELECT set_config('app.current_tenant_id', :tid, true)"),
             {"tid": str(setup_tenant.id)},
         )
-        rows = (
-            await session.execute(select(EntitlementWallet))
-        ).scalars().all()
+        rows = (await session.execute(select(EntitlementWallet))).scalars().all()
         # Only tenant A wallets visible under RLS
         assert all(w.tenant_id == setup_tenant.id for w in rows)
         assert any(w.id == wallet_a.id for w in rows)

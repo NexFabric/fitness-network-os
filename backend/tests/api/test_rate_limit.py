@@ -24,6 +24,7 @@ def _build_app(**kwargs):
 
     `add_middleware` would bury it in a stack Starlette only builds on startup.
     """
+
     async def login(request: Request):
         await request.json()
         return JSONResponse({"ok": True})

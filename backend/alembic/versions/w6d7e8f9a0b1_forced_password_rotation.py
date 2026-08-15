@@ -44,8 +44,7 @@ def downgrade() -> None:
     # Restricted sessions become meaningless once the level is gone; revoke them
     # rather than leaving rows that violate the narrower constraint.
     op.execute(
-        "UPDATE user_sessions SET is_revoked = true "
-        "WHERE auth_level = 'password_reset'"
+        "UPDATE user_sessions SET is_revoked = true WHERE auth_level = 'password_reset'"
     )
     op.execute(
         "UPDATE user_sessions SET auth_level = 'full' "

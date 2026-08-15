@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 71 models
+**sqlalchemy** — 78 models
 
 ### Base
 
@@ -48,6 +48,7 @@ pk: `id` (UUID)
 - `denial_reason`: String _(nullable)_
 - `jti`: String _(nullable, index)_
 - `method`: String _(nullable, default)_
+- `snapshot_data`: with_variant _(nullable)_
 - `timestamp`: DateTime _(default)_
 - _relations_: member: Member, device: Device
 
@@ -93,6 +94,18 @@ pk: `id` (UUID)
 - `ip_address`: String _(nullable)_
 - `user_agent`: String _(nullable)_
 
+### BreakGlassSession
+
+- `actor_id`: UUID _(index)_
+- `target_tenant_id`: UUID _(index)_
+- `reason`: Text
+- `ticket_reference`: String
+- `status`: String _(default)_
+- `granted_at`: DateTime
+- `expires_at`: DateTime
+- `revoked_at`: DateTime _(nullable)_
+- `actions_taken`: Text _(nullable)_
+
 ### ConsentDefinition
 
 - `name`: String
@@ -115,6 +128,29 @@ pk: `id` (UUID)
 - `withdrawn_at`: DateTime _(nullable)_
 - `source`: String _(nullable)_
 - `ip_address`: String _(nullable)_
+
+### DataImportBatch
+
+- `filename`: String
+- `status`: String _(default)_
+- `total_rows`: Integer _(default)_
+- `valid_rows`: Integer _(default)_
+- `invalid_rows`: Integer _(default)_
+- `imported_rows`: Integer _(default)_
+- `created_by_user_id`: UUID
+- `created_at`: DateTime _(default)_
+- `completed_at`: DateTime _(nullable)_
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+
+- `batch_id`: UUID _(index)_
+- `row_number`: Integer
+- `status`: String _(default)_
+- `raw_data`: with_variant
+- `parsed_data`: with_variant _(nullable)_
+- `error_message`: Text _(nullable)_
+- _relations_: batch: DataImportBatch
 
 ### EntitlementDefinition
 
@@ -213,6 +249,8 @@ fk: user_id
 - `total_amount_minor`: Integer _(default)_
 - `paid_amount_minor`: Integer _(default)_
 - `discount_amount_minor`: Integer _(default)_
+- `retry_count`: Integer _(default)_
+- `next_retry_at`: DateTime _(nullable)_
 - `idempotency_key`: String _(nullable)_
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -314,6 +352,29 @@ fk: user_id
 - `currency`: String _(default)_
 - `status`: String _(default)_
 - `matched_payment_id`: unknown _(nullable)_
+
+### PaymentAttempt
+
+- `invoice_id`: UUID _(index)_
+- `billing_account_id`: UUID _(index)_
+- `attempt_number`: Integer _(default)_
+- `amount_minor`: Integer
+- `currency`: String _(default)_
+- `status`: String _(default)_
+- `gateway_provider`: String _(nullable)_
+- `gateway_attempt_ref`: String _(nullable)_
+- `error_code`: String _(nullable)_
+- `error_message`: Text _(nullable)_
+- `attempted_at`: DateTime _(default)_
+
+### DunningPolicy
+
+- `name`: String _(default)_
+- `grace_period_days`: Integer _(default)_
+- `max_retry_attempts`: Integer _(default)_
+- `retry_interval_days`: Integer _(default)_
+- `block_access_on_failure`: Boolean _(default)_
+- `is_active`: Boolean _(default)_
 
 ### Lead
 
@@ -519,6 +580,13 @@ fk: recipient_user_id
 - `correlation_id`: String _(nullable)_
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+
+- `current_stage`: String _(default)_
+- `step_data`: with_variant
+- `is_completed`: Boolean _(default)_
+- `completed_at`: DateTime _(nullable)_
+
 ### Organization
 
 - `name`: String
@@ -599,6 +667,16 @@ fk: user_id, role_id, tenant_id, organization_id
 - `finished_at`: DateTime _(nullable)_
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+
+- `data_category`: String
+- `description`: Text
+- `retention_days`: Integer _(nullable)_
+- `deletion_method`: String _(default)_
+- `legal_basis`: String _(nullable)_
+- `is_active`: Boolean _(default)_
+- `requires_legal_review`: Boolean _(default)_
+
 ### Staff
 
 fk: user_id
@@ -614,6 +692,11 @@ fk: organization_id
 - `name`: String
 - `organization_id`: UUID _(fk)_
 - `location_code`: String _(unique)_
+- `status`: String _(default)_
+- `suspended_at`: DateTime _(nullable)_
+- `closed_at`: DateTime _(nullable)_
+- `suspension_reason`: Text _(nullable)_
+- `closure_reason`: Text _(nullable)_
 - _relations_: organization: Organization
 
 ### TrainerAssignment
@@ -679,18 +762,20 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **43** files
-- `backend/app/models/tenant.py` — imported by **39** files
-- `backend/app/models/organization.py` — imported by **34** files
-- `backend/app/db/base.py` — imported by **32** files
-- `backend/app/models/member.py` — imported by **30** files
-- `backend/app/models/rbac.py` — imported by **27** files
-- `backend/app/db/session.py` — imported by **22** files
-- `backend/app/models/membership.py` — imported by **20** files
-- `backend/app/db/rls.py` — imported by **18** files
-- `backend/app/models/location.py` — imported by **12** files
-- `backend/app/models/outbox.py` — imported by **12** files
-- `backend/app/models/access.py` — imported by **11** files
+- `backend/app/models/user.py` — imported by **52** files
+- `backend/app/models/tenant.py` — imported by **45** files
+- `backend/app/models/organization.py` — imported by **39** files
+- `backend/app/db/base.py` — imported by **36** files
+- `backend/app/models/member.py` — imported by **35** files
+- `backend/app/models/rbac.py` — imported by **31** files
+- `backend/app/models/membership.py` — imported by **27** files
+- `backend/app/db/session.py` — imported by **24** files
+- `backend/app/db/rls.py` — imported by **19** files
+- `backend/app/models/location.py` — imported by **17** files
+- `backend/app/models/access.py` — imported by **16** files
+- `backend/app/models/outbox.py` — imported by **13** files
+- `backend/app/models/finance.py` — imported by **12** files
+- `backend/app/models/entitlement.py` — imported by **11** files
 
 ---
 _Back to [overview.md](./overview.md)_

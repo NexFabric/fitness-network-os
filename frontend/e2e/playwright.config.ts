@@ -24,6 +24,9 @@ export default defineConfig({
       url: 'http://127.0.0.1:8000/ready',
       reuseExistingServer: true,
       timeout: 120_000,
+      env: {
+        RATE_LIMIT_LOGIN_MAX_REQUESTS: '500',
+      },
     },
     {
       command: 'npm --prefix ../admin-web run dev -- --port 5173',

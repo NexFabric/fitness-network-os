@@ -66,7 +66,11 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
 
                 from app.core.config import settings
 
-                self._redis = Redis.from_url(str(settings.REDIS_URL))
+                self._redis = Redis.from_url(
+                    str(settings.REDIS_URL),
+                    socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                    socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
+                )
             except Exception:
                 self._redis_failed = True
                 logger.warning("rate_limit.redis_unavailable degraded=in_process")
@@ -117,7 +121,9 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
     def _too_many(self) -> JSONResponse:
         return JSONResponse(
             status_code=429,
-            content={"detail": "Çok fazla deneme yapıldı, birkaç dakika sonra tekrar deneyin."},
+            content={
+                "detail": "Çok fazla deneme yapıldı, birkaç dakika sonra tekrar deneyin."
+            },
             headers={"Retry-After": str(self.window_seconds)},
         )
 

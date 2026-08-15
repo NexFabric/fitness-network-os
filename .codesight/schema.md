@@ -37,6 +37,7 @@
 - denial_reason: String (nullable)
 - jti: String (nullable, index)
 - method: String (nullable, default)
+- snapshot_data: with_variant (nullable)
 - timestamp: DateTime (default)
 - _relations_: member: Member, device: Device
 
@@ -77,6 +78,17 @@
 - ip_address: String (nullable)
 - user_agent: String (nullable)
 
+### BreakGlassSession
+- actor_id: UUID (index)
+- target_tenant_id: UUID (index)
+- reason: Text
+- ticket_reference: String
+- status: String (default)
+- granted_at: DateTime
+- expires_at: DateTime
+- revoked_at: DateTime (nullable)
+- actions_taken: Text (nullable)
+
 ### ConsentDefinition
 - name: String
 - consent_type: String
@@ -96,6 +108,27 @@
 - withdrawn_at: DateTime (nullable)
 - source: String (nullable)
 - ip_address: String (nullable)
+
+### DataImportBatch
+- filename: String
+- status: String (default)
+- total_rows: Integer (default)
+- valid_rows: Integer (default)
+- invalid_rows: Integer (default)
+- imported_rows: Integer (default)
+- created_by_user_id: UUID
+- created_at: DateTime (default)
+- completed_at: DateTime (nullable)
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+- batch_id: UUID (index)
+- row_number: Integer
+- status: String (default)
+- raw_data: with_variant
+- parsed_data: with_variant (nullable)
+- error_message: Text (nullable)
+- _relations_: batch: DataImportBatch
 
 ### EntitlementDefinition
 - code: String
@@ -180,6 +213,8 @@
 - total_amount_minor: Integer (default)
 - paid_amount_minor: Integer (default)
 - discount_amount_minor: Integer (default)
+- retry_count: Integer (default)
+- next_retry_at: DateTime (nullable)
 - idempotency_key: String (nullable)
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -270,6 +305,27 @@
 - currency: String (default)
 - status: String (default)
 - matched_payment_id: unknown (nullable)
+
+### PaymentAttempt
+- invoice_id: UUID (index)
+- billing_account_id: UUID (index)
+- attempt_number: Integer (default)
+- amount_minor: Integer
+- currency: String (default)
+- status: String (default)
+- gateway_provider: String (nullable)
+- gateway_attempt_ref: String (nullable)
+- error_code: String (nullable)
+- error_message: Text (nullable)
+- attempted_at: DateTime (default)
+
+### DunningPolicy
+- name: String (default)
+- grace_period_days: Integer (default)
+- max_retry_attempts: Integer (default)
+- retry_interval_days: Integer (default)
+- block_access_on_failure: Boolean (default)
+- is_active: Boolean (default)
 
 ### Lead
 - first_name: String
@@ -448,6 +504,12 @@
 - correlation_id: String (nullable)
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+- current_stage: String (default)
+- step_data: with_variant
+- is_completed: Boolean (default)
+- completed_at: DateTime (nullable)
+
 ### Organization
 - name: String
 - domain: String (unique, nullable)
@@ -518,6 +580,15 @@
 - finished_at: DateTime (nullable)
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+- data_category: String
+- description: Text
+- retention_days: Integer (nullable)
+- deletion_method: String (default)
+- legal_basis: String (nullable)
+- is_active: Boolean (default)
+- requires_legal_review: Boolean (default)
+
 ### Staff
 - user_id: UUID (fk, index)
 - location_id: unknown (nullable)
@@ -527,6 +598,11 @@
 - name: String
 - organization_id: UUID (fk)
 - location_code: String (unique)
+- status: String (default)
+- suspended_at: DateTime (nullable)
+- closed_at: DateTime (nullable)
+- suspension_reason: Text (nullable)
+- closure_reason: Text (nullable)
 - _relations_: organization: Organization
 
 ### TrainerAssignment

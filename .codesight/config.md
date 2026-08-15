@@ -6,7 +6,7 @@
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
-- `ENCRYPTION_KEY` **required** — backend/app/core/security.py
+- `ENCRYPTION_KEY` (has default) — backend/.env
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx

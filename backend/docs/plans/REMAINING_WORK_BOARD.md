@@ -61,6 +61,9 @@
 | P1-7 | Playwright suite wired into `all-green`; 36/36 passed, merged |
 | P1-PKG | Frozen `uv.lock`, pinned `uv`, base-image digest, `.dockerignore`, non-root runtime and HEALTHCHECK; image build added to CI |
 | P1-USER | `POST /staff/accounts` creates a login and links it to the tenant in one transaction, returning a one-time password once. `must_change_password` plus a restricted `password_reset` session force rotation before the account can be used, and `resolve_auth_level()` orders enrollment ahead of rotation so finishing MFA can no longer skip it (PR #57) |
+| WAVE-1 | Legal pages (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service expansion (`/invoices`, `/payments`, `/consents`, `finance:read:self`), 5-tab MemberPortal UI |
+| WAVE-2 | Forensic Access Snapshot (`AccessAttempt.snapshot_data`), Front Desk Reception workspace (`/reception`, instant search, manual override checkin), Server-side KPI Engine (`GET /dashboard/kpis`) |
+| WAVE-3 | CSV Data Migration Pipeline (`DataImportBatch`, `DataImportRow`, `DataImport.tsx`), Payment Attempts & Dunning policy (`PaymentAttempt`, `DunningPolicy`, invoice retry columns), Tenant Onboarding state machine (`TenantOnboarding`) |
 
 ---
 

@@ -273,9 +273,7 @@ async def list_notes(
     return await MemberService(db).list_notes(tenant_id, member_id)
 
 
-@router.post(
-    "/{member_id}/consents", response_model=ConsentResponse, status_code=201
-)
+@router.post("/{member_id}/consents", response_model=ConsentResponse, status_code=201)
 async def record_consent(
     member_id: UUID,
     body: ConsentCreate,
@@ -305,9 +303,7 @@ async def record_consent(
         raise HTTPException(status_code=code, detail=str(e)) from e
 
 
-@router.get(
-    "/{member_id}/memberships", response_model=list[MembershipResponse]
-)
+@router.get("/{member_id}/memberships", response_model=list[MembershipResponse])
 async def list_member_memberships(
     member_id: UUID,
     tenant_id: UUID = Depends(get_tenant_id),
@@ -342,9 +338,12 @@ async def list_member_access_logs(
     from sqlalchemy import select
 
     from app.models.access import AccessAttempt
+
     res = await db.execute(
         select(AccessAttempt)
-        .where(AccessAttempt.tenant_id == tenant_id, AccessAttempt.member_id == member_id)
+        .where(
+            AccessAttempt.tenant_id == tenant_id, AccessAttempt.member_id == member_id
+        )
         .order_by(AccessAttempt.timestamp.desc())
         .limit(20)
     )
@@ -359,4 +358,3 @@ async def list_member_access_logs(
         )
         for a in attempts
     ]
-

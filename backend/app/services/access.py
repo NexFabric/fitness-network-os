@@ -214,9 +214,7 @@ class AccessService:
                 now=now,
             )
         except QrCryptoError as e:
-            return await self._deny(
-                tenant_id, None, None, str(e), device_id=device_id
-            )
+            return await self._deny(tenant_id, None, None, str(e), device_id=device_id)
 
         member_id = UUID(str(payload["member_id"]))
         jti = str(payload["jti"])
@@ -241,7 +239,54 @@ class AccessService:
                 tenant_id, member_id, jti, "replay", device_id=device_id
             )
 
+        # Dunning policy enforcement: check if member has PAST_DUE membership
+        from app.models.finance import DunningPolicy
+        from app.models.membership import Membership
+
+        dunning_res = await self.db.execute(
+            select(DunningPolicy).where(
+                DunningPolicy.tenant_id == tenant_id,
+                DunningPolicy.is_active.is_(True),
+            )
+        )
+        dunning_policy = dunning_res.scalars().first()
+
+        # Query member's latest membership status for forensic snapshot
+        mem_res = await self.db.execute(
+            select(Membership)
+            .where(
+                Membership.tenant_id == tenant_id,
+                Membership.member_id == member_id,
+            )
+            .order_by(Membership.created_at.desc())
+        )
+        latest_membership = mem_res.scalars().first()
+        membership_status_now = (
+            latest_membership.status if latest_membership else "NO_MEMBERSHIP"
+        )
+
+        if dunning_policy and dunning_policy.block_access_on_failure:
+            if membership_status_now == "PAST_DUE":
+                return await self._deny(
+                    tenant_id,
+                    member_id,
+                    jti,
+                    "dunning_past_due_access_blocked",
+                    device_id=device_id,
+                    snapshot_data={
+                        "action": action,
+                        "membership_status_at_time": "PAST_DUE",
+                        "denial_reason": "dunning_past_due_access_blocked",
+                        "rule_triggered": "dunning_policy_block",
+                        "dunning_policy_id": str(dunning_policy.id),
+                        "policy_version": "v1.0",
+                    },
+                )
+
         remaining: int | None = None
+        wallet_before: int | None = None
+        wallet_after: int | None = None
+
         if require_entitlement:
             if consume:
                 ent = await EntitlementService.consume_access(
@@ -261,6 +306,9 @@ class AccessService:
                     quantity=quantity,
                 )
             remaining = ent.get("remaining")
+            wallet_before = ent.get("balance_before")
+            wallet_after = ent.get("remaining")
+
             if not ent.get("granted"):
                 attempt = await self._record_attempt(
                     tenant_id,
@@ -269,6 +317,19 @@ class AccessService:
                     status=AccessStatus.DENIED,
                     reason=ent.get("reason") or "entitlement_denied",
                     device_id=device_id,
+                    snapshot_data={
+                        "action": action,
+                        "quantity": quantity,
+                        "consume": consume,
+                        "remaining": remaining,
+                        "wallet_balance_before": wallet_before,
+                        "wallet_balance_after": wallet_after,
+                        "membership_status_at_time": membership_status_now,
+                        "entitlement_state": ent.get("last_known_state"),
+                        "denial_reason": ent.get("reason") or "entitlement_denied",
+                        "rule_triggered": "entitlement_check",
+                        "policy_version": "v1.0",
+                    },
                 )
                 return ValidateQrResult(
                     granted=False,
@@ -286,11 +347,25 @@ class AccessService:
             status=AccessStatus.GRANTED,
             reason=None,
             device_id=device_id,
+            snapshot_data={
+                "action": action,
+                "quantity": quantity,
+                "consume": consume,
+                "remaining": remaining,
+                "wallet_balance_before": wallet_before,
+                "wallet_balance_after": wallet_after,
+                "membership_status_at_time": membership_status_now,
+                "rule_triggered": "access_granted",
+                "policy_version": "v1.0",
+            },
         )
         checkin_id = None
         if location_id is None:
             from app.models.location import Location as LocationModel
-            res_loc = await self.db.execute(select(LocationModel).where(LocationModel.tenant_id == tenant_id))
+
+            res_loc = await self.db.execute(
+                select(LocationModel).where(LocationModel.tenant_id == tenant_id)
+            )
             loc = res_loc.scalars().first()
             if loc:
                 location_id = loc.id
@@ -331,7 +406,6 @@ class AccessService:
         except Exception:
             return None
 
-
     async def _deny(
         self,
         tenant_id: UUID,
@@ -340,6 +414,7 @@ class AccessService:
         reason: str,
         *,
         device_id: UUID | None = None,
+        snapshot_data: dict | None = None,
     ) -> ValidateQrResult:
         attempt = await self._record_attempt(
             tenant_id,
@@ -348,6 +423,8 @@ class AccessService:
             status=AccessStatus.DENIED,
             reason=reason,
             device_id=device_id,
+            snapshot_data=snapshot_data
+            or {"denial_reason": reason, "policy_version": "v1.0"},
         )
         return ValidateQrResult(
             granted=False,
@@ -366,6 +443,7 @@ class AccessService:
         status: AccessStatus,
         reason: str | None,
         device_id: UUID | None,
+        snapshot_data: dict | None = None,
     ) -> AccessAttempt:
         attempt = AccessAttempt(
             tenant_id=tenant_id,
@@ -375,6 +453,7 @@ class AccessService:
             denial_reason=reason,
             jti=jti,
             method="QR_SCAN",
+            snapshot_data=snapshot_data,
             timestamp=datetime.now(UTC),
         )
         self.db.add(attempt)

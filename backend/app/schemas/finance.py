@@ -167,7 +167,9 @@ class DiscountResponse(BaseModel):
 
 class ReconciliationItemCreate(BaseModel):
     external_ref: str
-    amount_minor: MoneyMinor  # may be negative for bank lines; nonzero checked in service
+    amount_minor: (
+        MoneyMinor  # may be negative for bank lines; nonzero checked in service
+    )
     currency: str = "TRY"
 
 

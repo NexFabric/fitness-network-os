@@ -22,7 +22,9 @@ class MembershipService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_membership(self, membership_id: UUID, for_update: bool = False) -> Membership | None:
+    async def get_membership(
+        self, membership_id: UUID, for_update: bool = False
+    ) -> Membership | None:
         """Fetch a membership by ID."""
         stmt = select(Membership).where(Membership.id == membership_id)
         if for_update:
@@ -57,7 +59,9 @@ class MembershipService:
     async def create_plan(
         self, tenant_id: UUID, *, name: str, description: str | None = None
     ) -> Plan:
-        plan = Plan(tenant_id=tenant_id, name=name, description=description, is_active=True)
+        plan = Plan(
+            tenant_id=tenant_id, name=name, description=description, is_active=True
+        )
         self.session.add(plan)
         await self.session.flush()
         return plan
@@ -72,7 +76,11 @@ class MembershipService:
         return list((await self.session.execute(stmt)).scalars().all())
 
     async def list_plan_versions(
-        self, tenant_id: UUID, *, plan_id: UUID | None = None, published_only: bool = False
+        self,
+        tenant_id: UUID,
+        *,
+        plan_id: UUID | None = None,
+        published_only: bool = False,
     ) -> list[PlanVersion]:
         stmt = select(PlanVersion).where(PlanVersion.tenant_id == tenant_id)
         if plan_id is not None:
@@ -139,33 +147,41 @@ class MembershipService:
         return pv
 
     async def publish_plan_version(self, plan_version_id: UUID) -> PlanVersion:
-        stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id).with_for_update()
+        stmt = (
+            select(PlanVersion)
+            .where(PlanVersion.id == plan_version_id)
+            .with_for_update()
+        )
         result = await self.session.execute(stmt)
         pv = result.scalar_one_or_none()
         if not pv:
             raise ValueError("Plan version not found")
         if pv.is_published:
             raise ValueError("Plan version is already published")
-        
+
         pv.is_published = True
         pv.published_at = datetime.now(UTC)
         await self.session.flush()
         return pv
 
     async def update_plan_version(self, plan_version_id: UUID, **kwargs) -> PlanVersion:
-        stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id).with_for_update()
+        stmt = (
+            select(PlanVersion)
+            .where(PlanVersion.id == plan_version_id)
+            .with_for_update()
+        )
         result = await self.session.execute(stmt)
         pv = result.scalar_one_or_none()
         if not pv:
             raise ValueError("Plan version not found")
-        
+
         if pv.is_published:
             raise ValueError("Cannot update published PlanVersion")
-            
+
         for k, v in kwargs.items():
             if hasattr(pv, k):
                 setattr(pv, k, v)
-        
+
         await self.session.flush()
         return pv
 
@@ -179,20 +195,22 @@ class MembershipService:
         # Check for overlap
         stmt = select(Membership).where(
             Membership.member_id == member_id,
-            Membership.status.in_({"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"})
+            Membership.status.in_(
+                {"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"}
+            ),
         )
         existing = await self.session.execute(stmt)
         if existing.scalars().first():
             raise ValueError("Member already has an active or scheduled membership")
-            
+
         pv_stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id)
         pv = (await self.session.execute(pv_stmt)).scalar_one_or_none()
         if not pv or not pv.is_published:
             raise ValueError("Valid published PlanVersion required")
-            
+
         status = "ACTIVE" if start_date <= datetime.now(UTC) else "SCHEDULED"
         end_date = start_date + relativedelta(months=pv.billing_cycle_months)
-        
+
         membership = Membership(
             member_id=member_id,
             plan_version_id=plan_version_id,
@@ -202,30 +220,30 @@ class MembershipService:
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
             terms_snapshot=pv.terms,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
         self.session.add(membership)
         await self.session.flush()
-        
+
         period = MembershipPeriod(
             membership_id=membership.id,
             start_date=start_date,
             end_date=end_date,
             is_active=status == "ACTIVE",
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
         self.session.add(period)
-        
+
         history = MembershipStatusHistory(
             membership_id=membership.id,
             old_status="DRAFT",
             new_status=status,
             changed_at=datetime.now(UTC),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
         self.session.add(history)
         await self.session.flush()
-        
+
         return membership
 
     async def freeze_membership(
@@ -245,14 +263,16 @@ class MembershipService:
         membership = await self.get_membership(membership_id, for_update=True)
         if not membership:
             raise ValueError("Membership not found")
-            
+
         valid_from_statuses = {"ACTIVE", "PAST_DUE"}
         if membership.status not in valid_from_statuses:
-            raise ValueError(f"Membership status '{membership.status}' cannot be frozen")
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be frozen"
+            )
 
         stmt = select(MembershipFreeze).where(
             MembershipFreeze.membership_id == membership_id,
-            MembershipFreeze.actual_end_date.is_(None)
+            MembershipFreeze.actual_end_date.is_(None),
         )
         existing_freeze = await self.session.execute(stmt)
         if existing_freeze.scalar_one_or_none():
@@ -264,7 +284,7 @@ class MembershipService:
             expected_end_date=expected_end_date,
             previous_status=membership.status,
             reason=reason,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(freeze)
 
@@ -274,7 +294,7 @@ class MembershipService:
             new_status="FROZEN",
             changed_at=datetime.now(UTC),
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(history)
 
@@ -285,7 +305,7 @@ class MembershipService:
         except exc.IntegrityError:
             await self.session.rollback()
             raise ValueError("Membership already has an active freeze")
-            
+
         return freeze
 
     async def unfreeze_membership(
@@ -304,10 +324,14 @@ class MembershipService:
         if membership.status != "FROZEN":
             raise ValueError("Membership is not frozen")
 
-        stmt = select(MembershipFreeze).where(
-            MembershipFreeze.membership_id == membership_id,
-            MembershipFreeze.actual_end_date.is_(None)
-        ).with_for_update()
+        stmt = (
+            select(MembershipFreeze)
+            .where(
+                MembershipFreeze.membership_id == membership_id,
+                MembershipFreeze.actual_end_date.is_(None),
+            )
+            .with_for_update()
+        )
         result = await self.session.execute(stmt)
         freeze = result.scalar_one_or_none()
 
@@ -316,20 +340,20 @@ class MembershipService:
 
         now = datetime.now(UTC)
         freeze.actual_end_date = now
-        
+
         if membership.end_date:
             delta = now - freeze.start_date
             membership.end_date += delta
-            
+
         new_status = freeze.previous_status or "ACTIVE"
-        
+
         history = MembershipStatusHistory(
             membership_id=membership_id,
             old_status="FROZEN",
             new_status=new_status,
             changed_at=datetime.now(UTC),
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(history)
 
@@ -350,8 +374,10 @@ class MembershipService:
 
         valid_from_statuses = {"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"}
         if membership.status not in valid_from_statuses:
-            raise ValueError(f"Membership status '{membership.status}' cannot be cancelled")
-            
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be cancelled"
+            )
+
         now = datetime.now(UTC)
 
         cancellation = MembershipCancellation(
@@ -360,18 +386,22 @@ class MembershipService:
             effective_date=effective_date,
             reason=reason,
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(cancellation)
-        
+
         if effective_date > now:
             membership.scheduled_cancellation_at = effective_date
         else:
             if membership.status == "FROZEN":
-                stmt = select(MembershipFreeze).where(
-                    MembershipFreeze.membership_id == membership_id,
-                    MembershipFreeze.actual_end_date.is_(None)
-                ).with_for_update()
+                stmt = (
+                    select(MembershipFreeze)
+                    .where(
+                        MembershipFreeze.membership_id == membership_id,
+                        MembershipFreeze.actual_end_date.is_(None),
+                    )
+                    .with_for_update()
+                )
                 freeze = (await self.session.execute(stmt)).scalar_one_or_none()
                 if freeze:
                     freeze.actual_end_date = now
@@ -382,7 +412,7 @@ class MembershipService:
                 new_status="CANCELLED",
                 changed_at=now,
                 changed_by_user_id=changed_by_user_id,
-                tenant_id=membership.tenant_id
+                tenant_id=membership.tenant_id,
             )
             self.session.add(history)
             membership.status = "CANCELLED"
@@ -404,20 +434,22 @@ class MembershipService:
 
         valid_from_statuses = {"ACTIVE", "FROZEN", "PAST_DUE"}
         if membership.status not in valid_from_statuses:
-            raise ValueError(f"Membership status '{membership.status}' cannot be renewed")
-            
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be renewed"
+            )
+
         stmt = select(MembershipRenewal).where(
             MembershipRenewal.membership_id == membership_id,
-            MembershipRenewal.renewal_date == renewal_date
+            MembershipRenewal.renewal_date == renewal_date,
         )
         if (await self.session.execute(stmt)).scalar_one_or_none():
             raise ValueError("Membership renewal already processed for this date")
-        
+
         pv_stmt = select(PlanVersion).where(PlanVersion.id == next_plan_version_id)
         pv = (await self.session.execute(pv_stmt)).scalar_one_or_none()
         if not pv or not pv.is_published:
             raise ValueError("Valid published next plan version not found")
-        
+
         renewal = MembershipRenewal(
             membership_id=membership_id,
             next_plan_version_id=next_plan_version_id,
@@ -425,9 +457,11 @@ class MembershipService:
             price_snapshot=pv.price_amount_minor,
             price_snapshot_currency=pv.currency,
             terms_snapshot=pv.terms,
-            status=RenewalStatus.APPLIED.value if renewal_date <= datetime.now(UTC) else RenewalStatus.PENDING.value,
+            status=RenewalStatus.APPLIED.value
+            if renewal_date <= datetime.now(UTC)
+            else RenewalStatus.PENDING.value,
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(renewal)
 
@@ -437,25 +471,29 @@ class MembershipService:
             membership.price_snapshot = pv.price_amount_minor
             membership.price_snapshot_currency = pv.currency
             membership.terms_snapshot = pv.terms
-            
+
             if membership.end_date:
                 # Close current active period if any
                 stmt_active_period = select(MembershipPeriod).where(
                     MembershipPeriod.membership_id == membership.id,
-                    MembershipPeriod.is_active
+                    MembershipPeriod.is_active,
                 )
-                active_period = (await self.session.execute(stmt_active_period)).scalar_one_or_none()
+                active_period = (
+                    await self.session.execute(stmt_active_period)
+                ).scalar_one_or_none()
                 if active_period:
                     active_period.is_active = False
-                    
-                new_end_date = membership.end_date + relativedelta(months=pv.billing_cycle_months)
-                
+
+                new_end_date = membership.end_date + relativedelta(
+                    months=pv.billing_cycle_months
+                )
+
                 period = MembershipPeriod(
                     membership_id=membership.id,
                     start_date=membership.end_date,
                     end_date=new_end_date,
                     is_active=membership.status == "ACTIVE",
-                    tenant_id=membership.tenant_id
+                    tenant_id=membership.tenant_id,
                 )
                 self.session.add(period)
                 membership.end_date = new_end_date
@@ -484,18 +522,24 @@ class MembershipService:
             raise ValueError("Membership not found")
 
         if membership.status != "SCHEDULED":
-            raise ValueError(f"Membership status '{membership.status}' cannot be activated")
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be activated"
+            )
 
         if membership.start_date > datetime.now(UTC):
             raise ValueError("Membership start date is in the future")
 
         membership.status = "ACTIVE"
-        
+
         # Activate the period
-        stmt_period = select(MembershipPeriod).where(
-            MembershipPeriod.membership_id == membership.id,
-            MembershipPeriod.is_active == False
-        ).order_by(MembershipPeriod.start_date.asc())
+        stmt_period = (
+            select(MembershipPeriod)
+            .where(
+                MembershipPeriod.membership_id == membership.id,
+                MembershipPeriod.is_active == False,
+            )
+            .order_by(MembershipPeriod.start_date.asc())
+        )
         period = (await self.session.execute(stmt_period)).scalars().first()
         if period:
             period.is_active = True
@@ -506,7 +550,7 @@ class MembershipService:
             new_status="ACTIVE",
             changed_at=datetime.now(UTC),
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(history)
 
@@ -521,7 +565,7 @@ class MembershipService:
         )
 
         await self.session.flush()
-        
+
         return membership
 
     async def expire_membership(
@@ -534,11 +578,12 @@ class MembershipService:
             raise ValueError("Membership not found")
 
         if membership.status not in ("ACTIVE", "PAST_DUE"):
-            raise ValueError(f"Membership status '{membership.status}' cannot be expired")
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be expired"
+            )
 
         stmt_period = select(MembershipPeriod).where(
-            MembershipPeriod.membership_id == membership.id,
-            MembershipPeriod.is_active
+            MembershipPeriod.membership_id == membership.id, MembershipPeriod.is_active
         )
         active_period = (await self.session.execute(stmt_period)).scalar_one_or_none()
         if active_period:
@@ -550,12 +595,12 @@ class MembershipService:
             new_status="EXPIRED",
             changed_at=datetime.now(UTC),
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(history)
 
         membership.status = "EXPIRED"
-        
+
         await self.session.flush()
         return membership
 
@@ -569,7 +614,9 @@ class MembershipService:
             raise ValueError("Membership not found")
 
         if membership.status != "ACTIVE":
-            raise ValueError(f"Membership status '{membership.status}' cannot be marked PAST_DUE")
+            raise ValueError(
+                f"Membership status '{membership.status}' cannot be marked PAST_DUE"
+            )
 
         history = MembershipStatusHistory(
             membership_id=membership_id,
@@ -577,11 +624,11 @@ class MembershipService:
             new_status="PAST_DUE",
             changed_at=datetime.now(UTC),
             changed_by_user_id=changed_by_user_id,
-            tenant_id=membership.tenant_id
+            tenant_id=membership.tenant_id,
         )
         self.session.add(history)
 
         membership.status = "PAST_DUE"
-        
+
         await self.session.flush()
         return membership

@@ -9,7 +9,14 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.audit import AuditEvent
+from app.models.break_glass import BreakGlassSession, BreakGlassStatus
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
+from app.models.data_import import (
+    DataImportBatch,
+    DataImportRow,
+    ImportBatchStatus,
+    ImportRowStatus,
+)
 from app.models.entitlement import (
     EntitlementDefinition,
     EntitlementTransaction,
@@ -23,12 +30,15 @@ from app.models.finance import (
     CreditApplication,
     CreditNote,
     Discount,
+    DunningPolicy,
     Invoice,
     InvoiceDiscount,
     InvoiceItem,
     Payment,
     PaymentAllocation,
     PaymentAllocationReversal,
+    PaymentAttempt,
+    PaymentAttemptStatus,
     ReconciliationItem,
     ReconciliationRun,
     Refund,
@@ -50,10 +60,12 @@ from app.models.membership import (
     RenewalStatus,
 )
 from app.models.notification import NotificationDelivery, NotificationTemplate
+from app.models.onboarding import OnboardingStage, TenantOnboarding
 from app.models.organization import Organization
 from app.models.outbox import InboxEvent, OutboxEvent
 from app.models.rbac import Permission, Role, UserRole
 from app.models.report import ReportDefinition, ReportRun
+from app.models.retention import DataRetentionPolicy, DeletionMethod
 from app.models.staff import Staff
 from app.models.tenant import Tenant
 from app.models.trainer_assignment import TrainerAssignment
@@ -64,6 +76,8 @@ __all__ = [
     "AccessMethod",
     "AuditEvent",
     "BillingAccount",
+    "BreakGlassSession",
+    "BreakGlassStatus",
     "Checkin",
     "ComplianceRecord",
     "ConsentDefinition",
@@ -71,9 +85,14 @@ __all__ = [
     "ConsentVersion",
     "CreditApplication",
     "CreditNote",
+    "DataImportBatch",
+    "DataImportRow",
+    "DataRetentionPolicy",
+    "DeletionMethod",
     "Device",
     "DeviceNonce",
     "Discount",
+    "DunningPolicy",
     "Entitlement",
     "EntitlementDefinition",
     "EntitlementTransaction",
@@ -81,6 +100,8 @@ __all__ = [
     "IdempotencyKey",
     "IdempotencyRecord",
     "IdempotencyStatus",
+    "ImportBatchStatus",
+    "ImportRowStatus",
     "InboxEvent",
     "Invoice",
     "InvoiceDiscount",
@@ -100,6 +121,7 @@ __all__ = [
     "NotificationDelivery",
     "NotificationTemplate",
     "OfflineSnapshot",
+    "OnboardingStage",
     "Opportunity",
     "Organization",
     "OutboxEvent",
@@ -107,6 +129,8 @@ __all__ = [
     "Payment",
     "PaymentAllocation",
     "PaymentAllocationReversal",
+    "PaymentAttempt",
+    "PaymentAttemptStatus",
     "Permission",
     "Plan",
     "PlanEntitlement",
@@ -125,6 +149,7 @@ __all__ = [
     "Tag",
     "Task",
     "Tenant",
+    "TenantOnboarding",
     "TrainerAssignment",
     "User",
     "UserDevice",

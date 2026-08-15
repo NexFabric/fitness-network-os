@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 88 routes | 71 models | 38 components | 60 lib files | 17 env vars | 6 middleware | 43% test coverage
-> **Token savings:** this file is ~11,700 tokens. Without it, AI exploration would cost ~114,300 tokens. **Saves ~102,500 tokens per conversation.**
-> **Last scanned:** 2026-08-13 18:56 — re-run after significant changes
+> 103 routes | 78 models | 43 components | 68 lib files | 17 env vars | 6 middleware | 38% test coverage
+> **Token savings:** this file is ~13,200 tokens. Without it, AI exploration would cost ~128,500 tokens. **Saves ~115,300 tokens per conversation.**
+> **Last scanned:** 2026-08-15 07:25 — re-run after significant changes
 
 ---
 
@@ -34,6 +34,14 @@
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
+- `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
+- `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
+- `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
+- `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `GET` `/batch/{batch_id}` params(batch_id) → in: AsyncSessio, out: ImportBatchResponse [auth, db]
+- `POST` `/batch/{batch_id}/commit` params(batch_id) → in: CsvUploadRequest, out: ImportBatchResponse [auth]
 - `POST` `/provision` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth]
 - `POST` `/auth` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
 - `POST` `/revoke` params() → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
@@ -61,6 +69,8 @@
 - `GET` `/entitlements` params() → in: AsyncSessio, out: MeSessionResponse [auth]
 - `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
@@ -79,9 +89,14 @@
 - `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
+- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
+- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db]
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
 - `GET` `/versions` params() → in: UUI, out: PlanResponse
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
+- `GET` `/search` params() → in: Annotated, out: list [auth, db]
+- `GET` `/member/{member_id}` params(member_id) → in: Annotated, out: list [auth, db]
+- `POST` `/checkin/{member_id}/override` params(member_id) → in: UUID, out: list [auth]
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
 - `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse
@@ -134,6 +149,7 @@
 - denial_reason: String (nullable)
 - jti: String (nullable, index)
 - method: String (nullable, default)
+- snapshot_data: with_variant (nullable)
 - timestamp: DateTime (default)
 - _relations_: member: Member, device: Device
 
@@ -174,6 +190,17 @@
 - ip_address: String (nullable)
 - user_agent: String (nullable)
 
+### BreakGlassSession
+- actor_id: UUID (index)
+- target_tenant_id: UUID (index)
+- reason: Text
+- ticket_reference: String
+- status: String (default)
+- granted_at: DateTime
+- expires_at: DateTime
+- revoked_at: DateTime (nullable)
+- actions_taken: Text (nullable)
+
 ### ConsentDefinition
 - name: String
 - consent_type: String
@@ -193,6 +220,27 @@
 - withdrawn_at: DateTime (nullable)
 - source: String (nullable)
 - ip_address: String (nullable)
+
+### DataImportBatch
+- filename: String
+- status: String (default)
+- total_rows: Integer (default)
+- valid_rows: Integer (default)
+- invalid_rows: Integer (default)
+- imported_rows: Integer (default)
+- created_by_user_id: UUID
+- created_at: DateTime (default)
+- completed_at: DateTime (nullable)
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+- batch_id: UUID (index)
+- row_number: Integer
+- status: String (default)
+- raw_data: with_variant
+- parsed_data: with_variant (nullable)
+- error_message: Text (nullable)
+- _relations_: batch: DataImportBatch
 
 ### EntitlementDefinition
 - code: String
@@ -277,6 +325,8 @@
 - total_amount_minor: Integer (default)
 - paid_amount_minor: Integer (default)
 - discount_amount_minor: Integer (default)
+- retry_count: Integer (default)
+- next_retry_at: DateTime (nullable)
 - idempotency_key: String (nullable)
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -367,6 +417,27 @@
 - currency: String (default)
 - status: String (default)
 - matched_payment_id: unknown (nullable)
+
+### PaymentAttempt
+- invoice_id: UUID (index)
+- billing_account_id: UUID (index)
+- attempt_number: Integer (default)
+- amount_minor: Integer
+- currency: String (default)
+- status: String (default)
+- gateway_provider: String (nullable)
+- gateway_attempt_ref: String (nullable)
+- error_code: String (nullable)
+- error_message: Text (nullable)
+- attempted_at: DateTime (default)
+
+### DunningPolicy
+- name: String (default)
+- grace_period_days: Integer (default)
+- max_retry_attempts: Integer (default)
+- retry_interval_days: Integer (default)
+- block_access_on_failure: Boolean (default)
+- is_active: Boolean (default)
 
 ### Lead
 - first_name: String
@@ -545,6 +616,12 @@
 - correlation_id: String (nullable)
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+- current_stage: String (default)
+- step_data: with_variant
+- is_completed: Boolean (default)
+- completed_at: DateTime (nullable)
+
 ### Organization
 - name: String
 - domain: String (unique, nullable)
@@ -615,6 +692,15 @@
 - finished_at: DateTime (nullable)
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+- data_category: String
+- description: Text
+- retention_days: Integer (nullable)
+- deletion_method: String (default)
+- legal_basis: String (nullable)
+- is_active: Boolean (default)
+- requires_legal_review: Boolean (default)
+
 ### Staff
 - user_id: UUID (fk, index)
 - location_id: unknown (nullable)
@@ -624,6 +710,11 @@
 - name: String
 - organization_id: UUID (fk)
 - location_code: String (unique)
+- status: String (default)
+- suspended_at: DateTime (nullable)
+- closed_at: DateTime (nullable)
+- suspension_reason: Text (nullable)
+- closure_reason: Text (nullable)
 - _relations_: organization: Organization
 
 ### TrainerAssignment
@@ -684,6 +775,7 @@
 - **RequireAuth** — `frontend/admin-web/src/components/RequireAuth.tsx`
 - **RequireRole** — props: allowed — `frontend/admin-web/src/components/RequireRole.tsx`
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
+- **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
 - **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
 - **Locations** — `frontend/admin-web/src/pages/Locations.tsx`
@@ -695,12 +787,16 @@
 - **PasswordChange** — `frontend/admin-web/src/pages/PasswordChange.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
+- **Reception** — `frontend/admin-web/src/pages/Reception.tsx`
 - **Reports** — `frontend/admin-web/src/pages/Reports.tsx`
 - **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
 - **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
+- **KvkkPage** — `frontend/public-site/src/app/kvkk/page.tsx`
 - **RootLayout** — `frontend/public-site/src/app/layout.tsx`
 - **Home** — `frontend/public-site/src/app/page.tsx`
+- **PrivacyPage** — `frontend/public-site/src/app/privacy/page.tsx`
+- **TermsPage** — `frontend/public-site/src/app/terms/page.tsx`
 - **Architecture** [client] — `frontend/public-site/src/components/Architecture.tsx`
 - **BrandMark** — props: size, showWordmark — `frontend/public-site/src/components/BrandMark.tsx`
 - **Cta** [client] — `frontend/public-site/src/components/Cta.tsx`
@@ -768,6 +864,18 @@
 - `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/v5c6d7e8f9a0_privileged_mfa_session_level.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/w6d7e8f9a0b1_forced_password_rotation.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x1a2b3c4d5e6_tenant_lifecycle_status.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x2b3c4d5e6f7_break_glass_sessions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x3c4d5e6f7a8_data_retention_policies.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x4d5e6f7a8b9_seed_finance_read_self.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x5e6f7a8b9c0_access_attempt_snapshot.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x6f7a8b9c0d1_wave3_migration_dunning_onboarding.py`
+  - function enable_rls: (table_name) -> None
+  - function disable_rls: (table_name) -> None
+  - function upgrade: () -> None
+  - function downgrade: () -> None
+- `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
@@ -824,7 +932,7 @@
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
-- `ENCRYPTION_KEY` **required** — backend/app/core/security.py
+- `ENCRYPTION_KEY` (has default) — backend/.env
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
@@ -870,46 +978,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **43** files
-- `backend/app/models/tenant.py` — imported by **39** files
-- `backend/app/models/organization.py` — imported by **34** files
-- `backend/app/db/base.py` — imported by **32** files
-- `backend/app/api/deps.py` — imported by **31** files
-- `backend/app/models/member.py` — imported by **30** files
-- `backend/app/models/rbac.py` — imported by **27** files
-- `backend/app/db/session.py` — imported by **22** files
-- `backend/app/models/membership.py` — imported by **20** files
-- `frontend/admin-web/src/api/client.ts` — imported by **19** files
-- `backend/app/db/rls.py` — imported by **18** files
-- `backend/app/core/authorization.py` — imported by **18** files
-- `backend/app/main.py` — imported by **18** files
-- `backend/app/core/config.py` — imported by **16** files
-- `backend/app/models/location.py` — imported by **12** files
-- `backend/app/models/outbox.py` — imported by **12** files
-- `frontend/admin-web/src/components/ui/index.ts` — imported by **12** files
-- `backend/app/models/access.py` — imported by **11** files
-- `frontend/admin-web/src/auth/AuthContext.tsx` — imported by **11** files
-- `backend/app/core/security.py` — imported by **10** files
+- `backend/app/models/user.py` — imported by **52** files
+- `backend/app/models/tenant.py` — imported by **45** files
+- `backend/app/models/organization.py` — imported by **39** files
+- `backend/app/api/deps.py` — imported by **37** files
+- `backend/app/db/base.py` — imported by **36** files
+- `backend/app/models/member.py` — imported by **35** files
+- `backend/app/models/rbac.py` — imported by **31** files
+- `backend/app/models/membership.py` — imported by **27** files
+- `backend/app/db/session.py` — imported by **24** files
+- `backend/app/core/authorization.py` — imported by **22** files
+- `frontend/admin-web/src/api/client.ts` — imported by **21** files
+- `backend/app/main.py` — imported by **20** files
+- `backend/app/db/rls.py` — imported by **19** files
+- `backend/app/core/config.py` — imported by **17** files
+- `backend/app/models/location.py` — imported by **17** files
+- `backend/app/models/access.py` — imported by **16** files
+- `frontend/admin-web/src/components/ui/index.ts` — imported by **14** files
+- `backend/app/models/outbox.py` — imported by **13** files
+- `backend/app/models/finance.py` — imported by **12** files
+- `backend/app/models/entitlement.py` — imported by **11** files
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +38 more
-- `backend/app/models/tenant.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py`, `backend/app/workers/report.py` +34 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +29 more
-- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/consent.py`, `backend/app/models/entitlement.py` +27 more
-- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +26 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py`, `backend/app/services/federation.py`, `backend/app/services/finance.py` +25 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py`, `backend/app/services/notification.py` +22 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +17 more
-- `backend/app/models/membership.py` ← `backend/app/models/__init__.py`, `backend/app/services/entitlement.py`, `backend/app/services/federation.py`, `backend/app/services/membership.py`, `backend/app/services/resolution.py` +15 more
-- `frontend/admin-web/src/api/client.ts` ← `frontend/admin-web/src/auth/AuthContext.tsx`, `frontend/admin-web/src/components/Layout.tsx`, `frontend/admin-web/src/components/MemberAccessLogs.tsx`, `frontend/admin-web/src/components/MemberMemberships.tsx`, `frontend/admin-web/src/pages/Dashboard.tsx` +14 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/dashboard.py` +47 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +40 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +34 more
+- `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/dashboard.py` +32 more
+- `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/break_glass.py`, `backend/app/models/consent.py` +31 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +30 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +26 more
+- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +22 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +19 more
+- `backend/app/core/authorization.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/data_import.py`, `backend/app/api/v1/endpoints/devices.py`, `backend/app/api/v1/endpoints/entitlements.py` +17 more
 
 ---
 
 # Test Coverage
 
-> **43%** of routes and models are covered by tests
-> 72 test files found
+> **38%** of routes and models are covered by tests
+> 78 test files found
 
 ## Covered Routes
 
@@ -977,6 +1085,7 @@
 - UserRole
 - ReportDefinition
 - ReportRun
+- DataRetentionPolicy
 - Staff
 - Tenant
 - TrainerAssignment

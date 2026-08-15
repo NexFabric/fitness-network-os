@@ -4,6 +4,9 @@ from app.api.v1.endpoints import (
     access,
     admin,
     auth,
+    break_glass,
+    dashboard,
+    data_import,
     devices,
     entitlements,
     finance,
@@ -13,7 +16,9 @@ from app.api.v1.endpoints import (
     memberships,
     mfa,
     notifications,
+    onboarding,
     plans,
+    reception,
     reports,
     staff,
     telemetry,
@@ -22,8 +27,13 @@ from app.api.v1.endpoints import (
 
 api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(
+    break_glass.router, prefix="/admin/break-glass", tags=["break-glass"]
+)
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(mfa.router, prefix="/auth/mfa", tags=["mfa"])
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+api_router.include_router(reception.router, prefix="/reception", tags=["reception"])
 api_router.include_router(plans.router, prefix="/plans", tags=["plans"])
 # Creation sits with the catalogue it depends on, but keeps the /memberships path.
 api_router.include_router(
@@ -45,5 +55,6 @@ api_router.include_router(
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(telemetry.router, prefix="/telemetry", tags=["telemetry"])
 api_router.include_router(trainers.router, prefix="/trainers", tags=["trainers"])
-# Phase 15.5C: generic /outbox HTTP ingress removed — OutboxService is in-process only.
+api_router.include_router(data_import.router, prefix="/import", tags=["import"])
+api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 api_router.include_router(me.router, prefix="/me", tags=["me"])

@@ -58,7 +58,9 @@ class FederationService:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_tenant(self, tenant_id: UUID, org_ids: list[UUID] | None) -> Tenant | None:
+    async def get_tenant(
+        self, tenant_id: UUID, org_ids: list[UUID] | None
+    ) -> Tenant | None:
         stmt = select(Tenant).where(Tenant.id == tenant_id)
         if org_ids is not None:
             if not org_ids:

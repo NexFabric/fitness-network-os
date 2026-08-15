@@ -45,13 +45,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        request_id = (
-            _safe_id(request.headers.get(REQUEST_ID_HEADER))
-            or str(uuid.uuid4())
+        request_id = _safe_id(request.headers.get(REQUEST_ID_HEADER)) or str(
+            uuid.uuid4()
         )
         correlation_id = (
-            _safe_id(request.headers.get(CORRELATION_ID_HEADER))
-            or request_id
+            _safe_id(request.headers.get(CORRELATION_ID_HEADER)) or request_id
         )
 
         # Available to handlers via request.state if needed later
