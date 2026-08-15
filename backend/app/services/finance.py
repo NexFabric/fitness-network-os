@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -16,6 +16,7 @@ from app.models.finance import (
     CreditNote,
     CreditNoteStatus,
     Discount,
+    DunningPolicy,
     Invoice,
     InvoiceDiscount,
     InvoiceItem,
@@ -23,6 +24,8 @@ from app.models.finance import (
     Payment,
     PaymentAllocation,
     PaymentAllocationReversal,
+    PaymentAttempt,
+    PaymentAttemptStatus,
     PaymentStatus,
     ReconciliationItem,
     ReconciliationItemStatus,
@@ -907,3 +910,90 @@ class FinanceService:
 
     def invoice_remaining(self, invoice: Invoice) -> int:
         return invoice.total_amount_minor - invoice.paid_amount_minor
+
+    # ------------------------------------------------------------------
+    # Payment attempts & Dunning
+    # ------------------------------------------------------------------
+
+    async def get_or_create_dunning_policy(self, tenant_id: UUID) -> DunningPolicy:
+        stmt = select(DunningPolicy).where(
+            DunningPolicy.tenant_id == tenant_id,
+            DunningPolicy.is_active.is_(True),
+        )
+        policy = (await self.session.execute(stmt)).scalars().first()
+        if not policy:
+            policy = DunningPolicy(
+                tenant_id=tenant_id,
+                name="Default Dunning Policy",
+                grace_period_days=3,
+                max_retry_attempts=3,
+                retry_interval_days=2,
+                block_access_on_failure=True,
+                is_active=True,
+            )
+            self.session.add(policy)
+            await self.session.flush()
+        return policy
+
+    async def record_payment_attempt(
+        self,
+        tenant_id: UUID,
+        *,
+        invoice_id: UUID,
+        amount_minor: int,
+        status: PaymentAttemptStatus | str,
+        currency: str = "TRY",
+        gateway_provider: str | None = None,
+        gateway_attempt_ref: str | None = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
+    ) -> PaymentAttempt:
+        assert_amount_minor(amount_minor)
+        invoice = await self._get_invoice(tenant_id, invoice_id, for_update=True)
+        status_val = (
+            status.value if isinstance(status, PaymentAttemptStatus) else str(status)
+        )
+
+        attempt = PaymentAttempt(
+            tenant_id=tenant_id,
+            invoice_id=invoice_id,
+            billing_account_id=invoice.billing_account_id,
+            attempt_number=invoice.retry_count + 1,
+            amount_minor=amount_minor,
+            currency=currency,
+            status=status_val,
+            gateway_provider=gateway_provider,
+            gateway_attempt_ref=gateway_attempt_ref,
+            error_code=error_code,
+            error_message=error_message,
+            attempted_at=datetime.now(UTC),
+        )
+        self.session.add(attempt)
+        invoice.retry_count += 1
+
+        if status_val == PaymentAttemptStatus.FAILED.value:
+            policy = await self.get_or_create_dunning_policy(tenant_id)
+            if invoice.retry_count >= policy.max_retry_attempts:
+                invoice.next_retry_at = None
+            else:
+                invoice.next_retry_at = datetime.now(UTC) + timedelta(
+                    days=policy.retry_interval_days
+                )
+        elif status_val == PaymentAttemptStatus.SUCCEEDED.value:
+            invoice.next_retry_at = None
+
+        await self.session.flush()
+        return attempt
+
+    async def list_payment_attempts(
+        self, tenant_id: UUID, invoice_id: UUID
+    ) -> list[PaymentAttempt]:
+        stmt = (
+            select(PaymentAttempt)
+            .where(
+                PaymentAttempt.tenant_id == tenant_id,
+                PaymentAttempt.invoice_id == invoice_id,
+            )
+            .order_by(PaymentAttempt.attempt_number.asc())
+        )
+        return list((await self.session.execute(stmt)).scalars().all())

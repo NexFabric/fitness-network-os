@@ -8,7 +8,7 @@
 
 ## Scale
 
-103 API routes · 78 database models · 43 UI components · 68 library files · 6 middleware layers · 17 environment variables
+103 API routes · 78 database models · 43 UI components · 68 library files · 6 middleware layers · 18 environment variables
 
 ## Subsystems
 
@@ -46,16 +46,17 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **52** files
-- `backend/app/models/tenant.py` — imported by **45** files
-- `backend/app/models/organization.py` — imported by **39** files
-- `backend/app/api/deps.py` — imported by **37** files
+- `backend/app/models/user.py` — imported by **54** files
+- `backend/app/models/tenant.py` — imported by **51** files
+- `backend/app/models/organization.py` — imported by **44** files
+- `backend/app/api/deps.py` — imported by **43** files
 - `backend/app/db/base.py` — imported by **36** files
 - `backend/app/models/member.py` — imported by **35** files
 
 ## Required Environment Variables
 
 - `ALLOW_DESTRUCTIVE_TEST_RESET` — `backend/tests/conftest.py`
+- `AWS_KMS_KEY_ID` — `backend/app/core/qr_crypto.py`
 - `CI` — `frontend/e2e/playwright.config.ts`
 - `ENVIRONMENT` — `backend/app/core/security.py`
 - `NEXT_PUBLIC_ADMIN_URL` — `frontend/public-site/src/components/Cta.tsx`

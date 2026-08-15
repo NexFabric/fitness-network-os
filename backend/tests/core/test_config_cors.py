@@ -74,6 +74,8 @@ def test_production_ok_with_cors_and_hosts():
         REPORT_STORAGE_PROVIDER="s3",
         S3_BUCKET_NAME="private-reports",
         METRICS_BEARER_TOKEN="m" * 32,
+        QR_KMS_MODE="aws_kms",
+        AWS_KMS_KEY_ID="alias/gym-qr-signing",
     )
     s.validate_production()  # does not raise
 

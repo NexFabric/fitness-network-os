@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x8b9c0d1e2f3` · **P0/P1 MVP Product Closure & Full Pillars 1-10:** Completed & Audited.
+**Branch:** `feat/production-readiness-deep-dive-hardening` · **Alembic head:** `x8b9c0d1e2f3` · **Deep-Dive Production Hardening & Full Pillars 1-10:** Completed & Audited.
 
 ---
 
@@ -27,13 +27,16 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-Phase 0–27.4 `main` üzerinde kurulu; üstüne P0/P1 Gym MVP Product Closure (Waves 1–3) ve 10 Temel Pillar tamamlandı:
-- **Wave 1 & Pillar 8:** Public site legal sayfaları (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service genişlemesi (`/invoices`, `/payments`, `/consents`, `finance:read:self`), MemberPortal 5 sekmeli responsive UI, `DataRetentionService`.
-- **Wave 2 & Pillars 5-6:** Forensic Access Decision Snapshot (`AccessAttempt.snapshot_data` JSONB), Server-side KPI Engine (`GET /api/v1/dashboard/kpis`), Resepsiyon Danışma Masası (`/reception`, instant arama, profil kartı, turnike override `access:override` ve immutable `AuditEvent`), `/admin/break-glass` acil durum oturumları.
-- **Wave 3 & Pillars 2-4:** Toplu Üye CSV Veri Göçü Hattı (`DataImportBatch`, `DataImportRow`, staging önizleme & transaksiyonel `MembershipService` aktarımı, `DataImport.tsx`), Başarısız Ödeme & Dunning mekaniği (`PaymentAttempt`, `DunningPolicy`, `DENY_DUNNING_PAST_DUE` turnike engelleme), Kesintisiz Tenant Onboarding State Machine (`TenantOnboarding` şube/paket/personel doğrulama şartları), Production Worker Stack (`outbox`, `notification`, `report` aktif tenant filtreli & commit garantili).
-- **Pillars 7 & 9:** QR KMS token crypto resolver (AWS KMS ve fail-closed fallback), Gelişmiş DR Restore Drill (`dr_restore_drill.sh` sha256 doğrulama & RLS kontrolü).
+Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı:
+- **Outbox & Worker RLS İzolasyonu:** Outbox event handler registry (`notification.requested.v1`, `report.run.requested.v1`), tüm worker'larda (`outbox`, `notification`, `report`, `retention`) tenant RLS bağlamı (`current_tenant_id_var` + `SET LOCAL app.current_tenant_id`).
+- **QR KMS Zarf Şifreleme:** `kms:enc:` ile `GenerateDataKey` & `Decrypt` deterministik anahtar çözümü, production ayar doğrulama kontrolü.
+- **Break-Glass Yetki Denetimi:** `deps.py:get_tenant_id` içinde doğrudan UserRole'ü olmayan superuser erişimlerinde aktif `BreakGlassSession` zorunluluğu ve audit kaydı.
+- **Dunning & Ödeme Denemeleri:** `FinanceService` içinde `PaymentAttempt` kaydı, `DunningPolicy` otomatik yeniden deneme takvimi ve aşım yönetimi.
+- **Periyodik Veri İmha Worker'ı:** `app.workers.retention` ve `docker-compose.prod.yml` entegrasyonu ile otomatik KVKK/GDPR veri anonimleştirme/silme.
+- **Sözleşme & Scanner Uyumu:** `terms/page.tsx` içinde offline turnike fail-closed (erişim kapalı) mimari teyidi.
+- **Genişletilmiş E2E Testleri:** Resepsiyon arama/override, CSV veri göçü yükleme/önizleme ve 5 sekmeli üye portalı Playwright akışları.
 
-**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 340+ test ve Playwright E2E testleri 0 hatayla yeşil.
+**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 357 test passed · 1 skipped ve Playwright E2E testleri 39/39 (0 hata) ile yeşil.
 
 Önceki dalgalar:
 

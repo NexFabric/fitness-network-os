@@ -121,7 +121,6 @@ export default function Reception() {
   // Load selected member detail
   const loadMemberDetail = useCallback(async (id: string) => {
     setLoadingDetail(true)
-    setOverrideMessage(null)
     try {
       const detail = await api<MemberDetail>(`/api/v1/reception/member/${id}`)
       setMemberDetail(detail)
@@ -133,6 +132,7 @@ export default function Reception() {
   }, [])
 
   useEffect(() => {
+    setOverrideMessage(null)
     if (selectedMemberId) {
       void loadMemberDetail(selectedMemberId)
     } else {
