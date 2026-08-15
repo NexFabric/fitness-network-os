@@ -146,7 +146,9 @@ class AccessAttempt(TenantMixin, Base):
         String(32), nullable=True, default="QR_SCAN"
     )
     snapshot_data: Mapped[dict | None] = mapped_column(
-        JSONB().with_variant(JSON, "sqlite"), nullable=True
+        JSONB().with_variant(JSON, "sqlite"),
+        nullable=True,
+        comment="Immutable forensic context snapshot at the decision moment",
     )
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

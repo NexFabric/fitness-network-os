@@ -10,6 +10,11 @@ import { CameraQrScanner } from './components/CameraQrScanner'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 export default function App() {
   const [email, setEmail] = useState('demo.admin@demo.local')
   const [password, setPassword] = useState('DemoAdmin123!')
@@ -24,7 +29,7 @@ export default function App() {
     () => !getTenantId(),
   )
 
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
     function handleOnline() { setIsOnline(true) }
@@ -32,7 +37,7 @@ export default function App() {
     
     function handleBeforeInstallPrompt(e: Event) {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
     }
 
     window.addEventListener('online', handleOnline)

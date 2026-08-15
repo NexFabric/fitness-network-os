@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x7a8b9c0d1e2` · **P0/P1 MVP Product Closure & Full Pillars 1-10:** Completed & Audited.
+**Branch:** `feat/production-readiness-p0-and-dr` · **Alembic head:** `x8b9c0d1e2f3` · **P0/P1 MVP Product Closure & Full Pillars 1-10:** Completed & Audited.
 
 ---
 

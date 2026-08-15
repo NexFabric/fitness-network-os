@@ -1,7 +1,7 @@
 # Knowledge Map — docs
-> 19 notes · 2 decisions · 0 open questions
+> 20 notes · 2 decisions · 0 open questions
 
-> **AI Primer:** This knowledge base has 19 notes. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
+> **AI Primer:** This knowledge base has 20 notes. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
 
 ## Key Decisions (2)
 - Federation-scope reads are served **without changing any existing RLS policy and
@@ -10,7 +10,7 @@
 ## Hub Notes (most referenced)
 - `plans/SHELF_NU_ADAPTATION_REFERENCE.md` — **2** incoming references — Shelf.nu Reference and Fitness Network OS Adaptation Plan
 
-## Note Index (19)
+## Note Index (20)
 
 ### Decision Records (2)
 - `adr/ADR-043-federation-scope-reads.md` — **Status:** Accepted
@@ -19,13 +19,14 @@
 ### Specs & PRDs (1)
 - `plans/phase11_money_floats.md` — **Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)
 
-### General Notes (16)
+### General Notes (17)
 - `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-12
 - `CORE_GATE_CLOSURE.md` — **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.
 - `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 - `IMPLEMENTATION_MASTER_PLAN.md` — **Status:** Living roadmap (Phase 0–27)
 - `MASTER_SPEC.md` — └── DedicatedDatabase
 - `PRODUCTION_READINESS.md` — **Sürüm:** v1.2 Phase 27 closure
+- `PRODUCTION_READINESS_P0_AND_CLOSURE_PLAN.md` — Bu plan, PR #59 üzerindeki release candidate (`feat/production-readiness-p0-and-dr`) için NO-GO kararına yol açan tüm P0 ve P1 mimari, runtime, güvenlik, iş man…
 - `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-15
 - `RBAC.md` — **Son güncelleme:** 2026-08-12
 - `REVIEW_CHECKPOINT.md` — **Main HEAD:** `837cec4`; no open PRs

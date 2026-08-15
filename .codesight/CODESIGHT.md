@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 103 routes | 78 models | 43 components | 67 lib files | 17 env vars | 6 middleware | 38% test coverage
-> **Token savings:** this file is ~13,100 tokens. Without it, AI exploration would cost ~128,200 tokens. **Saves ~115,100 tokens per conversation.**
-> **Last scanned:** 2026-08-15 06:46 — re-run after significant changes
+> 103 routes | 78 models | 43 components | 68 lib files | 17 env vars | 6 middleware | 38% test coverage
+> **Token savings:** this file is ~13,200 tokens. Without it, AI exploration would cost ~128,500 tokens. **Saves ~115,300 tokens per conversation.**
+> **Last scanned:** 2026-08-15 06:52 — re-run after significant changes
 
 ---
 
@@ -875,6 +875,7 @@
   - function upgrade: () -> None
   - function downgrade: () -> None
 - `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/fix_tests.py` — function repl_success: (m)
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
