@@ -48,7 +48,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground">5. Fikri Mülkiyet ve Müşteri Verisi Mülkiyeti</h2>
             <p className="mt-2">
-              Platformun kaynak kodları, algoritmaları, tasarımları ve markası münhasıran GymClubNex&apos;e aittir. Müşteri tarafından sisteme yüklenen tüm üye verileri, finansal veriler ve log kayıtları tamamen Müşteri&apos;nin mülkiyetindedir; sözleşme bitiminde talep doğrultusunda eksiksiz teslim edilir ve sunuculardan güvenli şekilde silinir.
+              Platformun kaynak kodları, algoritmaları, tasarımları ve markası münhasıran GymClubNex&apos;e aittir. Müşteri tarafından sisteme yüklenen tüm üye verileri, finansal veriler ve log kayıtları tamamen Müşteri&apos;nin mülkiyetindedir; sözleşme bitiminde talep halinde veri aktarımı sağlanır ve yasal saklama süreleri ile veri imha politikaları uyarınca güvenli biçimde anonimleştirilir veya silinir.
             </p>
           </section>
 

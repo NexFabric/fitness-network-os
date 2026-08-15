@@ -46,6 +46,16 @@ def _b64url_decode(data: str) -> bytes:
         raise QrCryptoError("invalid_token_encoding") from e
 
 
+def _get_kms_client() -> Any:
+    import boto3
+    from botocore.config import Config  # type: ignore[import-untyped]
+
+    return boto3.client(
+        "kms",
+        config=Config(connect_timeout=5, read_timeout=5, retries={"max_attempts": 2}),
+    )
+
+
 def new_local_hmac_ref() -> str:
     """Generate a HMAC secret reference using envelope encryption or local secret.
 
@@ -55,11 +65,19 @@ def new_local_hmac_ref() -> str:
     mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
 
     if mode == "aws_kms":
-        import boto3
+        from botocore.exceptions import (  # type: ignore[import-untyped]
+            BotoCoreError,
+            ClientError,
+        )
 
-        client = boto3.client("kms")
-        key_id = os.environ.get("AWS_KMS_KEY_ID") or "alias/gym-qr-signing"
-        resp = client.generate_data_key(KeyId=key_id, KeySpec="AES_256")
+        key_id = (os.environ.get("AWS_KMS_KEY_ID") or "").strip()
+        if not key_id:
+            raise QrCryptoError("missing_aws_kms_key_id")
+        try:
+            client = _get_kms_client()
+            resp = client.generate_data_key(KeyId=key_id, KeySpec="AES_256")
+        except (BotoCoreError, ClientError) as e:
+            raise QrCryptoError(f"kms_generate_data_key_failed: {e}") from e
         ciphertext_blob: bytes = resp["CiphertextBlob"]
         return f"{KMS_ENC_PREFIX}{_b64url_encode(ciphertext_blob)}"
 
@@ -81,12 +99,21 @@ def resolve_hmac_secret(key_material: str) -> bytes:
 
     if key_material.startswith(KMS_ENC_PREFIX):
         if kms_mode == "aws_kms":
-            import boto3
+            from botocore.exceptions import (  # type: ignore[import-untyped]
+                BotoCoreError,
+                ClientError,
+            )
 
-            client = boto3.client("kms")
             ciphertext = _b64url_decode(key_material[len(KMS_ENC_PREFIX) :])
-            resp = client.decrypt(CiphertextBlob=ciphertext)
-            return resp["Plaintext"]  # type: ignore[no-any-return]
+            try:
+                client = _get_kms_client()
+                resp = client.decrypt(CiphertextBlob=ciphertext)
+                plaintext: bytes = resp["Plaintext"]
+                if len(plaintext) < 16:
+                    raise QrCryptoError("invalid_kms_plaintext_length")
+                return plaintext
+            except (BotoCoreError, ClientError) as e:
+                raise QrCryptoError(f"kms_decryption_failed: {e}") from e
         if kms_mode in {"mock", "local", "test"}:
             return hashlib.sha256(key_material.encode("utf-8")).digest()
         raise QrCryptoError(

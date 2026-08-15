@@ -47,9 +47,9 @@
 Changes to these files have the widest blast radius across the codebase:
 
 - `backend/app/models/user.py` — imported by **54** files
-- `backend/app/models/tenant.py` — imported by **50** files
-- `backend/app/models/organization.py` — imported by **43** files
-- `backend/app/api/deps.py` — imported by **42** files
+- `backend/app/models/tenant.py` — imported by **51** files
+- `backend/app/models/organization.py` — imported by **44** files
+- `backend/app/api/deps.py` — imported by **43** files
 - `backend/app/db/base.py` — imported by **36** files
 - `backend/app/models/member.py` — imported by **35** files
 

@@ -763,8 +763,8 @@ fk: user_id
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
 - `backend/app/models/user.py` — imported by **54** files
-- `backend/app/models/tenant.py` — imported by **50** files
-- `backend/app/models/organization.py` — imported by **43** files
+- `backend/app/models/tenant.py` — imported by **51** files
+- `backend/app/models/organization.py` — imported by **44** files
 - `backend/app/db/base.py` — imported by **36** files
 - `backend/app/models/member.py` — imported by **35** files
 - `backend/app/models/rbac.py` — imported by **31** files
@@ -773,9 +773,8 @@ Read and edit these files when adding columns, creating migrations, or changing 
 - `backend/app/db/rls.py` — imported by **19** files
 - `backend/app/models/access.py` — imported by **17** files
 - `backend/app/models/location.py` — imported by **17** files
-- `backend/app/models/outbox.py` — imported by **14** files
+- `backend/app/models/outbox.py` — imported by **15** files
 - `backend/app/models/finance.py` — imported by **13** files
-- `backend/app/models/entitlement.py` — imported by **11** files
 
 ---
 _Back to [overview.md](./overview.md)_

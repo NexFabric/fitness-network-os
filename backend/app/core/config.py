@@ -150,8 +150,10 @@ class Settings(BaseSettings):
             errors.append("S3_KMS_KEY_ID is required when S3_SSE_ALGORITHM=aws:kms")
 
         qr_kms_mode = self.QR_KMS_MODE.strip().lower()
-        if qr_kms_mode not in {"aws_kms", "local"}:
-            errors.append("QR_KMS_MODE must be aws_kms or local in production")
+        if qr_kms_mode != "aws_kms":
+            errors.append("QR_KMS_MODE must be aws_kms in production")
+        if not self.AWS_KMS_KEY_ID or not self.AWS_KMS_KEY_ID.strip():
+            errors.append("AWS_KMS_KEY_ID is required when ENVIRONMENT=production")
 
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))

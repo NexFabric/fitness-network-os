@@ -10,7 +10,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING COMPLETE · CI & LOCAL DB VERIFIED (352 passed · 1 skipped, Playwright 36/36) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
+**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING COMPLETE · CI & LOCAL DB VERIFIED (357 passed · 1 skipped, Playwright 39/39) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 

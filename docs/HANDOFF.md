@@ -36,7 +36,7 @@ Phase 0–27.4 + Waves 1–3 ve Deep-Dive Production Hardening tamamlandı:
 - **Sözleşme & Scanner Uyumu:** `terms/page.tsx` içinde offline turnike fail-closed (erişim kapalı) mimari teyidi.
 - **Genişletilmiş E2E Testleri:** Resepsiyon arama/override, CSV veri göçü yükleme/önizleme ve 5 sekmeli üye portalı Playwright akışları.
 
-**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 352 test passed · 1 skipped ve Playwright E2E testleri 0 hatayla yeşil.
+**Kanıt durumu:** Gerçek PostgreSQL DB üzerinde 357 test passed · 1 skipped ve Playwright E2E testleri 39/39 (0 hata) ile yeşil.
 
 Önceki dalgalar:
 
