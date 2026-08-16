@@ -1,0 +1,43 @@
+# Alertmanager routing. Receivers are intentionally webhook-based and driven by
+# environment substitution — no credentials are committed here.
+#
+# Set ALERTMANAGER_WEBHOOK_URL before starting the stack. Until a real
+# destination is configured this routes to a null receiver, which is honest:
+# alerts fire and are visible in the Alertmanager UI, but nothing is paged.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity = "critical"
+      receiver: critical
+      group_wait: 10s
+      repeat_interval: 1h
+
+receivers:
+  # Null receivers on purpose: alerts fire, group and show up in the
+  # Alertmanager UI, but nothing is paged until a real destination is wired.
+  # Pointing at a webhook that does not exist would only fill the logs with
+  # delivery errors and give a false sense of coverage.
+  #
+  # To page for real, uncomment and supply the URL from a secret — never inline:
+  #   webhook_configs:
+  #     - url_file: /etc/alertmanager/webhook_url
+  #       send_resolved: true
+  - name: default
+  - name: critical
+
+inhibit_rules:
+  # A dead target explains every downstream symptom on the same job.
+  - source_matchers:
+      - alertname = "BackendTargetDown"
+    target_matchers:
+      - severity =~ "warning|critical"
+    equal: ["job"]

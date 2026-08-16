@@ -31,7 +31,8 @@
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
 | **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
 | **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
-| **Phase 29 + RC closure (this branch)** | 🟢 **CODE LANDED** · CI **VERIFIED** on `ab860f0` + `e6a2d6c` | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. PR #62 merge kapısı **yalnız CI** (onay kuralı kaldırıldı 2026-08-16); merge durumunun otoritesi `git log origin/main`. |
+| **Phase 29 + RC closure** | 🟢 **MERGED to `main`** at `ae6267d` (PR #62, 2026-08-16) | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. Squash-merged as `ae6267d`; merge gate is CI only (review requirement removed 2026-08-16). |
+| **Ops runtime proofs** | 🟢 **EXECUTED (local)** 2026-08-16 | S3-against-real-API 10/10, dump/restore + **PITR** drills passed, Prometheus/Alertmanager/Grafana landed with a drilled alert path. Production AWS bucket, off-host WAL archiving, real pager and pentest remain open. |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -202,13 +203,19 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
 - [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
 
+### Executed 2026-08-16 — real runtime drills
+
+- [x] **P1-3b-RT** Real S3 API proof — 10/10 against MinIO with the actual `S3StorageProvider`: SSE `AES256` at rest, tenant-scoped key layout, anonymous GET rejected 403, presigned GET serves byte-identical payload, cross-tenant presign refused, delete verified. Evidence `docs/ops/S3_RUNTIME_PROOF.md`; drill `backend/scripts/s3_runtime_proof.py`. **Production AWS bucket + policy still open** (see P2-3-IAM)
+- [x] **P1-10** Restore **and** PITR drills executed. Dump/restore: 632K, 8 tenants / 33 members / 72 RLS tables. PITR (`backend/scripts/pitr_drill.sh`): base backup → WAL replay to a target timestamp → the post-target write is correctly absent, archiver 6/0. Evidence `docs/ops/DR_RESTORE_STATUS.md`. **Local throwaway container, not the production host**
+- [x] **P2-OBS** Prometheus + Alertmanager + Grafana landed (`docker-compose.obs.yml`, `ops/observability/`). 7 alert rules bound to metrics that actually exist; 9-panel dashboard provisioned. Alert path drilled end-to-end: `inactive → pending → firing → delivered to Alertmanager → resolved`. Evidence `docs/ops/OBSERVABILITY.md`. **Receivers are null by design; no tracing**
+
 ### Still open — cannot fake complete
 
-- [ ] **P1-3b-RT** Real S3/MinIO bucket write + presign proof in staging
-- [ ] **P1-10** Restore / PITR drill evidence
-- [ ] **P1-11** Independent ASVS L2 / pentest + human APPROVE
-- [ ] **P2-OBS** Prometheus scraper, dashboards, traces, alert rules (metrics endpoint exists)
-- [ ] **P2-3-IAM** Production KMS alias / IAM / rotation proof (`kms:enc:` path is code-only)
+- [ ] **P1-11** Independent ASVS L2 / pentest by a third party. Removing the GitHub review requirement did **not** touch this
+- [ ] **P2-3-IAM** Production KMS alias / IAM / rotation. Policies, key policy, runbook and an executable verifier landed (`ops/iam/`, `docs/ops/KMS_IAM_RUNBOOK.md`, `backend/scripts/kms_iam_verify.py`) but **never run against real AWS** — the verifier exits 2 `NOT VERIFIED` without credentials
+- [ ] **P1-3b-PROD** Real AWS S3 bucket + bucket policy + public-access block + SSE-KMS (MinIO is S3-compatible, not AWS)
+- [ ] **P1-10-PROD** Continuous WAL archiving to durable off-host storage on the production database, with RPO ≤ 5 min measured there
+- [ ] **P2-OBS-PROD** Real Alertmanager receiver wired from a secret, plus distributed tracing
 - [ ] **ISO-1** IsolationProvider — do not invent; keep the abstraction, do not replace RLS
 
 ---
