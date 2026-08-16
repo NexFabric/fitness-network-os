@@ -199,7 +199,7 @@ Production öncesi kapsamlı ASVS ve penetrasyon testleri yapılmalıdır.
 
 # 182. FINAL ADR LIST
 
-Önceki ADR-001…030 korunur. Toplam 42 Architecture Decision Record kilitlenmiştir.
+Önceki ADR-001…042 korunur; ADR-043 (Federation Scope Reads) ve ADR-044 (Device Request Signing) dahil toplam 44 Architecture Decision Record kilitlenmiştir.
 
 # 183. UPDATED DEFINITION OF DONE
 
