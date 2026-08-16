@@ -23,13 +23,11 @@ from sqlalchemy import (
     Text,
     Time,
     Uuid,
-    column,
     text,
 )
 from sqlalchemy import (
     Enum as SAEnum,
 )
-from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -414,12 +412,6 @@ class PtAppointment(TenantMixin, Base):
             name="fk_pt_appointments_trainer_staff",
             ondelete="RESTRICT",
         ),
-        ExcludeConstraint(
-            (column("tenant_id"), "="),
-            (column("trainer_user_id"), "="),
-            (text("tstzrange(start_time_utc, end_time_utc, '[)')"), "&&"),
-            name="ex_pt_appointments_no_overlap",
-            using="gist",
-            where=text("status = 'CONFIRMED'"),
-        ),
+        # EXCLUDE USING gist lives in Alembic only (SQLite create_all cannot
+        # compile ExcludeConstraint). env.py include_object ignores the drift.
     )
