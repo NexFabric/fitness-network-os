@@ -114,7 +114,7 @@ export function Architecture() {
               <div className="space-y-2.5 text-slate-300">
                 <p>
                   <span className="text-brand-light font-semibold">SET LOCAL</span>{" "}
-                  app.current_tenant_id = <span className="text-amber-400">&apos;central-hq&apos;</span>;
+                  app.current_tenant_id = <span className="text-amber-400">&apos;a1b2c3d4-e5f6-7890-abcd-ef1234567890&apos;</span>;
                 </p>
                 <p>
                   <span className="text-brand-light font-semibold">SELECT</span> *{" "}
@@ -126,7 +126,7 @@ export function Architecture() {
                 </div>
                 <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent font-semibold flex items-center justify-between">
                   <span>DURUM: İZOLE VE GÜVENLİ</span>
-                  <span className="font-mono">PASS (357/357)</span>
+                  <span className="font-mono">PASS (100% ISOLATED)</span>
                 </div>
               </div>
             </div>
