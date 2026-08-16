@@ -27,7 +27,7 @@ test('owner can provision a staff account and see the one-time password once', a
   await expect(page.getByText('Davet yalnızca şimdi görünür')).toBeVisible({
     timeout: 15_000,
   })
-  await expect(page.getByText(email)).toBeVisible()
+  await expect(page.getByRole('status').getByText(email)).toBeVisible()
   const secret = page.locator('code.select-all')
   await expect(secret).toBeVisible()
   await expect(secret).toHaveText(/.{16,}/)
