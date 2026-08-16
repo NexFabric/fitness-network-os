@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 82 lib files | 29 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~16,300 tokens. Without it, AI exploration would cost ~163,900 tokens. **Saves ~147,600 tokens per conversation.**
-> **Last scanned:** 2026-08-16 17:32 — re-run after significant changes
+> **Last scanned:** 2026-08-16 17:35 — re-run after significant changes
 
 ---
 
@@ -1322,7 +1322,6 @@
   - `github/codeql-action/analyze@v4`
 - **image-scan** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v7`
-  - `aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8`
 - **all-green** on `ubuntu-latest` — 1 steps
 
 ### Deploy choreography

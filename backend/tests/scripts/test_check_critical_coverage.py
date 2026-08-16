@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from scripts.check_critical_coverage import main
 

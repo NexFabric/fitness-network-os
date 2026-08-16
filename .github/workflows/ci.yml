@@ -34,7 +34,7 @@ jobs:
           python-version: "3.12"
           
       - name: Install security tools
-        run: pip install bandit==1.8.6 pip-audit==2.9.0 uv==0.11.21 safety==3.6.2
+        run: pip install bandit==1.8.6 pip-audit==2.9.0 uv==0.11.21 safety==3.2.14 setuptools
         
       - name: SAST Scan (Bandit)
         working-directory: ./backend
@@ -453,12 +453,14 @@ jobs:
         run: docker build --file backend/Dockerfile.prod --tag fitness-network-os:scan backend
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.28.0
-        with:
-          image-ref: fitness-network-os:scan
-          format: table
-          exit-code: "0"
-          severity: HIGH,CRITICAL
+        run: >
+          docker run --rm
+          -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:0.58.1 image
+          --severity HIGH,CRITICAL
+          --exit-code 0
+          --no-progress
+          fitness-network-os:scan
 
   all-green:
     name: All Required Checks Passed

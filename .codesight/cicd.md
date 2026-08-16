@@ -49,7 +49,6 @@
   - `github/codeql-action/analyze@v4`
 - **image-scan** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v7`
-  - `aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8`
 - **all-green** on `ubuntu-latest` — 1 steps
 
 ### Deploy choreography
