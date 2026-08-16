@@ -27,17 +27,27 @@ updates:
     commit-message:
       prefix: "chore(deps)"
 
-  # CI actions — pinned by SHA, so these PRs are the rotation path
+  # CI actions — pinned by SHA, so these PRs are the rotation path.
+  # Majors are allowed here: the workflow run on the PR *is* the test.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns: ["*"]
     commit-message:
       prefix: "chore(ci)"
 
-  # Container base images
+  # Container base images.
+  #
+  # Major runtime bumps are ignored on purpose. CI pins its own toolchain
+  # (`python-version: "3.12"` in ci.yml, node via setup-node), so a major bump
+  # here is only ever proved to *build* — never to pass a single test. Shipping
+  # an untested runtime is worse than staying a version behind. Raising the
+  # runtime is a deliberate PR that moves the CI matrix at the same time.
   - package-ecosystem: "docker"
     directories:
       - "/backend"
@@ -47,5 +57,13 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    groups:
+      docker-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore(docker)"

@@ -13,16 +13,16 @@
 - **security** on `ubuntu-latest` — 7 steps
   - `actions/checkout@v5`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
-  - `actions/setup-python@v6`
+  - `actions/setup-python@v7`
 - **sbom** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v5`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
 - **lint** on `ubuntu-latest` — 11 steps
   - `actions/checkout@v5`
-  - `actions/setup-python@v6`
+  - `actions/setup-python@v7`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
   - `actions/checkout@v5`
-  - `actions/setup-python@v6`
+  - `actions/setup-python@v7`
 - **admin-web** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v5`
   - `actions/setup-node@v5`
@@ -38,7 +38,7 @@
   - `actions/setup-node@v5`
 - **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
   - `actions/checkout@v5`
-  - `actions/setup-python@v6`
+  - `actions/setup-python@v7`
   - `actions/setup-node@v5`
   - `actions/upload-artifact@v4`
 - **codeql** on `ubuntu-latest` — 3 steps
