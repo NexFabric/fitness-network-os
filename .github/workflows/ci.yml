@@ -34,7 +34,7 @@ jobs:
           python-version: "3.12"
           
       - name: Install security tools
-        run: pip install bandit pip-audit uv safety
+        run: pip install bandit==1.8.6 pip-audit==2.9.0 uv==0.11.21 safety==3.6.2
         
       - name: SAST Scan (Bandit)
         working-directory: ./backend
@@ -50,10 +50,12 @@ jobs:
         working-directory: ./backend
         run: safety check
 
-  # SBOM generation is a compliance artifact, not a gate. It lives in its own job
-  # because `anchore/sbom-action` downloads syft from GitHub releases at run time:
-  # a transient 503 there used to fail `security`, and since `test` needs
-  # `security`, an upstream outage silently skipped the entire test suite.
+  # SBOM generation is a compliance artifact, not a merge gate. It lives in
+  # its own job because `anchore/sbom-action` downloads syft from GitHub
+  # releases at run time: a transient 503 there used to fail `security`, and
+  # since `test` needs `security`, an upstream outage silently skipped the
+  # entire test suite. Keep continue-on-error and keep this job out of
+  # `test.needs` / `all-green.needs`.
   sbom:
     name: Generate SBOM
     runs-on: ubuntu-latest
@@ -189,7 +191,11 @@ jobs:
         
       - name: Run Pytest with Real DB
         working-directory: ./backend
-        run: uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=70
+
+      - name: Critical-module coverage floors
+        working-directory: ./backend
+        run: uv run python scripts/check_critical_coverage.py --coverage coverage.json
 
   # Phase 21 CI V2 — frontend production builds (workspace lockfile at frontend/)
   admin-web:
@@ -209,6 +215,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: npm audit (high+)
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
 
       - name: Lint admin-web
         working-directory: ./frontend/admin-web
@@ -237,6 +247,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: npm audit (high+)
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
 
       - name: Lint scanner-pwa
         working-directory: ./frontend/scanner-pwa
@@ -298,6 +312,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend/public-site
         run: npm ci
+
+      - name: npm audit (high+)
+        working-directory: ./frontend/public-site
+        run: npm audit --audit-level=high
 
       - name: Lint public-site
         working-directory: ./frontend/public-site
@@ -419,6 +437,28 @@ jobs:
         with:
           languages: python, javascript-typescript
       - uses: github/codeql-action/analyze@v4
+
+  image-scan:
+    name: Container image scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Independent of the test graph. An upstream scanner outage must not
+    # skip pytest. Not part of all-green until HIGH/CRITICAL are zero on
+    # a known-good baseline.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build backend image
+        run: docker build --file backend/Dockerfile.prod --tag fitness-network-os:scan backend
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.28.0
+        with:
+          image-ref: fitness-network-os:scan
+          format: table
+          exit-code: "0"
+          severity: HIGH,CRITICAL
 
   all-green:
     name: All Required Checks Passed

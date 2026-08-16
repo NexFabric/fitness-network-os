@@ -12,12 +12,25 @@ now in the repo and was executed, not just written.
 |---|---|
 | Scrape config | `ops/observability/prometheus/prometheus.yml` |
 | Alert rules (7) | `ops/observability/prometheus/alerts.yml` |
-| Alert routing | `ops/observability/alertmanager/alertmanager.yml` |
+| Alert routing | `ops/observability/alertmanager/alertmanager.yml` (null receivers — honest default) |
+| Pager overlay | `ops/observability/alertmanager/alertmanager.pager.yml` (`url_file` from a secret) |
 | Grafana datasource | `ops/observability/grafana/provisioning/datasources/prometheus.yml` |
 | Grafana dashboard provider | `ops/observability/grafana/provisioning/dashboards/dashboards.yml` |
 | Dashboard (9 panels) | `ops/observability/grafana/dashboards/fitness-os-overview.json` |
 | Alert-path drill | `ops/observability/alert_fire_drill.sh` |
 | Stack overlay | `docker-compose.obs.yml` |
+
+## Real pager (still UNVERIFIED)
+
+The committed Alertmanager config uses **null receivers** so local
+drills do not pretend to page a human. To page for real:
+
+1. Write the webhook URL into a secret file (never commit it).
+2. Mount `alertmanager.pager.yml` and that `url_file`.
+3. Re-run `ops/observability/alert_fire_drill.sh` and keep the
+   firing → human notification proof.
+
+Until that proof exists, P2-OBS-PROD stays open.
 
 ## Run it
 
