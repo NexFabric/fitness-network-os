@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **35%** of routes and models are covered by tests
-> 117 test files found
+> **36%** of routes and models are covered by tests
+> 119 test files found
 
 ## Covered Routes
 
@@ -33,9 +33,11 @@
 - ClassSchedule
 - ClassSession
 - ClassBooking
+- TrainerAvailability
 - PtAppointment
 - ConsentDefinition
 - ConsentRecord
+- DataImportRow
 - DsarRequest
 - EntitlementDefinition
 - MembershipEntitlement

@@ -1,4 +1,4 @@
-# GymClubNex — Wiki
+# subagent-01a00bf1-2403-74c3-a3a3-18a616f01f3f — Wiki
 
 _Generated 2026-08-16 — re-run `npx codesight --wiki` if the codebase has changed._
 

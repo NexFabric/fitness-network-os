@@ -1,5 +1,6 @@
 """DSAR service branches beyond the HTTP export/erasure specs."""
 
+import json
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
@@ -414,3 +415,224 @@ async def test_request_erasure_swallows_booking_cancel_races(db_session: AsyncSe
     assert row.status == STATUS_COMPLETED
     await db_session.refresh(member)
     assert member.status == "ANONYMIZED"
+
+
+@pytest.mark.asyncio
+async def test_export_package_includes_related_rows_and_download_url(
+    db_session: AsyncSession,
+):
+    from app.models.access import AccessAttempt, AccessStatus, Checkin
+    from app.models.finance import BillingAccount, Invoice, Payment
+
+    tenant, member, user = await _member_world(db_session)
+    loc = Location(tenant_id=tenant.id, name="Desk", timezone="UTC")
+    db_session.add(loc)
+    await db_session.flush()
+    checkin = Checkin(
+        tenant_id=tenant.id,
+        member_id=member.id,
+        location_id=loc.id,
+        checkin_time=datetime.now(UTC) - timedelta(hours=2),
+        checkout_time=datetime.now(UTC) - timedelta(hours=1),
+    )
+    attempt = AccessAttempt(
+        tenant_id=tenant.id,
+        member_id=member.id,
+        status=AccessStatus.DENIED,
+        denial_reason="expired_membership",
+        timestamp=datetime.now(UTC),
+    )
+    account = BillingAccount(tenant_id=tenant.id, member_id=member.id)
+    db_session.add_all([checkin, attempt, account])
+    await db_session.flush()
+    invoice = Invoice(
+        tenant_id=tenant.id,
+        billing_account_id=account.id,
+        status="PAID",
+        total_amount_minor=2500,
+        paid_amount_minor=2500,
+        discount_amount_minor=0,
+        currency="TRY",
+    )
+    payment = Payment(
+        tenant_id=tenant.id,
+        billing_account_id=account.id,
+        amount_minor=2500,
+        refunded_amount_minor=0,
+        currency="TRY",
+        status="SUCCEEDED",
+        method="CASH",
+    )
+    consent = ConsentRecord(
+        tenant_id=tenant.id,
+        member_id=member.id,
+        consent_type="PRIVACY",
+        document_version="v2",
+        status="GIVEN",
+        given_at=datetime.now(UTC),
+    )
+    plan = Plan(tenant_id=tenant.id, name="Pack")
+    db_session.add(plan)
+    await db_session.flush()
+    version = PlanVersion(
+        tenant_id=tenant.id,
+        plan_id=plan.id,
+        version=1,
+        price_amount_minor=2500,
+        billing_cycle_months=1,
+    )
+    db_session.add(version)
+    await db_session.flush()
+    membership = Membership(
+        tenant_id=tenant.id,
+        member_id=member.id,
+        plan_version_id=version.id,
+        status="ACTIVE",
+        start_date=datetime.now(UTC) - timedelta(days=3),
+    )
+    trainer = User(
+        email=f"tr-{uuid4().hex[:8]}@example.com",
+        hashed_password="x",
+        is_active=True,
+    )
+    db_session.add_all([invoice, payment, consent, membership, trainer])
+    await db_session.flush()
+    db_session.add(Staff(tenant_id=tenant.id, user_id=trainer.id, role="TRAINER"))
+    class_type = ClassType(
+        tenant_id=tenant.id,
+        name="Export HIIT",
+        duration_minutes=40,
+        default_capacity=6,
+        cancellation_cutoff_minutes=15,
+    )
+    db_session.add(class_type)
+    await db_session.flush()
+    start = datetime.now(UTC) + timedelta(days=2)
+    session = ClassSession(
+        tenant_id=tenant.id,
+        location_id=loc.id,
+        class_type_id=class_type.id,
+        trainer_user_id=trainer.id,
+        start_time_utc=start,
+        end_time_utc=start + timedelta(minutes=40),
+        capacity=6,
+        status=ClassSessionStatus.SCHEDULED,
+    )
+    db_session.add(session)
+    await db_session.flush()
+    db_session.add(
+        ClassBooking(
+            tenant_id=tenant.id,
+            session_id=session.id,
+            member_id=member.id,
+            status=ClassBookingStatus.CONFIRMED,
+            booked_at=datetime.now(UTC),
+        )
+    )
+    db_session.add(
+        PtAppointment(
+            tenant_id=tenant.id,
+            trainer_user_id=trainer.id,
+            member_id=member.id,
+            location_id=loc.id,
+            start_time_utc=start,
+            end_time_utc=start + timedelta(hours=1),
+            status=PtAppointmentStatus.CONFIRMED,
+            booked_at=datetime.now(UTC),
+        )
+    )
+    await db_session.commit()
+
+    svc = DsarService(db_session)
+    row, created = await svc.request_export(
+        tenant.id, member, requested_by_user_id=user.id
+    )
+    await db_session.commit()
+    assert created is True
+    assert row.status == STATUS_PACKAGED
+    url = await svc.download_url(tenant.id, row)
+    assert url
+
+    from pathlib import Path
+    from urllib.parse import unquote, urlparse
+
+    payload = json.loads(Path(unquote(urlparse(url).path)).read_text())
+    assert payload["schema"] == "gymclubnex.dsar.export.v1"
+    assert payload["member"]["email"] == "erase-me@example.com"
+    assert payload["invoices"][0]["total_amount_minor"] == 2500
+    assert payload["payments"][0]["amount_minor"] == 2500
+    assert payload["checkins"][0]["checkout_time"] is not None
+    assert payload["access_attempts"][0]["denial_reason"] == "expired_membership"
+    assert payload["consents"][0]["consent_type"] == "PRIVACY"
+    assert payload["memberships"][0]["status"] == "ACTIVE"
+    assert "CONFIRMED" in str(payload["class_bookings"][0]["status"])
+    assert "CONFIRMED" in str(payload["pt_appointments"][0]["status"])
+
+
+@pytest.mark.asyncio
+async def test_erasure_holds_draft_and_partial_invoices_and_unbound_member(
+    db_session: AsyncSession,
+):
+    from app.models.finance import BillingAccount, Invoice
+    from app.services.dsar import DsarLegalHold
+
+    tenant, member, user = await _member_world(db_session)
+    account = BillingAccount(tenant_id=tenant.id, member_id=member.id)
+    db_session.add(account)
+    await db_session.flush()
+    draft = Invoice(
+        tenant_id=tenant.id,
+        billing_account_id=account.id,
+        status="DRAFT",
+        total_amount_minor=1000,
+        paid_amount_minor=0,
+        discount_amount_minor=0,
+        currency="TRY",
+    )
+    db_session.add(draft)
+    await db_session.commit()
+
+    svc = DsarService(db_session)
+    with pytest.raises(DsarLegalHold) as held:
+        await svc.request_erasure(tenant.id, member, requested_by_user_id=user.id)
+    assert held.value.reason == HOLD_OPEN_INVOICES
+    assert held.value.row.status == STATUS_REJECTED
+
+    draft.status = "PARTIALLY_PAID"
+    draft.paid_amount_minor = 400
+    await db_session.commit()
+    with pytest.raises(DsarLegalHold):
+        await svc.request_erasure(tenant.id, member, requested_by_user_id=user.id)
+
+    draft.status = "PAID"
+    draft.paid_amount_minor = 1000
+    await db_session.commit()
+
+    unbound = Member(
+        tenant_id=tenant.id,
+        member_number=f"U-{uuid4().hex[:6]}",
+        first_name="Loose",
+        last_name="Member",
+        email="loose@example.com",
+        phone="+905559990011",
+        status="ACTIVE",
+        user_id=None,
+    )
+    db_session.add(unbound)
+    await db_session.commit()
+    row, created = await svc.request_erasure(
+        tenant.id, unbound, requested_by_user_id=None
+    )
+    await db_session.commit()
+    assert created is True
+    assert row.status == STATUS_COMPLETED
+    await db_session.refresh(unbound)
+    assert unbound.first_name == "ANON"
+    assert unbound.email is None
+    assert unbound.user_id is None
+
+
+def test_dsar_package_rejects_card_secrets():
+    for key in ("pan", "cvv", "card_number", "encrypted_secret"):
+        with pytest.raises(ValueError, match=f"package_contains_secret:{key}"):
+            _assert_package_safe({key: "x"})

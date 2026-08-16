@@ -1,8 +1,8 @@
-# GymClubNex — Overview
+# subagent-01a00bf1-2403-74c3-a3a3-18a616f01f3f — Overview
 
 > **Navigation aid.** This article shows WHERE things live (routes, models, files). Read actual source files before implementing new features or making changes.
 
-**GymClubNex** is a python project built with fastapi, using sqlalchemy for data persistence, organized as a microservices repo.
+**subagent-01a00bf1-2403-74c3-a3a3-18a616f01f3f** is a python project built with fastapi, using sqlalchemy for data persistence, organized as a microservices repo.
 
 **Services:** `backend` (`backend`), `fitness-network-os-frontend` (`frontend`), `admin-web` (`frontend/admin-web`), `gymclubnex-e2e` (`frontend/e2e`), `public-site` (`frontend/public-site`), `scanner-pwa` (`frontend/scanner-pwa`)
 
@@ -48,12 +48,12 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **73** files
-- `backend/app/models/tenant.py` — imported by **67** files
-- `backend/app/models/organization.py` — imported by **60** files
+- `backend/app/models/user.py` — imported by **75** files
+- `backend/app/models/tenant.py` — imported by **69** files
+- `backend/app/models/organization.py` — imported by **62** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/member.py` — imported by **45** files
-- `backend/app/models/rbac.py` — imported by **44** files
+- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **45** files
 
 ## Required Environment Variables
 
