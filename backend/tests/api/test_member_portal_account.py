@@ -128,7 +128,9 @@ async def test_portal_account_binds_member_and_returns_otp(api_client, pg_engine
         member = await db.get(Member, member_id)
         assert member is not None
         assert str(member.user_id) == body["user_id"]
-        role = (await db.execute(select(Role).where(Role.name == "MEMBER"))).scalar_one()
+        role = (
+            await db.execute(select(Role).where(Role.name == "MEMBER"))
+        ).scalar_one()
         link = (
             await db.execute(
                 select(UserRole).where(

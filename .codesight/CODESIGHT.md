@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 78 lib files | 19 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~161,600 tokens. **Saves ~145,800 tokens per conversation.**
-> **Last scanned:** 2026-08-16 13:14 — re-run after significant changes
+> **Last scanned:** 2026-08-16 13:19 — re-run after significant changes
 
 ---
 
@@ -1268,7 +1268,7 @@
 - **sbom** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v5`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
-- **lint** on `ubuntu-latest` — 10 steps
+- **lint** on `ubuntu-latest` — 11 steps
   - `actions/checkout@v5`
   - `actions/setup-python@v6`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)

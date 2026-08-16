@@ -567,7 +567,9 @@ async def test_pt_appointment_conflict_prevention(
 
 
 @pytest.mark.asyncio
-async def test_concurrent_pt_first_slot_one_wins(pg_session_maker, api_client: AsyncClient):
+async def test_concurrent_pt_first_slot_one_wins(
+    pg_session_maker, api_client: AsyncClient
+):
     """EXCLUDE constraint: two empty-slot inserts cannot both confirm."""
     async with pg_session_maker() as db:
         org = Organization(
@@ -586,19 +588,23 @@ async def test_concurrent_pt_first_slot_one_wins(pg_session_maker, api_client: A
         await db.execute(
             select(func.set_config("app.current_tenant_id", str(tenant.id), True))
         )
-        loc = Location(
-            id=uuid4(), tenant_id=tenant.id, name="PT Race", timezone="UTC"
-        )
+        loc = Location(id=uuid4(), tenant_id=tenant.id, name="PT Race", timezone="UTC")
         db.add(loc)
         trainer_user, _ = await _create_user_with_role(
             db, role_name="TRAINER", tenant_id=tenant.id, perms=["pt:write"]
         )
         user1, tok1 = await _create_user_with_role(
-            db, role_name="MEMBER", tenant_id=tenant.id, perms=["pt:book:self", "pt:read:self"]
+            db,
+            role_name="MEMBER",
+            tenant_id=tenant.id,
+            perms=["pt:book:self", "pt:read:self"],
         )
         await _create_member_for_user(db, tenant.id, user1.id, "Ann", "One")
         user2, tok2 = await _create_user_with_role(
-            db, role_name="MEMBER", tenant_id=tenant.id, perms=["pt:book:self", "pt:read:self"]
+            db,
+            role_name="MEMBER",
+            tenant_id=tenant.id,
+            perms=["pt:book:self", "pt:read:self"],
         )
         await _create_member_for_user(db, tenant.id, user2.id, "Ben", "Two")
         await db.commit()
@@ -624,7 +630,12 @@ async def test_concurrent_pt_first_slot_one_wins(pg_session_maker, api_client: A
         ),
     )
     codes = sorted([res1.status_code, res2.status_code])
-    assert codes == [201, 409], (res1.status_code, res1.text, res2.status_code, res2.text)
+    assert codes == [201, 409], (
+        res1.status_code,
+        res1.text,
+        res2.status_code,
+        res2.text,
+    )
 
 
 @pytest.mark.asyncio

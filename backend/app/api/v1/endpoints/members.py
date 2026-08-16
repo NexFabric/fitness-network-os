@@ -347,9 +347,7 @@ async def provision_portal_account(
 
     svc = MemberService(db)
     try:
-        member, user, _otp = await svc.provision_portal_account(
-            tenant_id, member_id
-        )
+        member, user, _otp = await svc.provision_portal_account(tenant_id, member_id)
         _invite, invite_token = await InviteService(db).issue(
             tenant_id, user.id, purpose=PURPOSE_MEMBER_PORTAL
         )
@@ -358,7 +356,11 @@ async def provision_portal_account(
     except ValueError as e:
         detail = str(e)
         status_code = 404 if detail == "member_not_found" else 400
-        if detail in {"portal_already_bound", "email_already_registered", "user_id_conflict"}:
+        if detail in {
+            "portal_already_bound",
+            "email_already_registered",
+            "user_id_conflict",
+        }:
             status_code = 409
         raise HTTPException(status_code=status_code, detail=detail) from e
 

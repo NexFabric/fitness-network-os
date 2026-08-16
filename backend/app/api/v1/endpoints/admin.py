@@ -31,9 +31,7 @@ async def _require_superuser_break_glass(
             status_code=403,
             detail="break_glass_required",
         )
-    active = await bg.check_active_session(
-        actor_id=scope.user.id, tenant_id=tenant_id
-    )
+    active = await bg.check_active_session(actor_id=scope.user.id, tenant_id=tenant_id)
     if active is None:
         raise HTTPException(status_code=403, detail="break_glass_required")
 

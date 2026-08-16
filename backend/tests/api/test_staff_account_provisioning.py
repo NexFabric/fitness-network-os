@@ -152,9 +152,7 @@ async def _session_after_first_login(
         assert setup.status_code == 200, setup.text
         totp_secret = setup.json()["secret"]
         code = pyotp.TOTP(totp_secret).now()
-        verify = await api_client.post(
-            "/api/v1/auth/mfa/verify", json={"code": code}
-        )
+        verify = await api_client.post("/api/v1/auth/mfa/verify", json={"code": code})
         assert verify.status_code == 200, verify.text
     return api_client.cookies["session_token"], totp_secret
 

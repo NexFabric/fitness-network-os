@@ -166,10 +166,7 @@ async def create_staff_account(
             recipient_address=provisioned.user.email,
             recipient_user_id=provisioned.user.id,
             subject="GymClubNex personel hesabı",
-            body=(
-                "Hesabınız açıldı.\n\n"
-                f"{invite_line}"
-            ),
+            body=(f"Hesabınız açıldı.\n\n{invite_line}"),
             context={"kind": "staff_account_created"},
             source_event_type="staff.account.created.v1",
             source_event_id=str(provisioned.staff.id),

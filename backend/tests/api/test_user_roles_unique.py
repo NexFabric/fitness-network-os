@@ -34,7 +34,9 @@ async def test_duplicate_tenant_role_grant_is_rejected(pg_engine):
             is_active=True,
         )
         db.add(user)
-        role = Role(name=f"UR-{uuid4().hex[:8]}", description="unique grant", is_system=False)
+        role = Role(
+            name=f"UR-{uuid4().hex[:8]}", description="unique grant", is_system=False
+        )
         db.add(role)
         await db.flush()
         db.add(UserRole(user_id=user.id, role_id=role.id, tenant_id=tenant.id))

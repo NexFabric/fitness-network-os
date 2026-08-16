@@ -156,17 +156,18 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
                 elif data.get("device_id"):
                     identifier = f"device:{data['device_id']}"
                 elif data.get("token"):
-                    identifier = "invite:" + hashlib.sha256(
-                        str(data["token"]).encode()
-                    ).hexdigest()[:16]
+                    identifier = (
+                        "invite:"
+                        + hashlib.sha256(str(data["token"]).encode()).hexdigest()[:16]
+                    )
         except (TypeError, ValueError, UnicodeDecodeError):
             identifier = "unknown"
         if identifier == "unknown":
             session_token = request.cookies.get("session_token")
             if session_token:
-                identifier = "session:" + hashlib.sha256(
-                    session_token.encode()
-                ).hexdigest()[:16]
+                identifier = (
+                    "session:" + hashlib.sha256(session_token.encode()).hexdigest()[:16]
+                )
 
         # Hash so emails / device ids never reach Redis or logs.
         digest = hashlib.sha256(identifier.encode()).hexdigest()[:32]

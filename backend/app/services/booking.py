@@ -591,9 +591,7 @@ class ClassBookingService:
                 class_type.required_entitlement_type,
             )
             if not access.get("granted"):
-                raise BookingForbidden(
-                    "Bu ders için geçerli hakkınız bulunmuyor."
-                )
+                raise BookingForbidden("Bu ders için geçerli hakkınız bulunmuyor.")
 
         # 2. Check if member already has active reservation (CONFIRMED or WAITLISTED)
         existing_stmt = select(ClassBooking).where(
@@ -730,7 +728,9 @@ class ClassBookingService:
             ClassBookingStatus.CONFIRMED,
             ClassBookingStatus.WAITLISTED,
         ]:
-            raise BookingInvalid(f"Bu rezervasyon zaten {booking.status.value} durumundadır.")
+            raise BookingInvalid(
+                f"Bu rezervasyon zaten {booking.status.value} durumundadır."
+            )
 
         # 2. Lock the Session
         sess_stmt = (
@@ -883,7 +883,9 @@ class ClassBookingService:
         if not booking:
             raise BookingNotFound("Rezervasyon bulunamadı.")
         if booking.status != ClassBookingStatus.CONFIRMED:
-            raise BookingConflict("Yalnızca asil listedeki rezervasyon yoklamaya alınır.")
+            raise BookingConflict(
+                "Yalnızca asil listedeki rezervasyon yoklamaya alınır."
+            )
 
         booking.status = status_val
         if status_val == ClassBookingStatus.ATTENDED:

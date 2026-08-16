@@ -205,7 +205,9 @@ async def test_paid_invoice_stays_after_anonymize(api_client, pg_engine):
                 await db.execute(
                     select(UserSession).where(UserSession.user_id == ctx["user_id"])
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         assert sessions
         assert all(s.is_revoked for s in sessions)

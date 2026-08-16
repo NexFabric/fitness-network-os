@@ -16,6 +16,7 @@ def _patch_settings(**kwargs):
     """spec=Settings so MagicMock allows assert_* methods on the real Settings API."""
     return patch("app.main.settings", spec=Settings, **kwargs)
 
+
 _REQUIRED = {
     "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
     "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",

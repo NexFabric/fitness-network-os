@@ -116,9 +116,7 @@ async def test_device_auth_is_limited_per_device_id():
             "api_key": "x",
         }
         for _ in range(3):
-            assert (
-                await client.post(device_path, json=payload)
-            ).status_code == 200
+            assert (await client.post(device_path, json=payload)).status_code == 200
         blocked = await client.post(device_path, json=payload)
         assert blocked.status_code == 429
         other = dict(payload)

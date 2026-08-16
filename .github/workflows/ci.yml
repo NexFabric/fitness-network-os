@@ -96,7 +96,11 @@ jobs:
       - name: Lint with ruff
         working-directory: ./backend
         run: uv run ruff check .
-        
+
+      - name: Format check with ruff
+        working-directory: ./backend
+        run: uv run ruff format --check .
+
       - name: Type check with mypy
         working-directory: ./backend
         run: uv run mypy app

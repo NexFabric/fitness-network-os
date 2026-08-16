@@ -171,9 +171,7 @@ async def test_csv_import_pipeline_e2e(api_client, pg_engine):
 
 
 @pytest.mark.asyncio
-async def test_csv_upload_rejects_formula_prefix_and_oversize(
-    api_client, pg_engine
-):
+async def test_csv_upload_rejects_formula_prefix_and_oversize(api_client, pg_engine):
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
         org = Organization(name="Imp2 Org", domain=f"imp2-{uuid4().hex[:6]}.com")
@@ -194,10 +192,7 @@ async def test_csv_upload_rejects_formula_prefix_and_oversize(
         "Authorization": f"Bearer {token}",
         "X-Tenant-ID": str(tenant.id),
     }
-    formula = (
-        "first_name,last_name,email\n"
-        "=cmd|' /C calc',Yilmaz,ahmet@test.com\n"
-    )
+    formula = "first_name,last_name,email\n=cmd|' /C calc',Yilmaz,ahmet@test.com\n"
     preview = await api_client.post(
         "/api/v1/import/upload",
         json={"filename": "evil.csv", "csv_content": formula},

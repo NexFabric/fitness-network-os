@@ -48,6 +48,7 @@ class DsarLegalHold(Exception):
         self.reason = reason
         self.row = row
 
+
 DSAR_SLA = timedelta(days=30)
 FORBIDDEN_PACKAGE_KEYS = frozenset(
     {
@@ -216,14 +217,18 @@ class DsarService:
             (
                 await self.db.execute(
                     select(Invoice)
-                    .join(BillingAccount, Invoice.billing_account_id == BillingAccount.id)
+                    .join(
+                        BillingAccount, Invoice.billing_account_id == BillingAccount.id
+                    )
                     .where(
                         Invoice.tenant_id == tenant_id,
                         BillingAccount.member_id == member_id,
                         Invoice.status.in_(OPEN_INVOICE_STATUSES),
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         return len(invoices) > 0
 
@@ -237,11 +242,16 @@ class DsarService:
                         ClassBooking.tenant_id == tenant_id,
                         ClassBooking.member_id == member.id,
                         ClassBooking.status.in_(
-                            [ClassBookingStatus.CONFIRMED, ClassBookingStatus.WAITLISTED]
+                            [
+                                ClassBookingStatus.CONFIRMED,
+                                ClassBookingStatus.WAITLISTED,
+                            ]
                         ),
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         for booking in bookings:
             try:
@@ -265,7 +275,9 @@ class DsarService:
                         PtAppointment.status == PtAppointmentStatus.CONFIRMED,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         for appt in pts:
             try:
@@ -288,7 +300,9 @@ class DsarService:
                         Membership.status == "ACTIVE",
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         for membership in memberships:
             membership.status = "CANCELLED"
@@ -303,7 +317,9 @@ class DsarService:
                         ConsentRecord.status == "GIVEN",
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         for consent in consents:
             consent.status = "WITHDRAWN"
@@ -317,7 +333,9 @@ class DsarService:
                         Note.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         for note in notes:
             note.content = "[anonymized]"
@@ -342,7 +360,9 @@ class DsarService:
                             UserSession.is_revoked.is_(False),
                         )
                     )
-                ).scalars().all()
+                )
+                .scalars()
+                .all()
             )
             for session in sessions:
                 session.is_revoked = True
@@ -367,7 +387,9 @@ class DsarService:
                         Membership.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         consents = list(
             (
@@ -379,7 +401,9 @@ class DsarService:
                     )
                     .order_by(ConsentRecord.created_at.desc())
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         checkins = list(
             (
@@ -392,7 +416,9 @@ class DsarService:
                     .order_by(Checkin.checkin_time.desc())
                     .limit(50)
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         attempts = list(
             (
@@ -405,31 +431,41 @@ class DsarService:
                     .order_by(AccessAttempt.timestamp.desc())
                     .limit(50)
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         invoices = list(
             (
                 await self.db.execute(
                     select(Invoice)
-                    .join(BillingAccount, Invoice.billing_account_id == BillingAccount.id)
+                    .join(
+                        BillingAccount, Invoice.billing_account_id == BillingAccount.id
+                    )
                     .where(
                         Invoice.tenant_id == tenant_id,
                         BillingAccount.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         payments = list(
             (
                 await self.db.execute(
                     select(Payment)
-                    .join(BillingAccount, Payment.billing_account_id == BillingAccount.id)
+                    .join(
+                        BillingAccount, Payment.billing_account_id == BillingAccount.id
+                    )
                     .where(
                         Payment.tenant_id == tenant_id,
                         BillingAccount.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         bookings = list(
             (
@@ -439,7 +475,9 @@ class DsarService:
                         ClassBooking.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         pts = list(
             (
@@ -449,7 +487,9 @@ class DsarService:
                         PtAppointment.member_id == member.id,
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
         )
         return {
             "schema": "gymclubnex.dsar.export.v1",

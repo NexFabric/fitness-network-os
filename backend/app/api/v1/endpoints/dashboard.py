@@ -78,7 +78,9 @@ async def get_dashboard_kpis(
             membership_filter.append(Membership.member_id.in_(scoped_ids))
             checkin_filter.append(Checkin.member_id.in_(scoped_ids))
 
-        res_active_members = await db.execute(select(func.count(Member.id)).where(*member_filter))
+        res_active_members = await db.execute(
+            select(func.count(Member.id)).where(*member_filter)
+        )
         active_members_count = res_active_members.scalar_one() or 0
 
         res_expiring = await db.execute(

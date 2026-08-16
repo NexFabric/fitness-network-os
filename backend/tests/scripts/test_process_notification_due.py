@@ -56,7 +56,11 @@ async def test_process_due_for_tenant_sets_rls_and_returns_stats():
     first = session.execute.await_args_list[0]
     sql = str(first.args[0])
     assert "app.current_tenant_id" in sql
-    params = first.args[1] if len(first.args) > 1 else first.kwargs.get("parameters") or first.kwargs
+    params = (
+        first.args[1]
+        if len(first.args) > 1
+        else first.kwargs.get("parameters") or first.kwargs
+    )
     if isinstance(params, dict):
         assert params.get("tid") == str(tenant_id)
     else:

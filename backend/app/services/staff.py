@@ -18,9 +18,7 @@ from app.models.user import User
 
 # Who may appear as class_sessions.trainer_user_id / schedules.
 # PT bookings are narrower: TRAINER only (see has_tenant_role(..., pt_only)).
-CLASS_TRAINER_ROLES = frozenset(
-    {"TRAINER", "GYM_OWNER", "GYM_ADMIN", "GYM_MANAGER"}
-)
+CLASS_TRAINER_ROLES = frozenset({"TRAINER", "GYM_OWNER", "GYM_ADMIN", "GYM_MANAGER"})
 PT_TRAINER_ROLES = frozenset({"TRAINER"})
 
 ALLOWED_STAFF_ROLES = frozenset(
@@ -255,9 +253,7 @@ class StaffService:
         return found is not None
 
     @staticmethod
-    async def is_employed(
-        db: AsyncSession, tenant_id: UUID, user_id: UUID
-    ) -> bool:
+    async def is_employed(db: AsyncSession, tenant_id: UUID, user_id: UUID) -> bool:
         found = (
             await db.execute(
                 select(Staff.id).where(
@@ -277,8 +273,7 @@ class StaffService:
             .join(Role, Role.id == UserRole.role_id)
             .join(
                 Staff,
-                (Staff.tenant_id == UserRole.tenant_id)
-                & (Staff.user_id == User.id),
+                (Staff.tenant_id == UserRole.tenant_id) & (Staff.user_id == User.id),
             )
             .where(
                 UserRole.tenant_id == tenant_id,

@@ -370,9 +370,7 @@ async def test_front_desk_login_without_enrollment_gets_restricted_session(
     email = f"fd-enroll-{uuid4().hex[:8]}@example.com"
     password = "MfaPassword1!"
     async with pg_session_maker() as db:
-        await _seed_user(
-            db, email=email, password=password, role_name="FRONT_DESK"
-        )
+        await _seed_user(db, email=email, password=password, role_name="FRONT_DESK")
 
     login = await api_client.post(
         "/api/v1/auth/login",

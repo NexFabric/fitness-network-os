@@ -17,7 +17,7 @@
 - **sbom** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v5`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
-- **lint** on `ubuntu-latest` — 10 steps
+- **lint** on `ubuntu-latest` — 11 steps
   - `actions/checkout@v5`
   - `actions/setup-python@v6`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)

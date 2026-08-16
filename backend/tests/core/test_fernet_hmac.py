@@ -28,7 +28,9 @@ def test_fernet_hmac_roundtrip_signs_and_verifies():
     assert isinstance(secret, bytes)
     assert len(secret) == 32
 
-    presented = compute_signature(ref, "POST", "/api/v1/devices/qr/validate", "1", "n" * 16, b"{}")
+    presented = compute_signature(
+        ref, "POST", "/api/v1/devices/qr/validate", "1", "n" * 16, b"{}"
+    )
     assert verify_signature(
         ref,
         presented,

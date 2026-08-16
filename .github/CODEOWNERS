@@ -1,0 +1,12 @@
+# Default owner for everything in the repo.
+* @emrahub
+
+# Security- and correctness-critical surfaces: never merge these unreviewed
+# once a second maintainer exists.
+/.github/                       @emrahub
+/backend/alembic/               @emrahub
+/backend/app/core/              @emrahub
+/backend/app/api/middleware/    @emrahub
+/backend/permissions.yml        @emrahub
+/backend/scripts/               @emrahub
+/docs/adr/                      @emrahub

@@ -108,7 +108,9 @@ async def test_privileged_session_stays_alive_within_idle_window(api_client, pg_
 
 
 @pytest.mark.asyncio
-async def test_superuser_cannot_create_tenant_without_break_glass(api_client, pg_engine):
+async def test_superuser_cannot_create_tenant_without_break_glass(
+    api_client, pg_engine
+):
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     raw = f"tok_{uuid4().hex}"
     async with maker() as db:

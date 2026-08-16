@@ -80,7 +80,9 @@ async def _canonical_role(db: AsyncSession, name: str, perm_names: list[str]) ->
     return role
 
 
-async def _login(db: AsyncSession, *, tenant_id, email: str, role: Role) -> tuple[User, str]:
+async def _login(
+    db: AsyncSession, *, tenant_id, email: str, role: Role
+) -> tuple[User, str]:
     raw = f"tok_{uuid4().hex}"
     user = User(email=email, hashed_password="x", is_active=True)
     db.add(user)

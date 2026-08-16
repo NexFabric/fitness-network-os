@@ -58,7 +58,9 @@ async def _owner_with_totp(pg_engine):
         db.add(user)
         await db.flush()
         existing = (
-            await db.execute(select(Permission).where(Permission.name == "devices:manage"))
+            await db.execute(
+                select(Permission).where(Permission.name == "devices:manage")
+            )
         ).scalar_one_or_none()
         if existing is None:
             existing = Permission(name="devices:manage", description="devices")

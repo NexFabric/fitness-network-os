@@ -52,19 +52,21 @@ async def require_recent_step_up(
     """Require a TOTP step-up within STEP_UP_MAX_AGE for sensitive writes."""
     from datetime import datetime
 
-    user, session = await _get_user_and_session(
-        token, db, allowed_auth_levels={"full"}
-    )
+    user, session = await _get_user_and_session(token, db, allowed_auth_levels={"full"})
     from app.models.user import UserMfaMethod
 
     enrolled = (
-        await db.execute(
-            select(UserMfaMethod).where(
-                UserMfaMethod.user_id == user.id,
-                UserMfaMethod.is_active.is_(True),
+        (
+            await db.execute(
+                select(UserMfaMethod).where(
+                    UserMfaMethod.user_id == user.id,
+                    UserMfaMethod.is_active.is_(True),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if enrolled is None:
         return user
     now = datetime.now(UTC)
@@ -146,7 +148,11 @@ async def _get_user_and_session(
         session.is_revoked = True
         await db.commit()
         raise HTTPException(status_code=401, detail="session_idle")
-    if prev_seen is None or prev_seen.tzinfo is None or now - prev_seen >= LAST_SEEN_THROTTLE:
+    if (
+        prev_seen is None
+        or prev_seen.tzinfo is None
+        or now - prev_seen >= LAST_SEEN_THROTTLE
+    ):
         session.last_seen_at = now
         await db.commit()
 

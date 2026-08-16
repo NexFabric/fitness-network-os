@@ -43,9 +43,7 @@ async def run_cycle() -> int:
                 runs = list(runs_res.scalars().all())
                 for run in runs:
                     service = ReportService(db)
-                    logger.info(
-                        f"Executing report run {run.id} for tenant {tenant.id}"
-                    )
+                    logger.info(f"Executing report run {run.id} for tenant {tenant.id}")
                     await service.execute_run(tenant.id, run.id)
                     processed += 1
             finally:
