@@ -22,7 +22,13 @@ PASSWORD = "tls-proof-pass"
 
 
 def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, check=True, text=True, capture_output=True, **kwargs)
+    try:
+        return subprocess.run(cmd, check=True, text=True, capture_output=True, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "").strip()
+        if detail:
+            raise RuntimeError(f"{cmd[0]} failed ({exc.returncode}): {detail}") from exc
+        raise
 
 
 def _cleanup() -> None:
@@ -102,6 +108,9 @@ def main() -> int:
             ]
         )
         key.chmod(0o600)
+        # Bind-mounts stay :ro and runner-owned. Copy + chown as root into
+        # the writable image FS *before* postgres starts so ssl=on does not
+        # crash the container (GHA then failed docker exec on a dead PID).
         _run(
             [
                 "docker",
@@ -109,42 +118,31 @@ def main() -> int:
                 "-d",
                 "--name",
                 CONTAINER,
+                "--user",
+                "root",
                 "-e",
                 f"POSTGRES_PASSWORD={PASSWORD}",
                 "-v",
-                f"{cert}:/var/lib/postgresql/server.crt:ro",
+                f"{cert}:/tmp/tls/server.crt:ro",
                 "-v",
-                f"{key}:/var/lib/postgresql/server.key:ro",
+                f"{key}:/tmp/tls/server.key:ro",
                 "-p",
                 "55432:5432",
-                IMAGE,
-                "-c",
-                "ssl=on",
-                "-c",
-                "ssl_cert_file=/var/lib/postgresql/server.crt",
-                "-c",
-                "ssl_key_file=/var/lib/postgresql/server.key",
-            ]
-        )
-        # postgres image may refuse the key because it is root-owned; fix inside.
-        _run(
-            [
-                "docker",
-                "exec",
-                "-u",
-                "root",
-                CONTAINER,
+                "--entrypoint",
                 "bash",
+                IMAGE,
                 "-lc",
                 (
-                    "chown postgres:postgres /var/lib/postgresql/server.key "
+                    "install -o postgres -g postgres -m 644 /tmp/tls/server.crt "
                     "/var/lib/postgresql/server.crt && "
-                    "chmod 600 /var/lib/postgresql/server.key"
+                    "install -o postgres -g postgres -m 600 /tmp/tls/server.key "
+                    "/var/lib/postgresql/server.key && "
+                    "exec docker-entrypoint.sh postgres "
+                    "-c ssl=on "
+                    "-c ssl_cert_file=/var/lib/postgresql/server.crt "
+                    "-c ssl_key_file=/var/lib/postgresql/server.key"
                 ),
             ]
-        )
-        subprocess.run(
-            ["docker", "restart", CONTAINER], check=True, capture_output=True
         )
         _wait_ready()
         url = (
