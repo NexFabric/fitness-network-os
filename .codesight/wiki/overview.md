@@ -1,8 +1,8 @@
-# GymClubNex — Overview
+# subagent-01a00bc3-8440-7e70-81d3-5a5ba80f1ee2 — Overview
 
 > **Navigation aid.** This article shows WHERE things live (routes, models, files). Read actual source files before implementing new features or making changes.
 
-**GymClubNex** is a python project built with fastapi, using sqlalchemy for data persistence, organized as a microservices repo.
+**subagent-01a00bc3-8440-7e70-81d3-5a5ba80f1ee2** is a python project built with fastapi, using sqlalchemy for data persistence, organized as a microservices repo.
 
 **Services:** `backend` (`backend`), `fitness-network-os-frontend` (`frontend`), `admin-web` (`frontend/admin-web`), `gymclubnex-e2e` (`frontend/e2e`), `public-site` (`frontend/public-site`), `scanner-pwa` (`frontend/scanner-pwa`)
 
@@ -69,6 +69,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`
 - `SMTP_USER` — `backend/app/services/notification_providers.py`
 - `TEST_DATABASE_URL` — `backend/scripts/check_permissions_db.py`
+- _...1 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-08-16_

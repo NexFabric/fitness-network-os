@@ -1,11 +1,11 @@
-# GymClubNex — AI Context Map
+# subagent-01a00bc3-8440-7e70-81d3-5a5ba80f1ee2 — AI Context Map
 
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
 > 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 18:05 — re-run after significant changes
+> **Last scanned:** 2026-08-16 18:12 — re-run after significant changes
 
 ---
 
@@ -1115,7 +1115,7 @@
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
 - `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
 - `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
-- `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
+- `VITE_API_URL` **required** — frontend/admin-web/src/api/client.ts
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 
 ## Config Files
