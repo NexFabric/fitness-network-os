@@ -100,11 +100,20 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
+    from app.core.config import database_ssl_connect_arg
+
+    section = dict(config.get_section(config.config_ini_section, {}) or {})
+    engine_url = section.get("sqlalchemy.url") or url
+    connect_args: dict = {}
+    ssl = database_ssl_connect_arg(str(engine_url))
+    if ssl is not None:
+        connect_args["ssl"] = ssl
 
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:

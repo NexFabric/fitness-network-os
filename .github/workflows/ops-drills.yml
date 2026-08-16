@@ -27,18 +27,26 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Start Docker Services
+      - name: Start Postgres, Redis, and MinIO
         run: |
-          docker compose -f docker-compose.storage.yml up -d
-          docker compose -f docker-compose.obs.yml up -d
           docker compose up -d postgres redis
+          docker compose -f docker-compose.storage.yml up -d
           sleep 15
 
-      - name: S3 Storage Runtime Proof Drill
+      - name: Migrate schema before dump/restore
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://fitness_app:fitness_app_password@localhost:5433/fitness_os
+          MIGRATOR_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_os
+          REDIS_URL: redis://localhost:6379/0
+          ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
         run: |
-          cd backend
           uv sync --frozen
-          uv run python scripts/s3_runtime_proof.py
+          uv run alembic upgrade head
+
+      - name: S3 Storage Runtime Proof Drill
+        working-directory: ./backend
+        run: uv run python scripts/s3_runtime_proof.py
 
       - name: Dump / restore drill
         env:
@@ -60,6 +68,12 @@ jobs:
         run: |
           cd backend
           uv run python scripts/tls_connection_proof.py
+
+      - name: Start backend + observability for the alert path
+        run: |
+          docker compose up -d backend
+          docker compose -f docker-compose.yml -f docker-compose.obs.yml up -d
+          sleep 20
 
       - name: Observability Alert Fire Drill
         run: |
