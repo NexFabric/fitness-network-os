@@ -173,3 +173,61 @@ async def test_member_sees_same_tenant_trainers_by_email(api_client, pg_engine):
     assert crossed.status_code in {200, 403}
     if crossed.status_code == 200:
         assert trainer_b.email not in {row["email"] for row in crossed.json()}
+
+
+@pytest.mark.asyncio
+async def test_session_rejects_trainer_from_another_tenant(api_client, pg_engine):
+    from app.models.booking import ClassType
+    from app.models.location import Location
+
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        tenant_a = await _tenant(db, "SessA")
+        tenant_b = await _tenant(db, "SessB")
+        trainer_role = await _canonical_role(db, "TRAINER", ["pt:read", "pt:write"])
+        owner_role = await _canonical_role(db, "GYM_OWNER", OWNER_PERMS)
+        foreign, _ = await _login(
+            db,
+            tenant_id=tenant_b.id,
+            email=f"foreign-{uuid4().hex[:6]}@e2e.local",
+            role=trainer_role,
+        )
+        _owner, owner_token = await _login(
+            db,
+            tenant_id=tenant_a.id,
+            email=f"owner-s-{uuid4().hex[:6]}@e2e.local",
+            role=owner_role,
+        )
+        loc = Location(
+            id=uuid4(),
+            tenant_id=tenant_a.id,
+            name="Studio",
+            timezone="Europe/Istanbul",
+        )
+        db.add(loc)
+        ctype = ClassType(
+            tenant_id=tenant_a.id,
+            name="HIIT",
+            category="CARDIO",
+            duration_minutes=45,
+            default_capacity=8,
+        )
+        db.add(ctype)
+        await db.commit()
+        loc_id, type_id = loc.id, ctype.id
+
+    start = datetime.now(UTC) + timedelta(days=1)
+    res = await api_client.post(
+        "/api/v1/classes/sessions",
+        headers=_headers(owner_token, tenant_a.id),
+        json={
+            "location_id": str(loc_id),
+            "class_type_id": str(type_id),
+            "trainer_user_id": str(foreign.id),
+            "start_time_utc": start.isoformat(),
+            "end_time_utc": (start + timedelta(minutes=45)).isoformat(),
+            "capacity": 8,
+        },
+    )
+    assert res.status_code == 400, res.text
+    assert "Eğitmen" in res.json()["detail"]

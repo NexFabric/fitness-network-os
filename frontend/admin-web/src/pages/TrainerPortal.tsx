@@ -330,7 +330,7 @@ export default function TrainerPortal() {
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                          {sess.class_category || 'GRUP DERSI'}
+                          {sess.class_type_category || 'GRUP DERSI'}
                         </span>
                         <span className="text-xs font-semibold text-emerald-400">
                           {sess.confirmed_count} / {sess.capacity} Kişi

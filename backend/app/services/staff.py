@@ -16,6 +16,13 @@ from app.models.rbac import Role, UserRole
 from app.models.staff import Staff
 from app.models.user import User
 
+# Who may appear as class_sessions.trainer_user_id / schedules.
+# PT bookings are narrower: TRAINER only (see has_tenant_role(..., pt_only)).
+CLASS_TRAINER_ROLES = frozenset(
+    {"TRAINER", "GYM_OWNER", "GYM_ADMIN", "GYM_MANAGER"}
+)
+PT_TRAINER_ROLES = frozenset({"TRAINER"})
+
 ALLOWED_STAFF_ROLES = frozenset(
     {
         "STAFF",
@@ -184,6 +191,7 @@ class StaffService:
             staff.role = role
             staff.location_id = location_id
             await self.db.flush()
+            await self._attach_rbac_role(tenant_id, user_id, role)
             return staff
 
         staff = Staff(
@@ -198,6 +206,7 @@ class StaffService:
             await self.db.flush()
         except IntegrityError as e:
             raise ValueError("staff_link_conflict") from e
+        await self._attach_rbac_role(tenant_id, user_id, role)
         return staff
 
     async def list_staff(self, tenant_id: UUID) -> list[Staff]:
@@ -216,6 +225,34 @@ class StaffService:
             .order_by(Staff.created_at)
         )
         return [(row[0], row[1]) for row in result.all()]
+
+    @staticmethod
+    async def has_tenant_role(
+        db: AsyncSession,
+        tenant_id: UUID,
+        user_id: UUID,
+        role_names: frozenset[str],
+    ) -> bool:
+        """True if ``user_id`` holds one of ``role_names`` in this tenant.
+
+        ``users`` is global; ``user_roles.tenant_id`` is the mapping that
+        keeps trainer_user_id from pointing at another gym's login.
+        """
+        from app.models.rbac import Role, UserRole
+
+        found = (
+            await db.execute(
+                select(UserRole.id)
+                .join(Role, Role.id == UserRole.role_id)
+                .where(
+                    UserRole.tenant_id == tenant_id,
+                    UserRole.user_id == user_id,
+                    Role.name.in_(role_names),
+                )
+                .limit(1)
+            )
+        ).first()
+        return found is not None
 
     async def list_trainers(self, tenant_id: UUID) -> list[tuple[UUID, str]]:
         """Users holding the TRAINER RBAC role in this tenant.

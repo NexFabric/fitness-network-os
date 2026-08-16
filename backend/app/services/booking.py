@@ -48,6 +48,7 @@ from app.schemas.booking import (
     TrainerAvailabilityCreate,
 )
 from app.services.outbox import OutboxService
+from app.services.staff import CLASS_TRAINER_ROLES, PT_TRAINER_ROLES, StaffService
 
 
 class ClassBookingService:
@@ -124,11 +125,26 @@ class ClassBookingService:
     # ---------------------------------------------------------
 
     @staticmethod
+    async def _require_class_trainer(
+        db: AsyncSession, tenant_id: UUID, trainer_user_id: UUID
+    ) -> None:
+        if not await StaffService.has_tenant_role(
+            db, tenant_id, trainer_user_id, CLASS_TRAINER_ROLES
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Eğitmen bu kulüpte tanımlı değil.",
+            )
+
+    @staticmethod
     async def create_schedule(
         db: AsyncSession, tenant_id: UUID, data: ClassScheduleCreate
     ) -> ClassSchedule:
         # Verify foreign keys
         await ClassBookingService.get_class_type(db, tenant_id, data.class_type_id)
+        await ClassBookingService._require_class_trainer(
+            db, tenant_id, data.trainer_user_id
+        )
 
         schedule = ClassSchedule(
             id=uuid4(),
@@ -182,7 +198,12 @@ class ClassBookingService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Ders programı şablonu bulunamadı.",
             )
-        for key, value in data.model_dump(exclude_unset=True).items():
+        updates = data.model_dump(exclude_unset=True)
+        if "trainer_user_id" in updates and updates["trainer_user_id"] is not None:
+            await ClassBookingService._require_class_trainer(
+                db, tenant_id, updates["trainer_user_id"]
+            )
+        for key, value in updates.items():
             setattr(schedule, key, value)
         await db.flush()
         return schedule
@@ -254,6 +275,9 @@ class ClassBookingService:
         db: AsyncSession, tenant_id: UUID, data: ClassSessionCreate
     ) -> ClassSession:
         await ClassBookingService.get_class_type(db, tenant_id, data.class_type_id)
+        await ClassBookingService._require_class_trainer(
+            db, tenant_id, data.trainer_user_id
+        )
 
         session = ClassSession(
             id=uuid4(),
@@ -282,6 +306,7 @@ class ClassBookingService:
         start_time: datetime | None = None,
         end_time: datetime | None = None,
         member_id: UUID | None = None,
+        session_id: UUID | None = None,
     ) -> list[ClassSessionResponse]:
         """Fetch sessions with enriched capacity counts and optional member-specific booking status."""
         stmt = (
@@ -289,6 +314,7 @@ class ClassBookingService:
                 ClassSession,
                 ClassType.name.label("class_type_name"),
                 ClassType.color_hex.label("class_type_color"),
+                ClassType.category.label("class_type_category"),
                 User.email.label("trainer_name"),
                 Location.name.label("location_name"),
             )
@@ -308,6 +334,8 @@ class ClassBookingService:
             stmt = stmt.where(ClassSession.start_time_utc >= start_time)
         if end_time:
             stmt = stmt.where(ClassSession.start_time_utc <= end_time)
+        if session_id:
+            stmt = stmt.where(ClassSession.id == session_id)
 
         stmt = stmt.order_by(ClassSession.start_time_utc.asc())
         result = await db.execute(stmt)
@@ -357,7 +385,7 @@ class ClassBookingService:
                 member_bookings[mb.session_id] = mb
 
         out: list[ClassSessionResponse] = []
-        for sess, ct_name, ct_color, tr_name, loc_name in rows:
+        for sess, ct_name, ct_color, ct_cat, tr_name, loc_name in rows:
             counts = count_map.get(sess.id, {})
             conf_cnt = counts.get(ClassBookingStatus.CONFIRMED.value, 0)
             wait_cnt = counts.get(ClassBookingStatus.WAITLISTED.value, 0)
@@ -380,6 +408,7 @@ class ClassBookingService:
                     status=sess.status,
                     class_type_name=ct_name,
                     class_type_color=ct_color,
+                    class_type_category=ct_cat,
                     trainer_name=tr_name,
                     location_name=loc_name,
                     confirmed_count=conf_cnt,
@@ -402,7 +431,7 @@ class ClassBookingService:
         """Fetch concrete session details and full list of confirmed + waitlisted attendees."""
         # 1. Fetch Session
         session_list = await ClassBookingService.list_sessions(
-            db, tenant_id=tenant_id, start_time=None, end_time=None
+            db, tenant_id=tenant_id, session_id=session_id
         )
         target_session = next((s for s in session_list if s.id == session_id), None)
         if not target_session:
@@ -801,6 +830,14 @@ class ClassBookingService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Rezervasyon bulunamadı.",
             )
+        if (
+            status_val == ClassBookingStatus.ATTENDED
+            and booking.status != ClassBookingStatus.CONFIRMED
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Yalnızca asil listedeki rezervasyon yoklamaya alınır.",
+            )
 
         booking.status = status_val
         if status_val == ClassBookingStatus.ATTENDED:
@@ -821,6 +858,13 @@ class PtBookingService:
     async def create_availability(
         db: AsyncSession, tenant_id: UUID, data: TrainerAvailabilityCreate
     ) -> TrainerAvailability:
+        if not await StaffService.has_tenant_role(
+            db, tenant_id, data.trainer_user_id, CLASS_TRAINER_ROLES
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Eğitmen bu kulüpte tanımlı değil.",
+            )
         avail = TrainerAvailability(
             id=uuid4(),
             tenant_id=tenant_id,
@@ -880,6 +924,14 @@ class PtBookingService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Bitiş saati başlangıç saatinden sonra olmalıdır.",
+            )
+
+        if not await StaffService.has_tenant_role(
+            db, tenant_id, trainer_user_id, PT_TRAINER_ROLES
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Eğitmen bu kulüpte tanımlı değil.",
             )
 
         # Check conflicting PT appointment for trainer

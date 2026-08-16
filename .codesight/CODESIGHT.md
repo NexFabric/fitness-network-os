@@ -4,8 +4,8 @@
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
 > 142 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,800 tokens. **Saves ~145,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 10:49 — re-run after significant changes
+> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~160,800 tokens. **Saves ~145,200 tokens per conversation.**
+> **Last scanned:** 2026-08-16 11:11 — re-run after significant changes
 
 ---
 
@@ -51,7 +51,7 @@
 - `GET` `/trainers` params() → in: AsyncSessio, out: list
 - `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
 - `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
-- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list
+- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list [auth, db]
 - `POST` `/bookings/{booking_id}/cancel` params(booking_id) → in: ClassTypeCreate, out: list
 - `GET` `/trainers/availability` params() → in: AsyncSessio, out: list
 - `POST` `/trainers/availability` params() → in: ClassTypeCreate, out: list
@@ -911,7 +911,7 @@
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
 - **PtTab** — props: appointments — `frontend/admin-web/src/pages/classes/PtTab.tsx`
 - **RosterDrawer** — props: roster, loading, onClose, onMarkAttendance, onCancelBooking — `frontend/admin-web/src/pages/classes/RosterDrawer.tsx`
-- **SchedulesTab** — props: schedules — `frontend/admin-web/src/pages/classes/SchedulesTab.tsx`
+- **SchedulesTab** — props: schedules, classTypes, trainers — `frontend/admin-web/src/pages/classes/SchedulesTab.tsx`
 - **SessionsTab** — props: sessions, onOpenSessionModal, onOpenRoster — `frontend/admin-web/src/pages/classes/SessionsTab.tsx`
 - **TypesTab** — props: classTypes — `frontend/admin-web/src/pages/classes/TypesTab.tsx`
 - **AlertsTab** — props: tenants, alerts, onOpenCreate, onDelete — `frontend/admin-web/src/pages/hq/AlertsTab.tsx`
@@ -921,7 +921,7 @@
 - **PassportTab** — props: tenants, passports, onEdit — `frontend/admin-web/src/pages/hq/PassportTab.tsx`
 - **ReportsTab** — props: tenants, analytics, onExportCsv — `frontend/admin-web/src/pages/hq/ReportsTab.tsx`
 - **AccessTab** — props: hasActiveMembership, issuing, issueError, qr, qrImage, secondsLeft, expired, onIssueQr — `frontend/admin-web/src/pages/portal/AccessTab.tsx`
-- **ClassesTab** — props: categoryFilter, filteredSessions, myBookings, myPtAppointments, trainers, bookingLoading, showPtModal, ptTrainerId, ptStart, ptEnd — `frontend/admin-web/src/pages/portal/ClassesTab.tsx`
+- **ClassesTab** — props: categoryFilter, filteredSessions, myBookings, myPtAppointments, trainers, bookingLoading, showPtModal, ptTrainerId, ptLocationId, ptLocations — `frontend/admin-web/src/pages/portal/ClassesTab.tsx`
 - **FinanceTab** — props: invoices, payments — `frontend/admin-web/src/pages/portal/FinanceTab.tsx`
 - **HistoryTab** — props: checkins — `frontend/admin-web/src/pages/portal/HistoryTab.tsx`
 - **MembershipsTab** — props: memberships, entitlements — `frontend/admin-web/src/pages/portal/MembershipsTab.tsx`
@@ -1134,8 +1134,8 @@
 - `backend/app/main.py` — imported by **28** files
 - `frontend/admin-web/src/api/client.ts` — imported by **27** files
 - `backend/app/core/authorization.py` — imported by **25** files
+- `backend/app/models/location.py` — imported by **23** files
 - `backend/app/db/rls.py` — imported by **22** files
-- `backend/app/models/location.py` — imported by **22** files
 - `backend/app/core/config.py` — imported by **19** files
 - `backend/app/models/access.py` — imported by **19** files
 - `backend/app/models/outbox.py` — imported by **17** files

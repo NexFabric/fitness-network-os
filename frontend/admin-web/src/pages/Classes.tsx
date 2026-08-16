@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api } from '../api/client'
-import { useAuth } from '../auth/AuthContext'
 import { Alert, LoadingSkeleton, PageHeader } from '../components/ui'
 import { PtTab } from './classes/PtTab'
 import { RosterDrawer } from './classes/RosterDrawer'
@@ -33,7 +32,6 @@ export type {
 } from './classes/types'
 
 export default function Classes() {
-  const { session } = useAuth()
   const [activeTab, setActiveTab] = useState<'sessions' | 'schedules' | 'types' | 'pt'>('sessions')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -184,7 +182,7 @@ export default function Classes() {
     e.preventDefault()
     const finalLocationId = sessLocationId || locations[0]?.id
     const finalClassTypeId = sessClassTypeId || classTypes[0]?.id
-    const finalTrainerId = sessTrainerUserId || trainers[0]?.user_id || session?.user_id
+    const finalTrainerId = sessTrainerUserId || trainers[0]?.user_id
 
     if (!finalLocationId || !finalClassTypeId || !finalTrainerId) {
       setError('Lütfen şube, ders tipi ve eğitmen seçimlerini tamamlayın.')
@@ -308,7 +306,9 @@ export default function Classes() {
               onOpenRoster={(id) => void openRoster(id)}
             />
           )}
-          {activeTab === 'schedules' && <SchedulesTab schedules={schedules} />}
+          {activeTab === 'schedules' && (
+            <SchedulesTab schedules={schedules} classTypes={classTypes} trainers={trainers} />
+          )}
           {activeTab === 'types' && <TypesTab classTypes={classTypes} />}
           {activeTab === 'pt' && <PtTab appointments={ptAppointments} />}
         </>
@@ -456,21 +456,22 @@ export default function Classes() {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Eğitmen</label>
                 <select
+                  id="session-trainer"
+                  required
+                  disabled={trainers.length === 0}
+                  aria-invalid={trainers.length === 0}
                   value={sessTrainerUserId}
                   onChange={(e) => setSessTrainerUserId(e.target.value)}
                   className="input w-full text-sm"
                 >
-                  {trainers.length === 0 && (
-                    <option value="">Henüz antrenör tanımlı değil</option>
-                  )}
+                  <option value="" disabled>
+                    {trainers.length === 0 ? 'Henüz antrenör tanımlı değil' : 'Antrenör seçin'}
+                  </option>
                   {trainers.map((t) => (
                     <option key={t.user_id} value={t.user_id}>
                       {staffLabel(t)}
                     </option>
                   ))}
-                  {session?.user_id && !trainers.some((t) => t.user_id === session.user_id) && (
-                    <option value={session.user_id}>{session.email || 'Kulüp Yöneticisi / Eğitmen'}</option>
-                  )}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -550,9 +551,15 @@ export default function Classes() {
                   onChange={(e) => setGenScheduleId(e.target.value)}
                   className="input w-full text-sm"
                 >
+                  {schedules.length === 0 && (
+                    <option value="" disabled>
+                      Haftalık şablon yok
+                    </option>
+                  )}
                   {schedules.map((sch) => (
                     <option key={sch.id} value={sch.id}>
-                      {sch.class_type_name} ({DAYS_TR[sch.day_of_week]} {sch.start_time.slice(0, 5)})
+                      {classTypes.find((t) => t.id === sch.class_type_id)?.name || 'Ders'} (
+                      {DAYS_TR[sch.day_of_week]} {sch.start_time.slice(0, 5)})
                     </option>
                   ))}
                 </select>

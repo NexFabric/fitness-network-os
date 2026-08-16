@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
 from app.core.authorization import AuthorizationService, SecurityException
-from app.models.booking import PtAppointment
+from app.models.booking import ClassBooking, ClassSession, PtAppointment
 from app.models.user import User
 from app.schemas.booking import (
     ClassAttendanceUpdateRequest,
@@ -271,12 +271,15 @@ async def list_class_sessions(
     end_time: datetime | None = Query(None),
 ) -> list[ClassSessionResponse]:
     _require(current_user, tenant_id, "classes:read")
+    scoped_trainer = trainer_user_id
+    if not has_tenant_wide_member_read(current_user, tenant_id):
+        scoped_trainer = current_user.id
     return await ClassBookingService.list_sessions(
         db,
         tenant_id=tenant_id,
         location_id=location_id,
         class_type_id=class_type_id,
-        trainer_user_id=trainer_user_id,
+        trainer_user_id=scoped_trainer,
         start_time=start_time,
         end_time=end_time,
     )
@@ -319,9 +322,15 @@ async def get_session_roster(
     tenant_id: UUID = Depends(get_tenant_id),
 ) -> ClassSessionRosterResponse:
     _require(current_user, tenant_id, "classes:read")
-    return await ClassBookingService.get_session_roster(
+    roster = await ClassBookingService.get_session_roster(
         db, tenant_id=tenant_id, session_id=session_id
     )
+    if (
+        not has_tenant_wide_member_read(current_user, tenant_id)
+        and roster.session.trainer_user_id != current_user.id
+    ):
+        raise SecurityException()
+    return roster
 
 
 @router.post(
@@ -336,6 +345,25 @@ async def mark_attendance(
     tenant_id: UUID = Depends(get_tenant_id),
 ) -> ClassBookingResponse:
     _require(current_user, tenant_id, "classes:attend")
+    if not has_tenant_wide_member_read(current_user, tenant_id):
+        taught = (
+            await db.execute(
+                select(ClassSession.trainer_user_id)
+                .join(ClassBooking, ClassBooking.session_id == ClassSession.id)
+                .where(
+                    ClassBooking.tenant_id == tenant_id,
+                    ClassBooking.id == booking_id,
+                    ClassSession.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if taught is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rezervasyon bulunamadı.",
+            )
+        if taught != current_user.id:
+            raise SecurityException()
     booking = await ClassBookingService.mark_attendance(
         db, tenant_id=tenant_id, booking_id=booking_id, status_val=data.status
     )
@@ -382,10 +410,13 @@ async def list_trainer_availabilities(
     location_id: UUID | None = Query(None),
 ) -> list[TrainerAvailabilityResponse]:
     _require(current_user, tenant_id, "trainers:availability:read")
+    scoped_trainer = trainer_user_id
+    if not has_tenant_wide_member_read(current_user, tenant_id):
+        scoped_trainer = current_user.id
     avail = await PtBookingService.list_availabilities(
         db,
         tenant_id=tenant_id,
-        trainer_user_id=trainer_user_id,
+        trainer_user_id=scoped_trainer,
         location_id=location_id,
     )
     return [TrainerAvailabilityResponse.model_validate(a) for a in avail]
@@ -403,6 +434,11 @@ async def create_trainer_availability(
     tenant_id: UUID = Depends(get_tenant_id),
 ) -> TrainerAvailabilityResponse:
     _require(current_user, tenant_id, "trainers:availability:write")
+    if (
+        not has_tenant_wide_member_read(current_user, tenant_id)
+        and data.trainer_user_id != current_user.id
+    ):
+        raise SecurityException()
     a = await PtBookingService.create_availability(db, tenant_id=tenant_id, data=data)
     await db.commit()
     await db.refresh(a)

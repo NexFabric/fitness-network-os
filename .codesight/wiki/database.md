@@ -873,8 +873,8 @@ Read and edit these files when adding columns, creating migrations, or changing 
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **33** files
 - `backend/app/models/membership.py` — imported by **28** files
+- `backend/app/models/location.py` — imported by **23** files
 - `backend/app/db/rls.py` — imported by **22** files
-- `backend/app/models/location.py` — imported by **22** files
 - `backend/app/models/access.py` — imported by **19** files
 - `backend/app/models/outbox.py` — imported by **17** files
 - `backend/app/models/finance.py` — imported by **16** files

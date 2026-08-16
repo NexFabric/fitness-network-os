@@ -40,7 +40,7 @@
 - `GET` `/trainers` params() → in: AsyncSessio, out: list
 - `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
 - `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
-- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list
+- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list [auth, db]
 - `POST` `/bookings/{booking_id}/cancel` params(booking_id) → in: ClassTypeCreate, out: list
 - `GET` `/trainers/availability` params() → in: AsyncSessio, out: list
 - `POST` `/trainers/availability` params() → in: ClassTypeCreate, out: list

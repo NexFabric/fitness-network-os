@@ -48,6 +48,7 @@ export default function MemberPortal() {
 
   const [showPtModal, setShowPtModal] = useState(false)
   const [ptTrainerId, setPtTrainerId] = useState('')
+  const [ptLocationId, setPtLocationId] = useState('')
   const [ptStart, setPtStart] = useState('')
   const [ptEnd, setPtEnd] = useState('')
   const [ptNotes, setPtNotes] = useState('')
@@ -100,6 +101,8 @@ export default function MemberPortal() {
       setMyPtAppointments(ptRes)
       setTrainers(trainerRes)
       if (trainerRes.length > 0) setPtTrainerId(trainerRes[0].user_id)
+      const locId = sessionsRes.find((s) => s.location_id)?.location_id
+      if (locId) setPtLocationId(locId)
     } catch {
       // ignore
     }
@@ -221,6 +224,7 @@ export default function MemberPortal() {
         method: 'POST',
         body: {
           trainer_user_id: ptTrainerId,
+          location_id: ptLocationId,
           start_time_utc: new Date(ptStart).toISOString(),
           end_time_utc: new Date(ptEnd).toISOString(),
           notes: ptNotes || null,
@@ -314,8 +318,15 @@ export default function MemberPortal() {
 
   const filteredSessions = classSessions.filter((s) => {
     if (categoryFilter === 'ALL') return true
-    return s.class_category === categoryFilter
+    return s.class_type_category === categoryFilter
   })
+  const ptLocations = Array.from(
+    new Map(
+      classSessions
+        .filter((s) => s.location_id)
+        .map((s) => [s.location_id, s.location_name || s.location_id] as const),
+    ).entries(),
+  ).map(([id, name]) => ({ id, name }))
 
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100 font-sans">
@@ -479,6 +490,8 @@ export default function MemberPortal() {
                 bookingLoading={bookingLoading}
                 showPtModal={showPtModal}
                 ptTrainerId={ptTrainerId}
+                ptLocationId={ptLocationId}
+                ptLocations={ptLocations}
                 ptStart={ptStart}
                 ptEnd={ptEnd}
                 ptNotes={ptNotes}
@@ -490,6 +503,7 @@ export default function MemberPortal() {
                 onCancelPt={(id) => void handleCancelPt(id)}
                 onBookPt={(e) => void handleBookPt(e)}
                 onPtTrainerChange={setPtTrainerId}
+                onPtLocationChange={setPtLocationId}
                 onPtStartChange={setPtStart}
                 onPtEndChange={setPtEnd}
                 onPtNotesChange={setPtNotes}

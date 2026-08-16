@@ -33,12 +33,12 @@ export function SessionsTab({ sessions, onOpenSessionModal, onOpenRoster }: Sess
             >
               <div
                 className="absolute top-0 left-0 right-0 h-1.5"
-                style={{ backgroundColor: sess.color_hex || '#3B82F6' }}
+                style={{ backgroundColor: sess.class_type_color || '#3B82F6' }}
               />
               <div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted/60 text-muted-foreground uppercase tracking-wider">
-                    {sess.class_category || 'DERS'}
+                    {sess.class_type_category || 'DERS'}
                   </span>
                   <StatusBadge
                     status={

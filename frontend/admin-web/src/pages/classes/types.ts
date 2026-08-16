@@ -36,8 +36,8 @@ export type ClassSession = {
   location_name?: string
   class_type_id: string
   class_type_name?: string
-  class_category?: string
-  color_hex?: string
+  class_type_color?: string
+  class_type_category?: string
   trainer_user_id: string
   trainer_name?: string
   start_time_utc: string
@@ -99,13 +99,6 @@ export type PtAppointment = {
 export type LocationItem = {
   id: string
   name: string
-}
-
-export type StaffItem = {
-  id: string
-  user_id: string
-  email?: string | null
-  role: string
 }
 
 export type TrainerOption = {

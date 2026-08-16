@@ -130,6 +130,7 @@ class ClassSessionResponse(ClassSessionBase):
     tenant_id: UUID
     class_type_name: str | None = None
     class_type_color: str | None = None
+    class_type_category: str | None = None
     trainer_name: str | None = None
     location_name: str | None = None
     confirmed_count: int = 0

@@ -11,6 +11,8 @@ type ClassesTabProps = {
   bookingLoading: boolean
   showPtModal: boolean
   ptTrainerId: string
+  ptLocationId: string
+  ptLocations: { id: string; name: string }[]
   ptStart: string
   ptEnd: string
   ptNotes: string
@@ -22,6 +24,7 @@ type ClassesTabProps = {
   onCancelPt: (appointmentId: string) => void
   onBookPt: (e: React.FormEvent) => void
   onPtTrainerChange: (id: string) => void
+  onPtLocationChange: (id: string) => void
   onPtStartChange: (value: string) => void
   onPtEndChange: (value: string) => void
   onPtNotesChange: (value: string) => void
@@ -36,6 +39,8 @@ export function ClassesTab({
   bookingLoading,
   showPtModal,
   ptTrainerId,
+  ptLocationId,
+  ptLocations,
   ptStart,
   ptEnd,
   ptNotes,
@@ -47,6 +52,7 @@ export function ClassesTab({
   onCancelPt,
   onBookPt,
   onPtTrainerChange,
+  onPtLocationChange,
   onPtStartChange,
   onPtEndChange,
   onPtNotesChange,
@@ -121,12 +127,12 @@ export function ClassesTab({
               >
                 <div
                   className="absolute top-0 left-0 right-0 h-1"
-                  style={{ backgroundColor: s.color_hex || '#10B981' }}
+                  style={{ backgroundColor: s.class_type_color || '#10B981' }}
                 />
                 <div>
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase tracking-wider">
-                      {s.class_category || 'DERS'}
+                      {s.class_type_category || 'DERS'}
                     </span>
                     <span className="text-xs font-semibold text-slate-400">
                       {s.confirmed_count} / {s.capacity} Kişi
@@ -223,18 +229,47 @@ export function ClassesTab({
             <h3 className="text-base font-bold text-white">1-on-1 PT Randevusu Al</h3>
             <form onSubmit={onBookPt} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Antrenör</label>
+                <label htmlFor="pt-trainer" className="block text-xs font-medium text-slate-400 mb-1">
+                  Antrenör
+                </label>
                 <select
+                  id="pt-trainer"
+                  required
+                  disabled={trainers.length === 0}
+                  aria-invalid={trainers.length === 0}
                   value={ptTrainerId}
                   onChange={(e) => onPtTrainerChange(e.target.value)}
                   className="input w-full text-xs"
                 >
-                  {trainers.length === 0 && (
-                    <option value="">Henüz antrenör tanımlı değil</option>
-                  )}
+                  <option value="" disabled>
+                    {trainers.length === 0 ? 'Henüz antrenör tanımlı değil' : 'Antrenör seçin'}
+                  </option>
                   {trainers.map((t) => (
                     <option key={t.user_id} value={t.user_id}>
                       {staffLabel(t)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="pt-location" className="block text-xs font-medium text-slate-400 mb-1">
+                  Şube
+                </label>
+                <select
+                  id="pt-location"
+                  required
+                  disabled={ptLocations.length === 0}
+                  aria-invalid={ptLocations.length === 0}
+                  value={ptLocationId}
+                  onChange={(e) => onPtLocationChange(e.target.value)}
+                  className="input w-full text-xs"
+                >
+                  <option value="" disabled>
+                    {ptLocations.length === 0 ? 'Takvimde şube yok — önce bir seans olmalı' : 'Şube seçin'}
+                  </option>
+                  {ptLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
                     </option>
                   ))}
                 </select>
@@ -273,7 +308,11 @@ export function ClassesTab({
                 <button type="button" onClick={onClosePtModal} className="btn btn-secondary text-xs px-3 py-1.5">
                   Vazgeç
                 </button>
-                <button type="submit" disabled={bookingLoading} className="btn btn-primary text-xs px-3 py-1.5">
+                <button
+                  type="submit"
+                  disabled={bookingLoading || trainers.length === 0 || ptLocations.length === 0}
+                  className="btn btn-primary text-xs px-3 py-1.5"
+                >
                   Randevu Oluştur
                 </button>
               </div>

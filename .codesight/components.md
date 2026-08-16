@@ -32,7 +32,7 @@
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
 - **PtTab** — props: appointments — `frontend/admin-web/src/pages/classes/PtTab.tsx`
 - **RosterDrawer** — props: roster, loading, onClose, onMarkAttendance, onCancelBooking — `frontend/admin-web/src/pages/classes/RosterDrawer.tsx`
-- **SchedulesTab** — props: schedules — `frontend/admin-web/src/pages/classes/SchedulesTab.tsx`
+- **SchedulesTab** — props: schedules, classTypes, trainers — `frontend/admin-web/src/pages/classes/SchedulesTab.tsx`
 - **SessionsTab** — props: sessions, onOpenSessionModal, onOpenRoster — `frontend/admin-web/src/pages/classes/SessionsTab.tsx`
 - **TypesTab** — props: classTypes — `frontend/admin-web/src/pages/classes/TypesTab.tsx`
 - **AlertsTab** — props: tenants, alerts, onOpenCreate, onDelete — `frontend/admin-web/src/pages/hq/AlertsTab.tsx`
@@ -42,7 +42,7 @@
 - **PassportTab** — props: tenants, passports, onEdit — `frontend/admin-web/src/pages/hq/PassportTab.tsx`
 - **ReportsTab** — props: tenants, analytics, onExportCsv — `frontend/admin-web/src/pages/hq/ReportsTab.tsx`
 - **AccessTab** — props: hasActiveMembership, issuing, issueError, qr, qrImage, secondsLeft, expired, onIssueQr — `frontend/admin-web/src/pages/portal/AccessTab.tsx`
-- **ClassesTab** — props: categoryFilter, filteredSessions, myBookings, myPtAppointments, trainers, bookingLoading, showPtModal, ptTrainerId, ptStart, ptEnd — `frontend/admin-web/src/pages/portal/ClassesTab.tsx`
+- **ClassesTab** — props: categoryFilter, filteredSessions, myBookings, myPtAppointments, trainers, bookingLoading, showPtModal, ptTrainerId, ptLocationId, ptLocations — `frontend/admin-web/src/pages/portal/ClassesTab.tsx`
 - **FinanceTab** — props: invoices, payments — `frontend/admin-web/src/pages/portal/FinanceTab.tsx`
 - **HistoryTab** — props: checkins — `frontend/admin-web/src/pages/portal/HistoryTab.tsx`
 - **MembershipsTab** — props: memberships, entitlements — `frontend/admin-web/src/pages/portal/MembershipsTab.tsx`
