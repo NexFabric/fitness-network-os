@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 from pydantic import PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -51,6 +52,11 @@ class Settings(BaseSettings):
     DATABASE_URL: PostgresDsn
     MIGRATOR_DATABASE_URL: PostgresDsn | None = None
     REDIS_URL: RedisDsn
+    # Explicit operator attestation that Postgres/Redis sit on a private
+    # network (VPC / RFC1918) and therefore may use redis:// without
+    # rediss:// or a DSN without sslmode. Public endpoints still refuse
+    # plaintext. Documented in docs/ops/PRODUCTION_DEPLOY.md.
+    PRODUCTION_PRIVATE_NETWORK: bool = False
 
     # Database connection pool
     DB_POOL_SIZE: int = 5
@@ -117,6 +123,13 @@ class Settings(BaseSettings):
                 errors.append(
                     "CORS_ORIGINS must be a non-empty comma-separated list in production"
                 )
+            else:
+                for origin in self.cors_origins_list:
+                    if not origin.lower().startswith("https://"):
+                        errors.append(
+                            "CORS origin must start with https:// in production: "
+                            + origin
+                        )
             if not self.allowed_hosts_list:
                 errors.append(
                     "ALLOWED_HOSTS must be a non-empty comma-separated list in production"
@@ -158,6 +171,18 @@ class Settings(BaseSettings):
         if not _is_valid_fernet_key(self.ENCRYPTION_KEY):
             errors.append("ENCRYPTION_KEY must be a valid Fernet key")
 
+        if not self.PRODUCTION_PRIVATE_NETWORK:
+            db_sslmode = _dsn_query_param(str(self.DATABASE_URL), "sslmode")
+            if db_sslmode not in {"require", "verify-full"}:
+                errors.append(
+                    "DATABASE_URL must include sslmode=require or sslmode=verify-full "
+                    "unless PRODUCTION_PRIVATE_NETWORK=1"
+                )
+            if not str(self.REDIS_URL).startswith("rediss://"):
+                errors.append(
+                    "REDIS_URL must use rediss:// unless PRODUCTION_PRIVATE_NETWORK=1"
+                )
+
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))
 
@@ -176,6 +201,23 @@ class Settings(BaseSettings):
                 "ENVIRONMENT=test is only valid under pytest. "
                 "Use local, development, staging, or production."
             )
+
+
+def _dsn_query_param(url: str, name: str) -> str:
+    values = parse_qs(urlparse(url).query).get(name, [])
+    return values[-1].strip().lower() if values else ""
+
+
+def database_ssl_connect_arg(database_url: str) -> object | None:
+    """asyncpg ssl= value for a production DSN, or None when TLS is not requested."""
+    sslmode = _dsn_query_param(database_url, "sslmode")
+    if sslmode == "verify-full":
+        import ssl
+
+        return ssl.create_default_context()
+    if sslmode == "require":
+        return True
+    return None
 
 
 def _is_valid_fernet_key(key: str) -> bool:

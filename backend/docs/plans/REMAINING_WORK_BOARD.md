@@ -1,10 +1,10 @@
 # Remaining Work Board
 
 **Date:** 2026-08-16  
-**Branch:** `main` — no open branches, no open PRs  
-**Last code:** `d56b6a0`  
+**Branch:** `feat/production-certification-closure` (from `main` @ `ee6597e`)  
+**Last code:** `ee6597e`  
 **Alembic head:** `xi0d1e2f3a4b`  
-**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#64/#66/#68` (CI actions)  
+**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#83`/`#84` · `#64/#66/#68` (CI actions)  
 **CI:** every merge passed required CI. Merge gate is CI only (review requirement removed 2026-08-16, single maintainer).  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
@@ -83,6 +83,13 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 |----|------|-------|
 | CI-62 | `ab860f0` `31947417828` SUCCESS. Docs `e6a2d6c` `31947732456` SUCCESS. Later docs-only SHAs not separately claimed. | — |
 | ~~REV-62~~ | **Closed by owner decision (2026-08-16).** Single-maintainer repo: the "1 approving review" rule was structurally unsatisfiable (GitHub blocks author self-approval), so the review requirement was removed. `enforce_admins`, `strict` and the 11 required checks stay — **CI is the merge gate**. | owner |
+| ~~MIG-PROD~~ | Prod compose migrate-before-app gate — landed this campaign | — |
+| ~~TLS-1~~ | Production DB/Redis TLS or `PRODUCTION_PRIVATE_NETWORK=1` — landed | — |
+| ~~CORS-HTTPS~~ | Production CORS origins must be `https://` — landed | — |
+| ~~CD-1~~ | Compose-first deploy choreography + `workflow_dispatch` — landed; live promote UNVERIFIED | — |
+| ~~COV-CRIT~~ | Critical-module coverage floors in CI — anti-regression floors landed | — |
+| ~~PERF-1~~ | k6 harness landed (not a claimed SLO) | — |
+| ~~A11Y-1~~ | axe Playwright regression spec landed | — |
 | HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link). Signature table is empty. | human |
 
 ## Still open — cannot fake “complete”

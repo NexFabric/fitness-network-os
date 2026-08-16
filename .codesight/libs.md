@@ -73,6 +73,7 @@
 - `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xh9c0d1e2f3a_trainer_staff_composite_fk.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xi0d1e2f3a4b_pt_overlap_exclusion.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/scripts/check_critical_coverage.py` — function main: () -> int
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
@@ -82,6 +83,7 @@
 - `backend/scripts/check_release_truth.py`
   - function require: (path, *needles) -> list[str]
   - function forbid: (path, *needles) -> list[str]
+  - function forbid_both: (path, left, right) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/kms_iam_verify.py`
@@ -101,6 +103,7 @@
 - `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
 - `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
+- `backend/scripts/smtp_delivery_proof.py` — function main: () -> int
 - `backend/src/backend/__init__.py` — function main: () -> None
 - `frontend/admin-web/src/api/client.ts`
   - function getBaseUrl: () => string

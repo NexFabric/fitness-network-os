@@ -5,10 +5,10 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Alan | Değer |
 |---|---|
-| Branch | `main` — açık dal yok, açık PR yok |
-| Last code | `d56b6a0` (main, 2026-08-16) |
+| Branch | `feat/production-certification-closure` (from `origin/main` @ `ee6597e`) |
+| Last code | `ee6597e` (`origin/main`, 2026-08-16) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#64/#66/#68` CI action bump |
+| Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#83`/`#84` frontend deps · `#64/#66/#68` CI action bump |
 | CI | `main` üzerindeki her merge required CI'dan geçti. Merge kapısı **yalnız CI** — review zorunluluğu yok (2026-08-16, tek geliştirici). |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
@@ -84,9 +84,10 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 | # | İş | Kim | Not |
 |---|---|---|---|
 | 1 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
-| 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. |
+| 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. `docs/ops/PENTEST_BRIEF.md`. |
 | 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır: `ops/iam/`, `backend/scripts/kms_iam_verify.py`. Kimlik bilgisi gelince tek komut. |
 | 4 | Üretim S3 kovası / off-host WAL / gerçek pager | A-OPS | Yerel tatbikatlar geçti; üretim altyapısı ayrı. |
+| 5 | In-repo certification (MIG-PROD, TLS-1, CORS-HTTPS, CD-1) | ajan | `feat/production-certification-closure` — fail-closed compose/config + deploy choreography. |
 
 **2026-08-16'da kapananlar:** P1-3b-RT (gerçek S3 API'sine karşı 10/10),
 P1-10 (dump/restore **ve** PITR tatbikatı), P2-OBS (Prometheus/Alertmanager/
@@ -100,7 +101,7 @@ Grafana + uçtan uca ateşlenen alert). Kanıtlar `docs/ops/` altında.
 | P2-3-IAM | Üretim KMS alias / IAM / rotation + canlı decrypt — AWS kimlik bilgisi yok |
 | P1-3b-PROD | Gerçek AWS kovası (MinIO S3-uyumlu, AWS değil) |
 | P1-10-PROD | Üretim host'unda off-host WAL arşivleme + ölçülmüş RPO |
-| P1-11 / Phase 26 | Dış pentest + bağımsız güvenlik onayı |
+| P1-11 / Phase 26 | Dış pentest + bağımsız güvenlik onayı (`docs/ops/PENTEST_BRIEF.md`) |
 | ISO-1 | IsolationProvider abstraction — icat etme, RLS’i değiştirme |
 | Scope.LOCATION | Bilinçli ertelendi; şimdi açma |
 

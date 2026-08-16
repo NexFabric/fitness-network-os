@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `main` (no open branches, no open PRs) · **Last code:** `d56b6a0` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, plus `#64/#66/#68`. Every merge passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer).
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `feat/production-certification-closure` from `main` @ `ee6597e` · **Last code:** `ee6597e` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, plus `#64/#66/#68`. Every merge passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer).
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.

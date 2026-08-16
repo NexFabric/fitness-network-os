@@ -77,8 +77,29 @@ def test_production_ok_with_cors_and_hosts():
         QR_KMS_MODE="aws_kms",
         AWS_KMS_KEY_ID="alias/gym-qr-signing",
         ENCRYPTION_KEY="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
+        REDIS_URL="rediss://localhost:6379/0",
     )
     s.validate_production()  # does not raise
+
+
+def test_production_rejects_http_cors_origin():
+    s = _settings(
+        ENVIRONMENT="production",
+        CORS_ORIGINS="http://admin.example.com",
+        ALLOWED_HOSTS="api.example.com",
+        NOTIFICATION_EMAIL_PROVIDER="disabled",
+        REPORT_STORAGE_PROVIDER="s3",
+        S3_BUCKET_NAME="private-reports",
+        METRICS_BEARER_TOKEN="m" * 32,
+        QR_KMS_MODE="aws_kms",
+        AWS_KMS_KEY_ID="alias/gym-qr-signing",
+        ENCRYPTION_KEY="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
+        REDIS_URL="rediss://localhost:6379/0",
+    )
+    with pytest.raises(RuntimeError, match="https://"):
+        s.validate_production()
 
 
 def test_test_environment_refused_outside_pytest():
