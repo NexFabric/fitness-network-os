@@ -8,7 +8,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Branch | `feat/public-site-modernization-and-seo` |
 | Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) OPEN · MERGEABLE · **BLOCKED `REVIEW_REQUIRED`** |
+| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) — merge kapısı **yalnız CI**. Onay kuralı 2026-08-16'da repo sahibi kararıyla kaldırıldı. Merge durumu için otorite: `git log origin/main`. |
 | CI | Kod `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. Sonraki **docs-only** SHA'lar ayrıca iddia edilmez. |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
@@ -39,7 +39,7 @@ değiştirmeden önce daima kaynağı oku.
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
 2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Daha yeni docs-only SHA’ların CI’sini görmeden iddia etme.
-3. **PR #62’yi merge etme.** GitHub yazarın (`emrahub`) kendi PR’ını onaylatmaz. Kullanıcı sözlü “onaylıyorum” ≠ GitHub `APPROVE`. İkinci bir insan hesabı gerekir. `enforce_admins` ve required check listesine dokunma.
+3. **Merge kapısı CI’dır.** Bu tek geliştiricili repoda “1 onaylayan review” kuralı yapısal olarak imkânsızdı (yazar kendi PR’ını onaylayamaz) ve 2026-08-16’da repo sahibi kararıyla kaldırıldı. `enforce_admins`, `strict` ve 11 required check **yerinde** — bunlara dokunma. Yeşil CI olmadan merge etme.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
 
@@ -74,15 +74,13 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 
 | # | İş | Kim | Not |
 |---|---|---|---|
-| 1 | PR #62 bağımsız `APPROVE` | **ikinci insan GitHub hesabı** | Self-approve yasak. Merge yok. |
-| 2 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
-| 3 | S3 / PITR / pentest / OBS / KMS IAM | A-OPS | Dış kanıt. Kod fail-closed. Uydurma. |
+| 1 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
+| 2 | S3 / PITR / pentest / OBS / KMS IAM | A-OPS | Dış kanıt. Kod fail-closed. Uydurma. |
 
 ## Bu makineden kapatılamayanlar
 
 | Madde | Neden |
 |---|---|
-| PR #62 merge | 1 required review + `enforce_admins`; yazar kendi PR’ını onaylayamaz |
 | HAND-1 imza | İnsan tıklama tutanağı; ajan imzalayamaz |
 | P1-3b-RT | Gerçek S3/MinIO kovası + kimlik bilgisi |
 | P2-3-IAM | Üretim KMS alias / IAM / rotation + canlı decrypt |
@@ -99,12 +97,12 @@ kararı dış kanıt + bağımsız insan onayı olmadan verilmez.
 
 ## Bilmen gereken tuzaklar
 
-- **`main` korumalı:** 1 onaylayan review + `enforce_admins` + dismiss stale +
-  conversation resolution + `strict`. Required checks: Unit tests, FE builds,
-  Frontend Images, Playwright, CodeQL, All Required Checks Passed (ve lint /
-  image / security job’ları). Force-push / deletion kapalı. `delete_branch_on_merge`
-  + Dependabot security updates açık. Review sayısını 0 yapmak solo-repo dansıdır;
-  **bu turda yapma** — kullanıcı merge istemedi, ikinci insan bekleniyor.
+- **`main` korumalı:** `enforce_admins` + `strict` + conversation resolution + 11
+  required check (Unit tests, FE builds, Frontend Images, Playwright, CodeQL,
+  All Required Checks Passed, lint / image / security job’ları). Force-push /
+  deletion kapalı. `delete_branch_on_merge` + Dependabot security updates açık.
+  **Review zorunluluğu yok** (2026-08-16, tek geliştirici). Kalan kapıları
+  “hız için” düşürme — main’i koruyan tek şey artık CI.
 - **Playwright Fernet:** `playwright.config.ts` `backend/.env` okur. Sıfır
   `ENCRYPTION_KEY` ile seed TOTP çözülmez (`InvalidToken`).
 - **Owner step-up:** class/device yazılarından önce `acceptOwnerStepUp`. Location
@@ -146,5 +144,5 @@ ve bağımsız pentest **kodla kapanmış sayılmaz**.
 - Scope.LOCATION’ı bu PR’da açma.
 - HAND-1 tutanağına ajan imzası atma.
 - Phase 26 / production-ready işaretleme.
-- `enforce_admins` veya required check listesini “hız için” düşürme.
+- `enforce_admins` veya required check listesini “hız için” düşürme. Yeşil CI olmadan merge etme.
 - `reports/` içeriğini commit etme — yerel denetim çıktısı, `.gitignore`'da.

@@ -79,7 +79,7 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 | ID | Item | Owner |
 |----|------|-------|
 | CI-62 | `ab860f0` `31947417828` SUCCESS. Docs `e6a2d6c` `31947732456` SUCCESS. Later docs-only SHAs not separately claimed. | — |
-| REV-62 | Independent GitHub `APPROVE` on PR #62. Author (`emrahub`) cannot self-approve. Do **not** merge. Do **not** drop `enforce_admins` or required reviews. | second human |
+| ~~REV-62~~ | **Closed by owner decision (2026-08-16).** Single-maintainer repo: the "1 approving review" rule was structurally unsatisfiable (GitHub blocks author self-approval), so the review requirement was removed. `enforce_admins`, `strict` and the 11 required checks stay — **CI is the merge gate**. | owner |
 | HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link). Signature table is empty. | human |
 
 ## Still open — cannot fake “complete”
@@ -93,7 +93,7 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 | P2-3-IAM | Production KMS alias / IAM / rotation proof | A-OPS |
 | ISO-1 | IsolationProvider — do not invent; keep abstraction | — |
 
-GitHub Settings (2026-08-16, `gh` API): Default CodeQL Setup = **not-configured**. `main` required checks: Unit tests, FE builds, Frontend Images, Playwright, CodeQL, All Required Checks Passed. Reviews: 1 approval, dismiss stale, conversation resolution, enforce_admins, strict. `delete_branch_on_merge` + Dependabot security updates enabled.
+GitHub Settings (2026-08-16, `gh` API): Default CodeQL Setup = **not-configured**. `main` required checks: Unit tests, FE builds, Frontend Images, Playwright, CodeQL, All Required Checks Passed. **No review requirement** (removed 2026-08-16, single maintainer); conversation resolution, `enforce_admins`, `strict` still on. `delete_branch_on_merge` + Dependabot security updates enabled.
 
 ---
 
