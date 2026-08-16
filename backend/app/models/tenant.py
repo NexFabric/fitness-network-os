@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -42,6 +42,7 @@ class Tenant(Base):
             "status IN ('ACTIVE', 'SUSPENDED', 'CLOSED')",
             name="ck_tenants_status",
         ),
+        Index("ix_tenants_organization_id", "organization_id"),
     )
 
     organization = relationship("Organization", back_populates="tenants")

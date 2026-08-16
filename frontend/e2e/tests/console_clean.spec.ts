@@ -16,6 +16,7 @@ const PORTALS = [
   { email: 'e2e.trainer@e2e.local', path: '/trainer', label: 'antrenör portalı' },
   { email: 'e2e.analyst@e2e.local', path: '/superadmin', label: 'federasyon konsolu' },
   { email: 'e2e.owner@e2e.local', path: '/', label: 'ops konsolu' },
+  { email: 'e2e.desk@e2e.local', path: '/', label: 'resepsiyon konsolu' },
   { email: 'e2e.member@e2e.local', path: '/portal', label: 'portal geçidi' },
 ] as const
 

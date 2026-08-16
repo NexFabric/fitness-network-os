@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -15,8 +15,8 @@ class PassportConfig(Base, TenantMixin):
     __tablename__ = "passport_configs"
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    allowed_home_gym_tiers: Mapped[str] = mapped_column(String, nullable=True)
-    rules: Mapped[dict] = mapped_column(JSON, nullable=True)
+    allowed_home_gym_tiers: Mapped[str | None] = mapped_column(String, nullable=True)
+    rules: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class ComplianceRecord(Base, TenantMixin):
@@ -31,7 +31,11 @@ class ComplianceRecord(Base, TenantMixin):
     audit_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
-    auditor_notes: Mapped[str] = mapped_column(String, nullable=True)
+    auditor_notes: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    _model_table_args = (
+        Index("ix_compliance_records_tenant_audit_date", "tenant_id", "audit_date"),
+    )
 
 
 class NetworkAlert(Base):
@@ -51,3 +55,7 @@ class NetworkAlert(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     message: Mapped[str] = mapped_column(String, nullable=False)
     severity: Mapped[str] = mapped_column(String, nullable=False, default="INFO")
+
+    __table_args__ = (
+        Index("ix_network_alerts_org_target", "organization_id", "target_tenant_id"),
+    )

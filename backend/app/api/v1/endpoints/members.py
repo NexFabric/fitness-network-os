@@ -1,11 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, get_tenant_id
+from app.api.deps import get_current_user, get_db, get_tenant_id, require_recent_step_up
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
 from app.schemas.membership import MembershipResponse
@@ -314,6 +314,64 @@ async def list_member_memberships(
     await require_member_visible(db, current_user, tenant_id, member_id)
     svc = MembershipService(db)
     return await svc.list_memberships_for_member(tenant_id, member_id)
+
+
+class PortalAccountResponse(BaseModel):
+    member_id: UUID
+    user_id: UUID
+    email: str
+    invite_token: str | None = None
+
+
+@router.post(
+    "/{member_id}/portal-account",
+    response_model=PortalAccountResponse,
+    status_code=201,
+)
+async def provision_portal_account(
+    member_id: UUID,
+    response: Response,
+    tenant_id: UUID = Depends(get_tenant_id),
+    current_user: User = Depends(require_recent_step_up),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a MEMBER login and bind it to this profile.
+
+    The generated password is in the response body, so the response must not be
+    cached. Privileged MFA step-up is required when the actor has TOTP enrolled.
+    """
+    _require(current_user, tenant_id, "members:write")
+    await require_member_visible(db, current_user, tenant_id, member_id)
+    from app.models.invite import PURPOSE_MEMBER_PORTAL
+    from app.services.invite import InviteService
+
+    svc = MemberService(db)
+    try:
+        member, user, _otp = await svc.provision_portal_account(tenant_id, member_id)
+        _invite, invite_token = await InviteService(db).issue(
+            tenant_id, user.id, purpose=PURPOSE_MEMBER_PORTAL
+        )
+        await db.commit()
+        await db.refresh(member)
+    except ValueError as e:
+        detail = str(e)
+        status_code = 404 if detail == "member_not_found" else 400
+        if detail in {
+            "portal_already_bound",
+            "email_already_registered",
+            "user_id_conflict",
+        }:
+            status_code = 409
+        raise HTTPException(status_code=status_code, detail=detail) from e
+
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+    return PortalAccountResponse(
+        member_id=member.id,
+        user_id=user.id,
+        email=user.email,
+        invite_token=invite_token,
+    )
 
 
 class AccessLogItem(BaseModel):

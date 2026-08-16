@@ -11,6 +11,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import Settings
 from app.main import _API_CSP, SecurityHeadersMiddleware, create_app
 
+
+def _patch_settings(**kwargs):
+    """spec=Settings so MagicMock allows assert_* methods on the real Settings API."""
+    return patch("app.main.settings", spec=Settings, **kwargs)
+
+
 _REQUIRED = {
     "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
     "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
@@ -81,33 +87,42 @@ def test_prod_headers_include_hsts_and_csp(prod_client: TestClient):
 
 def test_create_app_trusted_host_only_when_prod_and_hosts_set():
     """TrustedHostMiddleware installed only for production + non-empty ALLOWED_HOSTS."""
-    with patch("app.main.settings") as mock_settings:
+    with _patch_settings() as mock_settings:
         mock_settings.is_production = True
         mock_settings.validate_production.return_value = None
+        mock_settings.assert_runtime_environment_allowed.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = ["api.example.com"]
+        mock_settings.RATE_LIMIT_LOGIN_MAX_REQUESTS = 20
+        mock_settings.RATE_LIMIT_LOGIN_WINDOW_SECONDS = 60
         app = create_app()
         middleware_types = [m.cls for m in app.user_middleware]
         assert TrustedHostMiddleware in middleware_types
 
 
 def test_create_app_no_trusted_host_when_hosts_empty():
-    with patch("app.main.settings") as mock_settings:
+    with _patch_settings() as mock_settings:
         mock_settings.is_production = True
         mock_settings.validate_production.return_value = None
+        mock_settings.assert_runtime_environment_allowed.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = []
+        mock_settings.RATE_LIMIT_LOGIN_MAX_REQUESTS = 20
+        mock_settings.RATE_LIMIT_LOGIN_WINDOW_SECONDS = 60
         app = create_app()
         middleware_types = [m.cls for m in app.user_middleware]
         assert TrustedHostMiddleware not in middleware_types
 
 
 def test_create_app_no_trusted_host_non_prod():
-    with patch("app.main.settings") as mock_settings:
+    with _patch_settings() as mock_settings:
         mock_settings.is_production = False
         mock_settings.validate_production.return_value = None
+        mock_settings.assert_runtime_environment_allowed.return_value = None
         mock_settings.cors_origins_list = []
         mock_settings.allowed_hosts_list = ["api.example.com"]
+        mock_settings.RATE_LIMIT_LOGIN_MAX_REQUESTS = 20
+        mock_settings.RATE_LIMIT_LOGIN_WINDOW_SECONDS = 60
         app = create_app()
         middleware_types = [m.cls for m in app.user_middleware]
         assert TrustedHostMiddleware not in middleware_types

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy import Boolean, Column, ForeignKey, String, Table
+from sqlalchemy import Boolean, Column, ForeignKey, Index, String, Table, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -85,6 +85,29 @@ class UserRole(Base):
         sa.CheckConstraint(
             "(tenant_id IS NULL) OR (organization_id IS NULL)",
             name="chk_user_roles_tenant_or_org",
+        ),
+        Index(
+            "uq_user_roles_user_role_tenant",
+            "user_id",
+            "role_id",
+            "tenant_id",
+            unique=True,
+            postgresql_where=text("tenant_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_user_roles_user_role_org",
+            "user_id",
+            "role_id",
+            "organization_id",
+            unique=True,
+            postgresql_where=text("organization_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_user_roles_user_role_global",
+            "user_id",
+            "role_id",
+            unique=True,
+            postgresql_where=text("tenant_id IS NULL AND organization_id IS NULL"),
         ),
     )
 

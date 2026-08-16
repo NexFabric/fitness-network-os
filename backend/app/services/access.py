@@ -403,7 +403,7 @@ class AccessService:
             peek = json.loads(base64.urlsafe_b64decode(body_b64 + pad))
             kid = peek.get("kid")
             return str(kid) if kid else None
-        except Exception:
+        except Exception:  # noqa: BLE001
             return None
 
     async def _deny(

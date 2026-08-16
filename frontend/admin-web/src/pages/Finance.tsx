@@ -9,9 +9,11 @@ import {
 
 type Invoice = {
   id: string
+  billing_account_id: string
   invoice_number: string | null
   status: string
   total_amount_minor: number
+  remaining_amount_minor?: number
   currency: string
   due_date: string | null
   issued_at: string | null
@@ -45,6 +47,32 @@ export default function Finance() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [payingId, setPayingId] = useState<string | null>(null)
+
+  async function markPaid(inv: Invoice) {
+    const remaining = inv.remaining_amount_minor ?? inv.total_amount_minor
+    if (remaining <= 0) return
+    setPayingId(inv.id)
+    setError(null)
+    try {
+      await api('/api/v1/finance/payments', {
+        method: 'POST',
+        body: {
+          billing_account_id: inv.billing_account_id,
+          amount_minor: remaining,
+          method: 'CASH',
+          currency: inv.currency || 'TRY',
+          allocations: [{ invoice_id: inv.id, amount_minor: remaining }],
+        },
+        headers: { 'Idempotency-Key': `cash-${inv.id}-${Date.now()}` },
+      })
+      await loadData()
+    } catch (e) {
+      setError(formatApiError(e, 'Nakit tahsilat kaydedilemedi'))
+    } finally {
+      setPayingId(null)
+    }
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -111,13 +139,14 @@ export default function Finance() {
                     <th className="table-th">Son ödeme</th>
                     <th className="table-th">Durum</th>
                     <th className="table-th">Tarih</th>
+                    <th className="table-th">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {invoices.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-8 text-center text-sm text-ink-muted"
                       >
                         Henüz fatura kaydı bulunmuyor.
@@ -147,6 +176,24 @@ export default function Finance() {
                           {inv.issued_at
                             ? new Date(inv.issued_at).toLocaleDateString('tr-TR')
                             : '—'}
+                        </td>
+                        <td className="table-td">
+                          {inv.status !== 'PAID' &&
+                          (inv.remaining_amount_minor ?? inv.total_amount_minor) >
+                            0 ? (
+                            <button
+                              type="button"
+                              className="btn-secondary text-xs"
+                              disabled={payingId === inv.id}
+                              onClick={() => void markPaid(inv)}
+                            >
+                              {payingId === inv.id
+                                ? 'Kaydediliyor…'
+                                : 'Nakit tahsil'}
+                            </button>
+                          ) : (
+                            '—'
+                          )}
                         </td>
                       </tr>
                     ))

@@ -7,6 +7,13 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_session_token_from_cookie
+from app.core.session_policy import (
+    LAST_SEEN_THROTTLE,
+    PRIVILEGED_IDLE,
+    PRIVILEGED_ROLE_NAMES,
+    STEP_UP_MAX_AGE,
+    STEP_UP_REQUIRED,
+)
 from app.db.session import get_db
 from app.models.rbac import Role, UserRole
 from app.models.user import User, UserSession
@@ -32,23 +39,81 @@ async def get_current_user(
     token: str = Depends(get_current_session_token), db: AsyncSession = Depends(get_db)
 ) -> User:
     """Retrieve a fully authenticated user from the session token."""
-    return await _get_user_for_session(token, db, allowed_auth_levels={"full"})
+    user, _session = await _get_user_and_session(
+        token, db, allowed_auth_levels={"full"}
+    )
+    return user
+
+
+async def require_recent_step_up(
+    token: str = Depends(get_current_session_token),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Require a TOTP step-up within STEP_UP_MAX_AGE for sensitive writes."""
+    from datetime import datetime
+
+    user, session = await _get_user_and_session(token, db, allowed_auth_levels={"full"})
+    from app.models.user import UserMfaMethod
+
+    enrolled = (
+        (
+            await db.execute(
+                select(UserMfaMethod).where(
+                    UserMfaMethod.user_id == user.id,
+                    UserMfaMethod.is_active.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if enrolled is None:
+        return user
+    now = datetime.now(UTC)
+    stamped = session.last_step_up_at
+    if stamped is None or stamped.tzinfo is None:
+        fresh = False
+    else:
+        fresh = now - stamped <= STEP_UP_MAX_AGE
+    if not fresh:
+        raise HTTPException(status_code=403, detail=STEP_UP_REQUIRED)
+    return user
 
 
 async def _get_user_for_session(
     token: str, db: AsyncSession, *, allowed_auth_levels: set[str]
 ) -> User:
+    user, _session = await _get_user_and_session(
+        token, db, allowed_auth_levels=allowed_auth_levels
+    )
+    return user
+
+
+def _is_privileged_principal(user: User) -> bool:
+    if user.is_superuser:
+        return True
+    for user_role in user.user_roles:
+        role = user_role.role
+        if role is not None and role.name in PRIVILEGED_ROLE_NAMES:
+            return True
+    return False
+
+
+async def _get_user_and_session(
+    token: str, db: AsyncSession, *, allowed_auth_levels: set[str]
+) -> tuple[User, UserSession]:
     """Resolve a server session and enforce its authentication assurance."""
     import hashlib
     from datetime import datetime
 
     token_hash = hashlib.sha256(token.encode()).hexdigest()
+    now = datetime.now(UTC)
 
     result = await db.execute(
         select(UserSession).where(
             UserSession.token_hash == token_hash,
             UserSession.is_revoked == False,
-            UserSession.expires_at > datetime.now(UTC),
+            UserSession.expires_at > now,
             UserSession.auth_level.in_(allowed_auth_levels),
         )
     )
@@ -72,7 +137,26 @@ async def _get_user_for_session(
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User inactive or not found")
 
-    return user
+    prev_seen = session.last_seen_at
+    if (
+        prev_seen is not None
+        and prev_seen.tzinfo is not None
+        and _is_privileged_principal(user)
+        and now - prev_seen > PRIVILEGED_IDLE
+        and session.auth_level == "full"
+    ):
+        session.is_revoked = True
+        await db.commit()
+        raise HTTPException(status_code=401, detail="session_idle")
+    if (
+        prev_seen is None
+        or prev_seen.tzinfo is None
+        or now - prev_seen >= LAST_SEEN_THROTTLE
+    ):
+        session.last_seen_at = now
+        await db.commit()
+
+    return user, session
 
 
 async def get_mfa_enrollment_user(
@@ -154,7 +238,10 @@ async def get_tenant_id(
         )
 
     # Temporarily set the RLS context so we can read the UserRole for this tenant
-    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
+    await db.execute(
+        text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+        {"tid": str(tenant_id)},
+    )
 
     # 1. Verify user belongs to the requested tenant via UserRole
     result = await db.execute(
@@ -395,7 +482,10 @@ async def get_current_device(request: Request, db: AsyncSession = Depends(get_db
     # context, so `devices` and `device_nonces` stay RLS-protected like any other
     # tenant-owned table.
     current_tenant_id_var.set(session.tenant_id)
-    await db.execute(text(f"SET LOCAL app.current_tenant_id = '{session.tenant_id}';"))
+    await db.execute(
+        text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+        {"tid": str(session.tenant_id)},
+    )
     await _verify_tenant_status(db, session.tenant_id)
 
     result_device = await db.execute(

@@ -3,11 +3,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
   description: "6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca Aydınlatma Metni.",
+  alternates: {
+    canonical: "/kvkk",
+  },
 };
 
 export default function KvkkPage() {
   return (
-    <main className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
+    <article className="min-h-screen bg-background py-20 px-5 sm:px-6 lg:px-8 text-foreground">
       <div className="mx-auto max-w-4xl">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           KVKK Aydınlatma Metni
@@ -69,7 +72,7 @@ export default function KvkkPage() {
             <h2 className="text-lg font-semibold text-foreground">5. Başvuru ve İletişim</h2>
             <p className="mt-2">
               KVKK kapsamındaki haklarınıza ilişkin taleplerinizi, kimliğinizi tevsik edici belgeler ile birlikte{" "}
-              <a href="mailto:kvkk@gymclubnex.com" className="text-brand underline hover:text-brand-dark">
+              <a href="mailto:kvkk@gymclubnex.com" className="text-brand underline hover:text-brand-deep">
                 kvkk@gymclubnex.com
               </a>{" "}
               e-posta adresine iletebilirsiniz. Talepleriniz en geç 30 gün içinde ücretsiz olarak sonuçlandırılacaktır.
@@ -77,6 +80,6 @@ export default function KvkkPage() {
           </section>
         </div>
       </div>
-    </main>
+    </article>
   );
 }

@@ -36,6 +36,9 @@ logs
 htmlcov/
 .coverage
 
+# Locally generated audit / coverage output — never committed
+reports/
+
 # Frontend
 node_modules/
 dist/

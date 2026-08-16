@@ -35,6 +35,7 @@ ROLE_USERS: dict[str, str] = {
     "trainer": "TRAINER",
     "member": "MEMBER",
     "analyst": "FEDERATION_ANALYST",
+    "desk": "FRONT_DESK",
 }
 
 
@@ -302,7 +303,7 @@ async def seed() -> dict[str, object]:
                     "user_id": str(user.id),
                 }
 
-                if role_name == "GYM_OWNER":
+                if role_name != "MEMBER":
                     mfa = (
                         (
                             await session.execute(
@@ -333,6 +334,33 @@ async def seed() -> dict[str, object]:
                     await session.flush()
 
             await _set_tenant_rls(session, tenant.id)
+
+            from app.models.staff import Staff
+
+            # UserRole is the permission mapping; staff is the HR link.
+            # Class/PT pickers and /staff both need the row, not just RBAC.
+            for suffix, job in (("trainer", "TRAINER"), ("desk", "FRONT_DESK")):
+                staff_user_id = UUID(users[suffix]["user_id"])
+                staff_row = (
+                    await session.execute(
+                        select(Staff).where(
+                            Staff.tenant_id == tenant.id,
+                            Staff.user_id == staff_user_id,
+                        )
+                    )
+                ).scalar_one_or_none()
+                if staff_row is None:
+                    session.add(
+                        Staff(
+                            tenant_id=tenant.id,
+                            user_id=staff_user_id,
+                            role=job,
+                        )
+                    )
+                    await session.flush()
+                elif staff_row.role != job:
+                    staff_row.role = job
+                    await session.flush()
 
             # Member row bound to the MEMBER user so /me/* resolves.
             member_user_id = UUID(users["member"]["user_id"])

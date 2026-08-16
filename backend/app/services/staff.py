@@ -12,8 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
 from app.models.location import Location
+from app.models.rbac import Role, UserRole
 from app.models.staff import Staff
 from app.models.user import User
+
+# Who may appear as class_sessions.trainer_user_id / schedules.
+# PT bookings are narrower: TRAINER only (see has_tenant_role(..., pt_only)).
+CLASS_TRAINER_ROLES = frozenset({"TRAINER", "GYM_OWNER", "GYM_ADMIN", "GYM_MANAGER"})
+PT_TRAINER_ROLES = frozenset({"TRAINER"})
 
 ALLOWED_STAFF_ROLES = frozenset(
     {
@@ -27,6 +33,19 @@ ALLOWED_STAFF_ROLES = frozenset(
         "ACCOUNTANT",
     }
 )
+
+# Staff.role is a job label; login permissions come from the canonical RBAC
+# role. GYM_OWNER and platform roles are intentionally absent.
+STAFF_ROLE_TO_RBAC = {
+    "STAFF": "FRONT_DESK",
+    "TRAINER": "TRAINER",
+    "FRONT_DESK": "FRONT_DESK",
+    "MANAGER": "GYM_MANAGER",
+    "ADMIN": "GYM_ADMIN",
+    "GYM_ADMIN": "GYM_ADMIN",
+    "GYM_MANAGER": "GYM_MANAGER",
+    "ACCOUNTANT": "ACCOUNTANT",
+}
 
 # 20 URL-safe characters ≈ 119 bits of entropy. Shown once to the administrator
 # who provisioned the account and never stored in the clear.
@@ -104,9 +123,39 @@ class StaffService:
         staff = await self.link_staff(
             tenant_id, user_id=user.id, role=role, location_id=location_id
         )
+        await self._attach_rbac_role(tenant_id, user.id, role)
         return ProvisionedStaff(
             staff=staff, user=user, one_time_password=one_time_password
         )
+
+    async def _attach_rbac_role(
+        self, tenant_id: UUID, user_id: UUID, staff_role: str
+    ) -> None:
+        rbac_name = STAFF_ROLE_TO_RBAC[staff_role]
+        role = (
+            await self.db.execute(select(Role).where(Role.name == rbac_name))
+        ).scalar_one_or_none()
+        if role is None:
+            # Production always has the canonical row (permissions.yml seed).
+            # Tests truncate `roles` between cases; recreate the named role so
+            # the login principal is still bound. Grants are re-seeded by
+            # Alembic on a real migrate, not here.
+            role = Role(name=rbac_name, description=rbac_name, is_system=True)
+            self.db.add(role)
+            await self.db.flush()
+        existing = (
+            await self.db.execute(
+                select(UserRole).where(
+                    UserRole.user_id == user_id,
+                    UserRole.role_id == role.id,
+                    UserRole.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return
+        self.db.add(UserRole(user_id=user_id, role_id=role.id, tenant_id=tenant_id))
+        await self.db.flush()
 
     async def link_staff(
         self,
@@ -140,6 +189,7 @@ class StaffService:
             staff.role = role
             staff.location_id = location_id
             await self.db.flush()
+            await self._attach_rbac_role(tenant_id, user_id, role)
             return staff
 
         staff = Staff(
@@ -154,6 +204,7 @@ class StaffService:
             await self.db.flush()
         except IntegrityError as e:
             raise ValueError("staff_link_conflict") from e
+        await self._attach_rbac_role(tenant_id, user_id, role)
         return staff
 
     async def list_staff(self, tenant_id: UUID) -> list[Staff]:
@@ -162,8 +213,83 @@ class StaffService:
         )
         return list(result.scalars().all())
 
+    async def list_staff_with_emails(
+        self, tenant_id: UUID
+    ) -> list[tuple[Staff, str | None]]:
+        result = await self.db.execute(
+            select(Staff, User.email)
+            .outerjoin(User, User.id == Staff.user_id)
+            .where(Staff.tenant_id == tenant_id)
+            .order_by(Staff.created_at)
+        )
+        return [(row[0], row[1]) for row in result.all()]
+
+    @staticmethod
+    async def has_tenant_role(
+        db: AsyncSession,
+        tenant_id: UUID,
+        user_id: UUID,
+        role_names: frozenset[str],
+    ) -> bool:
+        """True if ``user_id`` holds one of ``role_names`` in this tenant.
+
+        ``users`` is global; ``user_roles.tenant_id`` is the mapping that
+        keeps trainer_user_id from pointing at another gym's login.
+        """
+        from app.models.rbac import Role, UserRole
+
+        found = (
+            await db.execute(
+                select(UserRole.id)
+                .join(Role, Role.id == UserRole.role_id)
+                .where(
+                    UserRole.tenant_id == tenant_id,
+                    UserRole.user_id == user_id,
+                    Role.name.in_(role_names),
+                )
+                .limit(1)
+            )
+        ).first()
+        return found is not None
+
+    @staticmethod
+    async def is_employed(db: AsyncSession, tenant_id: UUID, user_id: UUID) -> bool:
+        found = (
+            await db.execute(
+                select(Staff.id).where(
+                    Staff.tenant_id == tenant_id, Staff.user_id == user_id
+                )
+            )
+        ).first()
+        return found is not None
+
+    async def list_trainers(self, tenant_id: UUID) -> list[tuple[UUID, str]]:
+        """Active employed trainers: UserRole.TRAINER ∩ staff ∩ is_active."""
+        from app.models.rbac import Role, UserRole
+
+        result = await self.db.execute(
+            select(User.id, User.email)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .join(
+                Staff,
+                (Staff.tenant_id == UserRole.tenant_id) & (Staff.user_id == User.id),
+            )
+            .where(
+                UserRole.tenant_id == tenant_id,
+                Role.name == "TRAINER",
+                User.is_active.is_(True),
+            )
+            .order_by(User.email)
+        )
+        return [(row[0], row[1]) for row in result.all()]
+
     async def get_staff(self, tenant_id: UUID, staff_id: UUID) -> Staff | None:
         result = await self.db.execute(
             select(Staff).where(Staff.tenant_id == tenant_id, Staff.id == staff_id)
         )
         return result.scalars().first()
+
+    async def get_user_email(self, user_id: UUID) -> str | None:
+        user = await self.db.get(User, user_id)
+        return user.email if user is not None else None

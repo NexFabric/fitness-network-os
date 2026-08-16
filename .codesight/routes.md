@@ -2,6 +2,10 @@
 
 ## CRUD Resources
 
+- **`/tenants`** GET | POST | GET/:id → Tenant
+- **`/alerts`** GET | POST | GET/:id | DELETE/:id → Alert
+- **`/types`** GET | POST | GET/:id | PUT/:id → Type
+- **`/schedules`** GET | POST | GET/:id | PUT/:id → Schedule
 - **``** GET | POST | GET/:id | PATCH/:id
 - **`/deliveries`** GET | POST | GET/:id → Deliverie
 - **`/runs`** GET | POST | GET/:id → Run
@@ -15,17 +19,34 @@
 - `POST` `/keys/rotate` params() → in: IssueQrRequest, out: IssueQrResponse
 - `GET` `/keys` params() → in: UUI, out: IssueQrResponse
 - `GET` `/organizations` params() → in: FederationScop, out: list
-- `GET` `/tenants` params() → in: FederationScop, out: list
-- `GET` `/tenants/{tenant_id}` params(tenant_id) → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/suspend` params(tenant_id) → in: TenantCreateRequest, out: list
+- `POST` `/tenants/{tenant_id}/reactivate` params(tenant_id) → in: TenantCreateRequest, out: list
 - `GET` `/federation/summary` params() → in: FederationScop, out: list
 - `GET` `/audit` params() → in: FederationScop, out: list
+- `GET` `/passport/configs` params() → in: FederationScop, out: list [auth]
+- `GET` `/tenants/{tenant_id}/passport` params(tenant_id) → in: FederationScop, out: list [auth]
+- `PUT` `/tenants/{tenant_id}/passport` params(tenant_id) → in: UUID, out: list [auth]
+- `GET` `/compliance` params() → in: FederationScop, out: list
+- `POST` `/tenants/{tenant_id}/compliance` params(tenant_id) → in: TenantCreateRequest, out: list
+- `GET` `/analytics/overview` params() → in: FederationScop, out: list
 - `GET` `/csrf` params() → out: CsrfResponse [auth]
 - `POST` `/login` params() → in: LoginRequest, out: CsrfResponse [auth, db] ✓
+- `POST` `/invite/accept` params() → in: LoginRequest, out: CsrfResponse [auth]
 - `POST` `/password` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/logout` params() → in: LoginRequest, out: CsrfResponse [auth, db]
 - `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
 - `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/trainers` params() → in: AsyncSessio, out: list
+- `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
+- `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
+- `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list [auth, db]
+- `POST` `/bookings/{booking_id}/cancel` params(booking_id) → in: ClassTypeCreate, out: list
+- `GET` `/trainers/availability` params() → in: AsyncSessio, out: list
+- `POST` `/trainers/availability` params() → in: ClassTypeCreate, out: list
+- `GET` `/pt/appointments` params() → in: AsyncSessio, out: list
+- `POST` `/pt/appointments` params() → in: ClassTypeCreate, out: list
+- `POST` `/pt/appointments/{appointment_id}/cancel` params(appointment_id) → in: ClassTypeCreate, out: list [db]
 - `GET` `/kpis` params() → in: AsyncSessio, out: DashboardKPIResponse [auth, db]
 - `POST` `/upload` params() → in: CsvUploadRequest, out: ImportBatchResponse [auth, upload]
 - `GET` `/batches` params() → in: AsyncSessio, out: ImportBatchResponse [auth, db]
@@ -59,7 +80,14 @@
 - `GET` `/checkins` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/entitlements/check` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `GET` `/consents` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
+- `GET` `/dsar` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `POST` `/dsar/export` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `POST` `/dsar/erasure` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth] ✓
+- `POST` `/classes/sessions/{session_id}/book` params(session_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `POST` `/classes/bookings/{booking_id}/cancel` params(booking_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+- `GET` `/classes/bookings` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
 - `POST` `/{member_id}/status` params(member_id) → in: MemberCreate, out: MemberResponse
 - `POST` `/{member_id}/tags` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/tags` params(member_id) → out: MemberResponse
@@ -67,6 +95,7 @@
 - `GET` `/{member_id}/notes` params(member_id) → out: MemberResponse
 - `POST` `/{member_id}/consents` params(member_id) → in: MemberCreate, out: MemberResponse
 - `GET` `/{member_id}/memberships` params(member_id) → out: MemberResponse
+- `POST` `/{member_id}/portal-account` params(member_id) → in: MemberCreate, out: MemberResponse [cache]
 - `GET` `/{member_id}/access-logs` params(member_id) → out: MemberResponse [db]
 - `POST` `/{membership_id}/freeze` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/{membership_id}/unfreeze` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
@@ -76,10 +105,11 @@
 - `POST` `/{membership_id}/past-due` params(membership_id) → in: UUID, out: MembershipFreezeResponse [auth]
 - `POST` `/setup` params() → out: MfaSetupResponse [db, cache]
 - `POST` `/verify` params() → out: MfaSetupResponse [auth, db]
+- `POST` `/step-up` params() → out: MfaSetupResponse [auth, db]
 - `POST` `/templates` params() → in: TemplateCreate, out: TemplateResponse
 - `GET` `/templates` params() → in: UUI, out: TemplateResponse
-- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db]
-- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db]
+- `GET` `/status` params() → in: AsyncSessio, out: OnboardingStatusResponse [auth, db] ✓
+- `POST` `/advance` params() → in: AdvanceStageRequest, out: OnboardingStatusResponse [auth, db] ✓
 - `POST` `/{plan_id}/versions` params(plan_id) → in: PlanCreate, out: PlanResponse
 - `GET` `/versions` params() → in: UUI, out: PlanResponse
 - `POST` `/versions/{plan_version_id}/publish` params(plan_version_id) → in: PlanCreate, out: PlanResponse
@@ -89,7 +119,7 @@
 - `POST` `/definitions` params() → in: DefinitionCreate, out: DefinitionResponse
 - `GET` `/definitions` params() → in: UUI, out: DefinitionResponse
 - `POST` `/artifacts/cleanup` params() → in: DefinitionCreate, out: DefinitionResponse
-- `POST` `/accounts` params() → in: StaffLinkRequest, out: StaffResponse [cache]
+- `POST` `/accounts` params() → in: StaffLinkRequest, out: StaffResponse [auth, cache]
 - `GET` `/public` params()
 - `GET` `/health` params() [auth, db, cache] ✓
 - `GET` `/live` params() ✓

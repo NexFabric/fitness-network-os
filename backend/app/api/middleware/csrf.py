@@ -20,8 +20,9 @@ class CSRFMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS: frozenset[str] = frozenset(
         {
             "/api/v1/auth/login",
-            "/api/v1/auth/logout",
             "/api/v1/auth/csrf",
+            "/api/v1/auth/invite/accept",
+            "/api/v1/devices/auth",
         }
     )
     COOKIE_NAME = "csrf_token"

@@ -81,7 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh({ probe: true })
   }, [refresh])
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    try {
+      await api('/api/v1/auth/logout', { method: 'POST', skipAuth: true })
+    } catch {
+      // Best-effort server cleanup
+    }
     clearAuth()
     setSession(null)
   }, [])

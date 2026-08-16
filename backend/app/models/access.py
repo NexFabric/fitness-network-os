@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKeyConstraint,
+    Index,
     String,
     UniqueConstraint,
 )
@@ -194,6 +195,7 @@ class Checkin(TenantMixin, Base):
         ForeignKeyConstraint(
             ["tenant_id", "device_id"], ["devices.tenant_id", "devices.id"]
         ),
+        Index("ix_checkins_tenant_time", "tenant_id", "checkin_time"),
     )
 
     member = relationship("Member", overlaps="location,device")

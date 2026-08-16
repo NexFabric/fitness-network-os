@@ -9,6 +9,17 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.audit import AuditEvent
+from app.models.booking import (
+    ClassBooking,
+    ClassBookingStatus,
+    ClassSchedule,
+    ClassSession,
+    ClassSessionStatus,
+    ClassType,
+    PtAppointment,
+    PtAppointmentStatus,
+    TrainerAvailability,
+)
 from app.models.break_glass import BreakGlassSession, BreakGlassStatus
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
 from app.models.data_import import (
@@ -17,6 +28,7 @@ from app.models.data_import import (
     ImportBatchStatus,
     ImportRowStatus,
 )
+from app.models.dsar import DsarRequest
 from app.models.entitlement import (
     EntitlementDefinition,
     EntitlementTransaction,
@@ -45,6 +57,7 @@ from app.models.finance import (
 )
 from app.models.growth import Lead, Opportunity, RetentionCockpit, Task
 from app.models.idempotency import IdempotencyKey, IdempotencyRecord, IdempotencyStatus
+from app.models.invite import AccountInvite
 from app.models.location import Location
 from app.models.member import Member, Note, Tag
 from app.models.membership import (
@@ -74,11 +87,18 @@ from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 __all__ = [
     "AccessAttempt",
     "AccessMethod",
+    "AccountInvite",
     "AuditEvent",
     "BillingAccount",
     "BreakGlassSession",
     "BreakGlassStatus",
     "Checkin",
+    "ClassBooking",
+    "ClassBookingStatus",
+    "ClassSchedule",
+    "ClassSession",
+    "ClassSessionStatus",
+    "ClassType",
     "ComplianceRecord",
     "ConsentDefinition",
     "ConsentRecord",
@@ -92,6 +112,7 @@ __all__ = [
     "Device",
     "DeviceNonce",
     "Discount",
+    "DsarRequest",
     "DunningPolicy",
     "Entitlement",
     "EntitlementDefinition",
@@ -135,6 +156,8 @@ __all__ = [
     "Plan",
     "PlanEntitlement",
     "PlanVersion",
+    "PtAppointment",
+    "PtAppointmentStatus",
     "QrJtiReplay",
     "ReconciliationItem",
     "ReconciliationRun",
@@ -151,6 +174,7 @@ __all__ = [
     "Tenant",
     "TenantOnboarding",
     "TrainerAssignment",
+    "TrainerAvailability",
     "User",
     "UserDevice",
     "UserMfaMethod",

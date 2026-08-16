@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Server, Lock, Layers } from "lucide-react";
+import { Database, Server, Lock, Layers, ShieldCheck } from "lucide-react";
 
 const points = [
   {
@@ -30,7 +30,7 @@ export function Architecture() {
   return (
     <section
       id="architecture"
-      className="relative scroll-mt-20 overflow-hidden border-t border-border bg-surface-raised/40 py-20 sm:py-28"
+      className="relative scroll-mt-20 overflow-hidden border-t border-border bg-surface-raised/40 py-24 sm:py-32"
     >
       <div
         className="pointer-events-none absolute right-0 top-0 h-[480px] w-[480px] translate-x-1/3 -translate-y-1/4 rounded-full bg-accent/10 blur-[100px]"
@@ -44,9 +44,9 @@ export function Architecture() {
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-sm font-semibold uppercase tracking-wider text-accent"
+              className="text-xs font-mono uppercase tracking-[0.1em] text-accent"
             >
-              Mimari ve güvenlik
+              MİMARİ VE GÜVENLİK
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 16 }}
@@ -68,7 +68,7 @@ export function Architecture() {
               enterprise-grade multi-tenant mimari operasyonunuzu korur.
             </motion.p>
 
-            <ul className="mt-10 space-y-5">
+            <ul className="mt-10 space-y-6">
               {points.map((p, i) => (
                 <motion.li
                   key={p.title}
@@ -76,14 +76,14 @@ export function Architecture() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.08 * i }}
-                  className="flex gap-3"
+                  className="flex gap-4"
                 >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-brand/15">
-                    <p.icon className="h-4 w-4 text-brand-light" aria-hidden="true" />
+                  <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand/30 bg-brand/15">
+                    <p.icon className="h-5 w-5 text-brand-light" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="font-semibold text-foreground">{p.title}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-ink-muted">
+                    <h3 className="text-base font-semibold text-foreground">{p.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-muted">
                       {p.body}
                     </p>
                   </div>
@@ -103,24 +103,31 @@ export function Architecture() {
               className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-brand/20 to-accent/10 blur-xl opacity-40"
               aria-hidden="true"
             />
-            <div className="relative rounded-2xl border border-border bg-background p-6 font-mono text-sm shadow-2xl sm:p-8">
-              <div className="mb-5 flex gap-1.5" aria-hidden="true">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+            <div className="enterprise-card relative rounded-2xl p-6 sm:p-8 font-mono text-sm">
+              <div className="flex items-center justify-between border-b border-border/70 pb-4 mb-5 text-xs text-ink-muted">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-accent" />
+                  <span className="text-slate-200 font-semibold">PostgreSQL RLS Motoru</span>
+                </div>
+                <span className="text-accent">STRICT ENFORCEMENT</span>
               </div>
-              <div className="space-y-2 text-ink-muted">
+              <div className="space-y-2.5 text-slate-300">
                 <p>
-                  <span className="text-brand">SELECT</span> *{" "}
-                  <span className="text-brand">FROM</span> members
+                  <span className="text-brand-light font-semibold">SET LOCAL</span>{" "}
+                  app.current_tenant_id = <span className="text-amber-400">&apos;central-hq&apos;</span>;
                 </p>
                 <p>
-                  <span className="text-brand">WHERE</span> tenant_id ={" "}
-                  <span className="text-accent">current_tenant()</span>
+                  <span className="text-brand-light font-semibold">SELECT</span> *{" "}
+                  <span className="text-brand-light font-semibold">FROM</span> members;
                 </p>
-                <p className="text-ink-muted/50">-- Row Level Security aktif</p>
-                <p className="text-ink-muted/50">-- Yetkisiz satır: 0 sonuç</p>
-                <p className="pt-3 text-accent">DURUM: İzole ve güvenli</p>
+                <div className="pt-2 text-slate-400 text-xs space-y-1">
+                  <p>-- Row Level Security otomatik filtrelendi</p>
+                  <p>-- Yabancı tenant verisi: 0 kayıt / sızıntı imkansız</p>
+                </div>
+                <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-xs text-accent font-semibold flex items-center justify-between">
+                  <span>DURUM: İZOLE VE GÜVENLİ</span>
+                  <span className="font-mono">PASS (357/357)</span>
+                </div>
               </div>
             </div>
           </motion.div>

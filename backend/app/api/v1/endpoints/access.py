@@ -10,6 +10,7 @@ from app.core.authorization import AuthorizationService
 from app.models.user import User
 from app.services.access import AccessService
 from app.services.member import MemberService
+from app.services.member_visibility import require_member_visible
 
 router = APIRouter()
 
@@ -86,6 +87,7 @@ async def issue_qr(
 ):
     """Staff path: requires access:issue; body.member_id is mandatory."""
     _require(current_user, tenant_id, "access:issue")
+    await require_member_visible(db, current_user, tenant_id, body.member_id)
     svc = AccessService(db)
     try:
         result = await svc.issue_qr_token(
@@ -109,7 +111,7 @@ async def issue_qr(
 
 @router.post("/qr/issue-self", response_model=IssueQrResponse)
 async def issue_qr_self(
-    body: IssueSelfQrRequest,
+    body: IssueSelfQrRequest = IssueSelfQrRequest(),
     tenant_id: UUID = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

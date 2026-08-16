@@ -6,8 +6,9 @@
 - `AWS_KMS_KEY_ID` **required** — backend/app/core/qr_crypto.py
 - `CI` **required** — frontend/e2e/playwright.config.ts
 - `DATABASE_URL` (has default) — backend/.env.example
+- `E2E_API_URL` (has default) — frontend/e2e/tests/helpers/auth.ts
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
-- `ENCRYPTION_KEY` (has default) — backend/.env
+- `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx

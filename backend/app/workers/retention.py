@@ -30,7 +30,8 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
             token = current_tenant_id_var.set(tenant.id)
             if db.bind and db.bind.dialect.name == "postgresql":
                 await db.execute(
-                    text(f"SET LOCAL app.current_tenant_id = '{tenant.id}';")
+                    text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+                    {"tid": str(tenant.id)},
                 )
             try:
                 service = DataRetentionService(db)
@@ -65,7 +66,7 @@ async def run_worker() -> None:
                 logger.info(f"Total retention records processed: {affected}")
             # Sleep 1 hour between retention sweeps
             await asyncio.sleep(3600)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error in retention worker loop: {e}")
             await asyncio.sleep(60)
 

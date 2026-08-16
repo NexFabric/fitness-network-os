@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-migrate
+    command: ["alembic", "upgrade", "head"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - REDIS_URL=redis://redis:6379/0
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -17,11 +35,100 @@ services:
       - RATE_LIMIT_LOGIN_MAX_REQUESTS=500
       - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
+      # Dev-only Fernet. Production image must not inherit this value.
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  notification-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-notification-worker
+    command: ["python", "-m", "app.workers.notification"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - REDIS_URL=redis://redis:6379/0
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      - NOTIFICATION_EMAIL_PROVIDER=console
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  outbox-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-outbox-worker
+    command: ["python", "-m", "app.workers.outbox"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - REDIS_URL=redis://redis:6379/0
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  report-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-report-worker
+    command: ["python", "-m", "app.workers.report"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - REDIS_URL=redis://redis:6379/0
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  retention-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fitness-os-retention-worker
+    command: ["python", "-m", "app.workers.retention"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@postgres:5432/fitness_os
+      - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
+      - REDIS_URL=redis://redis:6379/0
+      - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   postgres:
     image: postgres:16-alpine

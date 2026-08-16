@@ -78,6 +78,70 @@
 - ip_address: String (nullable)
 - user_agent: String (nullable)
 
+### ClassType
+- name: String
+- category: String (default)
+- duration_minutes: Integer (default)
+- default_capacity: Integer (default)
+- color_hex: String (default)
+- required_entitlement_type: String (nullable)
+- cancellation_cutoff_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### ClassSchedule
+- location_id: UUID
+- class_type_id: UUID
+- trainer_user_id: UUID (fk, index)
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- room_name: String (nullable)
+- capacity: Integer
+- is_active: Boolean (default)
+
+### ClassSession
+- location_id: UUID
+- class_type_id: UUID
+- schedule_id: unknown (nullable)
+- trainer_user_id: UUID (fk, index)
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- room_name: String (nullable)
+- capacity: Integer
+- status: ClassSessionStatus (default)
+
+### ClassBooking
+- session_id: UUID
+- member_id: UUID
+- status: ClassBookingStatus (default)
+- waitlist_position: Integer (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
+- cancellation_reason: String (nullable)
+- is_late_cancellation: Boolean (default)
+
+### TrainerAvailability
+- trainer_user_id: UUID (fk, index)
+- location_id: UUID
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- slot_duration_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### PtAppointment
+- trainer_user_id: UUID (fk, index)
+- member_id: UUID
+- location_id: UUID
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- status: PtAppointmentStatus (default)
+- notes: Text (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
+
 ### BreakGlassSession
 - actor_id: UUID (index)
 - target_tenant_id: UUID (index)
@@ -129,6 +193,16 @@
 - parsed_data: with_variant (nullable)
 - error_message: Text (nullable)
 - _relations_: batch: DataImportBatch
+
+### DsarRequest
+- member_id: UUID
+- requested_by_user_id: unknown (fk, nullable)
+- kind: String
+- status: String
+- due_at: DateTime
+- package_uri: String (nullable)
+- rejection_reason: Text (nullable)
+- dedupe_key: String (nullable)
 
 ### EntitlementDefinition
 - code: String
@@ -382,6 +456,13 @@
 - owner_token: String (nullable)
 - attempt_count: Integer (default)
 
+### AccountInvite
+- user_id: UUID (fk)
+- token_hash: String
+- purpose: String
+- expires_at: DateTime
+- accepted_at: DateTime (nullable)
+
 ### Location
 - name: String
 - timezone: String (default)
@@ -626,6 +707,8 @@
 - expires_at: DateTime
 - is_revoked: Boolean (default)
 - auth_level: String (default)
+- last_seen_at: DateTime (nullable)
+- last_step_up_at: DateTime (nullable)
 - _relations_: user: User
 
 ### UserDevice

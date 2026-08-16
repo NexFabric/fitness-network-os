@@ -8,13 +8,20 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_device, get_current_user, get_db, get_tenant_id
+from app.api.deps import (
+    get_current_device,
+    get_current_user,
+    get_db,
+    get_tenant_id,
+    require_recent_step_up,
+)
 from app.api.v1.endpoints.access import ValidateQrRequest, ValidateQrResponse
 from app.core.authorization import AuthorizationService
 from app.core.device_auth import MAX_CLOCK_SKEW_SECONDS, new_device_signing_material
 from app.core.security import generate_session_token
 from app.models.access import Device, DeviceSession, DeviceStatus
 from app.models.audit import AuditEvent
+from app.models.location import Location
 from app.models.user import User
 from app.services.access import AccessService
 
@@ -88,11 +95,15 @@ def _hash_api_key(api_key: str) -> str:
 async def provision_device(
     body: ProvisionDeviceRequest,
     tenant_id: UUID = Depends(get_tenant_id),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_recent_step_up),
     db: AsyncSession = Depends(get_db),
 ):
     """Staff only: Provision a new physical scanner device."""
     AuthorizationService.require_tenant(current_user, "devices:manage", tenant_id)
+
+    location = await db.get(Location, body.location_id)
+    if location is None or location.tenant_id != tenant_id:
+        raise HTTPException(status_code=404, detail="Lokasyon bulunamadı.")
 
     raw_api_key = secrets.token_urlsafe(32)
     api_key_hash = _hash_api_key(raw_api_key)

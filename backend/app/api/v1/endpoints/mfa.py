@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
     get_current_session_token,
+    get_current_user,
     get_db,
     get_mfa_enrollment_user,
 )
@@ -197,3 +198,69 @@ async def verify_mfa_setup(
     return MfaVerifyResponse(
         success=True, password_change_required=next_level == "password_reset"
     )
+
+
+class StepUpRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=32)
+
+
+class StepUpResponse(BaseModel):
+    ok: bool = True
+
+
+@router.post("/step-up", response_model=StepUpResponse)
+async def step_up_mfa(
+    body: StepUpRequest,
+    token: str = Depends(get_current_session_token),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-verify TOTP and stamp the current full session for sensitive writes."""
+    import hashlib
+    from datetime import datetime
+
+    from app.core.security import decrypt_string, verify_password
+
+    mfa_row = (
+        (
+            await db.execute(
+                select(UserMfaMethod).where(
+                    UserMfaMethod.user_id == current_user.id,
+                    UserMfaMethod.is_active.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if mfa_row is None or not mfa_row.encrypted_secret:
+        raise HTTPException(status_code=400, detail="mfa_not_enrolled")
+
+    code = body.code.strip()
+    valid = False
+    totp = pyotp.TOTP(decrypt_string(mfa_row.encrypted_secret))
+    if totp.verify(code, valid_window=1):
+        valid = True
+    if not valid and mfa_row.hashed_recovery_codes:
+        for idx, hcode in enumerate(mfa_row.hashed_recovery_codes):
+            if verify_password(code, hcode):
+                valid = True
+                mfa_row.hashed_recovery_codes.pop(idx)
+                mfa_row.hashed_recovery_codes = list(mfa_row.hashed_recovery_codes)
+                break
+    if not valid:
+        raise HTTPException(status_code=401, detail="mfa_invalid")
+
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    session = (
+        await db.execute(
+            select(UserSession).where(
+                UserSession.token_hash == token_hash,
+                UserSession.user_id == current_user.id,
+                UserSession.is_revoked.is_(False),
+            )
+        )
+    ).scalar_one()
+    session.last_step_up_at = datetime.now(UTC)
+    await db.commit()
+    return StepUpResponse()

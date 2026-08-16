@@ -62,7 +62,17 @@
   - function downgrade: () -> None
 - `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
-- `backend/fix_tests.py` — function repl_success: (m)
+- `backend/alembic/versions/x9c0d1e2f3a4_seed_federation_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa1b2c3d4e5f_add_federation_performance_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa2b3c4d5e6f_add_class_and_pt_booking_engine.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xb3c4d5e6f7a_seed_reception_read_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xc4d5e6f7a8b_session_step_up_and_idle.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xd5e6f7a8b9c_account_invites.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xe6f7a8b9c0d_dsar_requests.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xf7a8b9c0d1e_align_model_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xh9c0d1e2f3a_trainer_staff_composite_fk.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xi0d1e2f3a4b_pt_overlap_exclusion.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
@@ -97,8 +107,8 @@
   - const ROLES
   - const FEDERATION_ROLES: RoleName[]
   - const OPS_ROLES: RoleName[]
-  - const TRAINER_ROLES: RoleName[]
-  - _...1 more_
+  - const RECEPTION_ROLES: RoleName[]
+  - _...2 more_
 - `frontend/scanner-pwa/src/api/client.ts`
   - function getBaseUrl: () => string
   - function getTenantId: () => string | null

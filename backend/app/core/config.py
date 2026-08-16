@@ -155,8 +155,39 @@ class Settings(BaseSettings):
         if not self.AWS_KMS_KEY_ID or not self.AWS_KMS_KEY_ID.strip():
             errors.append("AWS_KMS_KEY_ID is required when ENVIRONMENT=production")
 
+        if not _is_valid_fernet_key(self.ENCRYPTION_KEY):
+            errors.append("ENCRYPTION_KEY must be a valid Fernet key")
+
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))
+
+    def assert_runtime_environment_allowed(
+        self, *, pytest_loaded: bool | None = None
+    ) -> None:
+        """Refuse ENVIRONMENT=test outside pytest so CSRF/crypto kill-switches cannot ship."""
+        if self.ENVIRONMENT != "test":
+            return
+        if pytest_loaded is None:
+            import sys
+
+            pytest_loaded = "pytest" in sys.modules
+        if not pytest_loaded:
+            raise RuntimeError(
+                "ENVIRONMENT=test is only valid under pytest. "
+                "Use local, development, staging, or production."
+            )
+
+
+def _is_valid_fernet_key(key: str) -> bool:
+    if not key or not str(key).strip():
+        return False
+    try:
+        from cryptography.fernet import Fernet
+
+        Fernet(str(key).strip().encode())
+    except (ValueError, TypeError):
+        return False
+    return True
 
 
 settings = Settings()  # type: ignore[call-arg]

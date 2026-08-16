@@ -42,7 +42,7 @@ async def _seed_user(
     password: str,
     with_tenant: bool = True,
     active: bool = True,
-    role_name: str = "GYM_MANAGER",
+    role_name: str = "AUTH_TEST_STAFF",
 ) -> tuple[User, Tenant | None]:
     user = User(
         email=email.lower(),
@@ -361,3 +361,37 @@ async def test_privileged_mfa_enrollment_promotes_restricted_session(
         headers={"X-Tenant-ID": str(tenant.id)},
     )
     assert me.status_code == 200, me.text
+
+
+@pytest.mark.asyncio
+async def test_front_desk_login_without_enrollment_gets_restricted_session(
+    api_client, pg_session_maker
+):
+    email = f"fd-enroll-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        await _seed_user(db, email=email, password=password, role_name="FRONT_DESK")
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200, login.text
+    assert login.json()["mfa_enrollment_required"] is True
+
+
+@pytest.mark.asyncio
+async def test_member_login_does_not_require_mfa_enrollment(
+    api_client, pg_session_maker
+):
+    email = f"member-plain-{uuid4().hex[:8]}@example.com"
+    password = "MfaPassword1!"
+    async with pg_session_maker() as db:
+        await _seed_user(db, email=email, password=password, role_name="MEMBER")
+
+    login = await api_client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200, login.text
+    assert login.json()["mfa_enrollment_required"] is False

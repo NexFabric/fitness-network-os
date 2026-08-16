@@ -31,6 +31,14 @@ export const OPS_ROLES: RoleName[] = [
   ROLES.FRONT_DESK,
 ]
 
+/** Front-desk reception workspace — must match backend reception:read grants. */
+export const RECEPTION_ROLES: RoleName[] = [
+  ROLES.GYM_OWNER,
+  ROLES.GYM_ADMIN,
+  ROLES.GYM_MANAGER,
+  ROLES.FRONT_DESK,
+]
+
 export const TRAINER_ROLES: RoleName[] = [ROLES.TRAINER]
 
 export const MEMBER_ROLES: RoleName[] = [ROLES.MEMBER]

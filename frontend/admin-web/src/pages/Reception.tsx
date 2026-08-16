@@ -192,12 +192,12 @@ export default function Reception() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Örn: Ahmet, 555..., MBR-1002"
-                className="input w-full pr-10"
+                placeholder="Örn: Ahmet, 555..., MEM-102"
+                className="input-field !mt-0 w-full pr-10 text-sm font-medium text-slate-100 placeholder:text-slate-500 bg-slate-900/90 border-slate-700 focus:border-brand focus:ring-1 focus:ring-brand"
                 autoFocus
               />
               {searching && (
-                <div className="absolute right-3 top-2.5 text-xs text-slate-400">
+                <div className="absolute right-3 top-2.5 text-xs text-brand font-medium">
                   Aranıyor…
                 </div>
               )}
@@ -383,11 +383,11 @@ export default function Reception() {
                         id="reception-location"
                         value={selectedLocationId}
                         onChange={(e) => setSelectedLocationId(e.target.value)}
-                        className="input mt-1 w-full text-xs"
+                        className="input-field text-xs bg-slate-900/90 text-slate-100 border-slate-700"
                         required
                       >
                         {locations.map((loc) => (
-                          <option key={loc.id} value={loc.id}>
+                          <option key={loc.id} value={loc.id} className="bg-slate-900 text-slate-100">
                             {loc.name}
                           </option>
                         ))}
@@ -404,7 +404,7 @@ export default function Reception() {
                         value={overrideReason}
                         onChange={(e) => setOverrideReason(e.target.value)}
                         placeholder="Örn: Kartını evde unutmuş, kimlik kontrolü yapıldı."
-                        className="input mt-1 w-full text-xs"
+                        className="input-field text-xs bg-slate-900/90 text-slate-100 placeholder:text-slate-500 border-slate-700"
                         required
                         minLength={3}
                       />

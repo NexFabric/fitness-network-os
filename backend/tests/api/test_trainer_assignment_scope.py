@@ -35,6 +35,8 @@ TRAINER_PERMS = [
     "access:read",
     "members:read",
     "locations:read",
+    "pt:read",
+    "pt:write",
 ]
 
 OWNER_PERMS = TRAINER_PERMS + ["members:read:all", "members:write", "staff:write"]
@@ -78,6 +80,10 @@ async def _user_with_role(
     db.add(role)
     await db.flush()
     db.add(UserRole(user_id=user.id, role_id=role.id, tenant_id=tenant_id))
+    if role_name == "TRAINER":
+        from app.models.staff import Staff
+
+        db.add(Staff(tenant_id=tenant_id, user_id=user.id, role="TRAINER"))
     db.add(
         UserSession(
             user_id=user.id,
@@ -269,3 +275,101 @@ async def test_unassign_revokes_access(api_client, pg_engine):
         f"/api/v1/members/{s['assigned_id']}", headers=trainer_headers
     )
     assert after.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_trainer_cannot_search_reception(api_client, pg_engine):
+    s = await _scenario(pg_engine)
+    headers = {
+        "Authorization": f"Bearer {s['trainer_token']}",
+        "X-Tenant-ID": str(s["tenant_id"]),
+    }
+
+    denied = await api_client.get(
+        "/api/v1/reception/search",
+        headers=headers,
+        params={"q": "Test"},
+    )
+    assert denied.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_trainer_cannot_open_reception_member_card(api_client, pg_engine):
+    s = await _scenario(pg_engine)
+    headers = {
+        "Authorization": f"Bearer {s['trainer_token']}",
+        "X-Tenant-ID": str(s["tenant_id"]),
+    }
+
+    denied = await api_client.get(
+        f"/api/v1/reception/member/{s['other_id']}",
+        headers=headers,
+    )
+    assert denied.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_trainer_cannot_list_import_batches(api_client, pg_engine):
+    s = await _scenario(pg_engine)
+    headers = {
+        "Authorization": f"Bearer {s['trainer_token']}",
+        "X-Tenant-ID": str(s["tenant_id"]),
+    }
+
+    denied = await api_client.get("/api/v1/import/batches", headers=headers)
+    assert denied.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_trainer_cannot_book_pt_for_unassigned_member(api_client, pg_engine):
+    from datetime import UTC, datetime, timedelta
+
+    from app.models.location import Location
+
+    s = await _scenario(pg_engine)
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        loc = Location(
+            tenant_id=s["tenant_id"],
+            name="PT Room",
+            timezone="Europe/Istanbul",
+        )
+        db.add(loc)
+        await db.commit()
+        loc_id = loc.id
+
+    start = datetime.now(UTC) + timedelta(days=2)
+    denied = await api_client.post(
+        "/api/v1/classes/pt/appointments",
+        headers={
+            "Authorization": f"Bearer {s['trainer_token']}",
+            "X-Tenant-ID": str(s["tenant_id"]),
+        },
+        json={
+            "trainer_user_id": str(s["trainer_id"]),
+            "member_id": str(s["other_id"]),
+            "location_id": str(loc_id),
+            "start_time_utc": start.isoformat(),
+            "end_time_utc": (start + timedelta(hours=1)).isoformat(),
+        },
+    )
+    assert denied.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_trainer_dashboard_hides_finance(api_client, pg_engine):
+    s = await _scenario(pg_engine)
+    resp = await api_client.get(
+        "/api/v1/dashboard/kpis",
+        headers={
+            "Authorization": f"Bearer {s['trainer_token']}",
+            "X-Tenant-ID": str(s["tenant_id"]),
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["finance_visible"] is False
+    assert data["past_due_invoices_amount_minor"] == 0
+    assert data["month_collected_amount_minor"] == 0
+    assert data["total_outstanding_debt_minor"] == 0
+    assert data["active_members_count"] == 1

@@ -49,6 +49,9 @@ LEGACY_EXPAND_COLUMNS: set[tuple[str, str]] = {
 
 def include_object(object, name, type_, reflected, compare_to) -> bool:
     """Filter alembic autogenerate/check noise during Phase 11 dual-column window."""
+    if name == "ex_pt_appointments_no_overlap":
+        # PostgreSQL-only gist exclusion; not representable on the ORM for SQLite.
+        return False
     if type_ == "column" and reflected and compare_to is None:
         table = getattr(getattr(object, "table", None), "name", None)
         if table and name and (table, name) in LEGACY_EXPAND_COLUMNS:

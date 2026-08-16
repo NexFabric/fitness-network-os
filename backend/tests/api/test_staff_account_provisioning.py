@@ -12,6 +12,7 @@ import hashlib
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import pyotp
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
@@ -124,6 +125,38 @@ async def _create_account(api_client, tenant_id, token, *, email=None, role="STA
     return email, res
 
 
+async def _accept_invite(api_client, invite_token: str, password: str) -> None:
+    res = await api_client.post(
+        "/api/v1/auth/invite/accept",
+        json={"token": invite_token, "new_password": password},
+    )
+    assert res.status_code == 200, res.text
+
+
+async def _session_after_first_login(
+    api_client, email: str, otp: str
+) -> tuple[str, str | None]:
+    """Walk a provisioned account through MFA so password rotation is reachable.
+
+    FRONT_DESK (the default STAFF mapping) is privileged-MFA, so enrollment
+    outranks rotation. Tests that hit /auth/password need the post-MFA
+    password_reset session.
+    """
+    login = await api_client.post(
+        "/api/v1/auth/login", json={"email": email, "password": otp}
+    )
+    assert login.status_code == 200, login.text
+    totp_secret: str | None = None
+    if login.json().get("mfa_enrollment_required"):
+        setup = await api_client.post("/api/v1/auth/mfa/setup")
+        assert setup.status_code == 200, setup.text
+        totp_secret = setup.json()["secret"]
+        code = pyotp.TOTP(totp_secret).now()
+        verify = await api_client.post("/api/v1/auth/mfa/verify", json={"code": code})
+        assert verify.status_code == 200, verify.text
+    return api_client.cookies["session_token"], totp_secret
+
+
 @pytest.mark.asyncio
 async def test_created_account_is_linked_and_returns_a_one_time_password(
     api_client, pg_engine
@@ -136,9 +169,44 @@ async def test_created_account_is_linked_and_returns_a_one_time_password(
     assert body["email"] == email
     assert body["staff"]["tenant_id"] == str(tenant_id)
     assert body["staff"]["user_id"] == body["user_id"]
-    assert len(body["one_time_password"]) >= 16
-    # The password is a credential in transit; it must not be cached on the way.
+    assert body["staff"]["email"] == email
+    assert "one_time_password" not in body
+    assert body["invite_token"]
+    assert str(tenant_id) in body["invite_token"]
+    # The invite is a credential in transit; it must not be cached on the way.
     assert res.headers["cache-control"] == "no-store"
+
+    from app.models.notification import NotificationDelivery
+    from app.models.rbac import Role, UserRole
+
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        delivery = (
+            await db.execute(
+                select(NotificationDelivery).where(
+                    NotificationDelivery.tenant_id == tenant_id,
+                    NotificationDelivery.recipient_user_id == body["user_id"],
+                )
+            )
+        ).scalar_one_or_none()
+        assert delivery is not None
+        assert delivery.channel == "EMAIL"
+        assert body["invite_token"] in (delivery.body or "")
+        assert "Tek kullanımlık parola" not in (delivery.body or "")
+        assert delivery.context.get("kind") == "staff_account_created"
+        role = (
+            await db.execute(select(Role).where(Role.name == "FRONT_DESK"))
+        ).scalar_one()
+        link = (
+            await db.execute(
+                select(UserRole).where(
+                    UserRole.user_id == body["user_id"],
+                    UserRole.role_id == role.id,
+                    UserRole.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        assert link is not None
 
 
 @pytest.mark.asyncio
@@ -148,19 +216,12 @@ async def test_provisioned_account_cannot_use_the_app_before_rotating(
     """The whole point of the flag: a one-time password is not app access."""
     tenant_id, token = await _tenant_with_actor(pg_engine)
     email, res = await _create_account(api_client, tenant_id, token)
-    otp = res.json()["one_time_password"]
-
+    assert res.status_code == 201, res.text
     login = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": otp}
+        "/api/v1/auth/login",
+        json={"email": email, "password": "InvitePassphrase9!"},
     )
-    assert login.status_code == 200, login.text
-    assert login.json()["password_change_required"] is True
-
-    restricted = login.cookies["session_token"]
-    blocked = await api_client.get(
-        "/api/v1/me/session", headers={"Authorization": f"Bearer {restricted}"}
-    )
-    assert blocked.status_code == 401
+    assert login.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -169,12 +230,10 @@ async def test_rotation_opens_the_account_and_burns_the_old_password(
 ):
     tenant_id, token = await _tenant_with_actor(pg_engine)
     email, res = await _create_account(api_client, tenant_id, token)
-    otp = res.json()["one_time_password"]
+    otp = "InvitePassphrase9!"
+    await _accept_invite(api_client, res.json()["invite_token"], otp)
 
-    login = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": otp}
-    )
-    restricted = login.cookies["session_token"]
+    restricted, totp_secret = await _session_after_first_login(api_client, email, otp)
 
     new_password = "RotatedPassphrase9!"
     rotate = await api_client.post(
@@ -207,9 +266,10 @@ async def test_rotation_opens_the_account_and_burns_the_old_password(
     )
     assert replay.status_code == 401
 
-    fresh = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": new_password}
-    )
+    fresh_payload = {"email": email, "password": new_password}
+    if totp_secret:
+        fresh_payload["mfa_code"] = pyotp.TOTP(totp_secret).now()
+    fresh = await api_client.post("/api/v1/auth/login", json=fresh_payload)
     assert fresh.status_code == 200
     assert fresh.json()["password_change_required"] is False
 
@@ -218,11 +278,9 @@ async def test_rotation_opens_the_account_and_burns_the_old_password(
 async def test_rotation_refuses_a_wrong_current_password(api_client, pg_engine):
     tenant_id, token = await _tenant_with_actor(pg_engine)
     email, res = await _create_account(api_client, tenant_id, token)
-    otp = res.json()["one_time_password"]
-    login = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": otp}
-    )
-    restricted = login.cookies["session_token"]
+    otp = "InvitePassphrase9!"
+    await _accept_invite(api_client, res.json()["invite_token"], otp)
+    restricted, _ = await _session_after_first_login(api_client, email, otp)
 
     bad = await api_client.post(
         "/api/v1/auth/password",
@@ -239,11 +297,9 @@ async def test_rotation_refuses_a_wrong_current_password(api_client, pg_engine):
 async def test_rotation_refuses_reusing_the_same_password(api_client, pg_engine):
     tenant_id, token = await _tenant_with_actor(pg_engine)
     email, res = await _create_account(api_client, tenant_id, token)
-    otp = res.json()["one_time_password"]
-    login = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": otp}
-    )
-    restricted = login.cookies["session_token"]
+    otp = "InvitePassphrase9!"
+    await _accept_invite(api_client, res.json()["invite_token"], otp)
+    restricted, _ = await _session_after_first_login(api_client, email, otp)
 
     reused = await api_client.post(
         "/api/v1/auth/password",
@@ -258,11 +314,9 @@ async def test_rotation_refuses_reusing_the_same_password(api_client, pg_engine)
 async def test_short_new_password_is_rejected(api_client, pg_engine):
     tenant_id, token = await _tenant_with_actor(pg_engine)
     email, res = await _create_account(api_client, tenant_id, token)
-    otp = res.json()["one_time_password"]
-    login = await api_client.post(
-        "/api/v1/auth/login", json={"email": email, "password": otp}
-    )
-    restricted = login.cookies["session_token"]
+    otp = "InvitePassphrase9!"
+    await _accept_invite(api_client, res.json()["invite_token"], otp)
+    restricted, _ = await _session_after_first_login(api_client, email, otp)
 
     short = await api_client.post(
         "/api/v1/auth/password",
@@ -280,7 +334,7 @@ async def test_existing_email_conflicts_instead_of_rebinding(api_client, pg_engi
     assert first.status_code == 201
 
     _, second = await _create_account(api_client, tenant_id, token, email=email)
-    assert second.status_code == 409
+    assert second.status_code == 400
     assert second.json()["detail"] == "email_already_registered"
 
 
@@ -291,7 +345,7 @@ async def test_email_case_does_not_create_a_duplicate(api_client, pg_engine):
     assert first.status_code == 201
 
     _, second = await _create_account(api_client, tenant_id, token, email=email.upper())
-    assert second.status_code == 409
+    assert second.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -317,3 +371,17 @@ async def test_unknown_role_is_rejected_before_the_account_exists(
             await db.execute(select(User).where(User.email == email.lower()))
         ).scalar_one_or_none()
     assert orphan is None
+
+
+@pytest.mark.asyncio
+async def test_staff_list_includes_login_email(api_client, pg_engine):
+    tenant_id, token = await _tenant_with_actor(pg_engine)
+    email, created = await _create_account(api_client, tenant_id, token, role="TRAINER")
+    assert created.status_code == 201, created.text
+
+    listed = await api_client.get("/api/v1/staff", headers=_headers(token, tenant_id))
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()
+    match = next(row for row in rows if row["email"] == email)
+    assert match["role"] == "TRAINER"
+    assert match["user_id"] == created.json()["user_id"]

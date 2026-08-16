@@ -33,7 +33,10 @@ def set_tenant_id(session, transaction, connection):
 
     tenant_id = current_tenant_id_var.get(None)
     if tenant_id and connection.dialect.name == "postgresql":
-        connection.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}';"))
+        connection.execute(
+            text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+            {"tid": str(tenant_id)},
+        )
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

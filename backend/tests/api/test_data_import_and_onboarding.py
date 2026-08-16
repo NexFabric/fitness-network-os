@@ -171,6 +171,53 @@ async def test_csv_import_pipeline_e2e(api_client, pg_engine):
 
 
 @pytest.mark.asyncio
+async def test_csv_upload_rejects_formula_prefix_and_oversize(api_client, pg_engine):
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(name="Imp2 Org", domain=f"imp2-{uuid4().hex[:6]}.com")
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="Imp2 T",
+            organization_id=org.id,
+            location_code=f"I2-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+        _user, token = await _create_admin(db, tenant.id)
+        await db.commit()
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": str(tenant.id),
+    }
+    formula = "first_name,last_name,email\n=cmd|' /C calc',Yilmaz,ahmet@test.com\n"
+    preview = await api_client.post(
+        "/api/v1/import/upload",
+        json={"filename": "evil.csv", "csv_content": formula},
+        headers=headers,
+    )
+    assert preview.status_code == 201, preview.text
+    rows = (
+        await api_client.get(
+            f"/api/v1/import/batch/{preview.json()['id']}", headers=headers
+        )
+    ).json()["rows"]
+    assert rows[0]["status"] == "INVALID"
+    assert "formül" in rows[0]["error_message"]
+
+    huge = "first_name,last_name\n" + ("A,B\n" * 5001)
+    over = await api_client.post(
+        "/api/v1/import/upload",
+        json={"filename": "huge.csv", "csv_content": huge},
+        headers=headers,
+    )
+    assert over.status_code == 400
+    assert "satır" in over.json()["detail"]
+
+
+@pytest.mark.asyncio
 async def test_tenant_onboarding_state_machine(api_client, pg_engine):
     """Tenant onboarding state transitions and persistence."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)

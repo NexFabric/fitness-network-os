@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, get_tenant_id
+from app.api.deps import get_current_user, get_db, get_tenant_id, require_recent_step_up
 from app.core.authorization import AuthorizationService
 from app.models.access import AccessAttempt, AccessStatus, Checkin
 from app.models.entitlement import EntitlementWallet
@@ -18,6 +18,7 @@ from app.models.location import Location
 from app.models.member import Member, Note, Tag
 from app.models.membership import Membership
 from app.models.user import User
+from app.services.member_visibility import require_member_visible, visible_member_ids
 
 router = APIRouter()
 
@@ -79,7 +80,11 @@ async def search_members_for_reception(
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """Instant multi-field search for reception staff."""
-    AuthorizationService.require_tenant(current_user, "members:read", tenant_id)
+    AuthorizationService.require_tenant(current_user, "reception:read", tenant_id)
+
+    allowed_ids = await visible_member_ids(db, current_user, tenant_id)
+    if allowed_ids is not None and not allowed_ids:
+        return []
 
     search_term = f"%{q}%"
     stmt = (
@@ -96,6 +101,8 @@ async def search_members_for_reception(
         )
         .limit(20)
     )
+    if allowed_ids is not None:
+        stmt = stmt.where(Member.id.in_(allowed_ids))
     members = list((await db.execute(stmt)).scalars().all())
 
     results: list[ReceptionMemberSearchResult] = []
@@ -145,7 +152,8 @@ async def get_reception_member_detail(
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """Detailed member profile card for front-desk reception."""
-    AuthorizationService.require_tenant(current_user, "members:read", tenant_id)
+    AuthorizationService.require_tenant(current_user, "reception:read", tenant_id)
+    await require_member_visible(db, current_user, tenant_id, member_id)
 
     member = await db.get(Member, member_id)
     if member is None or member.tenant_id != tenant_id:
@@ -300,11 +308,12 @@ async def manual_checkin_override(
     member_id: UUID,
     body: ManualCheckinOverrideRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_recent_step_up),
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """Manual turnstile/access override performed by front desk staff."""
     AuthorizationService.require_tenant(current_user, "access:override", tenant_id)
+    await require_member_visible(db, current_user, tenant_id, member_id)
 
     member = await db.get(Member, member_id)
     if member is None or member.tenant_id != tenant_id:

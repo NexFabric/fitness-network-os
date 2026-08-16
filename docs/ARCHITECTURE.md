@@ -62,10 +62,10 @@ vardır. İkisi bire bir değildir — aşağıdaki tablo gerçek eşlemedir.
 
 | Portal | Rota | Erişebilen roller | İşlev |
 |---|---|---|---|
-| Federasyon Konsolu | `/superadmin` | `PLATFORM_SUPER_ADMIN`, `FEDERATION_ADMIN`, `FEDERATION_ANALYST`, `FEDERATION_SUPPORT` | Organizasyon/kulüp dizini, tenant başına metrikler, sistem audit kayıtları, tenant'a geçiş |
-| Kulüp Operasyon Konsolu | `/` (+ `/members`, `/locations`, `/finance`) | `GYM_OWNER`, `GYM_ADMIN`, `GYM_MANAGER`, `ACCOUNTANT`, `FRONT_DESK` | Üye kaydı, abonelik, şube, finans |
-| Antrenör Portalı | `/trainer` | `TRAINER` (+ `GYM_OWNER`, `GYM_ADMIN`) | Atanmış üyeler, turnike giriş geçmişi, hak kontrolü |
-| Sporcu Portalı | `/member` | `MEMBER` | Üyelik/hak durumu, 60 sn'lik tek kullanımlık giriş QR'ı |
+| Federasyon Konsolu | `/superadmin` | `PLATFORM_SUPER_ADMIN`, `FEDERATION_ADMIN`, `FEDERATION_ANALYST`, `FEDERATION_SUPPORT` | Organizasyon/kulüp dizini, tenant başına metrikler, sistem audit kayıtları, tenant'a geçiş, pasaport kuralları, uyumluluk sicili ve ağ duyuruları |
+| Kulüp Operasyon Konsolu | `/` (+ `/classes`, `/members`, `/locations`, `/finance`) | `GYM_OWNER`, `GYM_ADMIN`, `GYM_MANAGER`, `ACCOUNTANT`, `FRONT_DESK` | Üye kaydı, abonelik, şube, finans, ders programı takvimi ve yoklama çekmecesi |
+| Antrenör Portalı | `/trainer` | `TRAINER` (+ `GYM_OWNER`, `GYM_ADMIN`) | Atanmış üyeler, turnike giriş geçmişi, hak kontrolü, grup dersleri ve 1-on-1 PT seansları canlı yoklama defteri |
+| Sporcu Portalı | `/member` | `MEMBER` | Üyelik/hak durumu, 60 sn'lik tek kullanımlık giriş QR'ı, grup dersi rezervasyonu (yedek sırası) ve birebir PT randevusu alma |
 | Kapı Okuyucu PWA | `:5174` (ayrı uygulama) | *cihaz principal'ı* — kullanıcı rolü değil | QR doğrulama, hak düşümü, röle tetikleme |
 
 **Giriş kapısı:** `/portal` — oturum açmış kullanıcıya yalnızca **kendi
@@ -192,7 +192,70 @@ tarafından seçilir; istemci durum gönderemez.
 
 ---
 
-## 6. Bilinen açık maddeler
+## 6. Federasyon ve Çoklu Kulüp Ağı (HQ) Mimarisi
+
+Federasyon, münferit kulüplerin (tenant) üstünde yer alan organizasyon/franchise çatı yapısıdır.
+
+```mermaid
+graph TD
+    Fed[Federasyon / Organizasyon HQ<br/>organization_id]
+    Fed --> G1["Kulüp 1 (Tenant A)<br/>RLS İzolasyonu"]
+    Fed --> G2["Kulüp 2 (Tenant B)<br/>RLS İzolasyonu"]
+    Fed --> G3["Kulüp 3 (Tenant C)<br/>RLS İzolasyonu"]
+    
+    G1 --> L1["Şube 1 (Location)"]
+    G1 --> D1["Turnike Cihazları (Devices)"]
+    
+    Fed -.->|ADR-043 GUC Döngüsü| M["Konsolide Analitik & Raporlar"]
+    Fed --> P["Federasyon Pasaportu<br/>(Çapraz Kulüp Dolaşım Matrisi)"]
+    Fed --> C["Uyumluluk & Denetim Sicili<br/>(TSE, ISO, Hijyen)"]
+    Fed --> A["Ağ Duyuruları Yayını"]
+```
+
+Kurallar ve Tasarım İlkeleri:
+- **Federation != Tenant; Gym = Tenant:** Kulüp düzeyindeki tüm veriler (üyeler, turnike geçişleri, ödemeler, kasalar) PostgreSQL RLS (`tenant_id`) ile kesin olarak yalıtılmıştır.
+- **ADR-043 Çapraz Kulüp Okuma Güvencesi:** Federasyon okumaları RLS politikalarını gevşetmez veya RLS-bypass rolleri kullanmaz. `FederationService`, her bir tenant için sırayla `SET LOCAL app.current_tenant_id = :id` GUC'unu kurar, sayfa tavanı (`MAX_TENANT_PAGE = 50`) uygular ve `_leave_tenant()` ile temizler. Sayfa sınırını aşan durumlarda `partial: true` bayrağı döner.
+- **Kulüp Yaşam Döngüsü & Askıya Alma:** Federasyon yöneticisi bir kulübü gerekçe belirterek anında `SUSPENDED` durumuna alabilir. Askıya alınan kulübün hem insan girişleri hem de turnike tarayıcı cihaz yetkileri (`deps.py:_verify_tenant_status`) kesilir.
+- **Federasyon Pasaportu & Mahsuplaşma:** `passport_configs` tablosu üzerinden hangi kulübün hangi üyelik paket seviyelerini (VIP, Gold vb.) misafir olarak kabul edeceği, aylık geçiş kotası ve ziyaret başı mahsuplaşma ücreti (`guest_fee_minor`) yönetilir.
+- **Uyumluluk & Muayene Sicili:** `compliance_records` ile kulüplerin resmi TSE/ISO/Hijyen denetim kayıtları merkezi olarak tutulur.
+- **Ağ Duyuruları:** `network_alerts` ile tüm ağa veya belirli bir kulübün paneline doğrudan uyarı/duyuru broadcast edilir.
+
+---
+
+## 7. Grup Dersi & Birebir PT Rezervasyon Motoru (B1)
+
+Grup ders seansları, şablon programlar, kapasite kotaları, dinamik yedek sırası ve 1-on-1 Personal Training (PT) randevu motoru mimarisidir.
+
+```mermaid
+graph TD
+    CT[ClassType<br/>Ders Kataloğu: Reformer, Yoga, HIIT] --> CSCH["ClassSchedule (Haftalık Şablon)<br/>Pzt 10:00, Çrş 18:00"]
+    CSCH --> CS["ClassSession (Somut Takvim Seansı)<br/>16 Ağu 11:00 · Kapasite: 10"]
+    
+    CS -->|"book_session (SELECT FOR UPDATE)"| CB1["ClassBooking #1<br/>Durum: CONFIRMED"]
+    CS -->|"book_session (Kapasite Dolu)"| CB2["ClassBooking #2<br/>Durum: WAITLISTED (Sıra: 1)"]
+    
+    CB1 -.->|"cancel_booking"| CB1_CANCELLED["İptal Edildi"]
+    CB2 ==>|"Atomik Otomatik Terfi (Auto-Promotion)"| CB2_PROMOTED["CONFIRMED (Asil Listeye Alındı)"]
+    
+    TA[TrainerAvailability<br/>Antrenör Çalışma Saatleri] --> PTA["PtAppointment<br/>1-on-1 Birebir PT Randevusu"]
+```
+
+### Temel Prensipler ve Concurrency Güvenceleri:
+1. **Pessimistik Kilitleme (`SELECT ... FOR UPDATE`):** `ClassBookingService.book_session` ve `cancel_booking` çağrılarında hedef `class_sessions` satırı PostgreSQL üzerinde kilitlenir (`with_for_update()`). Eşzamanlı 10 rezervasyon burst denemesinde kapasite kesinlikle aşılmaz (sıfır overbooking).
+2. **Kapasite ve Dinamik Yedek Sırası (FIFO Waitlist):**
+   - Doluluk < Kapasite ise kayıt `CONFIRMED` olarak oluşturulur ve `class.booking_confirmed.v1` eventi yayınlanır.
+   - Doluluk >= Kapasite ise kayıt `WAITLISTED` durumuna alınır, ardışık kuyruk numarası (`waitlist_position = 1..N`) verilir ve `class.booking_waitlisted.v1` eventi yayınlanır.
+   - Kısmi tekil indeks (`uq_class_bookings_active_member`), üyenin aynı derse mükerrer aktif kayıt yapmasını veritabanı seviyesinde bloke eder.
+3. **Otomatik Asil Listeye Terfi (`Auto-Promotion`):**
+   - Asil listedeki bir üye rezervasyonunu iptal ettiğinde (`cancel_booking`), 1. sıradaki yedek (`waitlist_position = 1`) anında `CONFIRMED` statüsüne yükseltilir, `waitlist_position` alanı temizlenir ve `class.booking_promoted.v1` eventi üretilir.
+   - Kalan tüm yedek üyelerin sıraları (`2..N`) tek bir atomik sorguyla kaydırılır (`waitlist_position = waitlist_position - 1`).
+4. **Geç İptal Eşiği (`Cancellation Cutoff Window`):** Seans başlangıcına `cancellation_cutoff_minutes` süresinden daha az kalmışsa iptal işlemi `is_late_cancellation = True` olarak işaretlenir; kulüp no-show/hak yakma politikalarını işletebilir.
+5. **Antrenör Çakışma Önleme (PT Conflict Lock):** `PtBookingService`, antrenörün mevcut randevularını zaman aralığı (`start_time_utc < new_end AND end_time_utc > new_start`) üzerinde kilitler; çakışan randevu denemeleri `409 Conflict` ile reddedilir.
+6. **PostgreSQL RLS & Composite FK:** 6 tablo (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`) `TenantMixin` ve PostgreSQL RLS ile yalıtılmıştır.
+
+---
+
+## 8. Bilinen açık maddeler
 
 Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
 
@@ -205,8 +268,7 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
 - Üretimde raporlar özel S3/MinIO storage'a yazılır: server-side encryption,
   tenant-bound key, kısa ömürlü presigned URL, bounded cleanup. Kod `main`'de;
   **gerçek bir kovaya hiç yazmadı** — staging kanıtı için kova ve kimlik bilgisi gerekir.
-- QR imza sırları için KMS çözümü yok — `qr_crypto.py` KMS referansını tanır ama
-  bilinçli olarak `NotImplementedError` verir; üretimde `local:hmac:` kullanılır.
+- QR imza sırları için AWS KMS zarf şifrelemesi (`kms:enc:` ile `GenerateDataKey` & `Decrypt`) ve fail-closed production boot kontrolleri `app.core.qr_crypto` altında uygulanmıştır; yerel geliştirmede `local:hmac:` kullanılır.
 - `/metrics` gerçek request/dependency/outbox Prometheus metrikleri üretir; scraper,
   dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
 - Privileged roller için password-only erişim kapalıdır: kısa ömürlü restricted

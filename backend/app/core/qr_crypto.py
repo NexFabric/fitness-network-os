@@ -21,6 +21,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 LOCAL_HMAC_PREFIX = "local:hmac:"
+FERNET_HMAC_PREFIX = "fernet:hmac:"
 KMS_ENC_PREFIX = "kms:enc:"
 KMS_ALIAS_PREFIX = "kms:alias/"
 KMS_MOCK_PREFIX = "kms:mock:"
@@ -126,6 +127,18 @@ def resolve_hmac_secret(key_material: str) -> bytes:
         raise QrCryptoError(
             f"Unsupported KMS mode '{kms_mode}' for alias key material resolution"
         )
+
+    if key_material.startswith(FERNET_HMAC_PREFIX):
+        from app.core.security import get_fernet
+
+        token = key_material[len(FERNET_HMAC_PREFIX) :].encode("ascii")
+        try:
+            plaintext = get_fernet().decrypt(token)
+        except Exception as e:
+            raise QrCryptoError(f"fernet_hmac_decrypt_failed: {e}") from e
+        if len(plaintext) < 16:
+            raise QrCryptoError("invalid_fernet_hmac_length")
+        return plaintext
 
     if not key_material.startswith(LOCAL_HMAC_PREFIX):
         raise QrCryptoError("unsupported_key_material_ref")

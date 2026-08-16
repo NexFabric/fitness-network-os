@@ -2,42 +2,42 @@
 
 History of `npx codesight --wiki` runs. Capped at 20 entries.
 
-## [2026-08-13 18:56:48] scan | 88 routes, 71 models, 38 components → 23 articles
+## [2026-08-16 09:18:53] scan | 141 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-13 18:56:54] scan | 88 routes, 71 models, 38 components → 23 articles
+## [2026-08-16 09:19:03] scan | 141 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 19:34:34] scan | 88 routes, 73 models, 38 components → 23 articles
+## [2026-08-16 09:48:00] scan | 141 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 19:40:26] scan | 88 routes, 73 models, 38 components → 23 articles
+## [2026-08-16 09:58:24] scan | 141 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 20:03:06] scan | 88 routes, 73 models, 38 components → 23 articles
+## [2026-08-16 10:16:32] scan | 141 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 20:47:04] scan | 90 routes, 73 models, 41 components → 23 articles
+## [2026-08-16 10:49:49] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 21:00:22] scan | 94 routes, 73 models, 42 components → 25 articles
+## [2026-08-16 11:11:33] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 21:26:57] scan | 100 routes, 78 models, 43 components → 27 articles
+## [2026-08-16 11:31:19] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 21:29:04] scan | 100 routes, 78 models, 43 components → 27 articles
+## [2026-08-16 11:42:06] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-14 21:29:13] scan | 100 routes, 78 models, 43 components → 27 articles
+## [2026-08-16 11:45:31] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 06:46:28] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:21:00] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 06:52:53] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:34:06] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 07:04:09] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:40:57] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 07:14:22] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:41:07] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 07:25:16] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:54:50] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 09:59:48] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 12:56:00] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 10:27:31] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 13:01:31] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 11:22:10] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 13:12:30] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 11:33:56] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 13:14:20] scan | 142 routes, 86 models, 64 components → 30 articles
 
-## [2026-08-15 11:34:06] scan | 103 routes, 78 models, 43 components → 28 articles
+## [2026-08-16 13:19:35] scan | 142 routes, 86 models, 64 components → 30 articles

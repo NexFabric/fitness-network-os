@@ -76,8 +76,16 @@ def test_production_ok_with_cors_and_hosts():
         METRICS_BEARER_TOKEN="m" * 32,
         QR_KMS_MODE="aws_kms",
         AWS_KMS_KEY_ID="alias/gym-qr-signing",
+        ENCRYPTION_KEY="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
     )
     s.validate_production()  # does not raise
+
+
+def test_test_environment_refused_outside_pytest():
+    s = _settings(ENVIRONMENT="test")
+    with pytest.raises(RuntimeError, match="only valid under pytest"):
+        s.assert_runtime_environment_allowed(pytest_loaded=False)
+    s.assert_runtime_environment_allowed(pytest_loaded=True)
 
 
 def test_production_rejects_mock_notifications_and_local_reports():

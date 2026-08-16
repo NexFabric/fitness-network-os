@@ -1,86 +1,94 @@
+"""Growth CRM tables are tenant-owned: real PostgreSQL RLS, not SQLite theatre."""
+
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import event
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.api.deps import current_tenant_id_var
-from app.db.base import Base
-from app.models.growth import Lead, Opportunity, RetentionCockpit, Task
-
-
-@pytest.fixture
-async def mock_rls_engine():
-    # Use SQLite for dummy structure verification.
-    # Real RLS tests require Postgres and a running container.
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-
-    # SQLite doesn't support SET LOCAL, so we skip the actual SQL execution for this mock
-    @event.listens_for(Session, "after_begin")
-    def mock_set_tenant_id(session, transaction, connection):
-        tenant_id = current_tenant_id_var.get(None)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture
-def rls_session_maker(mock_rls_engine):
-    maker = async_sessionmaker(
-        mock_rls_engine, class_=AsyncSession, expire_on_commit=False
-    )
-    return maker
+from app.models.growth import Lead
 
 
 @pytest.mark.asyncio
-async def test_growth_models_tenant_context_isolation(rls_session_maker):
-    """
-    Verifies that the current_tenant_id_var correctly isolates the tenant context
-    across simulated requests for Growth models, and that the TenantMixin structure is intact.
-    """
+async def test_growth_leads_rls_isolates_tenants(pg_session_maker):
     tenant_a = uuid4()
+    tenant_b = uuid4()
 
-    # Simulate Request as Tenant A
     token_a = current_tenant_id_var.set(tenant_a)
+    try:
+        async with pg_session_maker() as session:
+            session.add(
+                Lead(
+                    tenant_id=tenant_a,
+                    first_name="Ada",
+                    last_name="A",
+                    status="NEW",
+                )
+            )
+            await session.commit()
+    finally:
+        current_tenant_id_var.reset(token_a)
 
-    async with rls_session_maker() as session:
-        assert current_tenant_id_var.get() == tenant_a
+    token_b = current_tenant_id_var.set(tenant_b)
+    try:
+        async with pg_session_maker() as session:
+            session.add(
+                Lead(
+                    tenant_id=tenant_b,
+                    first_name="Bora",
+                    last_name="B",
+                    status="NEW",
+                )
+            )
+            await session.commit()
+    finally:
+        current_tenant_id_var.reset(token_b)
 
-        # Test Lead
-        lead = Lead(
-            tenant_id=tenant_a, first_name="John", last_name="Doe", status="NEW"
-        )
-        session.add(lead)
-        await session.commit()
-        await session.refresh(lead)
+    token_a = current_tenant_id_var.set(tenant_a)
+    try:
+        async with pg_session_maker() as session:
+            rows = list((await session.execute(select(Lead))).scalars().all())
+            assert len(rows) == 1
+            assert rows[0].first_name == "Ada"
+            assert rows[0].tenant_id == tenant_a
+    finally:
+        current_tenant_id_var.reset(token_a)
 
-        # Test Opportunity
-        opportunity = Opportunity(
-            tenant_id=tenant_a, lead_id=lead.id, stage="PROSPECTING"
-        )
-        session.add(opportunity)
+    token_b = current_tenant_id_var.set(tenant_b)
+    try:
+        async with pg_session_maker() as session:
+            rows = list((await session.execute(select(Lead))).scalars().all())
+            assert len(rows) == 1
+            assert rows[0].first_name == "Bora"
+    finally:
+        current_tenant_id_var.reset(token_b)
 
-        # Test Task
-        task = Task(tenant_id=tenant_a, title="Call John")
-        session.add(task)
+    token_empty = current_tenant_id_var.set(None)
+    try:
+        async with pg_session_maker() as session:
+            # No tenant context → FORCE RLS hides every row.
+            rows = list((await session.execute(select(Lead))).scalars().all())
+            assert rows == []
+    finally:
+        current_tenant_id_var.reset(token_empty)
 
-        # Test RetentionCockpit (needs member_id, but member is not strictly FK checked in sqlite without pragma, or we can just supply a dummy uuid)
-        member_id = uuid4()
-        cockpit = RetentionCockpit(
-            tenant_id=tenant_a, member_id=member_id, health_score=85
-        )
-        session.add(cockpit)
-
-        await session.commit()
-
-        # Verify tenant_id inheritance
-        assert lead.tenant_id == tenant_a
-        assert opportunity.tenant_id == tenant_a
-        assert task.tenant_id == tenant_a
-        assert cockpit.tenant_id == tenant_a
-
-    current_tenant_id_var.reset(token_a)
+    token_a = current_tenant_id_var.set(tenant_a)
+    try:
+        async with pg_session_maker() as session:
+            session.add(
+                Lead(
+                    tenant_id=tenant_b,
+                    first_name="Spoof",
+                    last_name="X",
+                    status="NEW",
+                )
+            )
+            try:
+                await session.commit()
+                raise AssertionError("spoofed insert should violate growth RLS")
+            except Exception as exc:
+                await session.rollback()
+                text_exc = str(exc).lower()
+                assert "row-level security" in text_exc
+    finally:
+        current_tenant_id_var.reset(token_a)

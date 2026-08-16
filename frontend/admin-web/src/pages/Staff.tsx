@@ -5,6 +5,7 @@ import { Alert, EmptyState, LoadingSkeleton, PageHeader } from '../components/ui
 type Staff = {
   id: string
   user_id: string
+  email?: string | null
   role: string
   location_id: string | null
   created_at: string
@@ -19,7 +20,7 @@ type CreatedAccount = {
   staff: Staff
   user_id: string
   email: string
-  one_time_password: string
+  invite_token?: string | null
 }
 
 // Must stay in step with ALLOWED_STAFF_ROLES in backend/app/services/staff.py —
@@ -160,12 +161,13 @@ export default function Staff() {
   }
 
   async function copyPassword() {
-    if (!created) return
+    if (!created?.invite_token) return
     try {
-      await navigator.clipboard.writeText(created.one_time_password)
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/invite?token=${created.invite_token}`,
+      )
       setCopied(true)
     } catch {
-      // Clipboard can be blocked; the password is on screen either way.
       setCopied(false)
     }
   }
@@ -271,19 +273,19 @@ export default function Staff() {
             aria-live="polite"
           >
             <h3 className="text-sm font-semibold text-amber-200">
-              Parola yalnızca şimdi görünür
+              Davet yalnızca şimdi görünür
             </h3>
             <p className="mt-1 text-sm text-amber-100/80">
               <span className="font-medium">{created.email}</span> hesabı oluşturuldu.
-              Bu parolayı personele şimdi iletin — ekranı kapattığınızda bir daha
-              gösterilemez, sunucuda açık halde saklanmaz.
+              Personel parolasını davet bağlantısından belirler — jeton 7 gün,
+              bir kez geçerlidir.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <code className="select-all rounded bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-100">
-                {created.one_time_password}
+                {created.invite_token}
               </code>
               <button type="button" className="btn-secondary" onClick={copyPassword}>
-                {copied ? 'Kopyalandı' : 'Kopyala'}
+                {copied ? 'Kopyalandı' : 'Bağlantıyı kopyala'}
               </button>
               <button
                 type="button"
@@ -296,6 +298,18 @@ export default function Staff() {
                 Gizle
               </button>
             </div>
+            {created.invite_token && (
+              <p className="mt-3 text-xs text-amber-100/70 break-all">
+                Davet jetonu (7 gün):{' '}
+                <a
+                  className="underline"
+                  href={`/invite?token=${encodeURIComponent(created.invite_token)}`}
+                >
+                  /invite
+                </a>
+                <span className="ml-2 font-mono">{created.invite_token}</span>
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -395,7 +409,7 @@ export default function Staff() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2">Kullanıcı</th>
+                  <th className="px-3 py-2">E-posta</th>
                   <th className="px-3 py-2">Görev</th>
                   <th className="px-3 py-2">Şube</th>
                 </tr>
@@ -403,7 +417,10 @@ export default function Staff() {
               <tbody className="divide-y divide-slate-800/80">
                 {staff.map((s) => (
                   <tr key={s.id}>
-                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{s.user_id}</td>
+                    <td className="px-3 py-3 text-slate-200">
+                      <div>{s.email || '—'}</div>
+                      <div className="mt-0.5 font-mono text-[11px] text-slate-500">{s.user_id}</div>
+                    </td>
                     <td className="px-3 py-3 text-slate-200">{s.role}</td>
                     <td className="px-3 py-3 text-slate-400">{locationName(s.location_id)}</td>
                   </tr>

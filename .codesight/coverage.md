@@ -1,15 +1,18 @@
 # Test Coverage
 
-> **39%** of routes and models are covered by tests
-> 85 test files found
+> **33%** of routes and models are covered by tests
+> 105 test files found
 
 ## Covered Routes
 
 - POST:/login
 - GET:/
-- POST:
 - GET:
+- POST:
 - GET:/member
+- GET:/classes/sessions
+- GET:/status
+- POST:/advance
 - GET:/health
 - GET:/live
 - GET:/metrics
@@ -26,6 +29,9 @@
 - OfflineSnapshot
 - QrJtiReplay
 - AuditEvent
+- ClassType
+- ClassSession
+- ClassBooking
 - ConsentDefinition
 - ConsentRecord
 - EntitlementDefinition
@@ -46,9 +52,9 @@
 - PaymentAttempt
 - Lead
 - Opportunity
-- Task
 - RetentionCockpit
 - IdempotencyRecord
+- AccountInvite
 - Location
 - Member
 - Tag

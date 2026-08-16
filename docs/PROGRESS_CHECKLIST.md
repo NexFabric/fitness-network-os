@@ -1,8 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-15
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening  
-**Branch:** `main` (PR #60 merged at `f6c9a77`) · **Alembic head:** `x8b9c0d1e2f3`
+**Last updated:** 2026-08-16
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Last code:** `ab860f0` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** `ab860f0` `31947417828` **SUCCESS** · docs `e6a2d6c` `31947732456` **SUCCESS**. Pause commit CI is not claimed here.
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -10,7 +9,7 @@
 - MVP code on main ≠ production-ready. Phase 26 PASS is **NOT** currently verified.
 - Required CI red → not CI VERIFIED / not LOCKED.
 
-**Maturity:** IMPLEMENTED · WAVES 1–3 & DEEP-DIVE HARDENING MERGED TO MAIN · CI & LOCAL DB VERIFIED (357 passed · 1 skipped, Playwright 39/39) · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
+**Maturity:** IMPLEMENTED · WAVES 1–3, FEDERATION HQ & MILESTONE B1 BOOKING ENGINE VERIFIED · CI & LOCAL DB VERIFIED · PRODUCTION **NO-GO** (External pentest & real S3 bucket evidence gates open)
 
 ---
 
@@ -30,6 +29,9 @@
 | **Wave 2: Forensics, Reception & Dashboard** | 🟢 **MERGED** | `AccessAttempt.snapshot_data`, `/reception` workspace + override, `/dashboard/kpis` |
 | **Wave 3: Migration, Dunning & Onboarding** | 🟢 **MERGED** | CSV import pipeline (`DataImport.tsx`), `PaymentAttempt`, `DunningPolicy`, `TenantOnboarding` |
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
+| **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
+| **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
+| **Phase 29 + RC closure (this branch)** | 🟢 **CODE LANDED** · CI **VERIFIED** on `ab860f0` + `e6a2d6c` | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. PR #62 merge kapısı **yalnız CI** (onay kuralı kaldırıldı 2026-08-16); merge durumunun otoritesi `git log origin/main`. |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -41,18 +43,17 @@
 - [x] Playwright is a required GitHub CI gate against the real backend, PostgreSQL and Redis.
 - [x] CodeQL findings from the closure were resolved by opaque UUID-derived local artifact namespaces and MFA session rotation.
 
-**GitHub evidence (Phase 27.4):** CI run `31706150882` on the merged head passed backend
-**315 tests + 1 skip**, Playwright **36/36**, lint/type-check, security scans, SBOM,
-all frontend builds and the production image — 14/14 required jobs. A clean re-run of
-the same run produced identical counts, so the suite is not flaky. CodeQL run
-`31706145455` passed Python, JavaScript/TypeScript and Actions analyses.
+### Phase 28 — Waves 1–3, Federation HQ & Milestone B1 Class Booking (2026-08-15)
 
-**What this does and does not mean:** the *code* for Phase 27.4 is closed and merged.
-It was merged without an independent human approval, because this repository has a
-single collaborator and the required-review rule is therefore unsatisfiable; branch
-protection was relaxed for the merge and verified restored immediately afterwards.
-**No production-ready claim is made** — Phase 26's exit gate still needs the
-restore/PITR drill, real-bucket S3 proof and an external pentest.
+- [x] **Wave 1 (Legal & Member Self-Service):** Next.js 16 SSG public legal pages (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service expansion (`/invoices`, `/payments`, `/consents`, `finance:read:self`), 5-tab MemberPortal UI with 60s dynamic QR code.
+- [x] **Wave 2 (Forensics, Reception & Dashboard):** `AccessAttempt.snapshot_data` adli karar kaydı, `/reception` masası instant search & `access:override` gerekçeli manuel giriş, `/dashboard/kpis` sunucu taraflı SQL KPI motoru.
+- [x] **Wave 3 (Migration, Dunning & Onboarding):** CSV toplu üye aktarım boru hattı (`DataImport.tsx`, `DataImportService` preview & commit), `PaymentAttempt` & `DunningPolicy` turnike blokajı, `TenantOnboarding` durum makinesi.
+- [x] **Deep-Dive Hardening:** Outbox worker per-tenant RLS loop + DB savepoints, AWS KMS zarf şifrelemesi (`kms:enc:`), fail-closed production boot, ADR-044 HMAC istek imzası & tek kullanımlık `device_nonces`.
+- [x] **Federation HQ Console:** 6 sekmeli kurumsal federasyon HQ konsolu (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü, pasaport dolaşım kuralları, denetim sicili ve ağ duyuruları.
+- [x] **Milestone B1 (Grup Dersi & PT Takvimi):** 6 RLS tablosu (`xa2b3c4d5e6f`), `SELECT ... FOR UPDATE` kilitleme, FIFO yedek sırası ve otomatik asil listeye terfi (`auto-promotion`), Admin Görsel Takvim (`Classes.tsx`), Antrenör Canlı Yoklama Defteri (`TrainerPortal.tsx`), 6 sekmeli Sporcu Portalı (`MemberPortal.tsx`) ve Playwright E2E (`classes_and_booking_flows.spec.ts`).
+- [x] **Federation HQ Console & Multi-Club Network:** 6 sekmeli kurumsal HQ paneli (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), pasaport dolaşım matrisi (`passport_configs`), TSE/ISO denetim sicili (`compliance_records`), ağ duyuruları (`network_alerts`), konsolide ciro & CSV çıktısı, performans indeksleri (Alembic `xa1b2c3d4e5f`).
+
+**Evidence (local, 2026-08-15):** backend `pytest` **367 passed · 1 skipped** (PostgreSQL real database execution); Playwright E2E **41 passed / 41 total** with zero console errors across all 5 portals (`console_clean.spec.ts`); ruff, mypy, `check_permissions`, `check_tenancy`, `check_no_money_floats`, `check_release_truth` 100% green.
 
 ---
 
@@ -110,7 +111,7 @@ string).
 
 - [x] Device requests require HMAC-SHA256 signing: per-session secret issued once by `POST /devices/auth` (body, never a cookie), `X-Device-Signature` over `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, ±300s skew, single-use nonce in `device_nonces` (new table, RLS on, migration `u4b5c6d7e8f9`). A stolen `device_session` cookie is no longer a credential on its own; pre-signing sessions fail closed with `device_session_unsigned`.
 - [x] `get_current_device` now establishes tenant context from the bootstrap session row *before* reading `devices`, so the devices table is no longer read outside RLS (it previously depended on the connection role not enforcing it).
-- [x] scanner-pwa signs device requests via Web Crypto. `authenticateDevice()` imports the secret into a **non-extractable** `CryptoKey` and persists only that handle in IndexedDB — the plaintext never reaches a storage API, so script on the origin can sign but cannot exfiltrate the credential (keeps ASVS 3.4.2 true). Falls back to the staff `/access/qr/validate` path when unpaired.
+- [x] scanner-pwa signs device requests via Web Crypto. `authenticateDevice()` imports the secret into a **non-extractable** `CryptoKey` and persists only that handle in IndexedDB — the plaintext never reaches a storage API, so script on the origin can sign but cannot exfiltrate the credential (keeps ASVS 3.4.2 true). Phase 29 removed the staff-login fallback; unpaired scanners must pair via device ID + API key.
 - [x] CodeQL: cleared the high alert (demo seed script no longer echoes the password) and the 5 `actions/missing-workflow-permissions` alerts (top-level `permissions: contents: read` in `ci.yml`).
 
 - [x] CI hardening: SBOM generation split out of the `security` gate (an upstream syft/GitHub-releases outage was failing `security` and, through `needs`, skipping the whole test suite), `anchore/sbom-action` pinned to a SHA, `timeout-minutes` on every job.
@@ -127,7 +128,7 @@ page was exercised against the real API in Chromium, not just built.
 - [x] **Şube düzenleme** — the `PATCH /locations/{id}` endpoint had no UI.
 - [x] **Bildirimler** (`/notifications`) — template list + create, one-off delivery scheduling with the returned delivery state rendered. No delivery history list is shown because the API exposes no list endpoint.
 - [x] **Raporlar** (`/reports`) — definition list + create, run with format choice, status refresh and artifact link. Runs are session-scoped for the same reason.
-- [x] **Personel** (`/staff`) — list + link an existing user by id, role and location. Labelled as linking, not creating, since no user-creation API exists.
+- [x] **Personel** (`/staff`) — list + link an existing user by id, role and location. Superseded for creation by `POST /staff/accounts` (PR #57) + Phase 29 email hook.
 - [x] Login rate limit made configurable (`RATE_LIMIT_LOGIN_*`). The parallel browser suite tripped the 20/min budget on shared seeded accounts — a real product behaviour, not a flake. Production keeps the tight default; the dev stack raises it.
 
 All new routes and nav items are gated to `GYM_OWNER`/`GYM_ADMIN`; the nav hides rather than offering a link that 403s. The API remains the boundary.
@@ -151,6 +152,67 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ---
 
+## Phase 29 — In-repo hardening (2026-08-16, branch `feat/public-site-modernization-and-seo`)
+
+Same-tenant BOLA, privileged cookie assurance, device secret at rest, and the
+product gaps that were already implemented in services but had no HTTP/UI.
+
+Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / `last_step_up_at`) → `xd5e6f7a8b9c` (`account_invites`) → `xe6f7a8b9c0d` (`dsar_requests`) → `xf7a8b9c0d1e` (index align) → `xg8b9c0d1e2f` (`user_roles` uniques) → `xh9c0d1e2f3a` (trainer→staff composite FK) → **`xi0d1e2f3a4b`** (PT `btree_gist` EXCLUDE).
+
+### Closed in code (not claimed production-ready)
+
+- [x] `reception:read` + Reception / import / PT / dashboard BOLA (assignment-scoped trainers cannot list the tenant)
+- [x] Privileged MFA role set includes FRONT_DESK; login timing uses dummy Argon2
+- [x] Staff `UserRole` mapping (`STAFF` → `FRONT_DESK`); CSV formula/size caps; `+90…` phones allowed
+- [x] Device signing material stored as `fernet:hmac:` (ADR-044 at rest)
+- [x] Step-up MFA (`POST /auth/mfa/step-up`, 5 min) on finance / devices / reception override / break-glass / portal-account
+- [x] Privileged idle revoke 30 min (`401 session_idle`); logout CSRF
+- [x] Superuser tenant writes require live break-glass (`403 break_glass_required`)
+- [x] SMTP adapter sends `delivery.body` (context body is fallback only)
+- [x] Admin + scanner CSP: `'unsafe-eval'` removed
+- [x] Scanner PWA pairs via `POST /devices/auth` — hardcoded demo password removed
+- [x] `POST /members/{id}/portal-account` binds a MEMBER login; Members.tsx one-time password panel
+- [x] Staff create queues `schedule_delivery` EMAIL (OTP in body, not context)
+- [x] Compose `notification-worker` + `outbox-worker`; dev Dockerfile installs from `uv.lock`
+- [x] Growth `leads` RLS test is real PostgreSQL, not SQLite theatre
+- [x] Growth CRM frozen schema-only (`app/models/growth.py`) — no API, tables not dropped
+- [x] Tests: idle, `fernet:hmac` roundtrip, superuser 403, portal-account, SMTP body, staff delivery row
+- [x] Compose `migrate` one-shot before API/workers; frontend images use workspace lockfile + SPA nginx; prod compose injects `ENCRYPTION_KEY`
+
+### Still open — in-repo (doable)
+
+- [x] **INVITE-1** Hashed invite-token table (`account_invites`, Alembic `xd5e6f7a8b9c`) + `POST /auth/invite/accept` + `/invite` page
+- [x] **INVITE-OTP** Standing OTP no longer returned or emailed; invite is the only issued secret
+- [x] **ONB-UI** Tenant onboarding wizard UI (`/onboarding`) — API already existed
+- [x] **CI-62** `ab860f0` run `31947417828` **SUCCESS**. Docs `e6a2d6c` run `31947732456` **SUCCESS** (unit + Playwright). Later docs-only SHAs are not separately claimed.
+- [x] **REV-62** Closed by owner decision (2026-08-16): single-maintainer repo, the "1 approving review" rule was unsatisfiable (GitHub blocks author self-approval). Review requirement removed; `enforce_admins`, `strict` and the 11 required checks remain — **CI is the merge gate**. This is a process change, **not** an independent security review (see P1-11)
+- [ ] **HAND-1** Manual browser proof (tutanak `docs/ops/HAND1_BROWSER_PROOF.md`). Playwright covers invite accept, onboarding, portal bind, scanner pair, report artifact link — human sign-off still open
+- [x] **GOD-1** Split `SuperAdminPortal` (`pages/hq/*`), `Classes` (`pages/classes/*`), `MemberPortal` (`pages/portal/*`). `Finance.tsx` left intact — no tab seams; not a security gate
+- [x] **COV-1a** eslint on admin-web / scanner-pwa / public-site in required build jobs; pytest `--cov` report only (no fail_under)
+- [x] **COV-1b** Measured TOTAL **72%** (390 passed / 5 fixed); CI `--cov-fail-under=70` (local targeted pytest stays without coverage)
+- [x] **DSAR-1a** Bound-member export package + `dsar_requests` ledger (`xe6f7a8b9c0d`); admin inbox
+- [x] **DSAR-1b** Erasure / anonymize (`POST /me/dsar/erasure`); OPEN/PARTIALLY_PAID/DRAFT invoices → 409 `legal_hold_open_invoices`; paid invoices stay; PII wiped; session revoked
+- [x] **IDX-1** Model/DB index alignment (`xf7a8b9c0d1e`) so `alembic check` can pass
+- [x] **STAFF-2** Staff list returns `email`; class/PT picker uses tenant-isolated `GET /classes/trainers` (UserRole TRAINER; seed writes trainer/desk `staff` rows)
+- [x] **UR-1** Partial unique grants on `user_roles` (`xg8b9c0d1e2f`)
+- [x] **BK-ERR** `booking.py` raises `BookingError`; DSAR swallows only not-found/conflict
+- [x] **TR-FK** Composite FK `(tenant_id, trainer_user_id) → staff` (`xh9c0d1e2f3a`); picker requires staff + active
+- [x] **PT-EX** `btree_gist` EXCLUDE on confirmed PT overlaps (`xi0d1e2f3a4b`) — Alembic only; omitted from ORM for SQLite `create_all`
+- [x] **TZ-1** `generate_sessions` uses `Location.timezone`; unique schedule+start
+- [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
+- [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
+
+### Still open — cannot fake complete
+
+- [ ] **P1-3b-RT** Real S3/MinIO bucket write + presign proof in staging
+- [ ] **P1-10** Restore / PITR drill evidence
+- [ ] **P1-11** Independent ASVS L2 / pentest + human APPROVE
+- [ ] **P2-OBS** Prometheus scraper, dashboards, traces, alert rules (metrics endpoint exists)
+- [ ] **P2-3-IAM** Production KMS alias / IAM / rotation proof (`kms:enc:` path is code-only)
+- [ ] **ISO-1** IsolationProvider — do not invent; keep the abstraction, do not replace RLS
+
+---
+
 ## Closed on main (feature waves)
 
 | Wave | PRs | Highlights |
@@ -166,13 +228,11 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ## Remaining to “complete” production bar
 
-1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
-2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
-3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Completed)
-4. Observability productization beyond health probes: real metrics/traces/alerts.
-5. Execute and attach a restore/PITR drill; complete independent ASVS 5.0 L2 review and pentest.
+Checked items live in **Phase 29** above. Unchecked items there are the live backlog.
 
-Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
+Live board (same IDs): `backend/docs/plans/REMAINING_WORK_BOARD.md`
+
+Do **not** tick Phase 26 or production-ready until P1-3b-RT + P1-11 are evidenced.
 
 ---
 

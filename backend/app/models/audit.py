@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import JSON, String, Uuid, event
+from sqlalchemy import JSON, Index, String, Uuid, event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -26,6 +26,10 @@ class AuditEvent(Base, TenantMixin):
 
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    _model_table_args = (
+        Index("ix_audit_events_tenant_created", "tenant_id", "created_at"),
+    )
 
 
 @event.listens_for(AuditEvent, "before_update")

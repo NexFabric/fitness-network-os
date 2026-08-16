@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Members subsystem handles **10 routes** and touches: db.
+The Members subsystem handles **11 routes** and touches: cache, db.
 
 ## Routes
 
@@ -23,6 +23,8 @@ The Members subsystem handles **10 routes** and touches: db.
 - `POST` `/{member_id}/consents` params(member_id) → in: MemberCreate, out: MemberResponse
   `backend/app/api/v1/endpoints/members.py`
 - `GET` `/{member_id}/memberships` params(member_id) → out: MemberResponse
+  `backend/app/api/v1/endpoints/members.py`
+- `POST` `/{member_id}/portal-account` params(member_id) → in: MemberCreate, out: MemberResponse [cache]
   `backend/app/api/v1/endpoints/members.py`
 - `GET` `/{member_id}/access-logs` params(member_id) → out: MemberResponse [db]
   `backend/app/api/v1/endpoints/members.py`

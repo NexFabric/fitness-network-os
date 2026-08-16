@@ -2,13 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Locations subsystem handles **4 routes**.
+The Locations subsystem handles **3 routes**.
 
 ## Routes
 
 - `POST` `` → in: LocationCreate, out: LocationResponse
-  `backend/app/api/v1/endpoints/locations.py`
-- `GET` `` → in: UUI, out: LocationResponse
   `backend/app/api/v1/endpoints/locations.py`
 - `GET` `/{location_id}` params(location_id) → in: UUI, out: LocationResponse
   `backend/app/api/v1/endpoints/locations.py`
