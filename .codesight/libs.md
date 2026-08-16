@@ -84,10 +84,19 @@
   - function forbid: (path, *needles) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
+- `backend/scripts/kms_iam_verify.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function skip: (reason) -> None
+  - function main: () -> None
 - `backend/scripts/process_notification_due.py`
   - function build_parser: () -> argparse.ArgumentParser
   - function main: (argv) -> int
   - function process_due_for_tenant: (session, tenant_id, *, limit, max_attempts) -> dict[str, int]
+- `backend/scripts/s3_runtime_proof.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function main: () -> None
 - `backend/scripts/seed_active_membership.py` — function seed_active_membership: ()
 - `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()

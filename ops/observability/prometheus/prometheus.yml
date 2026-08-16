@@ -1,0 +1,38 @@
+# Prometheus scrape configuration for Fitness Network OS.
+#
+# Dev (docker-compose.obs.yml): /metrics is open because the backend only
+# enforces the bearer token when settings.is_production is true.
+# Production: set METRICS_BEARER_TOKEN on the backend and mount the same value
+# at /etc/prometheus/metrics_token so `authorization.credentials_file` picks it
+# up. Never inline the token in this file — it is committed.
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    service: fitness-network-os
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["fitness-os-alertmanager:9093"]
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: fitness-os-backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["fitness-os-backend:8000"]
+        labels:
+          component: api
+    # Uncomment in production once the token file is mounted:
+    # authorization:
+    #   type: Bearer
+    #   credentials_file: /etc/prometheus/metrics_token

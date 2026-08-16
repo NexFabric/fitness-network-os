@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 78 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~161,600 tokens. **Saves ~145,800 tokens per conversation.**
-> **Last scanned:** 2026-08-16 13:19 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 80 lib files | 24 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~146,800 tokens per conversation.**
+> **Last scanned:** 2026-08-16 13:44 — re-run after significant changes
 
 ---
 
@@ -1032,10 +1032,19 @@
   - function forbid: (path, *needles) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
+- `backend/scripts/kms_iam_verify.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function skip: (reason) -> None
+  - function main: () -> None
 - `backend/scripts/process_notification_due.py`
   - function build_parser: () -> argparse.ArgumentParser
   - function main: (argv) -> int
   - function process_due_for_tenant: (session, tenant_id, *, limit, max_attempts) -> dict[str, int]
+- `backend/scripts/s3_runtime_proof.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function main: () -> None
 - `backend/scripts/seed_active_membership.py` — function seed_active_membership: ()
 - `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
@@ -1081,9 +1090,14 @@
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
+- `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
+- `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example
+- `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
+- `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
+- `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
