@@ -71,6 +71,7 @@ test.describe.serial('Group Class & PT Booking Engine E2E Flows', () => {
     const sessionForm = page.locator('form', { hasText: 'Ders Tipi' });
     await sessionForm.locator('select').nth(0).selectOption({ label: `${uniqueClassName} (45 dk)` });
     await sessionForm.locator('select').nth(1).selectOption({ label: locationName });
+    await sessionForm.locator('select').nth(2).selectOption({ label: /e2e\.trainer@e2e\.local/ });
 
     const start = new Date(Date.now() + 86400000);
     start.setHours(14, 0, 0, 0);

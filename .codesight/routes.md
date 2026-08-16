@@ -37,6 +37,7 @@
 - `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
 - `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/trainers` params() → in: AsyncSessio, out: list
 - `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
 - `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
 - `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list

@@ -44,8 +44,21 @@ class StaffResponse(BaseModel):
     role: str
     location_id: UUID | None
     created_at: datetime
+    email: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+def _staff_response(staff, email: str | None) -> StaffResponse:
+    return StaffResponse(
+        id=staff.id,
+        tenant_id=staff.tenant_id,
+        user_id=staff.user_id,
+        role=staff.role,
+        location_id=staff.location_id,
+        created_at=staff.created_at,
+        email=email,
+    )
 
 
 class StaffAccountRequest(BaseModel):
@@ -91,7 +104,7 @@ async def link_staff(
         )
         await db.commit()
         await db.refresh(staff)
-        return staff
+        return _staff_response(staff, await svc.get_user_email(staff.user_id))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -172,7 +185,7 @@ async def create_staff_account(
     response.headers["Cache-Control"] = "no-store"
     response.headers["Pragma"] = "no-cache"
     return StaffAccountResponse(
-        staff=StaffResponse.model_validate(provisioned.staff),
+        staff=_staff_response(provisioned.staff, provisioned.user.email),
         user_id=provisioned.user.id,
         email=provisioned.user.email,
         invite_token=invite_token,
@@ -186,7 +199,8 @@ async def list_staff(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "staff:read")
-    return await StaffService(db).list_staff(tenant_id)
+    rows = await StaffService(db).list_staff_with_emails(tenant_id)
+    return [_staff_response(staff, email) for staff, email in rows]
 
 
 @router.get("/{staff_id}", response_model=StaffResponse)
@@ -197,7 +211,8 @@ async def get_staff(
     db: AsyncSession = Depends(get_db),
 ):
     _require(current_user, tenant_id, "staff:read")
-    staff = await StaffService(db).get_staff(tenant_id, staff_id)
+    svc = StaffService(db)
+    staff = await svc.get_staff(tenant_id, staff_id)
     if staff is None:
         raise HTTPException(status_code=404, detail="staff_not_found")
-    return staff
+    return _staff_response(staff, await svc.get_user_email(staff.user_id))

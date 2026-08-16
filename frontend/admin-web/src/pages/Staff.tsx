@@ -5,6 +5,7 @@ import { Alert, EmptyState, LoadingSkeleton, PageHeader } from '../components/ui
 type Staff = {
   id: string
   user_id: string
+  email?: string | null
   role: string
   location_id: string | null
   created_at: string
@@ -408,7 +409,7 @@ export default function Staff() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-3 py-2">Kullanıcı</th>
+                  <th className="px-3 py-2">E-posta</th>
                   <th className="px-3 py-2">Görev</th>
                   <th className="px-3 py-2">Şube</th>
                 </tr>
@@ -416,7 +417,10 @@ export default function Staff() {
               <tbody className="divide-y divide-slate-800/80">
                 {staff.map((s) => (
                   <tr key={s.id}>
-                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{s.user_id}</td>
+                    <td className="px-3 py-3 text-slate-200">
+                      <div>{s.email || '—'}</div>
+                      <div className="mt-0.5 font-mono text-[11px] text-slate-500">{s.user_id}</div>
+                    </td>
                     <td className="px-3 py-3 text-slate-200">{s.role}</td>
                     <td className="px-3 py-3 text-slate-400">{locationName(s.location_id)}</td>
                   </tr>

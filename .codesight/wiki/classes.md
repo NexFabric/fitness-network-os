@@ -2,10 +2,12 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Classes subsystem handles **15 routes** and touches: auth, db.
+The Classes subsystem handles **16 routes** and touches: auth, db.
 
 ## Routes
 
+- `GET` `/trainers` → in: AsyncSessio, out: list
+  `backend/app/api/v1/endpoints/classes.py`
 - `GET` `/types` → in: AsyncSessio, out: list
   `backend/app/api/v1/endpoints/classes.py`
 - `POST` `/types` → in: ClassTypeCreate, out: list

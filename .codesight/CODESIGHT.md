@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 141 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,300 tokens. **Saves ~144,700 tokens per conversation.**
-> **Last scanned:** 2026-08-16 10:16 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,800 tokens. **Saves ~145,200 tokens per conversation.**
+> **Last scanned:** 2026-08-16 10:49 — re-run after significant changes
 
 ---
 
@@ -48,6 +48,7 @@
 - `POST` `/sessions` params() → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
 - `GET` `/sessions` params() → in: AsyncSessio, out: BreakGlassSessionResponse [auth, db]
 - `POST` `/sessions/{session_id}/revoke` params(session_id) → in: CreateBreakGlassRequest, out: BreakGlassSessionResponse [auth]
+- `GET` `/trainers` params() → in: AsyncSessio, out: list
 - `POST` `/schedules/{schedule_id}/generate-sessions` params(schedule_id) → in: ClassTypeCreate, out: list [auth]
 - `GET` `/sessions/{session_id}/roster` params(session_id) → in: AsyncSessio, out: list [auth]
 - `POST` `/bookings/{booking_id}/attend` params(booking_id) → in: ClassTypeCreate, out: list
@@ -1120,17 +1121,17 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **67** files
-- `backend/app/models/tenant.py` — imported by **58** files
-- `backend/app/models/organization.py` — imported by **51** files
+- `backend/app/models/user.py` — imported by **68** files
+- `backend/app/models/tenant.py` — imported by **59** files
+- `backend/app/models/organization.py` — imported by **52** files
 - `backend/app/api/deps.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **41** files
 - `backend/app/models/member.py` — imported by **41** files
-- `backend/app/models/rbac.py` — imported by **40** files
 - `backend/app/db/base.py` — imported by **38** files
-- `backend/app/db/session.py` — imported by **32** files
+- `backend/app/db/session.py` — imported by **33** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **30** files
 - `backend/app/models/membership.py` — imported by **28** files
-- `backend/app/main.py` — imported by **27** files
+- `backend/app/main.py` — imported by **28** files
 - `frontend/admin-web/src/api/client.ts` — imported by **27** files
 - `backend/app/core/authorization.py` — imported by **25** files
 - `backend/app/db/rls.py` — imported by **22** files
@@ -1143,14 +1144,14 @@
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +62 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +53 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +46 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +63 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +54 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +47 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +36 more
 - `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +36 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +35 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +27 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +28 more
 - `frontend/admin-web/src/components/ui/index.ts` ← `frontend/admin-web/src/components/MemberMemberships.tsx`, `frontend/admin-web/src/components/RequireAuth.tsx`, `frontend/admin-web/src/pages/Classes.tsx`, `frontend/admin-web/src/pages/Dashboard.tsx`, `frontend/admin-web/src/pages/DataImport.tsx` +25 more
 - `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +23 more
 
@@ -1159,7 +1160,7 @@
 # Test Coverage
 
 > **33%** of routes and models are covered by tests
-> 103 test files found
+> 104 test files found
 
 ## Covered Routes
 

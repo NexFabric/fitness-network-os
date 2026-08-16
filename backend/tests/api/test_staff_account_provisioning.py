@@ -171,6 +171,7 @@ async def test_created_account_is_linked_and_returns_a_one_time_password(
     assert body["email"] == email
     assert body["staff"]["tenant_id"] == str(tenant_id)
     assert body["staff"]["user_id"] == body["user_id"]
+    assert body["staff"]["email"] == email
     assert "one_time_password" not in body
     assert body["invite_token"]
     assert str(tenant_id) in body["invite_token"]
@@ -372,3 +373,17 @@ async def test_unknown_role_is_rejected_before_the_account_exists(
             await db.execute(select(User).where(User.email == email.lower()))
         ).scalar_one_or_none()
     assert orphan is None
+
+
+@pytest.mark.asyncio
+async def test_staff_list_includes_login_email(api_client, pg_engine):
+    tenant_id, token = await _tenant_with_actor(pg_engine)
+    email, created = await _create_account(api_client, tenant_id, token, role="TRAINER")
+    assert created.status_code == 201, created.text
+
+    listed = await api_client.get("/api/v1/staff", headers=_headers(token, tenant_id))
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()
+    match = next(row for row in rows if row["email"] == email)
+    assert match["role"] == "TRAINER"
+    assert match["user_id"] == created.json()["user_id"]

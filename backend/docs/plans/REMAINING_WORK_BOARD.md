@@ -58,6 +58,7 @@ Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 | MIG-1 | Dev compose `migrate` one-shot before API/workers |
 | COV-1b | Measured 72%; CI `--cov-fail-under=70` |
 | IDX-1 | Model/DB index alignment (`xf7a8b9c0d1e`) so `alembic check` can pass |
+| STAFF-2 | Staff list returns `email`; class/PT picker uses tenant-isolated `GET /classes/trainers` (UserRole TRAINER mapping, not `first_name`); seed writes trainer/desk `staff` rows |
 
 Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they are not re-listed.
 

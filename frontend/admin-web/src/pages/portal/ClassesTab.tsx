@@ -1,5 +1,5 @@
 import { EmptyState } from '../../components/ui'
-import type { ClassBooking, ClassSession, PtAppointment, StaffItem } from '../classes/types'
+import { staffLabel, type ClassBooking, type ClassSession, type PtAppointment, type TrainerOption } from '../classes/types'
 import { formatDateTr, formatTime } from './types'
 
 type ClassesTabProps = {
@@ -7,7 +7,7 @@ type ClassesTabProps = {
   filteredSessions: ClassSession[]
   myBookings: ClassBooking[]
   myPtAppointments: PtAppointment[]
-  trainers: StaffItem[]
+  trainers: TrainerOption[]
   bookingLoading: boolean
   showPtModal: boolean
   ptTrainerId: string
@@ -229,9 +229,12 @@ export function ClassesTab({
                   onChange={(e) => onPtTrainerChange(e.target.value)}
                   className="input w-full text-xs"
                 >
+                  {trainers.length === 0 && (
+                    <option value="">Henüz antrenör tanımlı değil</option>
+                  )}
                   {trainers.map((t) => (
-                    <option key={t.id} value={t.user_id}>
-                      {t.first_name} {t.last_name} ({t.role})
+                    <option key={t.user_id} value={t.user_id}>
+                      {staffLabel(t)}
                     </option>
                   ))}
                 </select>

@@ -206,8 +206,41 @@ class StaffService:
         )
         return list(result.scalars().all())
 
+    async def list_staff_with_emails(
+        self, tenant_id: UUID
+    ) -> list[tuple[Staff, str | None]]:
+        result = await self.db.execute(
+            select(Staff, User.email)
+            .outerjoin(User, User.id == Staff.user_id)
+            .where(Staff.tenant_id == tenant_id)
+            .order_by(Staff.created_at)
+        )
+        return [(row[0], row[1]) for row in result.all()]
+
+    async def list_trainers(self, tenant_id: UUID) -> list[tuple[UUID, str]]:
+        """Users holding the TRAINER RBAC role in this tenant.
+
+        Source of truth is ``user_roles`` (permissions), not the staff job
+        label. Staff rows are the HR link; a seeded trainer without a staff
+        row must still appear on the class/PT picker.
+        """
+        from app.models.rbac import Role, UserRole
+
+        result = await self.db.execute(
+            select(User.id, User.email)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(UserRole.tenant_id == tenant_id, Role.name == "TRAINER")
+            .order_by(User.email)
+        )
+        return [(row[0], row[1]) for row in result.all()]
+
     async def get_staff(self, tenant_id: UUID, staff_id: UUID) -> Staff | None:
         result = await self.db.execute(
             select(Staff).where(Staff.tenant_id == tenant_id, Staff.id == staff_id)
         )
         return result.scalars().first()
+
+    async def get_user_email(self, user_id: UUID) -> str | None:
+        user = await self.db.get(User, user_id)
+        return user.email if user is not None else None

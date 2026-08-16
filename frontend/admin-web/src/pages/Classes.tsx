@@ -14,9 +14,10 @@ import {
   type ClassSession,
   type ClassSessionRoster,
   type ClassType,
+  staffLabel,
   type LocationItem,
   type PtAppointment,
-  type StaffItem,
+  type TrainerOption,
 } from './classes/types'
 
 export type {
@@ -28,7 +29,7 @@ export type {
   ClassType,
   LocationItem,
   PtAppointment,
-  StaffItem,
+  TrainerOption,
 } from './classes/types'
 
 export default function Classes() {
@@ -43,7 +44,7 @@ export default function Classes() {
   const [classTypes, setClassTypes] = useState<ClassType[]>([])
   const [ptAppointments, setPtAppointments] = useState<PtAppointment[]>([])
   const [locations, setLocations] = useState<LocationItem[]>([])
-  const [staffList, setStaffList] = useState<StaffItem[]>([])
+  const [trainers, setTrainers] = useState<TrainerOption[]>([])
 
   const [selectedSessionRoster, setSelectedSessionRoster] = useState<ClassSessionRoster | null>(null)
   const [rosterLoading, setRosterLoading] = useState(false)
@@ -75,13 +76,13 @@ export default function Classes() {
     setLoading(true)
     setError(null)
     try {
-      const [typesRes, schedsRes, sessRes, ptRes, locsRes, staffRes] = await Promise.all([
+      const [typesRes, schedsRes, sessRes, ptRes, locsRes, trainerRes] = await Promise.all([
         api<ClassType[]>('/api/v1/classes/types'),
         api<ClassSchedule[]>('/api/v1/classes/schedules'),
         api<ClassSession[]>('/api/v1/classes/sessions'),
         api<PtAppointment[]>('/api/v1/classes/pt/appointments'),
         api<LocationItem[]>('/api/v1/locations'),
-        api<StaffItem[]>('/api/v1/staff').catch(() => [] as StaffItem[]),
+        api<TrainerOption[]>('/api/v1/classes/trainers').catch(() => [] as TrainerOption[]),
       ])
 
       setClassTypes(typesRes)
@@ -89,11 +90,11 @@ export default function Classes() {
       setSessions(sessRes)
       setPtAppointments(ptRes)
       setLocations(locsRes)
-      setStaffList(staffRes)
+      setTrainers(trainerRes)
 
       if (locsRes.length > 0) setSessLocationId(locsRes[0].id)
       if (typesRes.length > 0) setSessClassTypeId(typesRes[0].id)
-      if (staffRes.length > 0) setSessTrainerUserId(staffRes[0].user_id)
+      if (trainerRes.length > 0) setSessTrainerUserId(trainerRes[0].user_id)
       if (schedsRes.length > 0) setGenScheduleId(schedsRes[0].id)
     } catch (e) {
       setError(formatApiError(e, 'Ders verileri yüklenirken bir hata oluştu.'))
@@ -183,7 +184,7 @@ export default function Classes() {
     e.preventDefault()
     const finalLocationId = sessLocationId || locations[0]?.id
     const finalClassTypeId = sessClassTypeId || classTypes[0]?.id
-    const finalTrainerId = sessTrainerUserId || staffList[0]?.user_id || session?.user_id
+    const finalTrainerId = sessTrainerUserId || trainers[0]?.user_id || session?.user_id
 
     if (!finalLocationId || !finalClassTypeId || !finalTrainerId) {
       setError('Lütfen şube, ders tipi ve eğitmen seçimlerini tamamlayın.')
@@ -459,12 +460,15 @@ export default function Classes() {
                   onChange={(e) => setSessTrainerUserId(e.target.value)}
                   className="input w-full text-sm"
                 >
-                  {staffList.map((s) => (
-                    <option key={s.id} value={s.user_id}>
-                      {s.first_name} {s.last_name} ({s.role})
+                  {trainers.length === 0 && (
+                    <option value="">Henüz antrenör tanımlı değil</option>
+                  )}
+                  {trainers.map((t) => (
+                    <option key={t.user_id} value={t.user_id}>
+                      {staffLabel(t)}
                     </option>
                   ))}
-                  {session?.user_id && !staffList.some((s) => s.user_id === session.user_id) && (
+                  {session?.user_id && !trainers.some((t) => t.user_id === session.user_id) && (
                     <option value={session.user_id}>{session.email || 'Kulüp Yöneticisi / Eğitmen'}</option>
                   )}
                 </select>

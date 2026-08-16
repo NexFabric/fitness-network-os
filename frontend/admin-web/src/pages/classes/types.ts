@@ -104,9 +104,19 @@ export type LocationItem = {
 export type StaffItem = {
   id: string
   user_id: string
-  first_name: string
-  last_name: string
+  email?: string | null
   role: string
+}
+
+export type TrainerOption = {
+  user_id: string
+  email: string
+  role: string
+}
+
+export function staffLabel(person: { email?: string | null; user_id: string; role: string }): string {
+  const who = person.email?.trim() || person.user_id
+  return `${who} (${person.role})`
 }
 
 export const DAYS_TR = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar']

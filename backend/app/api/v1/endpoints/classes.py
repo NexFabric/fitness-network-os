@@ -6,6 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +39,7 @@ from app.services.member_visibility import (
     has_tenant_wide_member_read,
     require_member_visible,
 )
+from app.services.staff import StaffService
 
 router = APIRouter()
 
@@ -47,6 +49,66 @@ def _require(user: User, tenant_id: UUID, permission: str) -> None:
         user=user, permission=permission, resource_tenant_id=tenant_id
     ):
         raise SecurityException()
+
+
+class TrainerDirectoryItem(BaseModel):
+    user_id: UUID
+    email: str
+    role: str = "TRAINER"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+_TRAINER_DIRECTORY_PERMS = (
+    "staff:read",
+    "classes:read",
+    "classes:write",
+    "pt:read",
+)
+
+
+def _can_list_trainers(user: User, tenant_id: UUID) -> bool:
+    """Admin uses tenant-wide grants; members use :self with owner proof."""
+    for perm in _TRAINER_DIRECTORY_PERMS:
+        if AuthorizationService.is_authorized(
+            user=user, permission=perm, resource_tenant_id=tenant_id
+        ):
+            return True
+    for perm in ("pt:book:self", "pt:read:self", "classes:read:self"):
+        if AuthorizationService.is_authorized(
+            user=user,
+            permission=perm,
+            resource_tenant_id=tenant_id,
+            resource_owner_id=user.id,
+        ):
+            return True
+    return False
+
+
+# ---------------------------------------------------------
+# Trainer directory (RBAC mapping, tenant-isolated)
+# ---------------------------------------------------------
+
+
+@router.get("/trainers", response_model=list[TrainerDirectoryItem])
+async def list_class_trainers(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> list[TrainerDirectoryItem]:
+    """List users who can be assigned as class/PT trainers in this tenant.
+
+    Isolated by ``user_roles.tenant_id`` + RLS. Does not grant ``staff:read``.
+    Members with ``pt:book:self`` see the same directory so the portal picker
+    is not an empty ``undefined undefined`` select.
+    """
+    if not _can_list_trainers(current_user, tenant_id):
+        raise SecurityException()
+    rows = await StaffService(db).list_trainers(tenant_id)
+    return [
+        TrainerDirectoryItem(user_id=user_id, email=email, role="TRAINER")
+        for user_id, email in rows
+    ]
 
 
 # ---------------------------------------------------------

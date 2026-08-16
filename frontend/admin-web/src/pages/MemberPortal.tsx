@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { api, ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { Alert, LoadingSkeleton } from '../components/ui'
-import type { ClassBooking, ClassSession, PtAppointment, StaffItem } from './classes/types'
+import type { ClassBooking, ClassSession, PtAppointment, TrainerOption } from './classes/types'
 import { AccessTab } from './portal/AccessTab'
 import { ClassesTab } from './portal/ClassesTab'
 import { FinanceTab } from './portal/FinanceTab'
@@ -42,7 +42,7 @@ export default function MemberPortal() {
   const [classSessions, setClassSessions] = useState<ClassSession[]>([])
   const [myBookings, setMyBookings] = useState<ClassBooking[]>([])
   const [myPtAppointments, setMyPtAppointments] = useState<PtAppointment[]>([])
-  const [trainers, setTrainers] = useState<StaffItem[]>([])
+  const [trainers, setTrainers] = useState<TrainerOption[]>([])
   const [bookingLoading, setBookingLoading] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
 
@@ -89,17 +89,17 @@ export default function MemberPortal() {
 
   const loadClassesData = useCallback(async () => {
     try {
-      const [sessionsRes, bookingsRes, ptRes, staffRes] = await Promise.all([
+      const [sessionsRes, bookingsRes, ptRes, trainerRes] = await Promise.all([
         api<ClassSession[]>('/api/v1/me/classes/sessions'),
         api<ClassBooking[]>('/api/v1/me/classes/bookings').catch(() => [] as ClassBooking[]),
         api<PtAppointment[]>('/api/v1/me/pt/appointments').catch(() => [] as PtAppointment[]),
-        api<StaffItem[]>('/api/v1/staff').catch(() => [] as StaffItem[]),
+        api<TrainerOption[]>('/api/v1/classes/trainers').catch(() => [] as TrainerOption[]),
       ])
       setClassSessions(sessionsRes)
       setMyBookings(bookingsRes)
       setMyPtAppointments(ptRes)
-      setTrainers(staffRes)
-      if (staffRes.length > 0) setPtTrainerId(staffRes[0].user_id)
+      setTrainers(trainerRes)
+      if (trainerRes.length > 0) setPtTrainerId(trainerRes[0].user_id)
     } catch {
       // ignore
     }
