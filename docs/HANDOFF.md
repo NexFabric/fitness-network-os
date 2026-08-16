@@ -7,10 +7,9 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 |---|---|
 | Branch | `feat/public-site-modernization-and-seo` |
 | Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
-| Docs HEAD | `e6a2d6c` (checklist/handoff sync; no code change) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
 | PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) OPEN · MERGEABLE · **BLOCKED `REVIEW_REQUIRED`** |
-| CI | `ab860f0` run `31947417828` **SUCCESS** (unit + Playwright + All Required Checks Passed). Docs `e6a2d6c` run `31947732456` unit green, **Playwright in progress**. |
+| CI | `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
 
@@ -39,7 +38,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `gh pr view 62` ve `gh run view 31947732456` (docs HEAD) ile CI’yı tazeleyin. Kod SHA `ab860f0` zaten yeşil (`31947417828`). Docs run kırmızıysa düzelt; yeşilse PR HEAD’i de CI VERIFIED yaz. Sahte yeşil yazma.
+2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Bu oturum durdu; yeni docs SHA’nın CI’sini iddia etme.
 3. **PR #62’yi merge etme.** GitHub yazarın (`emrahub`) kendi PR’ını onaylatmaz. Kullanıcı sözlü “onaylıyorum” ≠ GitHub `APPROVE`. İkinci bir insan hesabı gerekir. `enforce_admins` ve required check listesine dokunma.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -75,10 +74,9 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 
 | # | İş | Kim | Not |
 |---|---|---|---|
-| 1 | Docs HEAD CI `31947732456` bitsin | ajan | Kod `ab860f0` zaten yeşil. Docs Playwright kırmızıysa düzelt. |
-| 2 | PR #62 bağımsız `APPROVE` | **ikinci insan GitHub hesabı** | Self-approve yasak. Merge yok. |
-| 3 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
-| 4 | S3 / PITR / pentest / OBS / KMS IAM | A-OPS | Dış kanıt. Kod fail-closed. Uydurma. |
+| 1 | PR #62 bağımsız `APPROVE` | **ikinci insan GitHub hesabı** | Self-approve yasak. Merge yok. |
+| 2 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
+| 3 | S3 / PITR / pentest / OBS / KMS IAM | A-OPS | Dış kanıt. Kod fail-closed. Uydurma. |
 
 ## Bu makineden kapatılamayanlar
 

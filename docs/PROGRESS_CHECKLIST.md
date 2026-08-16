@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Last code:** `ab860f0` · **Docs HEAD:** `e6a2d6c` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** `ab860f0` run `31947417828` **SUCCESS** (lint/unit/Playwright/CodeQL/All Required Checks Passed). Docs `e6a2d6c` run `31947732456` unit green, Playwright in progress — PR HEAD henüz CI VERIFIED değil.
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Last code:** `ab860f0` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** `ab860f0` `31947417828` **SUCCESS** · docs `e6a2d6c` `31947732456` **SUCCESS**. Pause commit CI is not claimed here.
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -31,7 +31,7 @@
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
 | **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
 | **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
-| **Phase 29 + RC closure (this branch)** | 🟢 **CODE LANDED** · code CI **VERIFIED** on `ab860f0` | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. PR #62 **not merged**. Docs HEAD `e6a2d6c` Playwright still running. |
+| **Phase 29 + RC closure (this branch)** | 🟢 **CODE LANDED** · CI **VERIFIED** on `ab860f0` + `e6a2d6c` | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. PR #62 **not merged**. |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -184,7 +184,7 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **INVITE-1** Hashed invite-token table (`account_invites`, Alembic `xd5e6f7a8b9c`) + `POST /auth/invite/accept` + `/invite` page
 - [x] **INVITE-OTP** Standing OTP no longer returned or emailed; invite is the only issued secret
 - [x] **ONB-UI** Tenant onboarding wizard UI (`/onboarding`) — API already existed
-- [x] **CI-62** Code SHA `ab860f0` required CI run `31947417828` **SUCCESS** (unit + Playwright + All Required Checks Passed). Docs HEAD `e6a2d6c` run `31947732456` still has Playwright in progress — do not treat PR HEAD as CI VERIFIED until that run finishes green.
+- [x] **CI-62** `ab860f0` run `31947417828` **SUCCESS**. Docs `e6a2d6c` run `31947732456` **SUCCESS** (unit + Playwright). Later docs-only SHAs are not separately claimed.
 - [ ] **REV-62** Independent GitHub APPROVE on PR #62. Author cannot self-approve. Do not merge.
 - [ ] **HAND-1** Manual browser proof (tutanak `docs/ops/HAND1_BROWSER_PROOF.md`). Playwright covers invite accept, onboarding, portal bind, scanner pair, report artifact link — human sign-off still open
 - [x] **GOD-1** Split `SuperAdminPortal` (`pages/hq/*`), `Classes` (`pages/classes/*`), `MemberPortal` (`pages/portal/*`). `Finance.tsx` left intact — no tab seams; not a security gate
