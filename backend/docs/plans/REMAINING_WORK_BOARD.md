@@ -80,6 +80,8 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 | P2-3-IAM | Production KMS alias / IAM / rotation proof | A-OPS |
 | ISO-1 | IsolationProvider — do not invent; keep abstraction | — |
 
+GitHub Settings (2026-08-16, `gh` API): Default CodeQL Setup = **not-configured**. `main` required checks now include Unit tests, FE builds, Frontend Images, Playwright, CodeQL, All Required Checks Passed. Reviews: 1 approval, enforce_admins, strict.
+
 ---
 
 ## Explicit non-claims

@@ -3,8 +3,8 @@
 ## Most Imported Files (change these carefully)
 
 - `backend/app/models/user.py` — imported by **67** files
-- `backend/app/models/tenant.py` — imported by **59** files
-- `backend/app/models/organization.py` — imported by **52** files
+- `backend/app/models/tenant.py` — imported by **58** files
+- `backend/app/models/organization.py` — imported by **51** files
 - `backend/app/api/deps.py` — imported by **47** files
 - `backend/app/models/member.py` — imported by **41** files
 - `backend/app/models/rbac.py` — imported by **40** files
@@ -26,8 +26,8 @@
 ## Import Map (who imports what)
 
 - `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +62 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +54 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +47 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +53 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +46 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
 - `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +36 more
 - `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +35 more
