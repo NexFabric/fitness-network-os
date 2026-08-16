@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 35% test coverage
-> **Token savings:** this file is ~16,200 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,400 tokens per conversation.**
-> **Last scanned:** 2026-08-16 20:06 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 36% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
+> **Last scanned:** 2026-08-16 20:24 — re-run after significant changes
 
 ---
 
@@ -1117,7 +1117,7 @@
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
 - `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
 - `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
-- `VITE_API_URL` **required** — frontend/admin-web/src/api/client.ts
+- `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 
 ## Config Files
@@ -1152,46 +1152,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **73** files
-- `backend/app/models/tenant.py` — imported by **67** files
-- `backend/app/models/organization.py` — imported by **60** files
+- `backend/app/models/user.py` — imported by **75** files
+- `backend/app/models/tenant.py` — imported by **69** files
+- `backend/app/models/organization.py` — imported by **62** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/member.py` — imported by **45** files
-- `backend/app/models/rbac.py` — imported by **44** files
+- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **45** files
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **35** files
+- `backend/app/models/membership.py` — imported by **30** files
 - `backend/app/main.py` — imported by **30** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **30** files
-- `backend/app/models/membership.py` — imported by **29** files
+- `backend/app/models/location.py` — imported by **27** files
 - `frontend/admin-web/src/api/client.ts` — imported by **27** files
-- `backend/app/models/location.py` — imported by **26** files
 - `backend/app/core/authorization.py` — imported by **25** files
 - `backend/app/db/rls.py` — imported by **22** files
 - `backend/app/core/config.py` — imported by **20** files
-- `backend/app/models/access.py` — imported by **19** files
+- `backend/app/models/access.py` — imported by **20** files
+- `backend/app/models/finance.py` — imported by **18** files
 - `backend/app/models/outbox.py` — imported by **17** files
 - `frontend/e2e/tests/helpers/auth.ts` — imported by **17** files
-- `backend/app/models/finance.py` — imported by **16** files
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +68 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +62 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +55 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +70 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +64 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +57 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +40 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +39 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +42 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +40 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
 - `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +30 more
+- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +25 more
 - `backend/app/main.py` ← `backend/tests/api/test_admin_federation.py`, `backend/tests/api/test_admin_federation_complete.py`, `backend/tests/api/test_adversarial_security.py`, `backend/tests/api/test_auth_login.py`, `backend/tests/api/test_class_booking_engine.py` +25 more
-- `frontend/admin-web/src/components/ui/index.ts` ← `frontend/admin-web/src/components/MemberMemberships.tsx`, `frontend/admin-web/src/components/RequireAuth.tsx`, `frontend/admin-web/src/pages/Classes.tsx`, `frontend/admin-web/src/pages/Dashboard.tsx`, `frontend/admin-web/src/pages/DataImport.tsx` +25 more
 
 ---
 
 # Test Coverage
 
-> **35%** of routes and models are covered by tests
-> 117 test files found
+> **36%** of routes and models are covered by tests
+> 119 test files found
 
 ## Covered Routes
 
@@ -1223,9 +1223,11 @@
 - ClassSchedule
 - ClassSession
 - ClassBooking
+- TrainerAvailability
 - PtAppointment
 - ConsentDefinition
 - ConsentRecord
+- DataImportRow
 - DsarRequest
 - EntitlementDefinition
 - MembershipEntitlement
@@ -1324,7 +1326,7 @@
   - `actions/checkout@v7`
   - `actions/setup-python@v7`
   - `actions/setup-node@v7`
-  - `actions/upload-artifact@v4`
+  - `actions/upload-artifact@v7`
 - **codeql** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v7`
   - `github/codeql-action/init@v4`
@@ -1354,6 +1356,30 @@
 ---
 _Source: .github/workflows/ci.yml, .github/workflows/deploy.yml, .github/workflows/ops-drills.yml_
 _Generated by codesight-cicd-plugin_
+
+---
+
+# Git Hooks
+
+> **Note for agents:** These hooks fire automatically on git operations and will block the operation if they fail.
+
+## `pre-commit` — raw git hook
+
+- **set**: `set -e`
+- **changed=$(git**: `changed=$(git diff --cached --name-only --diff-filter=ACMR)`
+- **case**: `case "$changed" in`
+- ***.py|*.ts|*.tsx|*.md|*backend/*|*frontend/*|*docs/*)**: `*.py|*.ts|*.tsx|*.md|*backend/*|*frontend/*|*docs/*) ;;`
+- ***)**: `*) exit 0 ;;`
+- **esac**: `esac`
+- **command**: `command -v npx >/dev/null 2>&1 || exit 0`
+- **npx**: `npx --yes --no-install codesight --wiki >/dev/null 2>&1 || exit 0`
+- **if**: `if [ -d docs ]; then`
+- **npx**: `npx --yes --no-install codesight --mode knowledge docs -o .codesight >/dev/null 2>&1 || true`
+- **fi**: `fi`
+- **git**: `git add .codesight >/dev/null 2>&1 || true`
+- **exit**: `exit 0`
+
+_Source: .git/hooks/pre-commit_
 
 ---
 

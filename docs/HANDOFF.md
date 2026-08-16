@@ -162,6 +162,10 @@ kararı dış kanıt + bağımsız insan onayı olmadan verilmez.
   bloke edilir.
 - **CodeQL:** Default Setup açıkken Advanced workflow SARIF çakışır. Şu an
   Default Setup = not-configured. Geri açma.
+- **CI tasarrufu:** Required suite ~10+ dk. Her rebase / force-push / docs-only
+  commit tam CI'yı yeniden açar. Kardeş PR açma, yeşil PR'ı tekrar push etme,
+  izlemek için `workflow_dispatch` basma. Önce bitir, sonra tek rebase.
+  Stale run'ı `gh run cancel` ile kes.
 
 ### PR #55 (merged) — kısa hatırlatma
 
@@ -179,5 +183,6 @@ ve bağımsız pentest **kodla kapanmış sayılmaz**.
 - Phase 26 / production-ready işaretleme.
 - Kapanan kampanyayı yeniden yazma (`docs/CAMPAIGN_REGISTER.md`).
 - PR **#86** React 19 merge etme.
+- Yeşil CI'yı rebase / kardeş PR / boş commit ile yeniden başlatma.
 - `enforce_admins` veya required check listesini “hız için” düşürme. Yeşil CI olmadan merge etme.
 - `reports/` içeriğini commit etme — yerel denetim çıktısı, `.gitignore`'da.

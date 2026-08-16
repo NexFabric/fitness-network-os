@@ -1,4 +1,4 @@
-# subagent-01a00bf1-2403-74c3-a3a3-18a616f01f3f — Wiki
+# GymClubNex — Wiki
 
 _Generated 2026-08-16 — re-run `npx codesight --wiki` if the codebase has changed._
 
@@ -43,7 +43,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - Routes: **142**
 - Models: **86**
 - Components: **64**
-- Env vars: **13** required, **19** with defaults
+- Env vars: **12** required, **20** with defaults
 
 ## How to Use
 

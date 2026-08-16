@@ -80,6 +80,22 @@ Index of UNVERIFIED rows: `docs/ops/EXTERNAL_GATES.md`.
 
 ---
 
+## CI discipline (2026-08-16)
+
+Required CI is the merge gate and it is **expensive**. This wave burned
+duplicate runs by rebasing `#95`/`#96` after every tip move and leaving
+superseded workflows running.
+
+- Do **not** rebase a PR that is already All Green unless merge is blocked
+  by “not up to date” **and** you are about to merge it.
+- Do **not** open a sibling PR for the same ID. Watch the existing run.
+- Do **not** push docs-only follow-ups onto a PR whose unit job is still
+  running — that cancels ~10 minutes of work.
+- After a rebase, `gh run cancel` the previous SHA’s in-progress run.
+- Prefer one PR, one CI, merge. Finish the product first; do not farm CI.
+
+---
+
 ## Wave close (2026-08-16, docs)
 
 In-repo certification wave is **closed**. Architecture (`docs/ARCHITECTURE.md`)
@@ -94,5 +110,8 @@ ops-drills. After live test: HAND-1 signature + external gates.
 1. Read this file + `docs/HANDOFF.md` + `docs/PROGRESS_CHECKLIST.md`.
 2. `git fetch` and treat `origin/main` as authority. Last code must match `git log -1 origin/main`.
 3. If an ID is in the closed table above, **stop**. Tick it if a checklist still shows `[ ]`; do not write new code.
-4. If a PR is in flight, rebase/watch that PR — do not open a sibling.
-5. Remaining agent-doable work is only: keep #95/#92 moving, keep truth headers on the real tip, and refuse to invent IsolationProvider / Scope.LOCATION / React 19 / HAND-1 signatures.
+4. If a PR is in flight, **watch it**. Rebase only when merge is blocked
+   and you will merge immediately. Do not open a sibling. Do not farm CI.
+5. After `#95` lands, remaining agent-doable work is none in-repo.
+   Human live test + HAND-1 + external gates. Refuse IsolationProvider /
+   Scope.LOCATION / React 19 / HAND-1 signatures.

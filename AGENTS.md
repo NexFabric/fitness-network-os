@@ -33,3 +33,6 @@ Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için sou
 - Her aşamada testler çalıştırılacak ve hatalar temizlenmeden ilerlenmeyecektir.
 - Her büyük iş mantıklı commitlere bölünecektir.
 - Çalışma ağacı temiz bırakılacak ve yapılan işler açıklayıcı mesajlarla commit edilecektir.
+- **İlk iş ürünü bitirmektir.** Required CI pahalıdır: yeşil PR'ı tekrar
+  rebase etme, kardeş PR açma, koşan unit job'ı docs push ile iptal etme.
+  Detay: `docs/CAMPAIGN_REGISTER.md` (CI discipline).
