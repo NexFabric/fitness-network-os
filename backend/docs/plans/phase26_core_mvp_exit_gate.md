@@ -109,7 +109,7 @@ Any required FAIL or PARTIAL → overall **FAIL** (product remains **not product
 | C8 | Observability without PII cardinality blow-ups | **PASS** | Request/correlation ids + health |
 | C9 | Threat models + business invariant coverage for hot domains | **PASS** | Domain tests |
 | C10 | Zero-downtime migration discipline (expand/contract) | **PASS** | Expand used |
-| C11 | Supply chain (SAST/SCA/secrets in CI) | **PASS** | Bandit, pip-audit, TruffleHog, SBOM, Safety |
+| C11 | Supply chain (SAST/SCA/secrets in CI) | **PASS** | Bandit + pip-audit + TruffleHog + CodeQL. Safety CLI removed — it no longer boots; pip-audit is the SCA gate. |
 | C12 | Production secrets isolation & no secrets in images | **PARTIAL** | `.env` was gitignored but the production Docker context had no `.dockerignore`. |
 
 ---
