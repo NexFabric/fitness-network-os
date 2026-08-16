@@ -13,6 +13,14 @@ jobs:
     name: S3, dump/restore, PITR, and Alert Drills
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Settings() is imported by s3_runtime_proof.py and tls_connection_proof.py.
+    # backend/.env is gitignored, so a clean runner has no DATABASE_URL/REDIS_URL
+    # unless they are job-scoped. Host port 5433 matches compose postgres.
+    env:
+      DATABASE_URL: postgresql+asyncpg://fitness_app:fitness_app_password@localhost:5433/fitness_os
+      MIGRATOR_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_os
+      REDIS_URL: redis://localhost:6379/0
+      ENCRYPTION_KEY: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
 
     steps:
       - uses: actions/checkout@v7
