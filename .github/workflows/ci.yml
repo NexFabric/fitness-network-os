@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           
@@ -64,7 +64,7 @@ jobs:
     # own failure, but the run's conclusion is decided by the actual gates.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Generate SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -154,7 +154,7 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -225,7 +225,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -253,7 +253,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Build frozen non-root backend image
         run: docker build --file backend/Dockerfile.prod --tag fitness-network-os:${{ github.sha }} backend
@@ -263,7 +263,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Build admin-web image (workspace lockfile + SPA nginx)
         run: >
@@ -286,7 +286,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -343,7 +343,7 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -414,7 +414,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
         with:
           languages: python, javascript-typescript
