@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `main` · **Last code:** `e05e29f` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, `#89`→`e05e29f` (production certification), plus `#64/#66/#68`. **Campaign landings:** migrate gate, migrator isolation, TLS, ops-drills PITR, coverage floors; **EXTERNAL_GATES UNVERIFIED**. Every merge on `main` passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer). **Production-ready:** **NO**. Phase 26 PASS is **NOT VERIFIED**.
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `main` · **Last code:** `1b42ab4` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, `#89`→`e05e29f` (production certification), `#91`→`27fff12`, `#93`→`d9a5c9d`, `#94`→`1b42ab4`, plus `#64/#66/#68`. **Campaign landings:** **#89–#94 MERGED** (`1b42ab4`) — migrate gate, migrator isolation, TLS, ops-drills PITR (CI `31968740247` SUCCESS), coverage floors, Safety CLI dropped, release-truth checker. **Do not redo** (`docs/CAMPAIGN_REGISTER.md`). **EXTERNAL_GATES UNVERIFIED**. Every merge on `main` passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer). **Production-ready:** **NO**. Phase 26 PASS is **NOT VERIFIED**.
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -202,6 +202,21 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **TZ-1** `generate_sessions` uses `Location.timezone`; unique schedule+start
 - [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
 - [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
+
+### Certification campaign 2026-08-16 — MERGED, do not redo
+
+- [x] **CERT-89** PR **#89** `e05e29f` — production certification (migrate gate, migrator isolation, TLS / private-network, coverage floors, Safety CLI dropped)
+- [x] **TRUTH-91** PR **#91** `27fff12` — authority docs mark #89 MERGED
+- [x] **REL-TRUTH** PR **#93** `d9a5c9d` — `check_release_truth.py` forbids stale OPEN vs MERGED pairs
+- [x] **TLS-PROOF** PR **#94** `1b42ab4` — host `chown 999:999` of TLS proof certs; encrypt-only SSL context
+- [x] **DRILLS-CI** ops-drills dump/restore + PITR **SUCCESS** on tip (`31968740247` @ `1b42ab4`)
+- [x] **SAFETY-1** Safety CLI removed; pip-audit is the required SCA gate
+- [x] **MIG-PROD** / **TLS-1** / **CORS-HTTPS** / **MIG-SEC** / **COV-CRIT** / **A11Y-1** / **PERF-1** / **CD-1** (compose) — landed in #89. Live AWS promote still UNVERIFIED
+- [ ] **PR-95** P1 test-depth — in flight (`feat/p1-critical-test-depth`). Do not open a sibling
+- [ ] **PR-92** Dependabot github-actions — in flight; merge only All Green + up to date
+- [ ] **#86** React 19 — **do not merge**
+
+Register: `docs/CAMPAIGN_REGISTER.md`.
 
 ### Executed 2026-08-16 — real runtime drills & code hardening
 
