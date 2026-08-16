@@ -5,11 +5,12 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Alan | Değer |
 |---|---|
-| Branch | `feat/public-site-modernization-and-seo` |
-| Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
+| Branch | `feat/production-certification-closure` — PR **#89 OPEN** (until merged) |
+| Last code | `6530739` (campaign tip; `origin/main` still `ee6597e`) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) **MERGED** → `main` `ae6267d` (squash, 2026-08-16). Merge kapısı yalnız CI. |
-| CI | Kod `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. Sonraki **docs-only** SHA'lar ayrıca iddia edilmez. |
+| Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#83`/`#84` frontend deps · `#64/#66/#68` CI action bump |
+| Campaign landings (PR #89) | migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · EXTERNAL_GATES **UNVERIFIED** |
+| CI | `main` üzerindeki her merge required CI'dan geçti. Merge kapısı **yalnız CI** — review zorunluluğu yok (2026-08-16, tek geliştirici). |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
 
@@ -31,6 +32,8 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Yedek / restore / **PITR** tatbikatları | `docs/ops/DR_RESTORE_STATUS.md` |
 | KMS / IAM kurulum + rotation (NOT VERIFIED) | `docs/ops/KMS_IAM_RUNBOOK.md` |
 | Elle tarayıcı tutanağı | `docs/ops/HAND1_BROWSER_PROOF.md` (imza **boş**) |
+| Public repo / lisans kararı | `docs/ops/REPO_VISIBILITY.md` (LICENSE yok — insan) |
+| Prod deploy / TLS / migrator | `docs/ops/PRODUCTION_DEPLOY.md` |
 | Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` |
 | Kurallar / mühendislik sözleşmesi | `AGENTS.md` (`CLAUDE.md` buna sembolik bağ — tek kaynak) |
 
@@ -42,7 +45,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Daha yeni docs-only SHA’ların CI’sini görmeden iddia etme.
+2. `git log origin/main` otoritedir. Sertifikasyon PR **#89** açık olana kadar `main` dışındaki SHA'yı merged sayma. Bir SHA'nın CI'sini görmeden yeşil iddia etme.
 3. **Merge kapısı CI’dır.** Bu tek geliştiricili repoda “1 onaylayan review” kuralı yapısal olarak imkânsızdı (yazar kendi PR’ını onaylayamaz) ve 2026-08-16’da repo sahibi kararıyla kaldırıldı. `enforce_admins`, `strict` ve 11 required check **yerinde** — bunlara dokunma. Yeşil CI olmadan merge etme.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -51,9 +54,12 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-In-repo kod bu dalda **kapandı** (Phase 0–27.4 + Waves 1–3 + Fed HQ + Milestone B1 + Phase 29 + RC booking/staff/PT kapanışı). `main`’e **merge edilmedi**.
+Ürün kodu `main`'de (Phase 0–27.4 + Waves 1–3 + Fed HQ + B1 + Phase 29 + RC).
+Sertifikasyon kapanışı PR **#89** üzerindedir — Safety CLI düşürüldü, migrator
+DSN yalnız `migrate` servisinde, worker'lar `PRODUCTION_PRIVATE_NETWORK` alır,
+ops-drills dump/restore + PITR çalıştırır. Merge yalnız required CI yeşilse.
 
-**Bu dalda kapanan son kod (Phase 29 + RC):**
+**Phase 29 + RC (merge `ae6267d`):**
 - Same-tenant BOLA, privileged MFA + step-up + idle, `fernet:hmac:` cihaz sırrı, portal-account bind, scanner pairing, SMTP `delivery.body`, compose workers, hashed `account_invites`, onboarding UI, DSAR export+erasure, god-page split, index drift (`xf7a8b9c0d1e`).
 - **STAFF-2** staff list `email` + tenant-isolated `GET /classes/trainers` (UserRole TRAINER; seed trainer/desk `staff` satırı).
 - **UR-1** `user_roles` üç partial unique (`xg8b9c0d1e2f`).
@@ -63,6 +69,9 @@ In-repo kod bu dalda **kapandı** (Phase 0–27.4 + Waves 1–3 + Fed HQ + Miles
 - **TZ-1** `generate_sessions` `Location.timezone` (`ZoneInfo`); unique schedule+start.
 - **KPI-1** dashboard member KPI `visible_member_ids`.
 - **MEM-T** membership mutation `tenant_id` pin; class book `required_entitlement_type` check+consume; PT availability varsa saat filtresi.
+- **TD-1** `admin-web` ve `scanner-pwa` React render & hook yan etkileri temizlendi (0 error, 0 warning).
+- **TD-4** `.github/workflows/ops-drills.yml` haftalık periyodik tatbikat workflow'u eklendi.
+- **ADV-SEC** `backend/tests/api/test_adversarial_security.py` in-repo BOLA/IDOR/forgery/break-glass testleri eklendi (%100 yeşil).
 
 Önceki mercek (B1 / Fed HQ / #55–#60) checklist’te duruyor; burada tekrar edilmez.
 
@@ -79,9 +88,10 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 | # | İş | Kim | Not |
 |---|---|---|---|
 | 1 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
-| 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. |
+| 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. `docs/ops/PENTEST_BRIEF.md`. |
 | 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır: `ops/iam/`, `backend/scripts/kms_iam_verify.py`. Kimlik bilgisi gelince tek komut. |
 | 4 | Üretim S3 kovası / off-host WAL / gerçek pager | A-OPS | Yerel tatbikatlar geçti; üretim altyapısı ayrı. |
+| 5 | PR **#89** required CI + merge | ajan | Security artık pip-audit; Unit/Playwright GitHub'da. Yeşil olmadan merge yok. |
 
 **2026-08-16'da kapananlar:** P1-3b-RT (gerçek S3 API'sine karşı 10/10),
 P1-10 (dump/restore **ve** PITR tatbikatı), P2-OBS (Prometheus/Alertmanager/
@@ -95,7 +105,7 @@ Grafana + uçtan uca ateşlenen alert). Kanıtlar `docs/ops/` altında.
 | P2-3-IAM | Üretim KMS alias / IAM / rotation + canlı decrypt — AWS kimlik bilgisi yok |
 | P1-3b-PROD | Gerçek AWS kovası (MinIO S3-uyumlu, AWS değil) |
 | P1-10-PROD | Üretim host'unda off-host WAL arşivleme + ölçülmüş RPO |
-| P1-11 / Phase 26 | Dış pentest + bağımsız güvenlik onayı |
+| P1-11 / Phase 26 | Dış pentest + bağımsız güvenlik onayı (`docs/ops/PENTEST_BRIEF.md`) |
 | ISO-1 | IsolationProvider abstraction — icat etme, RLS’i değiştirme |
 | Scope.LOCATION | Bilinçli ertelendi; şimdi açma |
 

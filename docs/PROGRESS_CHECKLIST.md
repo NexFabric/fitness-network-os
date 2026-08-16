@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Last code:** `ab860f0` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** `ab860f0` `31947417828` **SUCCESS** · docs `e6a2d6c` `31947732456` **SUCCESS**. Pause commit CI is not claimed here.
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `feat/production-certification-closure` — PR **#89 OPEN** (until merged) · **Last code:** `6530739` (campaign tip; `origin/main` still `ee6597e`) · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, plus `#64/#66/#68`. **Campaign landings:** migrate gate, migrator isolation, TLS, ops-drills PITR, coverage floors; **EXTERNAL_GATES UNVERIFIED**. Every merge on `main` passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer). **Production-ready:** **NO**. Phase 26 PASS is **NOT VERIFIED**.
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -153,7 +153,7 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ---
 
-## Phase 29 — In-repo hardening (2026-08-16, branch `feat/public-site-modernization-and-seo`)
+## Phase 29 — In-repo hardening (2026-08-16, merged to `main` as `ae6267d`)
 
 Same-tenant BOLA, privileged cookie assurance, device secret at rest, and the
 product gaps that were already implemented in services but had no HTTP/UI.
@@ -203,8 +203,11 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
 - [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
 
-### Executed 2026-08-16 — real runtime drills
+### Executed 2026-08-16 — real runtime drills & code hardening
 
+- [x] **TD-1** Frontend React hook & render correctness: refactored all impure state updates, sync `setState` in `useEffect` calls, and hook dependency loops across `frontend/admin-web` and `frontend/scanner-pwa` (0 lint errors, 0 warnings).
+- [x] **TD-4** Scheduled Ops Drills CI: added `.github/workflows/ops-drills.yml` with scheduled weekly Sunday run + `workflow_dispatch` for automated S3 runtime proof and Alertmanager drills.
+- [x] **ADV-SEC** In-repo adversarial penetration testing suite (`backend/tests/api/test_adversarial_security.py`): verified cross-tenant IDOR/BOLA, header forgery, forged bearer tokens, revoked sessions, expired sessions, and superuser break-glass enforcement (100% pass).
 - [x] **P1-3b-RT** Real S3 API proof — 10/10 against MinIO with the actual `S3StorageProvider`: SSE `AES256` at rest, tenant-scoped key layout, anonymous GET rejected 403, presigned GET serves byte-identical payload, cross-tenant presign refused, delete verified. Evidence `docs/ops/S3_RUNTIME_PROOF.md`; drill `backend/scripts/s3_runtime_proof.py`. **Production AWS bucket + policy still open** (see P2-3-IAM)
 - [x] **P1-10** Restore **and** PITR drills executed. Dump/restore: 632K, 8 tenants / 33 members / 72 RLS tables. PITR (`backend/scripts/pitr_drill.sh`): base backup → WAL replay to a target timestamp → the post-target write is correctly absent, archiver 6/0. Evidence `docs/ops/DR_RESTORE_STATUS.md`. **Local throwaway container, not the production host**
 - [x] **P2-OBS** Prometheus + Alertmanager + Grafana landed (`docker-compose.obs.yml`, `ops/observability/`). 7 alert rules bound to metrics that actually exist; 9-panel dashboard provisioned. Alert path drilled end-to-end: `inactive → pending → firing → delivered to Alertmanager → resolved`. Evidence `docs/ops/OBSERVABILITY.md`. **Receivers are null by design; no tracing**

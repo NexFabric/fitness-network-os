@@ -1,0 +1,11 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-report-artifacts",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "reports/" },
+      "Expiration": { "Days": 90 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+    }
+  ]
+}

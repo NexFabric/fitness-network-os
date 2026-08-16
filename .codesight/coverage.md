@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **33%** of routes and models are covered by tests
-> 105 test files found
+> **35%** of routes and models are covered by tests
+> 117 test files found
 
 ## Covered Routes
 
@@ -30,10 +30,13 @@
 - QrJtiReplay
 - AuditEvent
 - ClassType
+- ClassSchedule
 - ClassSession
 - ClassBooking
+- PtAppointment
 - ConsentDefinition
 - ConsentRecord
+- DsarRequest
 - EntitlementDefinition
 - MembershipEntitlement
 - EntitlementWallet

@@ -32,7 +32,6 @@ export default function MfaSetup() {
 
   useEffect(() => {
     if (!setup?.provisioning_uri) {
-      setQrDataUrl(null)
       return
     }
     let active = true

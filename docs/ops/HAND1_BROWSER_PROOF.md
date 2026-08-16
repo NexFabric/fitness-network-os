@@ -1,9 +1,29 @@
 # HAND-1 — Elle tarayıcı kanıtı
 
-Bu tutanak **P1-11 pentest değildir.** Birinci kulüp akışının gerçek bir
-tarayıcıda baştan sona çalıştığını kaydeder.
+**Durum:** **UNVERIFIED** (insan imzası boş)
+
+Index: `docs/ops/EXTERNAL_GATES.md`. Bu tutanak **P1-11 pentest
+değildir.** Birinci kulüp akışının gerçek bir tarayıcıda baştan sona
+çalıştığını kaydeder.
 
 **Alembic:** `xi0d1e2f3a4b` · **Dal:** `main` (`ae6267d`)
+
+## Kapatma (insan listesi)
+
+Owner: **human**. Ajan bu tabloyu dolduramaz. Playwright 51/51 PASS
+imzanın yerine geçmez.
+
+1. Aşağıdaki 10 adımı **kendi gözünle** tıkla (otomatik koşum yetmez).
+2. Her adımda “görmelisin” sütunundaki sonucu gör.
+3. En alttaki imza tablosunu doldur. Ajan satırı boş bırakır.
+
+```bash
+# Otomatik koşum (imza değil) — port çakışmasını önle:
+docker compose up -d postgres redis
+docker stop fitness-os-backend
+cd backend && set -a && source .env && set +a && ./.venv/bin/python scripts/seed_role_matrix.py
+cd ../frontend/e2e && npx playwright test
+```
 
 ## İki ayrı kayıt — karıştırma
 
@@ -14,6 +34,23 @@ tarayıcıda baştan sona çalıştığını kaydeder.
 
 Otomatik koşum insan imzasının yerine geçmez. Otomasyon "buton çalışıyor" der;
 insan "bu ürün kullanılabilir" der. İkincisini ajan imzalayamaz.
+
+## İnsan tıklama listesi (imza bunları kapsar)
+
+Ortam: local veya staging. Üretim üyesi / gerçek kart kullanma.
+
+| # | Tıkla | Görmelisin |
+|---|---|---|
+| 1 | `e2e.owner@e2e.local` + TOTP → ops panel | Owner konsolu açılır; başka tenant görünmez |
+| 2 | `/locations` — şube oluştur | Yeni şube listede; timezone set |
+| 3 | `/plans` — fiyat kuruş, yayınla | Fiyat kuruş (float yok); yayın geri alınamaz |
+| 4 | `/members` — üye + e-posta → portal hesabı → `/invite` | Davet kabul; parola set; üye portala girer |
+| 5 | `/staff` — hesap oluştur → davet linki | OTP yok; staff e-posta görünür |
+| 6 | `/devices` — provision | API key **bir kez**; reload'da yok |
+| 7 | Scanner — cihaz ID + API key + tenant eşle | Eşleşme; cookie tek başına yetmez |
+| 8 | `/member` QR çıkar → scanner GRANT; aynı jti tekrar | İlk GRANT; replay 409 |
+| 9 | `/reports` çalıştır → çıktı | 200; indirme linki tenant'a bağlı |
+| 10 | `/onboarding` — eksik şubede advance | Red; tamamlanınca advance |
 
 ## Otomatik koşum — 2026-08-16
 
@@ -51,15 +88,6 @@ isteğinin hiç görünmemesi ayırt edici işarettir.
 
 Çözüm: Playwright'tan önce `docker stop fitness-os-backend`. Aynı anahtarla
 yeniden seed etmek de çalışır ama port çakışması sürdüğü için önerilmez.
-
-### Yeniden üretme
-
-```bash
-docker compose up -d postgres redis          # migrate one-shot dahil
-docker stop fitness-os-backend               # portu Playwright'a bırak
-cd backend && set -a && source .env && set +a && ./.venv/bin/python scripts/seed_role_matrix.py
-cd ../frontend/e2e && npx playwright test
-```
 
 ## İmza — insan
 

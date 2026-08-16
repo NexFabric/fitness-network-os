@@ -1,6 +1,41 @@
 version: '3.8'
 
+# Production compose is a single-replica reference, not the HA topology.
+# See docs/ops/HA_TOPOLOGY.md and docs/ops/PRODUCTION_DEPLOY.md.
+# Order is mandatory: migrate must complete successfully before API/workers.
+#
+# Privileged MIGRATOR_DATABASE_URL is only on the one-shot migrate service.
+
+x-runtime-env: &runtime-env
+  ENVIRONMENT: production
+  DATABASE_URL: ${DATABASE_URL}
+  REDIS_URL: ${REDIS_URL}
+  PRODUCTION_PRIVATE_NETWORK: ${PRODUCTION_PRIVATE_NETWORK:-0}
+  REPORT_STORAGE_PROVIDER: s3
+  S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+  S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+  S3_REGION_NAME: ${S3_REGION_NAME:-}
+  S3_SSE_ALGORITHM: ${S3_SSE_ALGORITHM:-AES256}
+  S3_KMS_KEY_ID: ${S3_KMS_KEY_ID:-}
+  QR_KMS_MODE: ${QR_KMS_MODE:-aws_kms}
+  AWS_KMS_KEY_ID: ${AWS_KMS_KEY_ID}
+  AWS_REGION: ${AWS_REGION:-eu-central-1}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
 services:
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: fitness-os-migrate-prod
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      <<: *runtime-env
+      COMPONENT_NAME: migrate
+      NOTIFICATION_EMAIL_PROVIDER: disabled
+      MIGRATOR_DATABASE_URL: ${MIGRATOR_DATABASE_URL}
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -8,35 +43,16 @@ services:
     container_name: fitness-os-backend-prod
     ports:
       - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     environment:
-      - ENVIRONMENT=production
-      - CORS_ORIGINS=https://admin.gymclubnex.com,https://scanner.gymclubnex.com
-      - ALLOWED_HOSTS=api.gymclubnex.com
-      - NOTIFICATION_EMAIL_PROVIDER=smtp
-      # Report storage — S3 required in production (validate_production enforces)
-      - REPORT_STORAGE_PROVIDER=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
-      - S3_REGION_NAME=${S3_REGION_NAME:-}
-      - S3_SSE_ALGORITHM=${S3_SSE_ALGORITHM:-AES256}
-      - S3_KMS_KEY_ID=${S3_KMS_KEY_ID:-}
-      # QR KMS envelope encryption
-      - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
-      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
-      - AWS_REGION=${AWS_REGION:-eu-central-1}
-      # Require external PostgreSQL / Redis for true production
-      - DATABASE_URL=${DATABASE_URL}
-      - MIGRATOR_DATABASE_URL=${MIGRATOR_DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      # Metrics
-      - METRICS_BEARER_TOKEN=${METRICS_BEARER_TOKEN}
-      # Real SMTP credentials should be injected via .env
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      <<: *runtime-env
+      COMPONENT_NAME: web
+      CORS_ORIGINS: https://admin.gymclubnex.com,https://scanner.gymclubnex.com
+      ALLOWED_HOSTS: api.gymclubnex.com
+      NOTIFICATION_EMAIL_PROVIDER: disabled
+      METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/live"]
       interval: 30s
@@ -52,19 +68,18 @@ services:
     container_name: fitness-os-outbox-worker-prod
     command: ["python", "-m", "app.workers.outbox"]
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ENVIRONMENT=production
-      - COMPONENT_NAME=worker
-      - NOTIFICATION_EMAIL_PROVIDER=disabled
-      - REPORT_STORAGE_PROVIDER=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
-      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
-      - AWS_REGION=${AWS_REGION:-eu-central-1}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      <<: *runtime-env
+      COMPONENT_NAME: worker
+      NOTIFICATION_EMAIL_PROVIDER: smtp
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       backend:
         condition: service_healthy
 
@@ -75,24 +90,18 @@ services:
     container_name: fitness-os-notification-worker-prod
     command: ["python", "-m", "app.workers.notification"]
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ENVIRONMENT=production
-      - COMPONENT_NAME=worker
-      - NOTIFICATION_EMAIL_PROVIDER=smtp
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - REPORT_STORAGE_PROVIDER=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
-      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
-      - AWS_REGION=${AWS_REGION:-eu-central-1}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      <<: *runtime-env
+      COMPONENT_NAME: worker
+      NOTIFICATION_EMAIL_PROVIDER: smtp
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       backend:
         condition: service_healthy
 
@@ -103,23 +112,13 @@ services:
     container_name: fitness-os-report-worker-prod
     command: ["python", "-m", "app.workers.report"]
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ENVIRONMENT=production
-      - COMPONENT_NAME=worker
-      - NOTIFICATION_EMAIL_PROVIDER=disabled
-      - REPORT_STORAGE_PROVIDER=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-}
-      - S3_REGION_NAME=${S3_REGION_NAME:-}
-      - S3_SSE_ALGORITHM=${S3_SSE_ALGORITHM:-AES256}
-      - S3_KMS_KEY_ID=${S3_KMS_KEY_ID:-}
-      - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
-      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
-      - AWS_REGION=${AWS_REGION:-eu-central-1}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      <<: *runtime-env
+      COMPONENT_NAME: worker
+      NOTIFICATION_EMAIL_PROVIDER: disabled
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       backend:
         condition: service_healthy
 
@@ -130,19 +129,13 @@ services:
     container_name: fitness-os-retention-worker-prod
     command: ["python", "-m", "app.workers.retention"]
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ENVIRONMENT=production
-      - COMPONENT_NAME=worker
-      - NOTIFICATION_EMAIL_PROVIDER=disabled
-      - REPORT_STORAGE_PROVIDER=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
-      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
-      - AWS_REGION=${AWS_REGION:-eu-central-1}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      <<: *runtime-env
+      COMPONENT_NAME: worker
+      NOTIFICATION_EMAIL_PROVIDER: disabled
     restart: unless-stopped
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       backend:
         condition: service_healthy
 
@@ -173,5 +166,3 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-
-

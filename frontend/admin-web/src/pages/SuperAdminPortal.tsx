@@ -125,15 +125,15 @@ export default function SuperAdminPortal() {
       setAlerts(alertRows)
       setAnalytics(analyticsRow)
 
-      if (tenantRows.length > 0 && !compTenantId) {
-        setCompTenantId(tenantRows[0].id)
+      if (tenantRows.length > 0) {
+        setCompTenantId((prev) => prev || tenantRows[0].id)
       }
     } catch (err) {
       setError(formatApiError(err, 'Federasyon verileri yüklenemedi. Birkaç saniye sonra tekrar deneyin.'))
     } finally {
       setLoading(false)
     }
-  }, [compTenantId])
+  }, [])
 
   useEffect(() => {
     void loadData()

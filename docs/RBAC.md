@@ -1,6 +1,6 @@
-# RBAC — Roller, İzinler ve Kapsamlar
+# GymClubNex (Fitness Network OS) — RBAC & Scope Modeli
 
-**Son güncelleme:** 2026-08-12
+**Son güncelleme:** 2026-08-16
 
 Bu doküman canlı referanstır. Daha önce yalnızca arşiv olarak işaretlenmiş
 `docs/CORE_GATE_CLOSURE.md` içinde duruyordu.
@@ -58,6 +58,8 @@ ayrışırsa **YAML doğrudur**.
 | `passport:manage` | Federasyon çapraz salon dolaşım (pasaport) kuralları ve mahsuplaşma ayarlarını yönetme (`FEDERATION_ADMIN`). |
 | `compliance:read` / `compliance:write` | Kulüplerin TSE, ISO ve hijyen denetim sicilini görüntüleme ve yeni muayene kaydı ekleme (`FEDERATION_ADMIN`). |
 | `alerts:broadcast` | Federasyon ağı genelinde veya belirli kulübe anlık uyarı/duyuru yayınlama (`FEDERATION_ADMIN`). |
+| `classes:read` / `classes:read:self` | Kulüp personeli genel takvim erişimi vs. üyenin yalnızca kendi programı ve katılabileceği seansları görmesi. |
+| `classes:book:self` / `pt:book:self` | Üyenin kendi adına grup dersi veya birebir PT randevusu alması (`MEMBER` rolü; başkası adına rezervasyon yapamaz). |
 
 ---
 

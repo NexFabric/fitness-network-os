@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 80 lib files | 24 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~146,800 tokens per conversation.**
-> **Last scanned:** 2026-08-16 14:33 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 35% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
+> **Last scanned:** 2026-08-16 18:36 — re-run after significant changes
 
 ---
 
@@ -1021,6 +1021,7 @@
 - `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xh9c0d1e2f3a_trainer_staff_composite_fk.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xi0d1e2f3a4b_pt_overlap_exclusion.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/scripts/check_critical_coverage.py` — function main: () -> int
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
@@ -1030,6 +1031,7 @@
 - `backend/scripts/check_release_truth.py`
   - function require: (path, *needles) -> list[str]
   - function forbid: (path, *needles) -> list[str]
+  - function forbid_both: (path, left, right) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/kms_iam_verify.py`
@@ -1049,6 +1051,8 @@
 - `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
 - `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
+- `backend/scripts/smtp_delivery_proof.py` — function main: () -> int
+- `backend/scripts/tls_connection_proof.py` — function main: () -> int
 - `backend/src/backend/__init__.py` — function main: () -> None
 - `frontend/admin-web/src/api/client.ts`
   - function getBaseUrl: () => string
@@ -1089,20 +1093,28 @@
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
+- `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (has default) — backend/app/core/tracing.py
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example
 - `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
 - `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
 - `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
+- `SMTP_FROM` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_HOST` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
+- `SMTP_PROOF_TO` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_STARTTLS` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
+- `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
+- `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
 - `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 
@@ -1138,46 +1150,46 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **69** files
-- `backend/app/models/tenant.py` — imported by **60** files
-- `backend/app/models/organization.py` — imported by **53** files
+- `backend/app/models/user.py` — imported by **73** files
+- `backend/app/models/tenant.py` — imported by **67** files
+- `backend/app/models/organization.py` — imported by **60** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/rbac.py` — imported by **42** files
-- `backend/app/models/member.py` — imported by **41** files
+- `backend/app/models/member.py` — imported by **45** files
+- `backend/app/models/rbac.py` — imported by **44** files
 - `backend/app/db/base.py` — imported by **38** files
-- `backend/app/db/session.py` — imported by **33** files
+- `backend/app/db/session.py` — imported by **35** files
+- `backend/app/main.py` — imported by **30** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **30** files
-- `backend/app/models/membership.py` — imported by **28** files
-- `backend/app/main.py` — imported by **28** files
+- `backend/app/models/membership.py` — imported by **29** files
 - `frontend/admin-web/src/api/client.ts` — imported by **27** files
+- `backend/app/models/location.py` — imported by **26** files
 - `backend/app/core/authorization.py` — imported by **25** files
-- `backend/app/models/location.py` — imported by **23** files
 - `backend/app/db/rls.py` — imported by **22** files
-- `backend/app/core/config.py` — imported by **19** files
+- `backend/app/core/config.py` — imported by **20** files
 - `backend/app/models/access.py` — imported by **19** files
 - `backend/app/models/outbox.py` — imported by **17** files
+- `frontend/e2e/tests/helpers/auth.ts` — imported by **17** files
 - `backend/app/models/finance.py` — imported by **16** files
-- `frontend/e2e/tests/helpers/auth.ts` — imported by **16** files
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +64 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +55 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +48 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +68 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +62 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +55 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +37 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +36 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +40 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +39 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +28 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +30 more
+- `backend/app/main.py` ← `backend/tests/api/test_admin_federation.py`, `backend/tests/api/test_admin_federation_complete.py`, `backend/tests/api/test_adversarial_security.py`, `backend/tests/api/test_auth_login.py`, `backend/tests/api/test_class_booking_engine.py` +25 more
 - `frontend/admin-web/src/components/ui/index.ts` ← `frontend/admin-web/src/components/MemberMemberships.tsx`, `frontend/admin-web/src/components/RequireAuth.tsx`, `frontend/admin-web/src/pages/Classes.tsx`, `frontend/admin-web/src/pages/Dashboard.tsx`, `frontend/admin-web/src/pages/DataImport.tsx` +25 more
-- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +23 more
 
 ---
 
 # Test Coverage
 
-> **33%** of routes and models are covered by tests
-> 105 test files found
+> **35%** of routes and models are covered by tests
+> 117 test files found
 
 ## Covered Routes
 
@@ -1206,10 +1218,13 @@
 - QrJtiReplay
 - AuditEvent
 - ClassType
+- ClassSchedule
 - ClassSession
 - ClassBooking
+- PtAppointment
 - ConsentDefinition
 - ConsentRecord
+- DsarRequest
 - EntitlementDefinition
 - MembershipEntitlement
 - EntitlementWallet
@@ -1265,17 +1280,19 @@
 
 # CI/CD Pipelines
 
-## GitHub Actions (1 workflow)
+## GitHub Actions (3 workflows)
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
-| CI | push, pull_request | 12 | — | — |
+| CI | push, pull_request | 13 | — | — |
+| Deploy choreography | workflow_dispatch | 2 | s3 | production |
+| Ops Drills & Recovery Verification | schedule, workflow_dispatch | 1 | s3 | — |
 
 ### CI
 
 > `.github/workflows/ci.yml`
 
-- **security** on `ubuntu-latest` — 7 steps
+- **security** on `ubuntu-latest` — 6 steps
   - `actions/checkout@v7`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
   - `actions/setup-python@v7`
@@ -1285,20 +1302,20 @@
 - **lint** on `ubuntu-latest` — 11 steps
   - `actions/checkout@v7`
   - `actions/setup-python@v7`
-- **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
+- **test** on `ubuntu-latest` — 10 steps (needs: security, lint)
   - `actions/checkout@v7`
   - `actions/setup-python@v7`
-- **admin-web** on `ubuntu-latest` — 5 steps
+- **admin-web** on `ubuntu-latest` — 6 steps
   - `actions/checkout@v7`
   - `actions/setup-node@v7`
-- **scanner-pwa** on `ubuntu-latest` — 5 steps
+- **scanner-pwa** on `ubuntu-latest` — 6 steps
   - `actions/checkout@v7`
   - `actions/setup-node@v7`
 - **production-image** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v7`
 - **frontend-images** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v7`
-- **public-site** on `ubuntu-latest` — 5 steps
+- **public-site** on `ubuntu-latest` — 6 steps
   - `actions/checkout@v7`
   - `actions/setup-node@v7`
 - **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
@@ -1310,10 +1327,30 @@
   - `actions/checkout@v7`
   - `github/codeql-action/init@v4`
   - `github/codeql-action/analyze@v4`
+- **image-scan** on `ubuntu-latest` — 3 steps
+  - `actions/checkout@v7`
 - **all-green** on `ubuntu-latest` — 1 steps
 
+### Deploy choreography
+
+> `.github/workflows/deploy.yml`
+
+- **build** on `ubuntu-latest` — 4 steps
+  - `actions/checkout@v7`
+- **promote** on `ubuntu-latest` — 3 steps (needs: build) → **s3**
+  - `actions/checkout@v7`
+
+### Secrets
+
+- `DATABASE_URL`
+- `ENCRYPTION_KEY`
+- `METRICS_BEARER_TOKEN`
+- `REDIS_URL`
+- `SMTP_PASS`
+- `SMTP_USER`
+
 ---
-_Source: .github/workflows/ci.yml_
+_Source: .github/workflows/ci.yml, .github/workflows/deploy.yml, .github/workflows/ops-drills.yml_
 _Generated by codesight-cicd-plugin_
 
 ---

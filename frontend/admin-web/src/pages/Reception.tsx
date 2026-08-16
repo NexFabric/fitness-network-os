@@ -99,14 +99,14 @@ export default function Reception() {
 
   // Search members debounce
   useEffect(() => {
-    if (!query.trim()) {
-      setSearchResults([])
+    const trimmed = query.trim()
+    if (!trimmed) {
       return
     }
     const timer = setTimeout(async () => {
       setSearching(true)
       try {
-        const res = await api<MemberSearchResult[]>(`/api/v1/reception/search?q=${encodeURIComponent(query.trim())}`)
+        const res = await api<MemberSearchResult[]>(`/api/v1/reception/search?q=${encodeURIComponent(trimmed)}`)
         setSearchResults(res)
       } catch (err) {
         console.error('Arama hatası:', err)
@@ -132,12 +132,10 @@ export default function Reception() {
   }, [])
 
   useEffect(() => {
-    setOverrideMessage(null)
-    if (selectedMemberId) {
-      void loadMemberDetail(selectedMemberId)
-    } else {
-      setMemberDetail(null)
+    if (!selectedMemberId) {
+      return
     }
+    void loadMemberDetail(selectedMemberId)
   }, [selectedMemberId, loadMemberDetail])
 
   // Handle manual override checkin
@@ -191,7 +189,13 @@ export default function Reception() {
                 id="member-search"
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setQuery(val)
+                  if (!val.trim()) {
+                    setSearchResults([])
+                  }
+                }}
                 placeholder="Örn: Ahmet, 555..., MEM-102"
                 className="input-field !mt-0 w-full pr-10 text-sm font-medium text-slate-100 placeholder:text-slate-500 bg-slate-900/90 border-slate-700 focus:border-brand focus:ring-1 focus:ring-brand"
                 autoFocus
@@ -209,7 +213,10 @@ export default function Reception() {
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => setSelectedMemberId(m.id)}
+                  onClick={() => {
+                    setSelectedMemberId(m.id)
+                    setOverrideMessage(null)
+                  }}
                   className={`w-full text-left rounded-xl border p-3 transition-all ${
                     selectedMemberId === m.id
                       ? 'border-brand bg-brand/10 shadow-sm'

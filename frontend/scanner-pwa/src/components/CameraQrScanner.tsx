@@ -68,6 +68,8 @@ export function CameraQrScanner({
 
   const handleStop = useCallback(() => {
     stopTracks()
+    setStarting(false)
+    setCameraError(null)
     onStop?.()
   }, [stopTracks, onStop])
 
@@ -75,15 +77,11 @@ export function CameraQrScanner({
     if (!active) {
       stopTracks()
       decodedRef.current = false
-      setCameraError(null)
-      setStarting(false)
       return
     }
 
     let cancelled = false
     decodedRef.current = false
-    setCameraError(null)
-    setStarting(true)
 
     async function start() {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -93,6 +91,9 @@ export function CameraQrScanner({
         setStarting(false)
         return
       }
+
+      setStarting(true)
+      setCameraError(null)
 
       try {
         const BD = getBarcodeDetector()

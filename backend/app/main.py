@@ -15,6 +15,7 @@ from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.metrics import DEPENDENCY_UP, MetricsMiddleware
+from app.core.tracing import setup_tracing
 
 # Tight default for a JSON API (no HTML assets). Not a full browser app CSP.
 _API_CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Core backend for Fitness Network OS",
     )
+    setup_tracing(app)
 
     # Last registered runs first on the request path (Starlette).
     app.add_middleware(SecurityHeadersMiddleware)

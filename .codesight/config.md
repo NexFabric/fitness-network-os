@@ -10,20 +10,28 @@
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
+- `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (has default) — backend/app/core/tracing.py
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example
 - `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
 - `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
 - `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
+- `SMTP_FROM` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_HOST` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
+- `SMTP_PROOF_TO` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_STARTTLS` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
+- `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
+- `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
 - `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 

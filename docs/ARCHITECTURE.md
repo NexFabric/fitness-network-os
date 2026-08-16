@@ -1,6 +1,6 @@
 # GymClubNex (Fitness Network OS) — Sistem Mimarisi
 
-**Son güncelleme:** 2026-08-12
+**Son güncelleme:** 2026-08-16
 **Kaynak:** Bu doküman `~/.gemini/antigravity-cli/brain/` altında, git dışında tutulan
 bir taslaktan repo'ya taşındı ve koda karşı doğrulanarak düzeltildi. Mimari
 doküman artık yalnızca burada yaşar.
@@ -143,7 +143,7 @@ sequenceDiagram
 - Aynı token ikinci kez taranırsa `replay` ile reddedilir.
 - Kiosk çevrimdışıyken **deny-by-default** uygular.
 - Cihaz kimliği iki parçadır: `device_session` cookie'si **ve** `POST /devices/auth`
-  yanıtında bir kez verilen imza sırrı (cookie'de taşınmaz). Her istek
+  yanıtında bir kez verilen imza sırrı (cookie'de taşınmaz; veritabanında `fernet:hmac:` ile şifrelenir). Her istek
   `METHOD\npath\ntimestamp\nnonce\nsha256(body)` üzerinden HMAC-SHA256 ile
   imzalanır; ±300 sn saat toleransı, nonce tek kullanımlıktır (`device_nonces`).
   Çalınan cookie tek başına yetmez, yakalanan imzalı istek tekrar oynatılamaz.
@@ -250,7 +250,7 @@ graph TD
    - Asil listedeki bir üye rezervasyonunu iptal ettiğinde (`cancel_booking`), 1. sıradaki yedek (`waitlist_position = 1`) anında `CONFIRMED` statüsüne yükseltilir, `waitlist_position` alanı temizlenir ve `class.booking_promoted.v1` eventi üretilir.
    - Kalan tüm yedek üyelerin sıraları (`2..N`) tek bir atomik sorguyla kaydırılır (`waitlist_position = waitlist_position - 1`).
 4. **Geç İptal Eşiği (`Cancellation Cutoff Window`):** Seans başlangıcına `cancellation_cutoff_minutes` süresinden daha az kalmışsa iptal işlemi `is_late_cancellation = True` olarak işaretlenir; kulüp no-show/hak yakma politikalarını işletebilir.
-5. **Antrenör Çakışma Önleme (PT Conflict Lock):** `PtBookingService`, antrenörün mevcut randevularını zaman aralığı (`start_time_utc < new_end AND end_time_utc > new_start`) üzerinde kilitler; çakışan randevu denemeleri `409 Conflict` ile reddedilir.
+5. **Antrenör Çakışma Önleme (PT Conflict Lock):** `PtBookingService`, antrenörün mevcut randevularını zaman aralığı (`start_time_utc < new_end AND end_time_utc > new_start`) üzerinde kilitler; çakışan randevu denemeleri `409 Conflict` ile reddedilir. Ayrıca PostgreSQL seviyesinde `btree_gist` eklentisiyle `ex_pt_appointments_no_overlap` EXCLUDE kısıtı (Alembic head `xi0d1e2f3a4b`) çift randevuyu veritabanı motoru düzeyinde bloke eder.
 6. **PostgreSQL RLS & Composite FK:** 6 tablo (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`) `TenantMixin` ve PostgreSQL RLS ile yalıtılmıştır.
 
 ---
@@ -273,9 +273,9 @@ Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
   dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
 - Privileged roller için password-only erişim kapalıdır: kısa ömürlü restricted
   setup session, TOTP kayıt UX'i ve başarılı kayıt sonrası session rotation.
-- Personel hesabı `POST /staff/accounts` ile açılır: tek kullanımlık parola bir kez
-  döner, hesap `must_change_password` ile işaretlenir ve login yalnızca parola
-  değiştirmeye yeten kısıtlı `password_reset` session verir. Session seviyesi tek
-  yerde (`resolve_auth_level`) kararlaştırılır; MFA kaydı rotasyonun yerine geçmez.
-  Parola teslimi ekrandan yapılır — e-posta davet akışı henüz yok.
+- Personel ve sporcu hesap davetleri `INVITE-1` mekanizmasıyla (`account_invites`,
+  Alembic `xd5e6f7a8b9c`) açılır: API tek kullanımlık açık parola dönmez (`INVITE-OTP`);
+  tek kullanımlık hash'lenmiş davet belirteci (`invite_token`) üretilir. Kullanıcı
+  `/invite?token=...` ekranından ve public `POST /api/v1/auth/invite/accept` ucu
+  üzerinden kendi parolasını belirler.
 - Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.
