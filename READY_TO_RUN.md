@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-08-16
 **Branch:** `feat/public-site-modernization-and-seo`
-**Alembic head:** `xf7a8b9c0d1e`.
+**Alembic head:** `xi0d1e2f3a4b`.
 **Production-ready?** **NO** — kod kapıları kapandı; restore/PITR tatbikatı, gerçek S3 staging kanıtı ve bağımsız pentest açık.
 **Privileged MFA:** `GYM_OWNER` / staff / federation login TOTP ister. `seed_demo.py` MFA’sız owner üretir ve `/mfa/setup`’a düşer; portal E2E için `seed_role_matrix.py` kullan.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).

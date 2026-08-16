@@ -3,7 +3,7 @@
 Bu tutanak **P1-11 pentest değildir.** Yerel/staging’de birinci kulüp akışının
 bir insan tarafından tıklandığını kaydeder.
 
-**Alembic:** `xe6f7a8b9c0d` · **Dal:** `feat/public-site-modernization-and-seo`
+**Alembic:** `xi0d1e2f3a4b` · **Dal:** `feat/public-site-modernization-and-seo` · **HEAD:** `ab860f0`
 
 Otomatik karşılık (CI / yerel Playwright): `invite_accept.spec.ts`,
 `onboarding.spec.ts`, `portal_account.spec.ts`, `scanner_pair.spec.ts`,

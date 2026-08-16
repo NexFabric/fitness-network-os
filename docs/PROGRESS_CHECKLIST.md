@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Alembic head:** `xf7a8b9c0d1e`
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **HEAD:** `ab860f0` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** run `31947417828` in progress (lint/FE/images/CodeQL green; Unit pending; Playwright not started) — **not CI VERIFIED**
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -31,7 +31,7 @@
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
 | **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
 | **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
-| **Phase 29: in-repo hardening (this branch)** | 🟢 **CODE LANDED** | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR export+erasure, god-page split, Alembic `xe6f7a8b9c0d` — not merged to `main` |
+| **Phase 29 + RC closure (this branch)** | 🟢 **CODE LANDED** | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR, god-page split, staff trainers, `user_roles` uniques, `BookingError`, trainer→staff FK, PT EXCLUDE, location TZ, KPI scope, entitlement consume. Alembic `xi0d1e2f3a4b`. PR #62 **not merged**. **Not CI VERIFIED.** |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -157,7 +157,7 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 Same-tenant BOLA, privileged cookie assurance, device secret at rest, and the
 product gaps that were already implemented in services but had no HTTP/UI.
 
-Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / `last_step_up_at`) → `xd5e6f7a8b9c` (`account_invites`).
+Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / `last_step_up_at`) → `xd5e6f7a8b9c` (`account_invites`) → `xe6f7a8b9c0d` (`dsar_requests`) → `xf7a8b9c0d1e` (index align) → `xg8b9c0d1e2f` (`user_roles` uniques) → `xh9c0d1e2f3a` (trainer→staff composite FK) → **`xi0d1e2f3a4b`** (PT `btree_gist` EXCLUDE).
 
 ### Closed in code (not claimed production-ready)
 
@@ -184,12 +184,23 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **INVITE-1** Hashed invite-token table (`account_invites`, Alembic `xd5e6f7a8b9c`) + `POST /auth/invite/accept` + `/invite` page
 - [x] **INVITE-OTP** Standing OTP no longer returned or emailed; invite is the only issued secret
 - [x] **ONB-UI** Tenant onboarding wizard UI (`/onboarding`) — API already existed
+- [ ] **CI-62** Required CI on `ab860f0` (run `31947417828`) — Unit in progress; Playwright not started. Not CI VERIFIED.
+- [ ] **REV-62** Independent GitHub APPROVE on PR #62. Author cannot self-approve. Do not merge.
 - [ ] **HAND-1** Manual browser proof (tutanak `docs/ops/HAND1_BROWSER_PROOF.md`). Playwright covers invite accept, onboarding, portal bind, scanner pair, report artifact link — human sign-off still open
 - [x] **GOD-1** Split `SuperAdminPortal` (`pages/hq/*`), `Classes` (`pages/classes/*`), `MemberPortal` (`pages/portal/*`). `Finance.tsx` left intact — no tab seams; not a security gate
 - [x] **COV-1a** eslint on admin-web / scanner-pwa / public-site in required build jobs; pytest `--cov` report only (no fail_under)
 - [x] **COV-1b** Measured TOTAL **72%** (390 passed / 5 fixed); CI `--cov-fail-under=70` (local targeted pytest stays without coverage)
 - [x] **DSAR-1a** Bound-member export package + `dsar_requests` ledger (`xe6f7a8b9c0d`); admin inbox
 - [x] **DSAR-1b** Erasure / anonymize (`POST /me/dsar/erasure`); OPEN/PARTIALLY_PAID/DRAFT invoices → 409 `legal_hold_open_invoices`; paid invoices stay; PII wiped; session revoked
+- [x] **IDX-1** Model/DB index alignment (`xf7a8b9c0d1e`) so `alembic check` can pass
+- [x] **STAFF-2** Staff list returns `email`; class/PT picker uses tenant-isolated `GET /classes/trainers` (UserRole TRAINER; seed writes trainer/desk `staff` rows)
+- [x] **UR-1** Partial unique grants on `user_roles` (`xg8b9c0d1e2f`)
+- [x] **BK-ERR** `booking.py` raises `BookingError`; DSAR swallows only not-found/conflict
+- [x] **TR-FK** Composite FK `(tenant_id, trainer_user_id) → staff` (`xh9c0d1e2f3a`); picker requires staff + active
+- [x] **PT-EX** `btree_gist` EXCLUDE on confirmed PT overlaps (`xi0d1e2f3a4b`) — Alembic only; omitted from ORM for SQLite `create_all`
+- [x] **TZ-1** `generate_sessions` uses `Location.timezone`; unique schedule+start
+- [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
+- [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
 
 ### Still open — cannot fake complete
 

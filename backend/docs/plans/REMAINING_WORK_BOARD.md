@@ -2,8 +2,11 @@
 
 **Date:** 2026-08-16  
 **Branch:** `feat/public-site-modernization-and-seo`  
+**HEAD:** `ab860f0`  
 **Alembic head:** `xi0d1e2f3a4b`  
-**Program:** Phase 27–29 — in-repo closure  
+**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) OPEN · **BLOCKED `REVIEW_REQUIRED`**  
+**CI:** run `31947417828` in progress — lint/FE/images/CodeQL green; Unit pending; Playwright not started. **Not CI VERIFIED.**  
+**Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
 
@@ -75,7 +78,9 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 
 | ID | Item | Owner |
 |----|------|-------|
-| HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link) | human |
+| CI-62 | Finish CI run `31947417828` on `ab860f0`. If red, fix e2e/pytest. If green, mark CI VERIFIED on checklist + HANDOFF. Do not invent green. | agent |
+| REV-62 | Independent GitHub `APPROVE` on PR #62. Author (`emrahub`) cannot self-approve. Do **not** merge. Do **not** drop `enforce_admins` or required reviews. | second human |
+| HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link). Signature table is empty. | human |
 
 ## Still open — cannot fake “complete”
 

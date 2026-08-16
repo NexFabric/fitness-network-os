@@ -22,7 +22,7 @@
 ### General Notes (18)
 - `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-12
 - `CORE_GATE_CLOSURE.md` — **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.
-- `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
+- `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**.
 - `IMPLEMENTATION_MASTER_PLAN.md` — **Status:** Living roadmap (Phase 0–27)
 - `MASTER_SPEC.md` — └── DedicatedDatabase
 - `PRODUCTION_READINESS.md` — **Sürüm:** v1.2 Phase 27 closure
@@ -32,7 +32,7 @@
 - `REVIEW_CHECKPOINT.md` — **Main HEAD:** `837cec4`; no open PRs
 - `WAVE_5_5B_CORE_CORRECTNESS.md` — **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.
 - `ops/ASVS_L2_COMPLIANCE_REPORT.md` — **Project:** GymClubNex (Fitness Network OS)
-- `ops/ASVS_PENTEST_STATUS.md` — **Status:** **UNVERIFIED** (Phase 27 P1-11)
+- `ops/ASVS_PENTEST_STATUS.md` — **Status:** **UNVERIFIED** (Phase 27 P1-11 / Phase 26)
 - `ops/DR_RESTORE_STATUS.md` — **Status:** **DRILL EXECUTED & VERIFIED** (Phase 27.5)
 - `ops/HAND1_BROWSER_PROOF.md` — Bu tutanak **P1-11 pentest değildir.** Yerel/staging’de birinci kulüp akışının
 - `plans/GYM_MVP_PRODUCT_CLOSURE_PLAN.md` ← 1 refs — **Scope:** Gym operations MVP, excluding physical equipment and inventory management
