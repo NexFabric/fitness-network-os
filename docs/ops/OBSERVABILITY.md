@@ -22,15 +22,42 @@ now in the repo and was executed, not just written.
 
 ## Real pager (still UNVERIFIED)
 
-The committed Alertmanager config uses **null receivers** so local
-drills do not pretend to page a human. To page for real:
+**Status:** **UNVERIFIED** · P2-OBS-PROD
 
-1. Write the webhook URL into a secret file (never commit it).
-2. Mount `alertmanager.pager.yml` and that `url_file`.
-3. Re-run `ops/observability/alert_fire_drill.sh` and keep the
-   firing → human notification proof.
+Index: `docs/ops/EXTERNAL_GATES.md`. The committed Alertmanager config
+uses **null receivers** so local drills do not pretend to page a human.
+The firing → Alertmanager path is already proven below. That is **not**
+a pager.
 
-Until that proof exists, P2-OBS-PROD stays open.
+### Close this gate (one command)
+
+Owner: **A-OPS**.
+
+```bash
+# File contains a single https webhook URL. Never commit it.
+umask 077
+printf '%s\n' "$PAGERDUTY_OR_SLACK_WEBHOOK_URL" > "$HOME/.secrets/fitness-os-pager-url"
+
+export PAGER_WEBHOOK_URL_FILE="$HOME/.secrets/fitness-os-pager-url"
+export APPLY=1          # remount alertmanager with the pager overlay
+export RUN_DRILL=1      # re-fire BackendTargetDown
+# Set this ONLY after a human confirms the page arrived:
+export PAGER_HUMAN_ACK=1
+./ops/observability/pager_prove.sh
+```
+
+Without `PAGER_HUMAN_ACK=1` the script exits 2 even if Alertmanager
+accepted the alert. A bot cannot acknowledge a pager.
+
+Overlay: `ops/observability/docker-compose.pager.yml` replaces the null
+receivers with `alertmanager.pager.yml` (`url_file` from the secret).
+Do not put the webhook URL in compose, git, or this file.
+
+### Evidence log
+
+| Date | Destination (pager/slack, no URL) | Human who got the page | Result |
+|---|---|---|---|
+| — | — | — | **Never paged a human.** |
 
 ## Run it
 
