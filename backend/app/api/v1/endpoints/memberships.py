@@ -42,6 +42,7 @@ async def freeze_membership(
             expected_end_date=freeze_in.expected_end_date,
             reason=freeze_in.reason,
             changed_by_user_id=current_user.id,
+            tenant_id=tenant_id,
         )
         await db.commit()
         await db.refresh(freeze)
@@ -65,7 +66,9 @@ async def unfreeze_membership(
     service = MembershipService(db)
     try:
         membership = await service.unfreeze_membership(
-            membership_id=membership_id, changed_by_user_id=current_user.id
+            membership_id=membership_id,
+            changed_by_user_id=current_user.id,
+            tenant_id=tenant_id,
         )
         await db.commit()
         await db.refresh(membership)
@@ -94,6 +97,7 @@ async def cancel_membership(
             effective_date=cancel_in.effective_date,
             reason=cancel_in.reason,
             changed_by_user_id=current_user.id,
+            tenant_id=tenant_id,
         )
         await db.commit()
         await db.refresh(cancellation)
@@ -122,6 +126,7 @@ async def renew_membership(
             next_plan_version_id=renew_in.next_plan_version_id,
             renewal_date=renew_in.renewal_date,
             changed_by_user_id=current_user.id,
+            tenant_id=tenant_id,
         )
         await db.commit()
         await db.refresh(renewal)

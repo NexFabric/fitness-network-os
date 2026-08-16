@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 class BookingError(Exception):
@@ -38,6 +39,7 @@ class BookingInvalid(BookingError):
 
 
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.event_types import (
@@ -73,6 +75,7 @@ from app.schemas.booking import (
     ClassTypeUpdate,
     TrainerAvailabilityCreate,
 )
+from app.services.entitlement import EntitlementService
 from app.services.outbox import OutboxService
 from app.services.staff import CLASS_TRAINER_ROLES, PT_TRAINER_ROLES, StaffService
 
@@ -155,6 +158,8 @@ class ClassBookingService:
             db, tenant_id, trainer_user_id, CLASS_TRAINER_ROLES
         ):
             raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
+        if not await StaffService.is_employed(db, tenant_id, trainer_user_id):
+            raise BookingInvalid("Eğitmen bu kulüpte personel olarak tanımlı değil.")
 
     @staticmethod
     async def create_schedule(
@@ -241,6 +246,21 @@ class ClassBookingService:
         if not schedule or not schedule.is_active:
             raise BookingNotFound("Aktif ders programı şablonu bulunamadı.")
 
+        loc = (
+            await db.execute(
+                select(Location).where(
+                    Location.tenant_id == tenant_id,
+                    Location.id == schedule.location_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if loc is None:
+            raise BookingNotFound("Şube bulunamadı.")
+        try:
+            loc_tz = ZoneInfo(loc.timezone or "UTC")
+        except ZoneInfoNotFoundError as exc:
+            raise BookingInvalid("Şube saat dilimi geçersiz.") from exc
+
         created_sessions: list[ClassSession] = []
         curr = start_date.date()
         end_d = end_date.date()
@@ -248,8 +268,14 @@ class ClassBookingService:
         while curr <= end_d:
             # Python weekday: 0 = Monday, 6 = Sunday
             if curr.weekday() == schedule.day_of_week:
-                session_start = datetime.combine(curr, schedule.start_time, tzinfo=UTC)
-                session_end = datetime.combine(curr, schedule.end_time, tzinfo=UTC)
+                session_start = datetime.combine(
+                    curr, schedule.start_time, tzinfo=loc_tz
+                ).astimezone(UTC)
+                session_end = datetime.combine(
+                    curr, schedule.end_time, tzinfo=loc_tz
+                ).astimezone(UTC)
+                if session_end <= session_start:
+                    session_end = session_end + timedelta(days=1)
 
                 # Check if session already exists for this schedule & start time
                 dup_stmt = select(ClassSession).where(
@@ -321,6 +347,7 @@ class ClassBookingService:
         end_time: datetime | None = None,
         member_id: UUID | None = None,
         session_id: UUID | None = None,
+        schedule_id: UUID | None = None,
     ) -> list[ClassSessionResponse]:
         """Fetch sessions with enriched capacity counts and optional member-specific booking status."""
         stmt = (
@@ -350,6 +377,8 @@ class ClassBookingService:
             stmt = stmt.where(ClassSession.start_time_utc <= end_time)
         if session_id:
             stmt = stmt.where(ClassSession.id == session_id)
+        if schedule_id:
+            stmt = stmt.where(ClassSession.schedule_id == schedule_id)
 
         stmt = stmt.order_by(ClassSession.start_time_utc.asc())
         result = await db.execute(stmt)
@@ -550,6 +579,21 @@ class ClassBookingService:
 
         if session.start_time_utc <= now:
             raise BookingInvalid("Geçmiş seanslara rezervasyon yapılamaz.")
+
+        class_type = await ClassBookingService.get_class_type(
+            db, tenant_id, session.class_type_id
+        )
+        if class_type.required_entitlement_type:
+            access = await EntitlementService.check_access(
+                db,
+                tenant_id,
+                member_id,
+                class_type.required_entitlement_type,
+            )
+            if not access.get("granted"):
+                raise BookingForbidden(
+                    "Bu ders için geçerli hakkınız bulunmuyor."
+                )
 
         # 2. Check if member already has active reservation (CONFIRMED or WAITLISTED)
         existing_stmt = select(ClassBooking).where(
@@ -837,9 +881,11 @@ class PtBookingService:
         db: AsyncSession, tenant_id: UUID, data: TrainerAvailabilityCreate
     ) -> TrainerAvailability:
         if not await StaffService.has_tenant_role(
-            db, tenant_id, data.trainer_user_id, CLASS_TRAINER_ROLES
+            db, tenant_id, data.trainer_user_id, PT_TRAINER_ROLES
         ):
             raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
+        if not await StaffService.is_employed(db, tenant_id, data.trainer_user_id):
+            raise BookingInvalid("Eğitmen bu kulüpte personel olarak tanımlı değil.")
         avail = TrainerAvailability(
             id=uuid4(),
             tenant_id=tenant_id,
@@ -876,6 +922,61 @@ class PtBookingService:
         return list(result.scalars().all())
 
     @staticmethod
+    async def _require_availability_slot(
+        db: AsyncSession,
+        tenant_id: UUID,
+        trainer_user_id: UUID,
+        location_id: UUID,
+        start_time_utc: datetime,
+        end_time_utc: datetime,
+    ) -> None:
+        loc = (
+            await db.execute(
+                select(Location).where(
+                    Location.tenant_id == tenant_id, Location.id == location_id
+                )
+            )
+        ).scalar_one_or_none()
+        if loc is None:
+            raise BookingNotFound("Şube bulunamadı.")
+        try:
+            loc_tz = ZoneInfo(loc.timezone or "UTC")
+        except ZoneInfoNotFoundError as exc:
+            raise BookingInvalid("Şube saat dilimi geçersiz.") from exc
+        local_start = start_time_utc.astimezone(loc_tz)
+        local_end = end_time_utc.astimezone(loc_tz)
+        dow = local_start.weekday()
+        start_t = local_start.timetz().replace(tzinfo=None)
+        end_t = local_end.timetz().replace(tzinfo=None)
+        has_hours = (
+            await db.execute(
+                select(TrainerAvailability.id).where(
+                    TrainerAvailability.tenant_id == tenant_id,
+                    TrainerAvailability.trainer_user_id == trainer_user_id,
+                    TrainerAvailability.location_id == location_id,
+                    TrainerAvailability.is_active.is_(True),
+                )
+            )
+        ).first()
+        if has_hours is None:
+            return
+        slot = (
+            await db.execute(
+                select(TrainerAvailability.id).where(
+                    TrainerAvailability.tenant_id == tenant_id,
+                    TrainerAvailability.trainer_user_id == trainer_user_id,
+                    TrainerAvailability.location_id == location_id,
+                    TrainerAvailability.day_of_week == dow,
+                    TrainerAvailability.is_active.is_(True),
+                    TrainerAvailability.start_time <= start_t,
+                    TrainerAvailability.end_time >= end_t,
+                )
+            )
+        ).first()
+        if slot is None:
+            raise BookingInvalid("Antrenör bu saat aralığında müsait değil.")
+
+    @staticmethod
     async def book_appointment(
         db: AsyncSession,
         tenant_id: UUID,
@@ -899,6 +1000,11 @@ class PtBookingService:
             db, tenant_id, trainer_user_id, PT_TRAINER_ROLES
         ):
             raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
+        if not await StaffService.is_employed(db, tenant_id, trainer_user_id):
+            raise BookingInvalid("Eğitmen bu kulüpte personel olarak tanımlı değil.")
+        await PtBookingService._require_availability_slot(
+            db, tenant_id, trainer_user_id, location_id, start_time_utc, end_time_utc
+        )
 
         # Check conflicting PT appointment for trainer
         conflict_stmt = (
@@ -929,7 +1035,10 @@ class PtBookingService:
             booked_at=now,
         )
         db.add(appointment)
-        await db.flush()
+        try:
+            await db.flush()
+        except IntegrityError as exc:
+            raise BookingConflict("Antrenör seçilen saat aralığında doludur.") from exc
 
         outbox = OutboxService(db)
         await outbox.enqueue(

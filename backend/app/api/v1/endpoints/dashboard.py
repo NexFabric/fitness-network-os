@@ -15,6 +15,7 @@ from app.models.finance import Invoice, Payment
 from app.models.member import Member
 from app.models.membership import Membership
 from app.models.user import User
+from app.services.member_visibility import visible_member_ids
 
 router = APIRouter()
 
@@ -46,6 +47,7 @@ async def get_dashboard_kpis(
         permission="finance:read",
         resource_tenant_id=tenant_id,
     )
+    scoped_ids = await visible_member_ids(db, current_user, tenant_id)
 
     now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -53,36 +55,41 @@ async def get_dashboard_kpis(
     in_30_days = today_start + timedelta(days=30)
     month_start = today_start.replace(day=1)
 
-    # 1. Active Members
-    res_active_members = await db.execute(
-        select(func.count(Member.id)).where(
-            Member.tenant_id == tenant_id,
-            Member.status == "ACTIVE",
-        )
-    )
-    active_members_count = res_active_members.scalar_one() or 0
-
-    # 2. Expiring Memberships within 30 days
-    res_expiring = await db.execute(
-        select(func.count(Membership.id)).where(
+    if scoped_ids is not None and len(scoped_ids) == 0:
+        active_members_count = 0
+        expiring_memberships_count = 0
+        today_checkins_count = 0
+    else:
+        member_filter = [Member.tenant_id == tenant_id, Member.status == "ACTIVE"]
+        membership_filter = [
             Membership.tenant_id == tenant_id,
             Membership.status == "ACTIVE",
             Membership.end_date.is_not(None),
             Membership.end_date >= today_start,
             Membership.end_date <= in_30_days,
-        )
-    )
-    expiring_memberships_count = res_expiring.scalar_one() or 0
-
-    # 3. Today's Check-ins
-    res_today_checkins = await db.execute(
-        select(func.count(Checkin.id)).where(
+        ]
+        checkin_filter = [
             Checkin.tenant_id == tenant_id,
             Checkin.checkin_time >= today_start,
             Checkin.checkin_time < today_end,
+        ]
+        if scoped_ids is not None:
+            member_filter.append(Member.id.in_(scoped_ids))
+            membership_filter.append(Membership.member_id.in_(scoped_ids))
+            checkin_filter.append(Checkin.member_id.in_(scoped_ids))
+
+        res_active_members = await db.execute(select(func.count(Member.id)).where(*member_filter))
+        active_members_count = res_active_members.scalar_one() or 0
+
+        res_expiring = await db.execute(
+            select(func.count(Membership.id)).where(*membership_filter)
         )
-    )
-    today_checkins_count = res_today_checkins.scalar_one() or 0
+        expiring_memberships_count = res_expiring.scalar_one() or 0
+
+        res_today_checkins = await db.execute(
+            select(func.count(Checkin.id)).where(*checkin_filter)
+        )
+        today_checkins_count = res_today_checkins.scalar_one() or 0
 
     past_due_invoices_count = 0
     past_due_invoices_amount_minor = 0

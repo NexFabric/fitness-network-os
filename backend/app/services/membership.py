@@ -24,10 +24,15 @@ class MembershipService:
         self.session = session
 
     async def get_membership(
-        self, membership_id: UUID, for_update: bool = False
+        self,
+        membership_id: UUID,
+        for_update: bool = False,
+        tenant_id: UUID | None = None,
     ) -> Membership | None:
-        """Fetch a membership by ID."""
+        """Fetch a membership by ID, optionally pinned to a tenant."""
         stmt = select(Membership).where(Membership.id == membership_id)
+        if tenant_id is not None:
+            stmt = stmt.where(Membership.tenant_id == tenant_id)
         if for_update:
             stmt = stmt.with_for_update()
         result = await self.session.execute(stmt)
@@ -271,6 +276,7 @@ class MembershipService:
         expected_end_date: datetime | None = None,
         reason: str | None = None,
         changed_by_user_id: UUID | None = None,
+        tenant_id: UUID | None = None,
     ) -> MembershipFreeze:
         """
         Freeze a membership. Changes its status to 'FROZEN'.
@@ -278,7 +284,9 @@ class MembershipService:
         if expected_end_date is not None and expected_end_date <= start_date:
             raise ValueError("expected_end_date must be after start_date")
 
-        membership = await self.get_membership(membership_id, for_update=True)
+        membership = await self.get_membership(
+            membership_id, for_update=True, tenant_id=tenant_id
+        )
         if not membership:
             raise ValueError("Membership not found")
 
@@ -330,12 +338,15 @@ class MembershipService:
         self,
         membership_id: UUID,
         changed_by_user_id: UUID | None = None,
+        tenant_id: UUID | None = None,
     ) -> Membership:
         """
         Unfreeze a membership manually. Changes status back to previous status
         and updates the freeze record's actual_end_date.
         """
-        membership = await self.get_membership(membership_id, for_update=True)
+        membership = await self.get_membership(
+            membership_id, for_update=True, tenant_id=tenant_id
+        )
         if not membership:
             raise ValueError("Membership not found")
 
@@ -385,8 +396,11 @@ class MembershipService:
         effective_date: datetime,
         reason: str | None,
         changed_by_user_id: UUID | None = None,
+        tenant_id: UUID | None = None,
     ) -> MembershipCancellation:
-        membership = await self.get_membership(membership_id, for_update=True)
+        membership = await self.get_membership(
+            membership_id, for_update=True, tenant_id=tenant_id
+        )
         if not membership:
             raise ValueError("Membership not found")
 
@@ -445,8 +459,11 @@ class MembershipService:
         next_plan_version_id: UUID,
         renewal_date: datetime,
         changed_by_user_id: UUID | None = None,
+        tenant_id: UUID | None = None,
     ) -> MembershipRenewal:
-        membership = await self.get_membership(membership_id, for_update=True)
+        membership = await self.get_membership(
+            membership_id, for_update=True, tenant_id=tenant_id
+        )
         if not membership:
             raise ValueError("Membership not found")
 

@@ -251,6 +251,7 @@ async def generate_sessions(
         tenant_id=tenant_id,
         start_time=data.start_date,
         end_time=data.end_date,
+        schedule_id=schedule_id,
     )
 
 

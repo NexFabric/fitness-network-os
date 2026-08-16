@@ -23,11 +23,13 @@ from sqlalchemy import (
     Text,
     Time,
     Uuid,
+    column,
     text,
 )
 from sqlalchemy import (
     Enum as SAEnum,
 )
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -137,6 +139,12 @@ class ClassSchedule(TenantMixin, Base):
             "day_of_week >= 0 AND day_of_week <= 6", name="ck_class_schedules_dow"
         ),
         CheckConstraint("capacity > 0", name="ck_class_schedules_capacity_pos"),
+        ForeignKeyConstraint(
+            ["tenant_id", "trainer_user_id"],
+            ["staff.tenant_id", "staff.user_id"],
+            name="fk_class_schedules_trainer_staff",
+            ondelete="RESTRICT",
+        ),
     )
 
 
@@ -200,6 +208,20 @@ class ClassSession(TenantMixin, Base):
             "end_time_utc > start_time_utc", name="ck_class_sessions_time_order"
         ),
         CheckConstraint("capacity > 0", name="ck_class_sessions_capacity_pos"),
+        ForeignKeyConstraint(
+            ["tenant_id", "trainer_user_id"],
+            ["staff.tenant_id", "staff.user_id"],
+            name="fk_class_sessions_trainer_staff",
+            ondelete="RESTRICT",
+        ),
+        Index(
+            "uq_class_sessions_schedule_start",
+            "tenant_id",
+            "schedule_id",
+            "start_time_utc",
+            unique=True,
+            postgresql_where=text("schedule_id IS NOT NULL"),
+        ),
     )
 
 
@@ -316,6 +338,12 @@ class TrainerAvailability(TenantMixin, Base):
             "day_of_week >= 0 AND day_of_week <= 6", name="ck_trainer_avail_dow"
         ),
         CheckConstraint("slot_duration_minutes > 0", name="ck_trainer_avail_slot_pos"),
+        ForeignKeyConstraint(
+            ["tenant_id", "trainer_user_id"],
+            ["staff.tenant_id", "staff.user_id"],
+            name="fk_trainer_avail_trainer_staff",
+            ondelete="RESTRICT",
+        ),
     )
 
 
@@ -379,5 +407,19 @@ class PtAppointment(TenantMixin, Base):
         ),
         CheckConstraint(
             "end_time_utc > start_time_utc", name="ck_pt_appointments_time_order"
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "trainer_user_id"],
+            ["staff.tenant_id", "staff.user_id"],
+            name="fk_pt_appointments_trainer_staff",
+            ondelete="RESTRICT",
+        ),
+        ExcludeConstraint(
+            (column("tenant_id"), "="),
+            (column("trainer_user_id"), "="),
+            (text("tstzrange(start_time_utc, end_time_utc, '[)')"), "&&"),
+            name="ex_pt_appointments_no_overlap",
+            using="gist",
+            where=text("status = 'CONFIRMED'"),
         ),
     )

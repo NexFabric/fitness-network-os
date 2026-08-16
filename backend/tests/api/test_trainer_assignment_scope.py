@@ -80,6 +80,10 @@ async def _user_with_role(
     db.add(role)
     await db.flush()
     db.add(UserRole(user_id=user.id, role_id=role.id, tenant_id=tenant_id))
+    if role_name == "TRAINER":
+        from app.models.staff import Staff
+
+        db.add(Staff(tenant_id=tenant_id, user_id=user.id, role="TRAINER"))
     db.add(
         UserSession(
             user_id=user.id,
@@ -368,3 +372,4 @@ async def test_trainer_dashboard_hides_finance(api_client, pg_engine):
     assert data["past_due_invoices_amount_minor"] == 0
     assert data["month_collected_amount_minor"] == 0
     assert data["total_outstanding_debt_minor"] == 0
+    assert data["active_members_count"] == 1

@@ -86,6 +86,10 @@ async def _login(db: AsyncSession, *, tenant_id, email: str, role: Role) -> tupl
     db.add(user)
     await db.flush()
     db.add(UserRole(user_id=user.id, role_id=role.id, tenant_id=tenant_id))
+    if role.name == "TRAINER":
+        from app.models.staff import Staff
+
+        db.add(Staff(tenant_id=tenant_id, user_id=user.id, role="TRAINER"))
     db.add(
         UserSession(
             user_id=user.id,

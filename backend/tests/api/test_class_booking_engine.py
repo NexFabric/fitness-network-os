@@ -93,6 +93,12 @@ async def _create_user_with_role(
             tenant_id=tenant_id,
         )
     )
+    from app.models.staff import Staff
+    from app.services.staff import ALLOWED_STAFF_ROLES
+
+    job = role_name if role_name in ALLOWED_STAFF_ROLES else "TRAINER"
+    if role_name in {"TRAINER", "GYM_ADMIN", "GYM_OWNER", "GYM_MANAGER"}:
+        db.add(Staff(tenant_id=tenant_id, user_id=user.id, role=job))
     db.add(
         UserSession(
             user_id=user.id,
@@ -238,6 +244,10 @@ async def test_class_type_and_schedule_flow(pg_session_maker, api_client: AsyncC
     assert len(sessions) >= 1
     assert sessions[0]["class_type_name"] == "Reformer Pilates"
     assert sessions[0]["capacity"] == 6
+    start_utc = datetime.fromisoformat(sessions[0]["start_time_utc"].replace("Z", "+00:00"))
+    assert start_utc.hour != 10 or start_utc.tzinfo is None
+    # Istanbul 10:00 is 07:00Z (winter) or 06:00Z (summer), never 10:00Z.
+    assert start_utc.astimezone(UTC).hour in {6, 7}
 
 
 @pytest.mark.asyncio

@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 76 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~161,100 tokens. **Saves ~145,400 tokens per conversation.**
-> **Last scanned:** 2026-08-16 11:31 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 78 lib files | 19 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~161,600 tokens. **Saves ~145,800 tokens per conversation.**
+> **Last scanned:** 2026-08-16 11:42 — re-run after significant changes
 
 ---
 
@@ -1019,6 +1019,8 @@
 - `backend/alembic/versions/xe6f7a8b9c0d_dsar_requests.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xf7a8b9c0d1e_align_model_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xh9c0d1e2f3a_trainer_staff_composite_fk.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xi0d1e2f3a4b_pt_overlap_exclusion.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
