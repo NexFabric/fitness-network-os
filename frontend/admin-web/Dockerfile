@@ -1,6 +1,6 @@
 # Build from repo `frontend/` context:
 #   docker build -f admin-web/Dockerfile --build-arg VITE_API_URL=https://api.example.com .
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
