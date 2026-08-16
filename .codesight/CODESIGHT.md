@@ -3,7 +3,7 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 33% test coverage
+> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 34% test coverage
 > **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
 > **Last scanned:** 2026-08-16 18:12 — re-run after significant changes
 
@@ -1151,8 +1151,8 @@
 ## Most Imported Files (change these carefully)
 
 - `backend/app/models/user.py` — imported by **71** files
-- `backend/app/models/tenant.py` — imported by **65** files
-- `backend/app/models/organization.py` — imported by **58** files
+- `backend/app/models/tenant.py` — imported by **66** files
+- `backend/app/models/organization.py` — imported by **59** files
 - `backend/app/api/deps.py` — imported by **47** files
 - `backend/app/models/rbac.py` — imported by **44** files
 - `backend/app/models/member.py` — imported by **44** files
@@ -1174,8 +1174,8 @@
 ## Import Map (who imports what)
 
 - `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +66 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +60 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +53 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +61 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +54 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
 - `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +39 more
 - `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +39 more
@@ -1188,7 +1188,7 @@
 
 # Test Coverage
 
-> **33%** of routes and models are covered by tests
+> **34%** of routes and models are covered by tests
 > 116 test files found
 
 ## Covered Routes
@@ -1218,6 +1218,7 @@
 - QrJtiReplay
 - AuditEvent
 - ClassType
+- ClassSchedule
 - ClassSession
 - ClassBooking
 - ConsentDefinition

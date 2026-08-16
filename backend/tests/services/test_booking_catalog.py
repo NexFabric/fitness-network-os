@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models.organization import Organization
 from app.models.tenant import Tenant
-from app.schemas.booking import ClassTypeCreate, ClassTypeUpdate
+from app.schemas.booking import ClassScheduleUpdate, ClassTypeCreate, ClassTypeUpdate
 from app.services.booking import BookingNotFound, ClassBookingService
 
 
@@ -69,3 +69,22 @@ async def test_class_type_crud_and_not_found(db_session, tenant):
 
     with pytest.raises(BookingNotFound):
         await ClassBookingService.get_class_type(db_session, tenant.id, uuid4())
+
+
+@pytest.mark.asyncio
+async def test_schedule_list_empty_and_missing_updates(db_session, tenant):
+    assert await ClassBookingService.list_schedules(db_session, tenant.id) == []
+    assert (
+        await ClassBookingService.list_schedules(
+            db_session, tenant.id, location_id=uuid4(), active_only=False
+        )
+        == []
+    )
+    with pytest.raises(BookingNotFound):
+        await ClassBookingService.update_class_type(
+            db_session, tenant.id, uuid4(), ClassTypeUpdate(name="Nope")
+        )
+    with pytest.raises(BookingNotFound):
+        await ClassBookingService.update_schedule(
+            db_session, tenant.id, uuid4(), ClassScheduleUpdate(room_name="A")
+        )

@@ -214,3 +214,15 @@ async def test_finance_http_invoice_payment_and_lists(api_client, pg_engine):
         json={"code": "HTTP10", "name": "Http ten", "percent_bps": 1000},
     )
     assert disc.status_code == 200, disc.text
+
+    reissue = await api_client.post(
+        f"/api/v1/finance/invoices/{invoice_id}/issue",
+        headers=headers,
+    )
+    assert reissue.status_code == 400
+
+    missing_void = await api_client.post(
+        f"/api/v1/finance/invoices/{uuid4()}/void",
+        headers=headers,
+    )
+    assert missing_void.status_code == 400
