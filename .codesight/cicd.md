@@ -12,7 +12,7 @@
 
 > `.github/workflows/ci.yml`
 
-- **security** on `ubuntu-latest` — 7 steps
+- **security** on `ubuntu-latest` — 6 steps
   - `actions/checkout@v7`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
   - `actions/setup-python@v7`
