@@ -69,6 +69,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`
 - `SMTP_USER` — `backend/app/services/notification_providers.py`
 - `TEST_DATABASE_URL` — `backend/scripts/check_permissions_db.py`
+- _...1 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-08-16_

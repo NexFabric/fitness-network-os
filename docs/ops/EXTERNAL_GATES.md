@@ -5,6 +5,11 @@ These gates cannot be closed from this repository alone. Every row is
 local drill does **not** change that. Do not write PASS, VERIFIED, or
 Phase 26 GO here.
 
+In-repo certification that *supports* these gates already landed
+(#89–#94, `1b42ab4`). Do not re-implement packets, verifiers, or
+compose TLS. See `docs/CAMPAIGN_REGISTER.md`. Local MinIO / local PITR /
+null-receiver drills are **not** the rows below.
+
 | gate | status | command or file | owner |
 |---|---|---|---|
 | Independent pentest (P1-11) | UNVERIFIED | `docs/ops/PENTEST_BRIEF.md` | human |

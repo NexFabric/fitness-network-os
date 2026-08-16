@@ -2,16 +2,17 @@
 
 **Date:** 2026-08-16  
 **Branch:** `main`  
-**Last code:** `e05e29f` (PR **#89 MERGED**)  
+**Last code:** `1b42ab4` (PR **#89** / **#91** / **#93** / **#94** MERGED)  
 **Alembic head:** `xi0d1e2f3a4b`  
-**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#83`/`#84` · `#64/#66/#68` (CI actions)  
-**Campaign landings:** migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · EXTERNAL_GATES **UNVERIFIED**  
+**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#83`/`#84` · `#64/#66/#68` (CI actions) · `#89`→`e05e29f` · `#91`→`27fff12` · `#93`→`d9a5c9d` · `#94`→`1b42ab4`  
+**Campaign landings:** **#89–#94 MERGED** — migrate gate · migrator isolation · TLS · ops-drills PITR (CI `31968740247` SUCCESS on `1b42ab4`) · coverage floors · Safety CLI dropped · release-truth checker. **Do not redo** — `docs/CAMPAIGN_REGISTER.md`. EXTERNAL_GATES **UNVERIFIED**.  
 **CI:** every merge passed required CI. Merge gate is CI only (review requirement removed 2026-08-16, single maintainer).  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
 
-Authority checklist: `docs/PROGRESS_CHECKLIST.md`
+Authority checklist: `docs/PROGRESS_CHECKLIST.md`  
+Do-not-redo register: `docs/CAMPAIGN_REGISTER.md`
 
 ---
 
@@ -78,21 +79,36 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 
 ---
 
+## Closed this campaign (2026-08-16) — do not reopen
+
+| ID | Item |
+|----|------|
+| CERT-89 | PR **#89** `e05e29f` — production certification squash |
+| TRUTH-91 | PR **#91** `27fff12` — authority docs mark #89 MERGED |
+| REL-TRUTH | PR **#93** `d9a5c9d` — `check_release_truth.py` forbids stale OPEN vs MERGED |
+| TLS-PROOF | PR **#94** `1b42ab4` — host chown 999:999 + encrypt-only SSL context |
+| SAFETY-1 | Safety CLI removed from required CI; pip-audit is the SCA gate |
+| DRILLS-CI | ops-drills dump/restore + PITR green on tip (`31968740247` @ `1b42ab4`) |
+| REV-62 | Owner decision: review requirement removed; CI is the merge gate |
+| MIG-PROD | Prod compose migrate-before-app |
+| TLS-1 | Production DB/Redis TLS or `PRODUCTION_PRIVATE_NETWORK=1` |
+| CORS-HTTPS | Production CORS origins must be `https://` |
+| CD-1 | Compose-first deploy choreography + `workflow_dispatch` (live promote UNVERIFIED) |
+| COV-CRIT | Critical-module coverage floors (anti-regression, measured) |
+| PERF-1 | k6 harness landed (not a claimed SLO) |
+| A11Y-1 | axe Playwright regression spec (color-contrast disabled — known dark teal) |
+| MIG-SEC | Migrator DSN only on `COMPONENT_NAME=migrate` |
+
+---
+
 ## Still open — in-repo (doable)
 
 | ID | Item | Owner |
 |----|------|-------|
-| CI-62 | `ab860f0` `31947417828` SUCCESS. Docs `e6a2d6c` `31947732456` SUCCESS. Later docs-only SHAs not separately claimed. | — |
-| ~~REV-62~~ | **Closed by owner decision (2026-08-16).** Single-maintainer repo: the "1 approving review" rule was structurally unsatisfiable (GitHub blocks author self-approval), so the review requirement was removed. `enforce_admins`, `strict` and the 11 required checks stay — **CI is the merge gate**. | owner |
-| ~~MIG-PROD~~ | Prod compose migrate-before-app gate — landed this campaign | — |
-| ~~TLS-1~~ | Production DB/Redis TLS or `PRODUCTION_PRIVATE_NETWORK=1` — landed | — |
-| ~~CORS-HTTPS~~ | Production CORS origins must be `https://` — landed | — |
-| ~~CD-1~~ | Compose-first deploy choreography + `workflow_dispatch` — landed; live promote UNVERIFIED | — |
-| ~~COV-CRIT~~ | Critical-module coverage floors in CI — anti-regression floors landed | — |
-| ~~PERF-1~~ | k6 harness landed (not a claimed SLO) | — |
-| ~~A11Y-1~~ | axe Playwright regression spec landed | — |
-| ~~MIG-SEC~~ | Migrator DSN only on `COMPONENT_NAME=migrate`; TLS rule on migrator DSN; workers share `PRODUCTION_PRIVATE_NETWORK` | — |
-| HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link). Signature table is empty. | human |
+| CI-62 | Historical: `ab860f0` `31947417828` SUCCESS. Later SHAs ride required CI on merge. Do not re-claim. | — |
+| PR-95 | P1 test-depth (`feat/p1-critical-test-depth`). Rebase + required CI. **Do not open a sibling.** | one agent |
+| PR-92 | Dependabot github-actions. Merge only when up to date with `main` and All Green. | one agent |
+| HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md`. Signature table is empty. **Do not agent-sign.** | human |
 
 ## Still open — cannot fake “complete”
 
@@ -117,4 +133,6 @@ GitHub Settings (2026-08-16, `gh` API): Default CodeQL Setup = **not-configured*
 
 - Do **not** claim production-ready YES or Phase 26 PASS.
 - Do **not** redesign multitenancy.
+- Do **not** re-implement any ID in **Closed this campaign**.
+- Do **not** merge PR **#86** (React 19).
 - Independent human APPROVE is **not** automated by this board.
