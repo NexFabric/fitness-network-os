@@ -5,11 +5,11 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Alan | Değer |
 |---|---|
-| Branch | `feat/public-site-modernization-and-seo` |
-| Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
+| Branch | `main` — açık dal yok, açık PR yok |
+| Last code | `d56b6a0` (main, 2026-08-16) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) **MERGED** → `main` `ae6267d` (squash, 2026-08-16). Merge kapısı yalnız CI. |
-| CI | Kod `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. Sonraki **docs-only** SHA'lar ayrıca iddia edilmez. |
+| Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#64/#66/#68` CI action bump |
+| CI | `main` üzerindeki her merge required CI'dan geçti. Merge kapısı **yalnız CI** — review zorunluluğu yok (2026-08-16, tek geliştirici). |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
 
@@ -42,7 +42,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Daha yeni docs-only SHA’ların CI’sini görmeden iddia etme.
+2. `git log origin/main` otoritedir. Açık PR ve açık dal **yok**; her şey `main`'de. Bir SHA'nın CI'sini görmeden yeşil iddia etme.
 3. **Merge kapısı CI’dır.** Bu tek geliştiricili repoda “1 onaylayan review” kuralı yapısal olarak imkânsızdı (yazar kendi PR’ını onaylayamaz) ve 2026-08-16’da repo sahibi kararıyla kaldırıldı. `enforce_admins`, `strict` ve 11 required check **yerinde** — bunlara dokunma. Yeşil CI olmadan merge etme.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -51,9 +51,11 @@ değiştirmeden önce daima kaynağı oku.
 
 ## Şu an ne durumda
 
-In-repo kod bu dalda **kapandı** (Phase 0–27.4 + Waves 1–3 + Fed HQ + Milestone B1 + Phase 29 + RC booking/staff/PT kapanışı). `main`’e **merge edilmedi**.
+In-repo kod **kapandı ve `main`'e merge edildi** (Phase 0–27.4 + Waves 1–3 +
+Fed HQ + Milestone B1 + Phase 29 + RC booking/staff/PT kapanışı). Açık PR yok,
+açık dal yok. Kalan her şey dış kanıt gerektiriyor — aşağıdaki tabloya bak.
 
-**Bu dalda kapanan son kod (Phase 29 + RC):**
+**Phase 29 + RC (merge `ae6267d`):**
 - Same-tenant BOLA, privileged MFA + step-up + idle, `fernet:hmac:` cihaz sırrı, portal-account bind, scanner pairing, SMTP `delivery.body`, compose workers, hashed `account_invites`, onboarding UI, DSAR export+erasure, god-page split, index drift (`xf7a8b9c0d1e`).
 - **STAFF-2** staff list `email` + tenant-isolated `GET /classes/trainers` (UserRole TRAINER; seed trainer/desk `staff` satırı).
 - **UR-1** `user_roles` üç partial unique (`xg8b9c0d1e2f`).

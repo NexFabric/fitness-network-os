@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Last code:** `ab860f0` · **Alembic head:** `xi0d1e2f3a4b` · **PR #62:** OPEN, not merged, `REVIEW_REQUIRED` · **CI:** `ab860f0` `31947417828` **SUCCESS** · docs `e6a2d6c` `31947732456` **SUCCESS**. Pause commit CI is not claimed here.
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `main` (no open branches, no open PRs) · **Last code:** `d56b6a0` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, plus `#64/#66/#68`. Every merge passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer).
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -153,7 +153,7 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ---
 
-## Phase 29 — In-repo hardening (2026-08-16, branch `feat/public-site-modernization-and-seo`)
+## Phase 29 — In-repo hardening (2026-08-16, merged to `main` as `ae6267d`)
 
 Same-tenant BOLA, privileged cookie assurance, device secret at rest, and the
 product gaps that were already implemented in services but had no HTTP/UI.
