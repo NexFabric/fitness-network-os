@@ -6,9 +6,9 @@
 
 ## Backend (80 files)
 
+- `backend/scripts/check_release_truth.py` — require, forbid, exclusive_pair_errors, forbid_both, authority_exclusive_errors, main
 - `backend/alembic/env.py` — include_object, run_migrations_offline, do_run_migrations, run_migrations_online, run_async_migrations
 - `backend/alembic/versions/x6f7a8b9c0d1_wave3_migration_dunning_onboarding.py` — enable_rls, disable_rls, upgrade, downgrade
-- `backend/scripts/check_release_truth.py` — require, forbid, forbid_both, main
 - `backend/scripts/kms_iam_verify.py` — ok, die, skip, main
 - `backend/scripts/check_no_money_floats.py` — scan_models, scan_source_ast, main
 - `backend/scripts/process_notification_due.py` — build_parser, main, process_due_for_tenant

@@ -83,7 +83,9 @@
 - `backend/scripts/check_release_truth.py`
   - function require: (path, *needles) -> list[str]
   - function forbid: (path, *needles) -> list[str]
+  - function exclusive_pair_errors: (path, text, left, right) -> list[str]
   - function forbid_both: (path, left, right) -> list[str]
+  - function authority_exclusive_errors: (path, text) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/kms_iam_verify.py`

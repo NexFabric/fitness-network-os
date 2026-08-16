@@ -12,6 +12,27 @@ AUTHORITY = (
     "AGENTS.md",
 )
 
+# String match only — no GitHub API, no live HEAD SHA (those go stale).
+# #89 is closed; a file may not claim both an OPEN story and a merged-main story,
+# and may not pin last code at the pre-#89 SHA once it also says #89 MERGED.
+PR89_OPEN = (
+    "PR #89 OPEN",
+    "PR **#89 OPEN",
+)
+PR89_MERGED_STORY = (
+    "PR #89 MERGED",
+    "PR **#89 MERGED",
+    "#89→`e05e29f`",
+    "`#89`→`e05e29f`",
+)
+STALE_PRE89_SHA = "ee6597e"
+
+AUTHORITY_FORBIDDEN = (
+    "PR #62 OPEN",
+    "| **Production-ready?** | **YES** |",
+    "**Production-ready?** **YES**",
+)
+
 
 def _read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
@@ -31,11 +52,25 @@ def forbid(path: str, *needles: str) -> list[str]:
     ]
 
 
-def forbid_both(path: str, left: str, right: str) -> list[str]:
-    text = _read(path)
+def exclusive_pair_errors(path: str, text: str, left: str, right: str) -> list[str]:
     if left in text and right in text:
         return [f"{path}: mutually exclusive claims {left!r} and {right!r}"]
     return []
+
+
+def forbid_both(path: str, left: str, right: str) -> list[str]:
+    return exclusive_pair_errors(path, _read(path), left, right)
+
+
+def authority_exclusive_errors(path: str, text: str) -> list[str]:
+    errors: list[str] = []
+    for open_needle in PR89_OPEN:
+        for merged_needle in PR89_MERGED_STORY:
+            errors.extend(exclusive_pair_errors(path, text, open_needle, merged_needle))
+    for merged_needle in PR89_MERGED_STORY:
+        errors.extend(exclusive_pair_errors(path, text, STALE_PRE89_SHA, merged_needle))
+    errors.extend(exclusive_pair_errors(path, text, "PR #62 OPEN", "MERGED to `main`"))
+    return errors
 
 
 def main() -> int:
@@ -78,21 +113,8 @@ def main() -> int:
     ]
 
     for path in AUTHORITY:
-        errors.extend(
-            forbid(
-                path,
-                "PR #62 OPEN",
-                "| **Production-ready?** | **YES** |",
-                "**Production-ready?** **YES**",
-            )
-        )
-        errors.extend(
-            forbid_both(
-                path,
-                "PR #62 OPEN",
-                "MERGED to `main`",
-            )
-        )
+        errors.extend(forbid(path, *AUTHORITY_FORBIDDEN))
+        errors.extend(authority_exclusive_errors(path, _read(path)))
 
     if errors:
         for error in errors:
