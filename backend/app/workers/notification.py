@@ -43,13 +43,13 @@ async def run_cycle() -> int:
                 if sent_count > 0 or failed_count > 0:
                     logger.info("Processed notifications for %s: %s", tenant.id, res)
                 if sent_count:
-                    NOTIFICATION_DISPATCH.labels(
-                        channel="all", outcome="sent"
-                    ).inc(sent_count)
+                    NOTIFICATION_DISPATCH.labels(channel="all", outcome="sent").inc(
+                        sent_count
+                    )
                 if failed_count:
-                    NOTIFICATION_DISPATCH.labels(
-                        channel="all", outcome="failed"
-                    ).inc(failed_count)
+                    NOTIFICATION_DISPATCH.labels(channel="all", outcome="failed").inc(
+                        failed_count
+                    )
                 # Commit per tenant to release row locks and isolate failure
                 await db.commit()
             except Exception:

@@ -54,9 +54,7 @@ async def run_cycle() -> int:
                     REPORT_EXECUTION.labels(outcome="success").inc()
                 await db.commit()
             except Exception:
-                logger.exception(
-                    "Error executing reports for tenant %s", tenant.id
-                )
+                logger.exception("Error executing reports for tenant %s", tenant.id)
                 REPORT_EXECUTION.labels(outcome="error").inc()
                 await db.rollback()
             finally:

@@ -52,9 +52,7 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
                     )
                 await db.commit()
             except Exception:
-                logger.exception(
-                    "Error in retention sweep for tenant %s", tenant.id
-                )
+                logger.exception("Error in retention sweep for tenant %s", tenant.id)
                 await db.rollback()
             finally:
                 current_tenant_id_var.reset(token)
