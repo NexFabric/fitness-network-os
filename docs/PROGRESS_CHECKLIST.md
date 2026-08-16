@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
 **Last updated:** 2026-08-16
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `feat/production-certification-closure` — PR **#89 OPEN** (until merged) · **Last code:** `6530739` (campaign tip; `origin/main` still `ee6597e`) · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, plus `#64/#66/#68`. **Campaign landings:** migrate gate, migrator isolation, TLS, ops-drills PITR, coverage floors; **EXTERNAL_GATES UNVERIFIED**. Every merge on `main` passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer). **Production-ready:** **NO**. Phase 26 PASS is **NOT VERIFIED**.
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ · **Branch:** `main` · **Last code:** `e05e29f` · **Alembic head:** `xi0d1e2f3a4b` · **Merged 2026-08-16:** `#62`→`ae6267d`, `#78`→`fb3a26d`, `#80`→`d56b6a0`, `#83`/`#84`, `#89`→`e05e29f` (production certification), plus `#64/#66/#68`. **Campaign landings:** migrate gate, migrator isolation, TLS, ops-drills PITR, coverage floors; **EXTERNAL_GATES UNVERIFIED**. Every merge on `main` passed required CI; the merge gate is CI only (review requirement removed 2026-08-16, single maintainer). **Production-ready:** **NO**. Phase 26 PASS is **NOT VERIFIED**.
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
