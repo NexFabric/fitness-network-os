@@ -35,9 +35,22 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+function shouldProbeOnMount(): boolean {
+  if (typeof window === 'undefined') return true
+  const path = window.location.pathname
+  if (
+    path.startsWith('/mfa/setup') ||
+    path.startsWith('/password/change') ||
+    (path.startsWith('/login') && !getTenantId())
+  ) {
+    return false
+  }
+  return true
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(() => shouldProbeOnMount())
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async ({ probe = false } = {}) => {
@@ -45,19 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // skip the probe rather than firing a request that can only 401.
     // A stored tenant means a prior session, which is worth re-checking so a
     // returning user is bounced straight to its portal.
-    if (probe && typeof window !== 'undefined') {
-      const path = window.location.pathname
-      // /mfa/setup and /password/change run on restricted sessions that
-      // /me/session rejects by design, so probing there only produces noise.
-      if (
-        path.startsWith('/mfa/setup') ||
-        path.startsWith('/password/change') ||
-        (path.startsWith('/login') && !getTenantId())
-      ) {
-        setSession(null)
-        setLoading(false)
-        return
-      }
+    if (probe && !shouldProbeOnMount()) {
+      return
     }
     setLoading(true)
     setError(null)

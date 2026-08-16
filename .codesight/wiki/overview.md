@@ -48,12 +48,12 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **69** files
-- `backend/app/models/tenant.py` — imported by **60** files
-- `backend/app/models/organization.py` — imported by **53** files
+- `backend/app/models/user.py` — imported by **70** files
+- `backend/app/models/tenant.py` — imported by **61** files
+- `backend/app/models/organization.py` — imported by **54** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/rbac.py` — imported by **42** files
-- `backend/app/models/member.py` — imported by **41** files
+- `backend/app/models/rbac.py` — imported by **43** files
+- `backend/app/models/member.py` — imported by **42** files
 
 ## Required Environment Variables
 

@@ -1,0 +1,53 @@
+name: Ops Drills & Recovery Verification
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'  # Weekly on Sunday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ops_drills:
+    name: S3, PITR, and Alert Drills
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Start Docker Services
+        run: |
+          docker compose -f docker-compose.storage.yml up -d
+          docker compose -f docker-compose.obs.yml up -d
+          docker compose up -d postgres redis
+          sleep 10
+
+      - name: S3 Storage Runtime Proof Drill
+        run: |
+          cd backend
+          uv sync --frozen
+          uv run python scripts/s3_runtime_proof.py
+
+      - name: Observability Alert Fire Drill
+        run: |
+          chmod +x ops/observability/alert_fire_drill.sh
+          ./ops/observability/alert_fire_drill.sh
+
+      - name: Tear down Services
+        if: always()
+        run: |
+          docker compose -f docker-compose.obs.yml down -v || true
+          docker compose -f docker-compose.storage.yml down -v || true
+          docker compose down -v || true

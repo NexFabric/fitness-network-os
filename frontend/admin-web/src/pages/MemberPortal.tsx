@@ -143,12 +143,18 @@ export default function MemberPortal() {
   }, [activeTab, loadTabData])
 
   useEffect(() => {
-    if (secondsLeft <= 0) return
+    if (!qr) return
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => (prev <= 1 ? 0 : prev - 1))
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
     }, 1000)
     return () => clearInterval(timer)
-  }, [secondsLeft])
+  }, [qr])
 
   async function handleIssueQr() {
     setIssuing(true)
