@@ -35,6 +35,7 @@ logs
 # Coverage
 htmlcov/
 .coverage
+reports/coverage.json
 
 # Frontend
 node_modules/

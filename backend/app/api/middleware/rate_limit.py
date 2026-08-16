@@ -41,7 +41,13 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
         self,
         app,
         *,
-        paths: tuple[str, ...] = ("/api/v1/auth/login",),
+        paths: tuple[str, ...] = (
+            "/api/v1/auth/login",
+            "/api/v1/devices/auth",
+            "/api/v1/auth/mfa/setup",
+            "/api/v1/auth/mfa/verify",
+            "/api/v1/auth/invite/accept",
+        ),
         max_requests: int = 20,
         window_seconds: int = 60,
     ) -> None:
@@ -71,9 +77,11 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
                     socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
                     socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
                 )
-            except Exception:
+            except (OSError, TimeoutError, ImportError) as e:
                 self._redis_failed = True
-                logger.warning("rate_limit.redis_unavailable degraded=in_process")
+                logger.warning(
+                    "rate_limit.redis_unavailable degraded=in_process err=%s", e
+                )
                 return None
         return self._redis
 
@@ -97,9 +105,9 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
                 await client.zrem(key, member)
                 return True
             return False
-        except Exception:
+        except Exception as e:  # noqa: BLE001
             self._redis_failed = True
-            logger.warning("rate_limit.redis_error degraded=in_process")
+            logger.warning("rate_limit.redis_error degraded=in_process err=%s", e)
             return None
 
     def _over_limit_local(self, key: str, now: float) -> bool:
@@ -143,11 +151,24 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
         try:
             if body_bytes:
                 data = json.loads(body_bytes)
-                identifier = str(data.get("email", "unknown")).lower().strip()
-        except Exception:
-            pass
+                if data.get("email"):
+                    identifier = str(data["email"]).lower().strip()
+                elif data.get("device_id"):
+                    identifier = f"device:{data['device_id']}"
+                elif data.get("token"):
+                    identifier = "invite:" + hashlib.sha256(
+                        str(data["token"]).encode()
+                    ).hexdigest()[:16]
+        except (TypeError, ValueError, UnicodeDecodeError):
+            identifier = "unknown"
+        if identifier == "unknown":
+            session_token = request.cookies.get("session_token")
+            if session_token:
+                identifier = "session:" + hashlib.sha256(
+                    session_token.encode()
+                ).hexdigest()[:16]
 
-        # The identifier is an email — hash it so no PII reaches Redis or logs.
+        # Hash so emails / device ids never reach Redis or logs.
         digest = hashlib.sha256(identifier.encode()).hexdigest()[:32]
         key = f"rl:{request.url.path}:{digest}"
         now = time.time()

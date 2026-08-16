@@ -51,11 +51,16 @@ async def test_process_due_for_tenant_sets_rls_and_returns_stats():
     )
     session.commit.assert_awaited_once()
     session.rollback.assert_not_awaited()
-    # RLS SET LOCAL issued
+    # RLS SET LOCAL issued (tenant id is bound, not interpolated)
     assert session.execute.await_count >= 1
-    sql = str(session.execute.await_args_list[0].args[0])
+    first = session.execute.await_args_list[0]
+    sql = str(first.args[0])
     assert "app.current_tenant_id" in sql
-    assert str(tenant_id) in sql
+    params = first.args[1] if len(first.args) > 1 else first.kwargs.get("parameters") or first.kwargs
+    if isinstance(params, dict):
+        assert params.get("tid") == str(tenant_id)
+    else:
+        assert str(tenant_id) in str(first)
 
 
 @pytest.mark.asyncio

@@ -47,24 +47,24 @@ export function Header() {
             aria-label="Ana menü"
           >
             {nav.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="rounded-lg px-3 py-2 text-ink-muted transition-colors hover:bg-white/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
 
         <div className="hidden sm:flex items-center gap-3">
-          <a
+          <Link
             href="/#demo"
             className="text-sm font-medium text-ink-muted transition-colors hover:text-foreground px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
           >
             Sistemi incele
-          </a>
+          </Link>
           <a
             href={`${ADMIN_URL}/login`}
             className="btn-glow rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -100,22 +100,22 @@ export function Header() {
         >
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-4" aria-label="Mobil menü">
             {nav.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="rounded-lg px-3 py-3 text-base font-medium text-foreground hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 onClick={() => setOpen(false)}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
-            <a
+            <Link
               href="/#demo"
               className="rounded-lg px-3 py-3 text-base font-medium text-ink-muted hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               onClick={() => setOpen(false)}
             >
               Sistemi incele
-            </a>
+            </Link>
             <a
               href={`${ADMIN_URL}/login`}
               className="mt-2 rounded-lg bg-brand px-4 py-3 text-center text-base font-semibold text-white hover:bg-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"

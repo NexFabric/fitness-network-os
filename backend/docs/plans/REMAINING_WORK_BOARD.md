@@ -1,9 +1,13 @@
 # Remaining Work Board
 
-**Date:** 2026-08-13 (post PR #57 merge, `main` = `837cec4`)  
-**Program:** Phase 27 — Final Production Closure  
-**Production-ready?** **NO** (architecture strong; external evidence gates still open)
+**Date:** 2026-08-16  
+**Branch:** `feat/public-site-modernization-and-seo`  
+**Alembic head:** `xe6f7a8b9c0d`  
+**Program:** Phase 27–29 — in-repo closure  
+**Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
+
+Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 
 ---
 
@@ -12,77 +16,73 @@
 | Band | Verdict |
 |------|---------|
 | Architecture / tenancy / finance / outbox / QR core | 🟢 GO |
-| CSRF bootstrap + cookie admin (local) | 🟢 landed |
-| Production fail-closed config | 🟢 landed |
-| Notification PII / prod mock block | 🟢 landed |
-| Report object storage | 🟢 merged (PR #55) — S3 upload + SSE + tenant-bound presigned URL + cleanup; **runtime proof against a real bucket still open (P1-3b)** |
-| /live /ready /metrics | 🟢 present |
-| Public metrics honesty | 🟢 landed |
-| Public-site CI job | 🟢 added |
-| Privileged MFA enrollment | 🟢 merged (PR #55) — restricted setup session, TOTP UX and post-enrollment session rotation |
-| Scanner offline deny-by-default | 🟢 landed |
-| Scanner device auth | 🟢 landed — credentials **+ HMAC request signing + single-use nonce** (ADR-044) |
-| Playwright E2E | 🟢 required GitHub CI gate; 36/36 real-browser scenarios passed in run `31732326181` |
-| DR / pentest evidence | 🔴 UNVERIFIED (docs only) |
+| CSRF + cookie admin + privileged MFA + step-up + idle | 🟢 landed (this branch) |
+| Device HMAC at rest (`fernet:hmac:`) + scanner pairing UI | 🟢 landed (this branch) |
+| Member portal bind + staff email hook + compose workers | 🟢 landed (this branch) |
+| Playwright E2E | 🟢 required CI gate |
+| Invite token + onboarding wizard UI | 🟢 landed (this branch) |
+| DR / pentest / real S3 / KMS IAM | 🔴 UNVERIFIED (external) |
 | Independent APPROVE | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
 
 ---
 
-## Closed this session (code)
+## Closed on this branch (Phase 29)
 
 | ID | Item |
 |----|------|
-| P0-2 | CSRF `GET /auth/csrf` + admin/scanner ensureCsrf |
-| P0-3 | Cookie-only admin session (tenant in localStorage only) |
-| P0-4 | Truth docs NO production-ready |
-| P1-5 | `Settings.validate_production()` fail-closed |
-| P1-6 | No recipient PII in logs; prod blocks mock SMS/WA/PUSH |
-| P1-3 | Initial local CSV artifact path (superseded by P1-3b object storage closure) |
-| P1-8 | CI job `public-site` build |
-| P1-9 | Marketing design targets (not fake live stats) |
-| P1-2 | Scanner offline deny-by-default |
-| P2-1 | `/live`, `/ready` (503) and metrics endpoint foundation (superseded by real counters merged in PR #55) |
-| P1-4 | MFA: refuse login without code if MFA enrolled |
-| P1-10/11 | Honest UNVERIFIED status docs under `docs/ops/` |
-| P1-12 | FE builds as **required** branch checks (via `all-green` job) |
-| SEC-1 | Dependabot high alert triage (npm audit fix vite/esbuild) |
-| P1-1 | Scanner **device** authentication |
-| P1-4b | Real TOTP + privileged role matrix UI (Backend) |
-| P1-7 | Playwright browser E2E suite (21 tests, real Chromium + real backend) |
-| SEC-2 | Device channel HMAC signing + nonce replay protection (ADR-044) |
-| P2-2 | Redis-backed distributed rate limit (login), fail-open with degraded log |
-| API-1 | Plan catalogue (`/plans`, versions, publish) + membership creation (`POST /memberships`) — the lifecycle surface can now be driven end to end |
-| API-2 | Delivery and run history endpoints (`GET /notifications/deliveries`, `GET /reports/runs`) — bounded, filterable |
-| SEC-3 | Dead `verify_idempotency_key` middleware removed — it advertised idempotency while only checking header presence; the real path is `api/idempotency_uow.py` |
-| P0-1 | Main Unit & Integration CI green at `837cec4` — 325 passed · 1 skipped (GitHub Actions run `31732326181`) |
-| P1-3b | Real S3/MinIO upload, server-side encryption, tenant-key validation, short-lived presigned downloads and bounded cleanup **implemented and merged**. Code path is closed; runtime proof against a real bucket is still open below. |
-| P1-4 | Privileged password login is restricted to MFA setup until TOTP enrollment succeeds; admin enrollment UX and session rotation merged |
-| P1-7 | Playwright suite wired into `all-green`; 36/36 passed, merged |
-| P1-PKG | Frozen `uv.lock`, pinned `uv`, base-image digest, `.dockerignore`, non-root runtime and HEALTHCHECK; image build added to CI |
-| P1-USER | `POST /staff/accounts` creates a login and links it to the tenant in one transaction, returning a one-time password once. `must_change_password` plus a restricted `password_reset` session force rotation before the account can be used, and `resolve_auth_level()` orders enrollment ahead of rotation so finishing MFA can no longer skip it (PR #57) |
-| WAVE-1 | Legal pages (`/privacy`, `/terms`, `/kvkk`), Backend `/me` self-service expansion (`/invoices`, `/payments`, `/consents`, `finance:read:self`), 5-tab MemberPortal UI |
-| WAVE-2 | Forensic Access Snapshot (`AccessAttempt.snapshot_data`), Front Desk Reception workspace (`/reception`, instant search, manual override checkin), Server-side KPI Engine (`GET /dashboard/kpis`) |
-| WAVE-3 | CSV Data Migration Pipeline (`DataImportBatch`, `DataImportRow`, `DataImport.tsx`), Payment Attempts & Dunning policy (`PaymentAttempt`, `DunningPolicy`, invoice retry columns), Tenant Onboarding state machine (`TenantOnboarding`) |
-| FED-HQ | 6-tab Federation HQ Console (`SuperAdminPortal.tsx`), Gym Lifecycle (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), Roaming Passport Matrix (`PassportConfig`), Compliance & Audit Registry (`ComplianceRecord`), Network Alert Broadcasts (`NetworkAlert`), Cross-Tenant Analytics (`AnalyticsOverview`), Alembic migration `x9c0d1e2f3a4` |
-| P2-3 | AWS KMS envelope encryption (`kms:enc:`) with `GenerateDataKey` & `Decrypt`, fail-closed boot validation in `core/config.py` |
-| MILESTONE-B1 | Group Class & PT Booking Engine: 6 RLS tables (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`), Alembic `xa2b3c4d5e6f`, `SELECT ... FOR UPDATE` write lock concurrency, monotonic FIFO waitlist auto-promotion, Admin Visual Calendar & Attendee Roster Drawer (`Classes.tsx`), Trainer Portal live attendance ledger (`TrainerPortal.tsx`), 6-tab Member Portal (`MemberPortal.tsx`), real PostgreSQL concurrency pytest suite, and Playwright E2E suite (`classes_and_booking_flows.spec.ts`) |
+| BOLA-1 | `reception:read` + reception/import/PT/dashboard assignment scope |
+| MFA-1 | Privileged MFA set includes FRONT_DESK; dummy Argon2 timing |
+| STAFF-1 | Staff `UserRole` `STAFF`→`FRONT_DESK` |
+| CSV-1 | CSV formula/size caps; `+90…` phones allowed |
+| DEV-1 | Device signing material `fernet:hmac:` at rest |
+| STEP-1 | Step-up MFA 5 min on sensitive writes |
+| IDLE-1 | Privileged idle 30 min → `401 session_idle` |
+| BG-1 | Superuser tenant writes `403 break_glass_required` |
+| SMTP-1 | SMTP sends `delivery.body` |
+| CSP-1 | `'unsafe-eval'` removed from admin + scanner CSP |
+| SCAN-1 | Scanner pairs via device auth; demo password gone |
+| PORT-1 | `POST /members/{id}/portal-account` + Members.tsx |
+| MAIL-1 | Staff create → `schedule_delivery` EMAIL |
+| WRK-1 | Compose notification + outbox workers; Dockerfile `uv.lock` |
+| RLS-G | Growth leads RLS test is real PostgreSQL |
+| INVITE-1 | `account_invites` hashed token + `POST /auth/invite/accept` + `/invite` |
+| ONB-UI | Admin `/onboarding` wizard |
+| INVITE-OTP | Standing OTP no longer returned or emailed |
+| COV-1a | eslint in required FE jobs; pytest `--cov` report |
+| DSAR-1a | Bound-member export + `dsar_requests` ledger |
+| DSAR-1b | Erasure anonymize; open invoices 409 hold; paid invoices stay |
+| GOD-1 | Split SuperAdmin / Classes / MemberPortal tab shells |
+| GROW-F | Growth CRM frozen schema-only — no API, no table drop |
+| IMG-1 | Frontend Dockerfiles use workspace lockfile + SPA nginx; prod compose has ENCRYPTION_KEY + admin/scanner images |
+| MIG-1 | Dev compose `migrate` one-shot before API/workers |
+| COV-1b | Measured 72%; CI `--cov-fail-under=70` |
+
+Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they are not re-listed.
 
 ---
 
-## Still open (cannot fake “complete”)
+## Still open — in-repo (doable)
 
 | ID | Item | Owner |
 |----|------|-------|
-| P1-3b-RT | S3/MinIO **runtime** proof — real bucket + credentials in staging; the adapter is merged but has never written to a live bucket | A-OPS |
+| HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link) | human |
+
+## Still open — cannot fake “complete”
+
+| ID | Item | Owner |
+|----|------|-------|
+| P1-3b-RT | S3/MinIO **runtime** proof — real bucket + credentials | A-OPS |
 | P1-10 | Actual restore/PITR drill evidence | A-OPS |
 | P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
-| P2-OBS | Prometheus request/dependency/outbox metrics merged; scraper/dashboard, traces and alert rules remain as external infra | A-OPS |
+| P2-OBS | Scraper / dashboard / traces / alert rules | A-OPS |
+| P2-3-IAM | Production KMS alias / IAM / rotation proof | A-OPS |
+| ISO-1 | IsolationProvider — do not invent; keep abstraction | — |
 
 ---
 
 ## Explicit non-claims
 
-- Do **not** claim production-ready YES or Phase 26 PASS.  
-- Do **not** redesign multitenancy.  
+- Do **not** claim production-ready YES or Phase 26 PASS.
+- Do **not** redesign multitenancy.
 - Independent human APPROVE is **not** automated by this board.

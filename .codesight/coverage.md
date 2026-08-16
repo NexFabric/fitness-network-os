@@ -1,15 +1,17 @@
 # Test Coverage
 
 > **33%** of routes and models are covered by tests
-> 89 test files found
+> 103 test files found
 
 ## Covered Routes
 
 - POST:/login
 - GET:/
-- POST:
 - GET:
+- POST:
 - GET:/member
+- GET:/status
+- POST:/advance
 - GET:/health
 - GET:/live
 - GET:/metrics
@@ -49,9 +51,9 @@
 - PaymentAttempt
 - Lead
 - Opportunity
-- Task
 - RetentionCockpit
 - IdempotencyRecord
+- AccountInvite
 - Location
 - Member
 - Tag

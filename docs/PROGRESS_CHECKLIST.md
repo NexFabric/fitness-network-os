@@ -1,7 +1,7 @@
 # FITNESS NETWORK OS - PROGRESS CHECKLIST (MATURITY TRACKER)
 
-**Last updated:** 2026-08-15
-**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `main` · **Alembic head:** `xa2b3c4d5e6f`
+**Last updated:** 2026-08-16
+**Program:** P0/P1 Gym MVP Product Closure (Waves 1–3) & Deep-Dive Production Hardening & Federation HQ **Branch:** `feat/public-site-modernization-and-seo` · **Alembic head:** `xe6f7a8b9c0d`
 
 **Truth rules:**
 - Prefer **MERGED / CI VERIFIED** after green **required** CI over vague “done”.
@@ -31,6 +31,7 @@
 | **Deep-Dive Hardening & Full E2E** | 🟢 **MERGED** | Outbox RLS loop + savepoints, fail-closed KMS, 357 backend tests, 39 Playwright tests (PR #60) |
 | **Federation HQ & Multi-Club Network** | 🟢 **VERIFIED** | 6-tab HQ Console, gym lifecycle, passport roaming, compliance audits, alert broadcast, Alembic `xa1b2c3d4e5f` |
 | **Milestone B1: Group Class & PT Booking** | 🟢 **VERIFIED** | Concurrency pessimistic locks, FIFO waitlist auto-promotion, RLS models, Admin Calendar, Trainer Ledger, Member Portal, Alembic `xa2b3c4d5e6f` |
+| **Phase 29: in-repo hardening (this branch)** | 🟢 **CODE LANDED** | BOLA/step-up/idle, `fernet:hmac`, portal bind, scanner pairing, SMTP body, workers, hashed invite, onboarding UI, DSAR export+erasure, god-page split, Alembic `xe6f7a8b9c0d` — not merged to `main` |
 | **Production-ready** | ❌ **NO** | Public launch NO-GO |
 
 ### Phase 27.4 — Final production closure (PR #55 → MERGED at `2a1002d`, 2026-08-13)
@@ -49,7 +50,7 @@
 - [x] **Wave 3 (Migration, Dunning & Onboarding):** CSV toplu üye aktarım boru hattı (`DataImport.tsx`, `DataImportService` preview & commit), `PaymentAttempt` & `DunningPolicy` turnike blokajı, `TenantOnboarding` durum makinesi.
 - [x] **Deep-Dive Hardening:** Outbox worker per-tenant RLS loop + DB savepoints, AWS KMS zarf şifrelemesi (`kms:enc:`), fail-closed production boot, ADR-044 HMAC istek imzası & tek kullanımlık `device_nonces`.
 - [x] **Federation HQ Console:** 6 sekmeli kurumsal federasyon HQ konsolu (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü, pasaport dolaşım kuralları, denetim sicili ve ağ duyuruları.
-- [x] **Milestone B1 (Grup Dersi & PT Takvimi):** 6 RLS tablosu (`xa2b3c4d5e6f`), `SELECT ... FOR UPDATE` kilitleme, FIFO yedek sırası ve otomatik asil listeye terfi (`auto-promotion`), Admin Görsel Takvim (`Classes.tsx`), Antrenör Canlı Yoklama Defteri (`TrainerPortal.tsx`), 6 sekmeli Sporcu Portalı (`MemberPortal.tsx`) ve Playwright E2E (`classes_and_booking_flows.spec.ts`).ail-closed production boot, ADR-044 HMAC istek imzası & tek kullanımlık `device_nonces`.
+- [x] **Milestone B1 (Grup Dersi & PT Takvimi):** 6 RLS tablosu (`xa2b3c4d5e6f`), `SELECT ... FOR UPDATE` kilitleme, FIFO yedek sırası ve otomatik asil listeye terfi (`auto-promotion`), Admin Görsel Takvim (`Classes.tsx`), Antrenör Canlı Yoklama Defteri (`TrainerPortal.tsx`), 6 sekmeli Sporcu Portalı (`MemberPortal.tsx`) ve Playwright E2E (`classes_and_booking_flows.spec.ts`).
 - [x] **Federation HQ Console & Multi-Club Network:** 6 sekmeli kurumsal HQ paneli (`SuperAdminPortal.tsx`), kulüp yaşam döngüsü (`create_tenant`, `suspend_tenant`, `reactivate_tenant`), pasaport dolaşım matrisi (`passport_configs`), TSE/ISO denetim sicili (`compliance_records`), ağ duyuruları (`network_alerts`), konsolide ciro & CSV çıktısı, performans indeksleri (Alembic `xa1b2c3d4e5f`).
 
 **Evidence (local, 2026-08-15):** backend `pytest` **367 passed · 1 skipped** (PostgreSQL real database execution); Playwright E2E **41 passed / 41 total** with zero console errors across all 5 portals (`console_clean.spec.ts`); ruff, mypy, `check_permissions`, `check_tenancy`, `check_no_money_floats`, `check_release_truth` 100% green.
@@ -110,7 +111,7 @@ string).
 
 - [x] Device requests require HMAC-SHA256 signing: per-session secret issued once by `POST /devices/auth` (body, never a cookie), `X-Device-Signature` over `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, ±300s skew, single-use nonce in `device_nonces` (new table, RLS on, migration `u4b5c6d7e8f9`). A stolen `device_session` cookie is no longer a credential on its own; pre-signing sessions fail closed with `device_session_unsigned`.
 - [x] `get_current_device` now establishes tenant context from the bootstrap session row *before* reading `devices`, so the devices table is no longer read outside RLS (it previously depended on the connection role not enforcing it).
-- [x] scanner-pwa signs device requests via Web Crypto. `authenticateDevice()` imports the secret into a **non-extractable** `CryptoKey` and persists only that handle in IndexedDB — the plaintext never reaches a storage API, so script on the origin can sign but cannot exfiltrate the credential (keeps ASVS 3.4.2 true). Falls back to the staff `/access/qr/validate` path when unpaired.
+- [x] scanner-pwa signs device requests via Web Crypto. `authenticateDevice()` imports the secret into a **non-extractable** `CryptoKey` and persists only that handle in IndexedDB — the plaintext never reaches a storage API, so script on the origin can sign but cannot exfiltrate the credential (keeps ASVS 3.4.2 true). Phase 29 removed the staff-login fallback; unpaired scanners must pair via device ID + API key.
 - [x] CodeQL: cleared the high alert (demo seed script no longer echoes the password) and the 5 `actions/missing-workflow-permissions` alerts (top-level `permissions: contents: read` in `ci.yml`).
 
 - [x] CI hardening: SBOM generation split out of the `security` gate (an upstream syft/GitHub-releases outage was failing `security` and, through `needs`, skipping the whole test suite), `anchore/sbom-action` pinned to a SHA, `timeout-minutes` on every job.
@@ -127,7 +128,7 @@ page was exercised against the real API in Chromium, not just built.
 - [x] **Şube düzenleme** — the `PATCH /locations/{id}` endpoint had no UI.
 - [x] **Bildirimler** (`/notifications`) — template list + create, one-off delivery scheduling with the returned delivery state rendered. No delivery history list is shown because the API exposes no list endpoint.
 - [x] **Raporlar** (`/reports`) — definition list + create, run with format choice, status refresh and artifact link. Runs are session-scoped for the same reason.
-- [x] **Personel** (`/staff`) — list + link an existing user by id, role and location. Labelled as linking, not creating, since no user-creation API exists.
+- [x] **Personel** (`/staff`) — list + link an existing user by id, role and location. Superseded for creation by `POST /staff/accounts` (PR #57) + Phase 29 email hook.
 - [x] Login rate limit made configurable (`RATE_LIMIT_LOGIN_*`). The parallel browser suite tripped the 20/min budget on shared seeded accounts — a real product behaviour, not a flake. Production keeps the tight default; the dev stack raises it.
 
 All new routes and nav items are gated to `GYM_OWNER`/`GYM_ADMIN`; the nav hides rather than offering a link that 403s. The API remains the boundary.
@@ -151,6 +152,56 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ---
 
+## Phase 29 — In-repo hardening (2026-08-16, branch `feat/public-site-modernization-and-seo`)
+
+Same-tenant BOLA, privileged cookie assurance, device secret at rest, and the
+product gaps that were already implemented in services but had no HTTP/UI.
+
+Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / `last_step_up_at`) → `xd5e6f7a8b9c` (`account_invites`).
+
+### Closed in code (not claimed production-ready)
+
+- [x] `reception:read` + Reception / import / PT / dashboard BOLA (assignment-scoped trainers cannot list the tenant)
+- [x] Privileged MFA role set includes FRONT_DESK; login timing uses dummy Argon2
+- [x] Staff `UserRole` mapping (`STAFF` → `FRONT_DESK`); CSV formula/size caps; `+90…` phones allowed
+- [x] Device signing material stored as `fernet:hmac:` (ADR-044 at rest)
+- [x] Step-up MFA (`POST /auth/mfa/step-up`, 5 min) on finance / devices / reception override / break-glass / portal-account
+- [x] Privileged idle revoke 30 min (`401 session_idle`); logout CSRF
+- [x] Superuser tenant writes require live break-glass (`403 break_glass_required`)
+- [x] SMTP adapter sends `delivery.body` (context body is fallback only)
+- [x] Admin + scanner CSP: `'unsafe-eval'` removed
+- [x] Scanner PWA pairs via `POST /devices/auth` — hardcoded demo password removed
+- [x] `POST /members/{id}/portal-account` binds a MEMBER login; Members.tsx one-time password panel
+- [x] Staff create queues `schedule_delivery` EMAIL (OTP in body, not context)
+- [x] Compose `notification-worker` + `outbox-worker`; dev Dockerfile installs from `uv.lock`
+- [x] Growth `leads` RLS test is real PostgreSQL, not SQLite theatre
+- [x] Growth CRM frozen schema-only (`app/models/growth.py`) — no API, tables not dropped
+- [x] Tests: idle, `fernet:hmac` roundtrip, superuser 403, portal-account, SMTP body, staff delivery row
+- [x] Compose `migrate` one-shot before API/workers; frontend images use workspace lockfile + SPA nginx; prod compose injects `ENCRYPTION_KEY`
+
+### Still open — in-repo (doable)
+
+- [x] **INVITE-1** Hashed invite-token table (`account_invites`, Alembic `xd5e6f7a8b9c`) + `POST /auth/invite/accept` + `/invite` page
+- [x] **INVITE-OTP** Standing OTP no longer returned or emailed; invite is the only issued secret
+- [x] **ONB-UI** Tenant onboarding wizard UI (`/onboarding`) — API already existed
+- [ ] **HAND-1** Manual browser proof (tutanak `docs/ops/HAND1_BROWSER_PROOF.md`). Playwright covers invite accept, onboarding, portal bind, scanner pair, report artifact link — human sign-off still open
+- [x] **GOD-1** Split `SuperAdminPortal` (`pages/hq/*`), `Classes` (`pages/classes/*`), `MemberPortal` (`pages/portal/*`). `Finance.tsx` left intact — no tab seams; not a security gate
+- [x] **COV-1a** eslint on admin-web / scanner-pwa / public-site in required build jobs; pytest `--cov` report only (no fail_under)
+- [x] **COV-1b** Measured TOTAL **72%** (390 passed / 5 fixed); CI `--cov-fail-under=70` (local targeted pytest stays without coverage)
+- [x] **DSAR-1a** Bound-member export package + `dsar_requests` ledger (`xe6f7a8b9c0d`); admin inbox
+- [x] **DSAR-1b** Erasure / anonymize (`POST /me/dsar/erasure`); OPEN/PARTIALLY_PAID/DRAFT invoices → 409 `legal_hold_open_invoices`; paid invoices stay; PII wiped; session revoked
+
+### Still open — cannot fake complete
+
+- [ ] **P1-3b-RT** Real S3/MinIO bucket write + presign proof in staging
+- [ ] **P1-10** Restore / PITR drill evidence
+- [ ] **P1-11** Independent ASVS L2 / pentest + human APPROVE
+- [ ] **P2-OBS** Prometheus scraper, dashboards, traces, alert rules (metrics endpoint exists)
+- [ ] **P2-3-IAM** Production KMS alias / IAM / rotation proof (`kms:enc:` path is code-only)
+- [ ] **ISO-1** IsolationProvider — do not invent; keep the abstraction, do not replace RLS
+
+---
+
 ## Closed on main (feature waves)
 
 | Wave | PRs | Highlights |
@@ -166,13 +217,11 @@ Every membership row points at a `plan_version`, but nothing over HTTP could cre
 
 ## Remaining to “complete” production bar
 
-1. ~~Real notification transports (SMTP/SMS/WhatsApp) behind adapters~~ (SMTP completed, others deferred)
-2. ~~Admin cookie-only session (drop localStorage token) + day-1 ops UI (edit, membership lifecycle, finance)~~ (Completed)
-3. ~~Scanner device auth / offline~~; FE builds as **required** checks (Completed)
-4. Observability productization beyond health probes: real metrics/traces/alerts.
-5. Execute and attach a restore/PITR drill; complete independent ASVS 5.0 L2 review and pentest.
+Checked items live in **Phase 29** above. Unchecked items there are the live backlog.
 
-Live backlog: `backend/docs/plans/REMAINING_WORK_BOARD.md`
+Live board (same IDs): `backend/docs/plans/REMAINING_WORK_BOARD.md`
+
+Do **not** tick Phase 26 or production-ready until P1-3b-RT + P1-11 are evidenced.
 
 ---
 

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, get_tenant_id
+from app.api.deps import get_current_user, get_db, get_tenant_id, require_recent_step_up
 from app.api.idempotency_uow import materialize_replay, run_idempotent
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.user import User
@@ -232,7 +232,7 @@ async def refund_payment(
     body: RefundCreate,
     response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_recent_step_up),
     db: AsyncSession = Depends(get_db),
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ):
@@ -280,7 +280,7 @@ async def issue_credit(
     body: CreditNoteCreate,
     response: Response,
     tenant_id: UUID = Depends(get_tenant_id),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_recent_step_up),
     db: AsyncSession = Depends(get_db),
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ):

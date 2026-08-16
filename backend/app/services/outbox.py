@@ -317,7 +317,7 @@ class OutboxService:
                 continue
             try:
                 await publisher(ev)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 try:
                     await self.mark_failed(ev, str(e), worker_id=claim_worker)
                 except ValueError as ve:
@@ -427,7 +427,7 @@ class OutboxService:
                 ev.processed_at = datetime.now(UTC)
                 ev.error_message = None
                 processed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 ev.error_message = str(e)[:2000]
                 if (ev.attempt_count or 0) >= max_attempts:
                     ev.status = "DEAD"

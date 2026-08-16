@@ -28,6 +28,7 @@ async function loginTrainer(page: Page) {
   await page.fill('input[type="email"]', TRAINER);
   await page.fill('input[type="password"]', PASSWORD);
   await page.click('button[type="submit"]');
+  await completeOwnerMfaIfNeeded(page, TRAINER);
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 });
 }
 

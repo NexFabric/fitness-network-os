@@ -1,8 +1,9 @@
 import { useCallback, useState, type FormEvent, useEffect } from 'react'
 import {
+  authenticateDevice,
   clearAuth,
+  getDeviceKey,
   getTenantId,
-  setAuth,
   validateQr,
   type ValidateQrResponse,
 } from './api/client'
@@ -16,9 +17,10 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function App() {
-  const [email, setEmail] = useState('demo.admin@demo.local')
-  const [password, setPassword] = useState('DemoAdmin123!')
-  const [tenantId, setTenantId] = useState(getTenantId() ?? '92c41231-2a7d-42a5-862d-fda966f1137e')
+  const [deviceId, setDeviceId] = useState('')
+  const [apiKey, setApiKey] = useState('')
+  const [tenantId, setTenantId] = useState(getTenantId() ?? '')
+  const [paired, setPaired] = useState(false)
   const [qrToken, setQrToken] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ValidateQrResponse | null>(null)
@@ -43,6 +45,10 @@ export default function App() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    void getDeviceKey().then((key) => {
+      setPaired(Boolean(key) && Boolean(getTenantId()))
+    })
     
     return () => {
       window.removeEventListener('online', handleOnline)
@@ -63,32 +69,24 @@ export default function App() {
   async function saveCredentials(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    const em = email.trim()
+    const did = deviceId.trim()
     const tid = tenantId.trim()
-    if (!em || !password || !tid) {
-      setError('E-posta, şifre ve Tenant ID gereklidir.')
+    const key = apiKey.trim()
+    if (!did || !tid || !key) {
+      setError('Cihaz ID, Tenant ID ve API anahtarı gereklidir.')
       return
     }
-    
+
     try {
-      const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const res = await fetch(`${base}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: em, password }),
-        credentials: 'include',
-      })
-      
-      if (!res.ok) {
-        setError('Giriş başarısız')
-        return
-      }
-      
-      setAuth(tid)
+      const auth = await authenticateDevice(did, tid, key)
+      setTenantId(auth.tenant_id)
+      setPaired(true)
+      setApiKey('')
       setError(null)
       setCredsOpen(false)
-    } catch (err) {
-      setError('Bağlantı hatası')
+    } catch {
+      setPaired(false)
+      setError('Cihaz eşlenemedi. Kimlik bilgilerini kontrol edin.')
     }
   }
 
@@ -109,7 +107,7 @@ export default function App() {
         return
       }
       if (!getTenantId()) {
-        setError('Önce personel oturumu açın (e-posta/şifre + tenant).')
+        setError('Önce cihazı eşleyin (cihaz ID + API anahtarı + tenant).')
         setCredsOpen(true)
         return
       }
@@ -126,7 +124,7 @@ export default function App() {
         setError('Sunucu bağlantı hatası veya doğrulama başarısız.')
       }
     },
-    [tenantId],
+    [],
   )
 
   async function onValidate(e: FormEvent) {
@@ -139,26 +137,26 @@ export default function App() {
       setScanning(false)
       setQrToken(token)
       setError(null)
-      // Auto-validate when staff credentials are already present
       const hasCreds = Boolean(getTenantId())
       if (hasCreds) {
         void runValidate(token)
       }
     },
-    [runValidate, tenantId],
+    [runValidate],
   )
 
   function logout() {
     clearAuth()
     setTenantId('')
-    setEmail('')
-    setPassword('')
+    setDeviceId('')
+    setApiKey('')
+    setPaired(false)
     setResult(null)
     setCredsOpen(true)
   }
 
   const granted = result?.granted === true
-  const hasSavedCreds = Boolean(getTenantId())
+  const hasSavedCreds = paired && Boolean(getTenantId())
 
   return (
     <div className="min-h-screen flex flex-col bg-surface font-sans text-ink selection:bg-brand/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
@@ -209,7 +207,7 @@ export default function App() {
           >
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Personel Oturumu
+                Cihaz eşleme
               </h2>
               {hasSavedCreds ? (
                 <div className="flex items-center gap-2 mt-1">
@@ -231,23 +229,23 @@ export default function App() {
           {credsOpen && (
             <form onSubmit={saveCredentials} className="mt-3 space-y-3 border-t border-slate-800/80 pt-3">
               <div>
-                <label htmlFor="email" className="text-xs text-slate-500">E-posta</label>
-                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
+                <label htmlFor="device-id" className="text-xs text-slate-500">Cihaz ID</label>
+                <input id="device-id" type="text" autoComplete="off" value={deviceId} onChange={(e) => setDeviceId(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div>
-                <label htmlFor="password" className="text-xs text-slate-500">Şifre</label>
-                <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
+                <label htmlFor="api-key" className="text-xs text-slate-500">API anahtarı</label>
+                <input id="api-key" type="password" autoComplete="off" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div>
                 <label htmlFor="tenant" className="text-xs text-slate-500">Tenant ID</label>
-                <input id="tenant" type="text" value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
+                <input id="tenant" type="text" autoComplete="off" value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-200" />
               </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
                   className="rounded-control bg-brand px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-deep"
                 >
-                  Kaydet
+                  Eşle
                 </button>
                 <button
                   type="button"

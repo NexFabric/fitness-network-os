@@ -69,6 +69,12 @@ class UserSession(Base):
     auth_level: Mapped[str] = mapped_column(
         String(32), nullable=False, default="full", server_default="full"
     )
+    last_seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_step_up_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     user: Mapped["User"] = relationship("User", back_populates="sessions")
 

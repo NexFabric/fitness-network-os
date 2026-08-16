@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, getTenantId } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
+import { RECEPTION_ROLES, ROLES } from '../auth/roles'
 import { LoadingSkeleton, PageHeader } from '../components/ui'
 
 type DashboardKPIs = {
@@ -11,13 +13,23 @@ type DashboardKPIs = {
   past_due_invoices_amount_minor: number
   month_collected_amount_minor: number
   total_outstanding_debt_minor: number
+  finance_visible?: boolean
   currency: string
 }
 
 export default function Dashboard() {
   const tenantId = getTenantId()
+  const { hasRole } = useAuth()
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
+  const canReception = hasRole(RECEPTION_ROLES)
+  const canFinance = hasRole([
+    ROLES.GYM_OWNER,
+    ROLES.GYM_ADMIN,
+    ROLES.GYM_MANAGER,
+    ROLES.ACCOUNTANT,
+  ])
+  const showFinance = (kpis?.finance_visible ?? true) && canFinance
 
   useEffect(() => {
     let cancelled = false
@@ -88,7 +100,7 @@ export default function Dashboard() {
             </Link>
 
             <Link
-              to="/reception"
+              to={canReception ? '/reception' : '/members'}
               className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
             >
               <div className="flex items-start justify-between gap-3">
@@ -139,6 +151,7 @@ export default function Dashboard() {
               <p className="mt-4 text-xs font-medium text-brand">Abonelikleri incele →</p>
             </Link>
 
+            {showFinance && (
             <Link
               to="/finance"
               className="card group transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-elevated focus-visible:ring-2 focus-visible:ring-brand"
@@ -164,9 +177,11 @@ export default function Dashboard() {
               </div>
               <p className="mt-4 text-xs font-medium text-brand">Gecikmeleri gör →</p>
             </Link>
+            )}
           </div>
 
           {/* Financial Summary Strip */}
+          {showFinance && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="card border-slate-800 bg-slate-900/80 p-5">
               <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Bu Ay Tahsil Edilen</span>
@@ -184,6 +199,7 @@ export default function Dashboard() {
               <p className="mt-1 text-xs text-slate-400">Açık ve kısmen ödenmiş faturaların kalan bakiye toplamı</p>
             </div>
           </div>
+          )}
         </>
       )}
 
@@ -196,18 +212,22 @@ export default function Dashboard() {
           Hızlı Operasyon İşlemleri
         </h2>
         <div className="mt-4 flex flex-wrap gap-2.5">
-          <Link to="/reception" className="btn-primary">
-            Resepsiyon Masası
-          </Link>
+          {canReception && (
+            <Link to="/reception" className="btn-primary">
+              Resepsiyon Masası
+            </Link>
+          )}
           <Link to="/members" className="btn-secondary">
             Üye Yönetimi
           </Link>
           <Link to="/locations" className="btn-secondary">
             Şubeler
           </Link>
-          <Link to="/finance" className="btn-secondary">
-            Finans & Faturalar
-          </Link>
+          {canFinance && (
+            <Link to="/finance" className="btn-secondary">
+              Finans & Faturalar
+            </Link>
+          )}
         </div>
         {tenantId && (
           <p className="mt-4 text-xs text-ink-muted">

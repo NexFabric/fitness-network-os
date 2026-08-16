@@ -49,6 +49,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 def create_app() -> FastAPI:
     # Fail closed before wiring routes when production config is incomplete.
     settings.validate_production()
+    settings.assert_runtime_environment_allowed()
 
     app = FastAPI(
         title="Fitness Network OS",
@@ -61,7 +62,7 @@ def create_app() -> FastAPI:
     app.add_middleware(MetricsMiddleware)
     # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
     app.add_middleware(RequestLoggingMiddleware)
-    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
+    # Redis-backed limiter on unauthenticated / weakly authenticated writes.
     app.add_middleware(
         SimpleRateLimitMiddleware,
         max_requests=settings.RATE_LIMIT_LOGIN_MAX_REQUESTS,
@@ -113,7 +114,7 @@ def create_app() -> FastAPI:
                 await conn.execute(text("SELECT 1"))
             checks["db"] = "up"
             DEPENDENCY_UP.labels("postgresql").set(1)
-        except Exception:
+        except Exception:  # noqa: BLE001
             checks["db"] = "down"
             DEPENDENCY_UP.labels("postgresql").set(0)
 
@@ -128,7 +129,7 @@ def create_app() -> FastAPI:
             await r.aclose()
             checks["redis"] = "up"
             DEPENDENCY_UP.labels("redis").set(1)
-        except Exception:
+        except Exception:  # noqa: BLE001
             checks["redis"] = "down"
             DEPENDENCY_UP.labels("redis").set(0)
 
@@ -163,7 +164,7 @@ def create_app() -> FastAPI:
             await r.ping()
             await r.aclose()
             return Response(content="OK", status_code=200, media_type="text/plain")
-        except Exception:
+        except Exception:  # noqa: BLE001
             return Response(
                 content="Service Unavailable", status_code=503, media_type="text/plain"
             )

@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     dashboard,
     data_import,
     devices,
+    dsar_admin,
     entitlements,
     finance,
     locations,
@@ -59,4 +60,5 @@ api_router.include_router(classes.router, prefix="/classes", tags=["classes"])
 api_router.include_router(trainers.router, prefix="/trainers", tags=["trainers"])
 api_router.include_router(data_import.router, prefix="/import", tags=["import"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
+api_router.include_router(dsar_admin.router, prefix="/admin/dsar", tags=["dsar"])
 api_router.include_router(me.router, prefix="/me", tags=["me"])

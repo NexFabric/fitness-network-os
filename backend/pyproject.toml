@@ -56,7 +56,11 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-lint.extend-ignore = ["B008", "SIM103", "F841", "TRY002", "F821", "EXE001", "S110", "BLE001", "SIM102"]
+lint.extend-ignore = ["B008", "SIM103", "F841", "TRY002", "EXE001", "SIM102"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["BLE001", "S110"]
+"scripts/**" = ["BLE001", "S110"]
 
 [tool.mypy]
 explicit_package_bases = true

@@ -27,6 +27,7 @@ class DashboardKPIResponse(BaseModel):
     past_due_invoices_amount_minor: int
     month_collected_amount_minor: int
     total_outstanding_debt_minor: int
+    finance_visible: bool = True
     currency: str = "TRY"
 
     model_config = ConfigDict(from_attributes=True)
@@ -40,6 +41,11 @@ async def get_dashboard_kpis(
 ):
     """Retrieve operational high-level KPIs calculated server-side in Postgres."""
     AuthorizationService.require_tenant(current_user, "gym:read", tenant_id)
+    finance_visible = AuthorizationService.is_authorized(
+        user=current_user,
+        permission="finance:read",
+        resource_tenant_id=tenant_id,
+    )
 
     now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -78,46 +84,49 @@ async def get_dashboard_kpis(
     )
     today_checkins_count = res_today_checkins.scalar_one() or 0
 
-    # 4. Past Due Invoices
-    res_past_due = await db.execute(
-        select(
-            func.count(Invoice.id),
-            func.coalesce(
-                func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
-            ),
-        ).where(
-            Invoice.tenant_id == tenant_id,
-            Invoice.status == "OPEN",
-            Invoice.due_date.is_not(None),
-            Invoice.due_date < now,
-        )
-    )
-    past_due_row = res_past_due.first()
-    past_due_invoices_count = past_due_row[0] if past_due_row else 0
-    past_due_invoices_amount_minor = int(past_due_row[1]) if past_due_row else 0
+    past_due_invoices_count = 0
+    past_due_invoices_amount_minor = 0
+    month_collected_amount_minor = 0
+    total_outstanding_debt_minor = 0
 
-    # 5. Month Collected Revenue
-    res_month_collected = await db.execute(
-        select(func.coalesce(func.sum(Payment.amount_minor), 0)).where(
-            Payment.tenant_id == tenant_id,
-            Payment.status == "SUCCEEDED",
-            Payment.created_at >= month_start,
-        )
-    )
-    month_collected_amount_minor = int(res_month_collected.scalar_one() or 0)
-
-    # 6. Total Outstanding Debt
-    res_total_debt = await db.execute(
-        select(
-            func.coalesce(
-                func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
+    if finance_visible:
+        res_past_due = await db.execute(
+            select(
+                func.count(Invoice.id),
+                func.coalesce(
+                    func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
+                ),
+            ).where(
+                Invoice.tenant_id == tenant_id,
+                Invoice.status == "OPEN",
+                Invoice.due_date.is_not(None),
+                Invoice.due_date < now,
             )
-        ).where(
-            Invoice.tenant_id == tenant_id,
-            Invoice.status.in_(["OPEN", "PARTIALLY_PAID"]),
         )
-    )
-    total_outstanding_debt_minor = int(res_total_debt.scalar_one() or 0)
+        past_due_row = res_past_due.first()
+        past_due_invoices_count = past_due_row[0] if past_due_row else 0
+        past_due_invoices_amount_minor = int(past_due_row[1]) if past_due_row else 0
+
+        res_month_collected = await db.execute(
+            select(func.coalesce(func.sum(Payment.amount_minor), 0)).where(
+                Payment.tenant_id == tenant_id,
+                Payment.status == "SUCCEEDED",
+                Payment.created_at >= month_start,
+            )
+        )
+        month_collected_amount_minor = int(res_month_collected.scalar_one() or 0)
+
+        res_total_debt = await db.execute(
+            select(
+                func.coalesce(
+                    func.sum(Invoice.total_amount_minor - Invoice.paid_amount_minor), 0
+                )
+            ).where(
+                Invoice.tenant_id == tenant_id,
+                Invoice.status.in_(["OPEN", "PARTIALLY_PAID"]),
+            )
+        )
+        total_outstanding_debt_minor = int(res_total_debt.scalar_one() or 0)
 
     return DashboardKPIResponse(
         active_members_count=active_members_count,
@@ -127,5 +136,6 @@ async def get_dashboard_kpis(
         past_due_invoices_amount_minor=past_due_invoices_amount_minor,
         month_collected_amount_minor=month_collected_amount_minor,
         total_outstanding_debt_minor=total_outstanding_debt_minor,
+        finance_visible=finance_visible,
         currency="TRY",
     )

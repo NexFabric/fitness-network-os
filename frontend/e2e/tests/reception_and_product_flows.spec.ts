@@ -1,9 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
-import { completeOwnerMfaIfNeeded } from './helpers/auth';
+import { completeOwnerMfaIfNeeded, currentOwnerTotp } from './helpers/auth';
 
 const PASSWORD = 'E2ePortal123!';
 const OWNER = 'e2e.owner@e2e.local';
+const DESK = 'e2e.desk@e2e.local';
 const MEMBER = 'e2e.member@e2e.local';
+
+async function loginDesk(page: Page) {
+  await page.goto('/login');
+  await page.fill('input[type="email"]', DESK);
+  await page.fill('input[type="password"]', PASSWORD);
+  await page.click('button[type="submit"]');
+  await completeOwnerMfaIfNeeded(page, DESK);
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 });
+}
 
 async function loginOwner(page: Page) {
   await page.goto('/login');
@@ -26,7 +36,10 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
   test('reception workspace supports search, detail display, and manual turnstile override submit', async ({
     page,
   }) => {
-    await loginOwner(page);
+    await loginDesk(page);
+    page.on('dialog', async (dialog) => {
+      await dialog.accept(currentOwnerTotp());
+    });
 
     // Open reception workspace
     await page.goto('/reception');
@@ -110,6 +123,13 @@ test.describe('Reception Workspace & MVP Product Flows', () => {
       await tabButton.click();
       await page.waitForTimeout(200);
     }
+
+    await page.getByRole('button', { name: 'İletişim', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Paketi indir' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Verilerimi sil' })).toBeVisible();
+    page.once('dialog', (dialog) => dialog.dismiss());
+    await page.getByRole('button', { name: 'Verilerimi sil' }).click();
+    await expect(page.getByRole('button', { name: 'Paketi indir' })).toBeVisible();
   });
 });
 

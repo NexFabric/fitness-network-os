@@ -6,10 +6,12 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id
 from app.core.authorization import AuthorizationService, SecurityException
+from app.models.booking import PtAppointment
 from app.models.user import User
 from app.schemas.booking import (
     ClassAttendanceUpdateRequest,
@@ -32,6 +34,10 @@ from app.schemas.booking import (
     TrainerAvailabilityResponse,
 )
 from app.services.booking import ClassBookingService, PtBookingService
+from app.services.member_visibility import (
+    has_tenant_wide_member_read,
+    require_member_visible,
+)
 
 router = APIRouter()
 
@@ -357,10 +363,15 @@ async def list_pt_appointments(
     end_time: datetime | None = Query(None),
 ) -> list[PtAppointmentResponse]:
     _require(current_user, tenant_id, "pt:read")
+    scoped_trainer_id = trainer_user_id
+    if not has_tenant_wide_member_read(current_user, tenant_id):
+        scoped_trainer_id = current_user.id
+    if member_id is not None:
+        await require_member_visible(db, current_user, tenant_id, member_id)
     appts = await PtBookingService.list_appointments(
         db,
         tenant_id=tenant_id,
-        trainer_user_id=trainer_user_id,
+        trainer_user_id=scoped_trainer_id,
         member_id=member_id,
         start_time=start_time,
         end_time=end_time,
@@ -385,6 +396,12 @@ async def create_pt_appointment(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="member_id zorunludur.",
         )
+    await require_member_visible(db, current_user, tenant_id, data.member_id)
+    if (
+        not has_tenant_wide_member_read(current_user, tenant_id)
+        and data.trainer_user_id != current_user.id
+    ):
+        raise SecurityException("cannot book PT as another trainer")
     appt = await PtBookingService.book_appointment(
         db,
         tenant_id=tenant_id,
@@ -412,6 +429,25 @@ async def admin_cancel_pt_appointment(
     tenant_id: UUID = Depends(get_tenant_id),
 ) -> PtAppointmentResponse:
     _require(current_user, tenant_id, "pt:write")
+    existing = (
+        await db.execute(
+            select(PtAppointment).where(
+                PtAppointment.tenant_id == tenant_id,
+                PtAppointment.id == appointment_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PT randevusu bulunamadı.",
+        )
+    await require_member_visible(db, current_user, tenant_id, existing.member_id)
+    if (
+        not has_tenant_wide_member_read(current_user, tenant_id)
+        and existing.trainer_user_id != current_user.id
+    ):
+        raise SecurityException("cannot cancel another trainer's appointment")
     appt = await PtBookingService.cancel_appointment(
         db,
         tenant_id=tenant_id,

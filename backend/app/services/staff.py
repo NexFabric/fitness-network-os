@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
 from app.models.location import Location
+from app.models.rbac import Role, UserRole
 from app.models.staff import Staff
 from app.models.user import User
 
@@ -27,6 +28,19 @@ ALLOWED_STAFF_ROLES = frozenset(
         "ACCOUNTANT",
     }
 )
+
+# Staff.role is a job label; login permissions come from the canonical RBAC
+# role. GYM_OWNER and platform roles are intentionally absent.
+STAFF_ROLE_TO_RBAC = {
+    "STAFF": "FRONT_DESK",
+    "TRAINER": "TRAINER",
+    "FRONT_DESK": "FRONT_DESK",
+    "MANAGER": "GYM_MANAGER",
+    "ADMIN": "GYM_ADMIN",
+    "GYM_ADMIN": "GYM_ADMIN",
+    "GYM_MANAGER": "GYM_MANAGER",
+    "ACCOUNTANT": "ACCOUNTANT",
+}
 
 # 20 URL-safe characters ≈ 119 bits of entropy. Shown once to the administrator
 # who provisioned the account and never stored in the clear.
@@ -104,9 +118,39 @@ class StaffService:
         staff = await self.link_staff(
             tenant_id, user_id=user.id, role=role, location_id=location_id
         )
+        await self._attach_rbac_role(tenant_id, user.id, role)
         return ProvisionedStaff(
             staff=staff, user=user, one_time_password=one_time_password
         )
+
+    async def _attach_rbac_role(
+        self, tenant_id: UUID, user_id: UUID, staff_role: str
+    ) -> None:
+        rbac_name = STAFF_ROLE_TO_RBAC[staff_role]
+        role = (
+            await self.db.execute(select(Role).where(Role.name == rbac_name))
+        ).scalar_one_or_none()
+        if role is None:
+            # Production always has the canonical row (permissions.yml seed).
+            # Tests truncate `roles` between cases; recreate the named role so
+            # the login principal is still bound. Grants are re-seeded by
+            # Alembic on a real migrate, not here.
+            role = Role(name=rbac_name, description=rbac_name, is_system=True)
+            self.db.add(role)
+            await self.db.flush()
+        existing = (
+            await self.db.execute(
+                select(UserRole).where(
+                    UserRole.user_id == user_id,
+                    UserRole.role_id == role.id,
+                    UserRole.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return
+        self.db.add(UserRole(user_id=user_id, role_id=role.id, tenant_id=tenant_id))
+        await self.db.flush()
 
     async def link_staff(
         self,

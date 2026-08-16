@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/class-and-pt-booking-engine` · **Alembic head:** `xa2b3c4d5e6f` · **Group Class & PT Booking Engine (Milestone B1):** Completed, Audited & Verified.
+**Branch:** `feat/public-site-modernization-and-seo` · **Alembic head:** `xe6f7a8b9c0d` · Phase 29 + invite + HAND-1 e2e + DSAR export/erasure + god-page split.
 
 ---
 
@@ -52,31 +52,26 @@ Grup Dersi & PT Takvimi / Rezervasyon Motoru (Milestone B1) ve Phase 0–27.4 + 
 | #55 | Phase 27.4 final closure: privileged MFA, private S3 rapor storage, gerçek metrics, frozen non-root image, required Playwright gate |
 | #57 | Personel hesabı açma ucu + tek kullanımlık parola, zorunlu rotasyon (`password_reset` session), enrollment/rotation sıralaması |
 
-**Test tabanı:** GitHub CI ve lokalde backend 357 passed · 1 skipped, Playwright 39 passed
+**Test tabanı:** GitHub CI ve lokalde backend pytest + Playwright
 (gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 `check_tenancy`, `check_permissions`, `check_permissions_db`,
-`check_no_money_floats`, 3 frontend build, CodeQL.
+`check_no_money_floats`, 3 frontend build. CodeQL workflow bu repoda yok
+(HANDOFF bunu kapı diye saymaz).
 
 ---
 
 ## Sıradaki iş (yapılabilir olanlar)
 
-1. **Uygulamayı gerçek ortamda elle doğrulamak** — bugüne kadarki bütün kanıt CI'dan
-   geliyor; hiç kimse ürünü tarayıcıda uçtan uca kullanmadı. `READY_TO_RUN.md` ile
-   stack'i kaldır, en az şu akışları geç: privileged login → MFA enrollment →
-   üyelik oluşturma → QR ile giriş → rapor çalıştırma ve indirme.
-2. **Observability altyapısını bağlamak** — `/metrics` gerçek Prometheus metrikleri
-   üretir; scraper, dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
-3. **E-posta davet akışı** — hesap açma bugün tek kullanımlık parolayı ekranda
-   gösteriyor ve yönetici parolayı elden iletiyor. Token tablosu + şablon + public
-   uç ile davet bağlantısına çevrilebilir; çalışan akışı bozmayan bir iyileştirme.
+1. **HAND-1 insan imzası** — tutanak `docs/ops/HAND1_BROWSER_PROOF.md`. Playwright
+   invite / onboarding / portal / scanner / rapor linkini kapsar; insan onayı açık.
+2. **Observability / S3 / PITR / pentest / KMS IAM** — dış kanıt; kod fail-closed.
 
 ## Bu makineden kapatılamayanlar (sebebiyle)
 
 | Madde | Neden |
 |---|---|
 | P1-3b runtime doğrulaması | Adapter hazır; gerçek S3/MinIO kovası ve kimlik bilgisiyle staging kanıtı gerekiyor |
-| P2-3 QR sırları için KMS | Sağlayıcı SDK'sı + anahtar politikası gerekiyor; `qr_crypto.py` KMS referansını tanır, bilinçli `NotImplementedError` verir |
+| P2-3 QR sırları için **üretim** KMS politikası | `qr_crypto.py` `kms:enc:` GenerateDataKey/Decrypt yolunu içerir; IAM/alias/rotation ve canlı decrypt kanıtı AWS tarafındadır |
 | P1-10 yedekten dönüş tatbikatı | Gerçek altyapıda koşup kanıtlanması gereken ops prosedürü |
 | P1-11 / Phase 26 dış pentest + bağımsız onay | Tanımı gereği dışarıdan gelmeli |
 

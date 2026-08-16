@@ -23,36 +23,36 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Platform</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a
+                <Link
                   href="/#features"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Özellikler
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#architecture"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Mimari
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#pricing"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Fiyatlandırma
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#demo"
                   className="text-sm text-ink-muted transition-colors hover:text-brand"
                 >
                   Demo
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

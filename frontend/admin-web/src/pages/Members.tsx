@@ -18,6 +18,14 @@ type Member = {
   email: string | null
   phone: string | null
   status: string
+  user_id: string | null
+}
+
+type PortalAccount = {
+  member_id: string
+  user_id: string
+  email: string
+  invite_token?: string | null
 }
 
 type CreateMemberForm = {
@@ -75,6 +83,10 @@ export default function Members() {
   const [editForm, setEditForm] = useState<EditMemberForm | null>(null)
   const [editSubmitting, setEditSubmitting] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
+  const [portalBusy, setPortalBusy] = useState(false)
+  const [portalError, setPortalError] = useState<string | null>(null)
+  const [portalAccount, setPortalAccount] = useState<PortalAccount | null>(null)
+  const [portalCopied, setPortalCopied] = useState(false)
 
   const loadMembers = useCallback(async (opts?: { silent?: boolean }) => {
     const silent = opts?.silent ?? false
@@ -161,6 +173,37 @@ export default function Members() {
   function closeEditModal() {
     setEditingMember(null)
     setEditForm(null)
+    setPortalAccount(null)
+    setPortalError(null)
+    setPortalCopied(false)
+  }
+
+  async function provisionPortalAccount() {
+    if (!editingMember) return
+    if (!editingMember.email && !editForm?.email.trim()) {
+      setPortalError('Önce üyeye bir e-posta kaydedin.')
+      return
+    }
+    setPortalBusy(true)
+    setPortalError(null)
+    try {
+      if (editForm && editForm.email.trim() && editForm.email.trim() !== (editingMember.email ?? '')) {
+        await api<Member>(`/api/v1/members/${editingMember.id}`, {
+          method: 'PATCH',
+          body: { email: editForm.email.trim() },
+        })
+      }
+      const created = await api<PortalAccount>(
+        `/api/v1/members/${editingMember.id}/portal-account`,
+        { method: 'POST' },
+      )
+      setPortalAccount(created)
+      setEditingMember((m) => (m ? { ...m, user_id: created.user_id, email: created.email } : m))
+    } catch (err) {
+      setPortalError(formatApiError(err, 'Portal hesabı açılamadı'))
+    } finally {
+      setPortalBusy(false)
+    }
   }
 
   async function handleEditSubmit(e: FormEvent) {
@@ -509,6 +552,75 @@ export default function Members() {
                   </button>
                 </div>
               </form>
+
+              <div>
+                <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">
+                  Sporcu portalı
+                </h3>
+                {editingMember.user_id && !portalAccount ? (
+                  <p className="mt-3 text-sm text-slate-400">
+                    Bu üye bir giriş hesabına bağlı.
+                    <span className="ml-2 font-mono text-xs text-slate-500">
+                      {editingMember.user_id}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-400">
+                    E-posta kaydı olan üyeye tek kullanımlık parolalı MEMBER hesabı açılır.
+                    Parola yalnızca bir kez gösterilir.
+                  </p>
+                )}
+                {portalError && (
+                  <p className="mt-2 text-sm text-rose-400" role="alert">
+                    {portalError}
+                  </p>
+                )}
+                {portalAccount && (
+                  <div className="mt-3 rounded-control border border-emerald-800/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">
+                    <p>
+                      Hesap: <span className="font-mono">{portalAccount.email}</span>
+                    </p>
+                    <p className="mt-1">
+                      Davet jetonu:{' '}
+                      <span className="font-mono">{portalAccount.invite_token}</span>
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-2 text-xs font-medium text-emerald-300 underline"
+                      onClick={() => {
+                        if (!portalAccount.invite_token) return
+                        void navigator.clipboard.writeText(
+                          `${window.location.origin}/invite?token=${portalAccount.invite_token}`,
+                        )
+                        setPortalCopied(true)
+                      }}
+                    >
+                      {portalCopied ? 'Kopyalandı' : 'Davet bağlantısını kopyala'}
+                    </button>
+                    {portalAccount.invite_token && (
+                      <p className="mt-2 text-xs break-all">
+                        Davet:{' '}
+                        <a
+                          className="underline"
+                          href={`/invite?token=${encodeURIComponent(portalAccount.invite_token)}`}
+                        >
+                          /invite
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                )}
+                {!editingMember.user_id && !portalAccount && (
+                  <button
+                    type="button"
+                    className="btn-primary mt-3"
+                    disabled={portalBusy}
+                    onClick={() => void provisionPortalAccount()}
+                  >
+                    {portalBusy ? 'Açılıyor…' : 'Portal hesabı aç'}
+                  </button>
+                )}
+              </div>
 
               {/* Abonelikler Bölümü */}
               <div>

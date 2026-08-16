@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import exc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.event_types import MEMBERSHIP_ACTIVATED_V1
 from app.models.membership import (
     Membership,
     MembershipCancellation,
@@ -243,6 +244,23 @@ class MembershipService:
         )
         self.session.add(history)
         await self.session.flush()
+
+        if status == "ACTIVE":
+            from app.services.outbox import OutboxService
+
+            await OutboxService(self.session).enqueue(
+                tenant_id=tenant_id,
+                event_type=MEMBERSHIP_ACTIVATED_V1,
+                payload={
+                    "membership_id": str(membership.id),
+                    "member_id": str(member_id),
+                    "plan_version_id": str(plan_version_id),
+                    "status": status,
+                },
+                aggregate_type="membership",
+                aggregate_id=membership.id,
+                dedupe_key=f"membership.activated:{membership.id}",
+            )
 
         return membership
 

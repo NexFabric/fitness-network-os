@@ -19,6 +19,21 @@ from app.models.data_import import (
 from app.models.member import Member
 from app.models.membership import PlanVersion
 
+MAX_CSV_BYTES = 2 * 1024 * 1024
+MAX_CSV_ROWS = 5_000
+_FORMULA_STARTERS = frozenset("=@\t\r")
+
+
+def _looks_like_spreadsheet_formula(value: str) -> bool:
+    if not value:
+        return False
+    if value[0] in _FORMULA_STARTERS:
+        return True
+    # "+cmd|..." is injection; "+90555..." is a phone number.
+    if value[0] in {"+", "-"} and (len(value) == 1 or not value[1].isdigit()):
+        return True
+    return False
+
 
 def _normalize_header(header: str) -> str:
     h = header.strip().lower().replace(" ", "_")
@@ -51,6 +66,9 @@ class DataImportService:
         filename: str,
         csv_text: str,
     ) -> DataImportBatch:
+        if len(csv_text.encode("utf-8")) > MAX_CSV_BYTES:
+            raise ValueError("CSV dosyası 2 MB sınırını aşıyor.")
+
         f = io.StringIO(csv_text.strip())
         reader = csv.reader(f)
         try:
@@ -83,6 +101,8 @@ class DataImportService:
             if not row or all(c.strip() == "" for c in row):
                 continue
             total += 1
+            if total > MAX_CSV_ROWS:
+                raise ValueError(f"CSV en fazla {MAX_CSV_ROWS} satır içerebilir.")
             row_dict = {}
             for col_idx, val in enumerate(row):
                 if col_idx < len(headers):
@@ -102,6 +122,15 @@ class DataImportService:
                 errors.append("Soyisim (last_name) boş olamaz.")
             if email and not email_regex.match(email):
                 errors.append("Geçersiz e-posta formatı.")
+            for field_name, field_val in (
+                ("first_name", first_name),
+                ("last_name", last_name),
+                ("email", email or ""),
+                ("phone", phone or ""),
+                ("member_number", member_number or ""),
+            ):
+                if _looks_like_spreadsheet_formula(field_val):
+                    errors.append(f"{field_name} formül öneki içeremez.")
 
             status = ImportRowStatus.INVALID if errors else ImportRowStatus.VALID
             if status == ImportRowStatus.VALID:
@@ -226,7 +255,7 @@ class DataImportService:
                                 )
                                 if start_dt.tzinfo is None:
                                     start_dt = start_dt.replace(tzinfo=UTC)
-                            except Exception:
+                            except ValueError:
                                 start_dt = datetime.now(UTC)
 
                         from app.services.membership import MembershipService
@@ -238,7 +267,7 @@ class DataImportService:
                             start_date=start_dt,
                             tenant_id=tenant_id,
                         )
-                except Exception as ex:
+                except (ValueError, TypeError) as ex:
                     logger.warning(
                         f"Failed to attach imported membership for member {member.id}: {ex}"
                     )

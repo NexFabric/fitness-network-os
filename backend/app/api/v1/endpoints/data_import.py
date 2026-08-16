@@ -94,7 +94,7 @@ async def list_import_batches(
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """List all CSV migration batches for this tenant."""
-    AuthorizationService.require_tenant(current_user, "members:read", tenant_id)
+    AuthorizationService.require_tenant(current_user, "members:write", tenant_id)
 
     res = await db.execute(
         select(DataImportBatch)
@@ -112,7 +112,7 @@ async def get_import_batch_detail(
     tenant_id: UUID = Depends(get_tenant_id),
 ):
     """Get single import batch and its detailed rows & validation errors."""
-    AuthorizationService.require_tenant(current_user, "members:read", tenant_id)
+    AuthorizationService.require_tenant(current_user, "members:write", tenant_id)
 
     batch = await db.get(DataImportBatch, batch_id)
     if not batch or batch.tenant_id != tenant_id:

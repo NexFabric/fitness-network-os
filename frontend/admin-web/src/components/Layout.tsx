@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clearAuth, getTenantId } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import { ROLES, type RoleName } from '../auth/roles'
+import { RECEPTION_ROLES, ROLES, type RoleName } from '../auth/roles'
 
 type NavItem = {
   to: string
@@ -16,7 +16,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: '/', end: true, label: 'Panel', icon: IconPanel },
-  { to: '/reception', end: false, label: 'Resepsiyon', icon: IconReception },
+  { to: '/reception', end: false, label: 'Resepsiyon', icon: IconReception, roles: RECEPTION_ROLES },
   { to: '/classes', end: false, label: 'Dersler & PT', icon: IconCalendar },
   { to: '/members', end: false, label: 'Üyeler', icon: IconMembers },
   { to: '/locations', end: false, label: 'Şubeler', icon: IconLocations },
@@ -60,6 +60,20 @@ const navItems: NavItem[] = [
     to: '/staff',
     end: false,
     label: 'Personel',
+    icon: IconStaff,
+    roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
+  },
+  {
+    to: '/onboarding',
+    end: false,
+    label: 'Kurulum',
+    icon: IconStaff,
+    roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
+  },
+  {
+    to: '/dsar',
+    end: false,
+    label: 'KVKK',
     icon: IconStaff,
     roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
   },

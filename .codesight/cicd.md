@@ -4,7 +4,7 @@
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
-| CI | push, pull_request | 10 | — | — |
+| CI | push, pull_request | 12 | — | — |
 
 ### CI
 
@@ -23,15 +23,17 @@
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
   - `actions/checkout@v5`
   - `actions/setup-python@v6`
-- **admin-web** on `ubuntu-latest` — 4 steps
+- **admin-web** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v5`
   - `actions/setup-node@v5`
-- **scanner-pwa** on `ubuntu-latest` — 4 steps
+- **scanner-pwa** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v5`
   - `actions/setup-node@v5`
 - **production-image** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v5`
-- **public-site** on `ubuntu-latest` — 4 steps
+- **frontend-images** on `ubuntu-latest` — 3 steps
+  - `actions/checkout@v5`
+- **public-site** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v5`
   - `actions/setup-node@v5`
 - **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
@@ -39,6 +41,10 @@
   - `actions/setup-python@v6`
   - `actions/setup-node@v5`
   - `actions/upload-artifact@v4`
+- **codeql** on `ubuntu-latest` — 3 steps
+  - `actions/checkout@v5`
+  - `github/codeql-action/init@v3`
+  - `github/codeql-action/analyze@v3`
 - **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site, production-image, browser-e2e)
 
 ---

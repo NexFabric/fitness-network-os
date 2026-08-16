@@ -185,7 +185,7 @@ jobs:
         
       - name: Run Pytest with Real DB
         working-directory: ./backend
-        run: uv run pytest
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=70
 
   # Phase 21 CI V2 — frontend production builds (workspace lockfile at frontend/)
   admin-web:
@@ -205,6 +205,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
+
+      - name: Lint admin-web
+        working-directory: ./frontend/admin-web
+        run: npm run lint
 
       - name: Build admin-web
         working-directory: ./frontend/admin-web
@@ -230,6 +234,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Lint scanner-pwa
+        working-directory: ./frontend/scanner-pwa
+        run: npm run lint
+
       - name: Build scanner-pwa
         working-directory: ./frontend/scanner-pwa
         env:
@@ -245,6 +253,29 @@ jobs:
 
       - name: Build frozen non-root backend image
         run: docker build --file backend/Dockerfile.prod --tag fitness-network-os:${{ github.sha }} backend
+
+  frontend-images:
+    name: Frontend Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build admin-web image (workspace lockfile + SPA nginx)
+        run: >
+          docker build
+          --file frontend/admin-web/Dockerfile
+          --build-arg VITE_API_URL=http://localhost:8000
+          --tag fitness-admin-web:${{ github.sha }}
+          frontend
+
+      - name: Build scanner-pwa image (workspace lockfile + SPA nginx)
+        run: >
+          docker build
+          --file frontend/scanner-pwa/Dockerfile
+          --build-arg VITE_API_URL=http://localhost:8000
+          --tag fitness-scanner-pwa:${{ github.sha }}
+          frontend
 
   public-site:
     name: Public Site Build
@@ -263,6 +294,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend/public-site
         run: npm ci
+
+      - name: Lint public-site
+        working-directory: ./frontend/public-site
+        run: npm run lint
 
       - name: Build public-site
         working-directory: ./frontend/public-site
@@ -366,6 +401,20 @@ jobs:
           name: playwright-report
           path: frontend/e2e/playwright-report
           retention-days: 7
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: python, javascript
+      - uses: github/codeql-action/analyze@v3
 
   all-green:
     name: All Required Checks Passed

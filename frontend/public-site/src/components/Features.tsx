@@ -6,9 +6,7 @@ import {
   MonitorSmartphone,
   CreditCard,
   ShieldCheck,
-  Bell,
   BarChart3,
-  Sparkles,
 } from "lucide-react";
 
 export function Features() {

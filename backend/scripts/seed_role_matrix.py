@@ -35,6 +35,7 @@ ROLE_USERS: dict[str, str] = {
     "trainer": "TRAINER",
     "member": "MEMBER",
     "analyst": "FEDERATION_ANALYST",
+    "desk": "FRONT_DESK",
 }
 
 
@@ -302,7 +303,7 @@ async def seed() -> dict[str, object]:
                     "user_id": str(user.id),
                 }
 
-                if role_name == "GYM_OWNER":
+                if role_name != "MEMBER":
                     mfa = (
                         (
                             await session.execute(

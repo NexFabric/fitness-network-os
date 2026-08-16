@@ -30,7 +30,7 @@ const tiers = [
       "Dinamik QR + Turnike Tarayıcı PWA",
       "Kuruş hassasiyetinde faturalama & dunning",
       "Tenant veri izolasyonu ve denetim izi",
-      "Öncelikli 7/24 teknik destek",
+      "İş günü teknik destek",
     ],
     cta: "Teklif al",
     ariaLabel: "Kulüp ölçeğinize özel Operasyon paketi için teklif alın",
@@ -45,7 +45,7 @@ const tiers = [
     features: [
       "Çok tenantlı merkezi federasyon paneli",
       "Özel donanım & API entegrasyonları",
-      "Kurumsal SLA ve bağımsız güvenlik denetimi",
+      "Sözleşmeli SLA (pentest kanıtı ayrıca planlanır)",
       "Özel yerinde veri göçü ve onboarding",
     ],
     cta: "İletişime geç",

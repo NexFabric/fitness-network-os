@@ -12,13 +12,16 @@
 - **Dashboard** — `frontend/admin-web/src/pages/Dashboard.tsx`
 - **DataImport** — `frontend/admin-web/src/pages/DataImport.tsx`
 - **Devices** — `frontend/admin-web/src/pages/Devices.tsx`
+- **DsarInbox** — `frontend/admin-web/src/pages/DsarInbox.tsx`
 - **Finance** — `frontend/admin-web/src/pages/Finance.tsx`
+- **InviteAccept** — `frontend/admin-web/src/pages/InviteAccept.tsx`
 - **Locations** — `frontend/admin-web/src/pages/Locations.tsx`
 - **Login** — `frontend/admin-web/src/pages/Login.tsx`
 - **MemberPortal** — `frontend/admin-web/src/pages/MemberPortal.tsx`
 - **Members** — `frontend/admin-web/src/pages/Members.tsx`
 - **MfaSetup** — `frontend/admin-web/src/pages/MfaSetup.tsx`
 - **Notifications** — `frontend/admin-web/src/pages/Notifications.tsx`
+- **Onboarding** — `frontend/admin-web/src/pages/Onboarding.tsx`
 - **PasswordChange** — `frontend/admin-web/src/pages/PasswordChange.tsx`
 - **Plans** — `frontend/admin-web/src/pages/Plans.tsx`
 - **PortalHome** — `frontend/admin-web/src/pages/PortalHome.tsx`
@@ -27,6 +30,23 @@
 - **Staff** — `frontend/admin-web/src/pages/Staff.tsx`
 - **SuperAdminPortal** — `frontend/admin-web/src/pages/SuperAdminPortal.tsx`
 - **TrainerPortal** — `frontend/admin-web/src/pages/TrainerPortal.tsx`
+- **PtTab** — props: appointments — `frontend/admin-web/src/pages/classes/PtTab.tsx`
+- **RosterDrawer** — props: roster, loading, onClose, onMarkAttendance, onCancelBooking — `frontend/admin-web/src/pages/classes/RosterDrawer.tsx`
+- **SchedulesTab** — props: schedules — `frontend/admin-web/src/pages/classes/SchedulesTab.tsx`
+- **SessionsTab** — props: sessions, onOpenSessionModal, onOpenRoster — `frontend/admin-web/src/pages/classes/SessionsTab.tsx`
+- **TypesTab** — props: classTypes — `frontend/admin-web/src/pages/classes/TypesTab.tsx`
+- **AlertsTab** — props: tenants, alerts, onOpenCreate, onDelete — `frontend/admin-web/src/pages/hq/AlertsTab.tsx`
+- **ComplianceTab** — props: tenants, compliance, onOpenAdd — `frontend/admin-web/src/pages/hq/ComplianceTab.tsx`
+- **GymsTab** — props: tenants, searchQuery, statusFilter, switching, onSearchChange, onStatusFilterChange, onOpenAddGym, onEnterTenant, onOpenBreakGlass, onOpenSuspend — `frontend/admin-web/src/pages/hq/GymsTab.tsx`
+- **OverviewTab** — props: summary, tenants, audit, switching, onEnterTenant, onGoGyms — `frontend/admin-web/src/pages/hq/OverviewTab.tsx`
+- **PassportTab** — props: tenants, passports, onEdit — `frontend/admin-web/src/pages/hq/PassportTab.tsx`
+- **ReportsTab** — props: tenants, analytics, onExportCsv — `frontend/admin-web/src/pages/hq/ReportsTab.tsx`
+- **AccessTab** — props: hasActiveMembership, issuing, issueError, qr, qrImage, secondsLeft, expired, onIssueQr — `frontend/admin-web/src/pages/portal/AccessTab.tsx`
+- **ClassesTab** — props: categoryFilter, filteredSessions, myBookings, myPtAppointments, trainers, bookingLoading, showPtModal, ptTrainerId, ptStart, ptEnd — `frontend/admin-web/src/pages/portal/ClassesTab.tsx`
+- **FinanceTab** — props: invoices, payments — `frontend/admin-web/src/pages/portal/FinanceTab.tsx`
+- **HistoryTab** — props: checkins — `frontend/admin-web/src/pages/portal/HistoryTab.tsx`
+- **MembershipsTab** — props: memberships, entitlements — `frontend/admin-web/src/pages/portal/MembershipsTab.tsx`
+- **PreferencesTab** — props: consents, dsarBusy, dsarMessage, eraseBusy, eraseMessage, consentUpdating, onDsarExport, onDsarErasure, onToggleConsent — `frontend/admin-web/src/pages/portal/PreferencesTab.tsx`
 - **KvkkPage** — `frontend/public-site/src/app/kvkk/page.tsx`
 - **RootLayout** — `frontend/public-site/src/app/layout.tsx`
 - **Home** — `frontend/public-site/src/app/page.tsx`

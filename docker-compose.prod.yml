@@ -36,6 +36,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/live"]
       interval: 30s
@@ -61,6 +62,7 @@ services:
       - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
       - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
       - AWS_REGION=${AWS_REGION:-eu-central-1}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     restart: unless-stopped
     depends_on:
       backend:
@@ -88,6 +90,7 @@ services:
       - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
       - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
       - AWS_REGION=${AWS_REGION:-eu-central-1}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     restart: unless-stopped
     depends_on:
       backend:
@@ -114,6 +117,7 @@ services:
       - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
       - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
       - AWS_REGION=${AWS_REGION:-eu-central-1}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     restart: unless-stopped
     depends_on:
       backend:
@@ -136,11 +140,38 @@ services:
       - QR_KMS_MODE=${QR_KMS_MODE:-aws_kms}
       - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID}
       - AWS_REGION=${AWS_REGION:-eu-central-1}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
 
+  admin-web:
+    build:
+      context: ./frontend
+      dockerfile: admin-web/Dockerfile
+      args:
+        VITE_API_URL: ${ADMIN_API_URL:-https://api.gymclubnex.com}
+    container_name: fitness-os-admin-web-prod
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
 
+  scanner-pwa:
+    build:
+      context: ./frontend
+      dockerfile: scanner-pwa/Dockerfile
+      args:
+        VITE_API_URL: ${SCANNER_API_URL:-https://api.gymclubnex.com}
+    container_name: fitness-os-scanner-pwa-prod
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
 
 

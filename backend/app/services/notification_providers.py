@@ -116,6 +116,17 @@ import smtplib
 from email.message import EmailMessage
 
 
+def _delivery_body(delivery: NotificationDelivery) -> str:
+    """Prefer the rendered ledger body; context['body'] is a fallback only."""
+    if delivery.body and delivery.body.strip():
+        return delivery.body
+    if isinstance(delivery.context, dict):
+        extra = delivery.context.get("body")
+        if isinstance(extra, str) and extra.strip():
+            return extra
+    return "Size yeni bir mesajımız var."
+
+
 class SmtpNotificationProvider:
     """Real SMTP adapter for production email delivery.
 
@@ -147,14 +158,7 @@ class SmtpNotificationProvider:
         msg["From"] = from_address
         msg["To"] = delivery.recipient_address
 
-        # In a real app, body is rendered from delivery.template_id + delivery.context
-        # We assume body is passed or we send a generic message
-        body = (
-            delivery.context.get("body", "Size yeni bir mesajımız var.")
-            if delivery.context
-            else "Yeni mesaj."
-        )
-        msg.set_content(body)
+        msg.set_content(_delivery_body(delivery))
 
         try:
             # We use synchronous smtplib wrapped in a thread/executor conceptually,
@@ -179,7 +183,7 @@ class SmtpNotificationProvider:
             return ProviderResult(
                 success=True, provider=self.name, provider_message_id=mid
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(
                 "notification.email.smtp error=%s delivery_id=%s",
                 type(e).__name__,

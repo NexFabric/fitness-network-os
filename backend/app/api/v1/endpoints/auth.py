@@ -45,6 +45,12 @@ MIN_PASSWORD_LENGTH = 12
 RESTRICTED_AUTH_LEVELS = frozenset({"mfa_setup", "password_reset"})
 COOKIE_NAME = "session_token"
 CSRF_COOKIE = "csrf_token"
+# Precomputed Argon2id of a non-password. Used only to keep unknown-user 401
+# on the same code path as a wrong password. Never a valid credential.
+_DUMMY_PASSWORD_HASH = (
+    "$argon2id$v=19$m=65536,t=3,p=4$/v9/b+1dK0WI0Vqr9Z4zZg"
+    "$KdG+6cToJayOIz6xHvzwEC5pgUEMQ1sIk6jvcOUsPO0"
+)
 
 
 class LoginRequest(BaseModel):
@@ -68,8 +74,14 @@ class LoginResponse(BaseModel):
 PRIVILEGED_MFA_ROLES = {
     "PLATFORM_SUPER_ADMIN",
     "FEDERATION_ADMIN",
+    "FEDERATION_ANALYST",
+    "FEDERATION_SUPPORT",
     "GYM_OWNER",
-    "SUPPORT_PRIVILEGED",
+    "GYM_ADMIN",
+    "GYM_MANAGER",
+    "ACCOUNTANT",
+    "FRONT_DESK",
+    "TRAINER",
 }
 
 
@@ -81,6 +93,16 @@ class PasswordChangeRequest(BaseModel):
 class PasswordChangeResponse(BaseModel):
     expires_at: datetime
     mfa_enrollment_required: bool = False
+
+
+class InviteAcceptRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=256)
+    new_password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
+
+
+class InviteAcceptResponse(BaseModel):
+    email: str
+    password_set: bool = True
 
 
 class LogoutResponse(BaseModel):
@@ -237,19 +259,19 @@ async def login(
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
-    # Generic error for missing / inactive / bad password (no account enumeration).
-    if user is None or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
-
+    # Always burn an Argon2 verify so missing/inactive accounts are not a
+    # cheaper 401 than a wrong password (classic timing oracle).
+    hashed = (
+        user.hashed_password
+        if user is not None and user.is_active
+        else _DUMMY_PASSWORD_HASH
+    )
     try:
-        valid = verify_password(body.password, user.hashed_password)
-    except Exception:
+        valid = verify_password(body.password, hashed)
+    except (ValueError, TypeError):
         valid = False
 
-    if not valid:
+    if user is None or not user.is_active or not valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -360,6 +382,37 @@ async def login(
     )
 
 
+@router.post("/invite/accept", response_model=InviteAcceptResponse)
+async def accept_invite(
+    body: InviteAcceptRequest,
+    db: AsyncSession = Depends(get_db),
+) -> InviteAcceptResponse:
+    """Public: set a password from a one-time hashed invite token."""
+    from app.api.deps import current_tenant_id_var
+    from app.services.invite import InviteService, parse_invite_tenant
+
+    try:
+        tenant_id = parse_invite_tenant(body.token)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    token = current_tenant_id_var.set(tenant_id)
+    try:
+        user = await InviteService(db).accept(body.token, body.new_password)
+        await db.commit()
+    except ValueError as e:
+        await db.rollback()
+        detail = str(e)
+        status_code = 404 if detail == "invite_not_found" else 400
+        if detail == "invite_already_used":
+            status_code = 409
+        raise HTTPException(status_code=status_code, detail=detail) from e
+    finally:
+        current_tenant_id_var.reset(token)
+
+    return InviteAcceptResponse(email=user.email)
+
+
 @router.post("/password", response_model=PasswordChangeResponse)
 async def change_password(
     body: PasswordChangeRequest,
@@ -377,7 +430,7 @@ async def change_password(
         current_ok = verify_password(
             body.current_password, current_user.hashed_password
         )
-    except Exception:
+    except (ValueError, TypeError):
         current_ok = False
     if not current_ok:
         raise HTTPException(

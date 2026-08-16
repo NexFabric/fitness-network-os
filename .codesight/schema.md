@@ -194,6 +194,16 @@
 - error_message: Text (nullable)
 - _relations_: batch: DataImportBatch
 
+### DsarRequest
+- member_id: UUID
+- requested_by_user_id: unknown (fk, nullable)
+- kind: String
+- status: String
+- due_at: DateTime
+- package_uri: String (nullable)
+- rejection_reason: Text (nullable)
+- dedupe_key: String (nullable)
+
 ### EntitlementDefinition
 - code: String
 - name: String
@@ -446,6 +456,13 @@
 - owner_token: String (nullable)
 - attempt_count: Integer (default)
 
+### AccountInvite
+- user_id: UUID (fk)
+- token_hash: String
+- purpose: String
+- expires_at: DateTime
+- accepted_at: DateTime (nullable)
+
 ### Location
 - name: String
 - timezone: String (default)
@@ -690,6 +707,8 @@
 - expires_at: DateTime
 - is_revoked: Boolean (default)
 - auth_level: String (default)
+- last_seen_at: DateTime (nullable)
+- last_step_up_at: DateTime (nullable)
 - _relations_: user: User
 
 ### UserDevice

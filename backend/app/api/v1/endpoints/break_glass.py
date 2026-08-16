@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_recent_step_up
+from app.core.authorization import AuthorizationService
 from app.models.break_glass import BreakGlassSession, BreakGlassStatus
 from app.models.user import User
 from app.services.break_glass import BreakGlassService
@@ -37,18 +38,25 @@ class BreakGlassSessionResponse(BaseModel):
 
 
 def _require_break_glass_auth(current_user: User) -> None:
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Bu işlem yalnızca platform süper yöneticisi tarafından yapılabilir.",
-        )
+    if current_user.is_superuser:
+        return
+    if AuthorizationService.is_authorized(
+        user=current_user,
+        permission="admin:break_glass",
+        resource_tenant_id=None,
+    ):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Bu işlem yalnızca platform süper yöneticisi veya break-glass izni olan hesap tarafından yapılabilir.",
+    )
 
 
 @router.post("/sessions", response_model=BreakGlassSessionResponse)
 async def create_break_glass_session(
     body: CreateBreakGlassRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_recent_step_up),
 ):
     """Create a time-limited emergency access break-glass session for a tenant."""
     _require_break_glass_auth(current_user)

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 84 models
+**sqlalchemy** — 86 models
 
 ### Base
 
@@ -229,6 +229,19 @@ fk: trainer_user_id
 - `parsed_data`: with_variant _(nullable)_
 - `error_message`: Text _(nullable)_
 - _relations_: batch: DataImportBatch
+
+### DsarRequest
+
+fk: requested_by_user_id
+
+- `member_id`: UUID
+- `requested_by_user_id`: unknown _(fk, nullable)_
+- `kind`: String
+- `status`: String
+- `due_at`: DateTime
+- `package_uri`: String _(nullable)_
+- `rejection_reason`: Text _(nullable)_
+- `dedupe_key`: String _(nullable)_
 
 ### EntitlementDefinition
 
@@ -516,6 +529,16 @@ fk: assigned_to
 - `locked_until`: DateTime _(nullable)_
 - `owner_token`: String _(nullable)_
 - `attempt_count`: Integer _(default)_
+
+### AccountInvite
+
+fk: user_id
+
+- `user_id`: UUID _(fk)_
+- `token_hash`: String
+- `purpose`: String
+- `expires_at`: DateTime
+- `accepted_at`: DateTime _(nullable)_
 
 ### Location
 
@@ -805,6 +828,8 @@ fk: user_id
 - `expires_at`: DateTime
 - `is_revoked`: Boolean _(default)_
 - `auth_level`: String _(default)_
+- `last_seen_at`: DateTime _(nullable)_
+- `last_step_up_at`: DateTime _(nullable)_
 - _relations_: user: User
 
 ### UserDevice
@@ -840,19 +865,19 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **58** files
-- `backend/app/models/tenant.py` — imported by **53** files
-- `backend/app/models/organization.py` — imported by **46** files
-- `backend/app/db/base.py` — imported by **37** files
-- `backend/app/models/member.py` — imported by **37** files
-- `backend/app/models/rbac.py` — imported by **33** files
-- `backend/app/db/session.py` — imported by **27** files
-- `backend/app/models/membership.py` — imported by **27** files
-- `backend/app/db/rls.py` — imported by **20** files
-- `backend/app/models/location.py` — imported by **20** files
-- `backend/app/models/access.py` — imported by **18** files
-- `backend/app/models/outbox.py` — imported by **16** files
-- `backend/app/models/finance.py` — imported by **13** files
+- `backend/app/models/user.py` — imported by **67** files
+- `backend/app/models/tenant.py` — imported by **59** files
+- `backend/app/models/organization.py` — imported by **52** files
+- `backend/app/models/member.py` — imported by **41** files
+- `backend/app/models/rbac.py` — imported by **40** files
+- `backend/app/db/base.py` — imported by **38** files
+- `backend/app/db/session.py` — imported by **32** files
+- `backend/app/models/membership.py` — imported by **28** files
+- `backend/app/db/rls.py` — imported by **22** files
+- `backend/app/models/location.py` — imported by **22** files
+- `backend/app/models/access.py` — imported by **19** files
+- `backend/app/models/outbox.py` — imported by **17** files
+- `backend/app/models/finance.py` — imported by **16** files
 
 ---
 _Back to [overview.md](./overview.md)_

@@ -50,6 +50,7 @@ ayrışırsa **YAML doğrudur**.
 | `access:issue` / `access:issue:self` | İlki personelin herhangi bir üye için QR üretmesi; ikincisi üyenin yalnızca kendisi için. Self uç `member_id` alanını hiç kabul etmez. |
 | `access:override` | Turnike arızası, unutan üye veya acil durumlarda resepsiyonun zorunlu gerekçeli manuel giriş izni (`FRONT_DESK`, `GYM_ADMIN`, `GYM_OWNER`). |
 | `members:read` / `members:read:all` | İlki uca erişimi, ikincisi **satır kapsamını** verir. TRAINER ikincisini almaz. |
+| `reception:read` | Resepsiyon arama ve üye kartı. `GYM_OWNER` / `GYM_ADMIN` / `GYM_MANAGER` / `FRONT_DESK`. TRAINER almaz — `members:read` resepsiyonu açmaz. |
 | `memberships:read` / `memberships:read:self` | Personel geneli vs. bağlı üyenin kendi kayıtları. |
 | `finance:read:self` | Üyenin kendi fatura ve ödeme geçmişini görmesi (`MEMBER` rolü). |
 | `devices:manage` | Cihaz sağlama/iptal. `GYM_OWNER` + `GYM_ADMIN`. |

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Server, Lock, Layers, Cpu, ShieldCheck } from "lucide-react";
+import { Database, Server, Lock, Layers, ShieldCheck } from "lucide-react";
 
 const points = [
   {

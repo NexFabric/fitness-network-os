@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Classes subsystem handles **15 routes** and touches: auth.
+The Classes subsystem handles **15 routes** and touches: auth, db.
 
 ## Routes
 
@@ -34,7 +34,7 @@ The Classes subsystem handles **15 routes** and touches: auth.
   `backend/app/api/v1/endpoints/classes.py`
 - `POST` `/pt/appointments` → in: ClassTypeCreate, out: list
   `backend/app/api/v1/endpoints/classes.py`
-- `POST` `/pt/appointments/{appointment_id}/cancel` params(appointment_id) → in: ClassTypeCreate, out: list
+- `POST` `/pt/appointments/{appointment_id}/cancel` params(appointment_id) → in: ClassTypeCreate, out: list [db]
   `backend/app/api/v1/endpoints/classes.py`
 
 ## Source Files

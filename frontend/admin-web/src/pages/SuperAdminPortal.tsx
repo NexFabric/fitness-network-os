@@ -1,117 +1,38 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { api, ApiError, setAuth } from '../api/client'
+import { api, setAuth } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import { Alert, EmptyState, LoadingSkeleton, StatusBadge } from '../components/ui'
-
-type TabKey = 'overview' | 'gyms' | 'passport' | 'compliance' | 'alerts' | 'reports'
-
-type OrganizationSummary = {
-  id: string
-  name: string
-  domain: string | null
-}
-
-type TenantSummary = {
-  id: string
-  name: string
-  location_code: string
-  organization_id: string
-  status: 'ACTIVE' | 'SUSPENDED' | 'CLOSED'
-  suspended_at?: string | null
-  suspension_reason?: string | null
-  member_count: number
-  active_membership_count: number
-  revenue_minor: number
-}
-
-type FederationSummary = {
-  organization_count: number
-  tenant_count: number
-  active_tenant_count: number
-  suspended_tenant_count: number
-  member_count: number
-  active_membership_count: number
-  revenue_minor: number
-  partial: boolean
-}
-
-type AuditEvent = {
-  id: string
-  tenant_id: string
-  user_id: string | null
-  action: string
-  resource_type: string
-  created_at: string
-}
-
-type PassportConfig = {
-  id: string
-  tenant_id: string
-  is_active: boolean
-  allowed_home_gym_tiers: string | null
-  rules: {
-    max_monthly_roaming_visits?: number
-    guest_fee_minor?: number
-  } | null
-  updated_at?: string | null
-}
-
-type ComplianceRecord = {
-  id: string
-  tenant_id: string
-  certification_name: string
-  status: 'PASSED' | 'FAILED' | 'CONDITIONAL' | 'EXPIRED'
-  audit_date: string
-  auditor_notes?: string | null
-  created_at: string
-}
-
-type NetworkAlert = {
-  id: string
-  organization_id: string
-  target_tenant_id: string | null
-  title: string
-  message: string
-  severity: 'INFO' | 'WARNING' | 'CRITICAL' | 'MAINTENANCE'
-  created_at: string
-}
-
-type AnalyticsOverview = {
-  total_checkins: number
-  checkins_by_tenant: Record<string, number>
-  total_revenue_minor: number
-  revenue_by_tenant_minor: Record<string, number>
-  partial: boolean
-}
-
-function formatMinor(minor: number): string {
-  const major = Math.trunc(minor / 100)
-  const cents = Math.abs(minor % 100)
-    .toString()
-    .padStart(2, '0')
-  return `₺${major.toLocaleString('tr-TR')},${cents}`
-}
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    if (e.status === 403) return 'Bu işlem için yetkiniz bulunmuyor.'
-    return e.message
-  }
-  if (e instanceof Error) return e.message
-  return fallback
-}
+import { Alert, LoadingSkeleton } from '../components/ui'
+import { AlertsTab } from './hq/AlertsTab'
+import { ComplianceTab } from './hq/ComplianceTab'
+import { GymsTab } from './hq/GymsTab'
+import { OverviewTab } from './hq/OverviewTab'
+import { PassportTab } from './hq/PassportTab'
+import { ReportsTab } from './hq/ReportsTab'
+import {
+  formatApiError,
+  isTabKey,
+  type AnalyticsOverview,
+  type AuditEvent,
+  type ComplianceRecord,
+  type FederationSummary,
+  type NetworkAlert,
+  type OrganizationSummary,
+  type PassportConfig,
+  type TabKey,
+  type TenantSummary,
+} from './hq/types'
 
 export default function SuperAdminPortal() {
   const { session, refresh } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = (searchParams.get('tab') as TabKey) || 'overview'
+  const rawTab = searchParams.get('tab')
+  const activeTab: TabKey = isTabKey(rawTab) ? rawTab : 'overview'
 
   const setTab = (tab: TabKey) => {
-    setSearchParams({ tab })
+    setSearchParams(tab === 'overview' ? {} : { tab })
   }
 
-  // Data states
   const [orgs, setOrgs] = useState<OrganizationSummary[]>([])
   const [tenants, setTenants] = useState<TenantSummary[]>([])
   const [summary, setSummary] = useState<FederationSummary | null>(null)
@@ -120,17 +41,13 @@ export default function SuperAdminPortal() {
   const [compliance, setCompliance] = useState<ComplianceRecord[]>([])
   const [alerts, setAlerts] = useState<NetworkAlert[]>([])
   const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null)
-
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [switching, setSwitching] = useState<string | null>(null)
-
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL')
 
-  // Modals state
   const [showAddGymModal, setShowAddGymModal] = useState(false)
   const [newGymName, setNewGymName] = useState('')
   const [newGymCode, setNewGymCode] = useState('')
@@ -229,7 +146,6 @@ export default function SuperAdminPortal() {
     window.location.assign('/')
   }
 
-  // Action: Create Gym
   async function handleCreateGym(e: FormEvent) {
     e.preventDefault()
     if (!orgs[0]) return
@@ -260,7 +176,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Suspend Gym
   async function handleSuspendGym(e: FormEvent) {
     e.preventDefault()
     if (!suspendTarget) return
@@ -282,7 +197,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Reactivate Gym
   async function handleReactivateGym(t: TenantSummary) {
     try {
       await api(`/api/v1/admin/tenants/${t.id}/reactivate`, { method: 'POST' })
@@ -293,7 +207,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Break Glass
   async function handleBreakGlass(e: FormEvent) {
     e.preventDefault()
     if (!breakGlassTarget) return
@@ -319,7 +232,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Update Passport
   async function handleUpdatePassport(e: FormEvent) {
     e.preventDefault()
     if (!passportTarget) return
@@ -347,7 +259,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Add Compliance
   async function handleAddCompliance(e: FormEvent) {
     e.preventDefault()
     if (!compTenantId) return
@@ -374,7 +285,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Create Alert
   async function handleCreateAlert(e: FormEvent) {
     e.preventDefault()
     if (!orgs[0]) return
@@ -405,7 +315,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // Action: Delete Alert
   async function handleDeleteAlert(id: string) {
     try {
       await api(`/api/v1/admin/alerts/${id}`, { method: 'DELETE' })
@@ -416,7 +325,6 @@ export default function SuperAdminPortal() {
     }
   }
 
-  // CSV Export
   function exportCSV() {
     if (tenants.length === 0) return
     const headers = ['Kulüp Adı', 'Lokasyon Kodu', 'Durum', 'Üye Sayısı', 'Aktif Abonelik', 'Toplam Gelir (₺)', 'Turnike Giriş']
@@ -450,27 +358,24 @@ export default function SuperAdminPortal() {
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 font-sans">
       <div className="mx-auto w-full max-w-7xl">
-        {/* Header */}
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
           <div>
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-xl text-teal-400 border border-teal-500/20">
                 👑
               </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-extrabold tracking-tight text-white">
-                      Federasyon Konsolu
-                    </h1>
-                    <span className="rounded-lg bg-teal-500/10 px-2.5 py-0.5 text-xs font-bold text-teal-400 border border-teal-500/20">
-                      Ağ & HQ
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {orgs[0]?.name ?? 'Demo Organization'} · {session?.email}
-                    {session?.is_superuser && ' · Platform Süper Yöneticisi'}
-                  </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-extrabold tracking-tight text-white">Federasyon Konsolu</h1>
+                  <span className="rounded-lg bg-teal-500/10 px-2.5 py-0.5 text-xs font-bold text-teal-400 border border-teal-500/20">
+                    Ağ & HQ
+                  </span>
                 </div>
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {orgs[0]?.name ?? 'Demo Organization'} · {session?.email}
+                  {session?.is_superuser && ' · Platform Süper Yöneticisi'}
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -483,7 +388,6 @@ export default function SuperAdminPortal() {
           </div>
         </header>
 
-        {/* Global Alerts Banner */}
         {alerts.length > 0 && (
           <div className="mb-6 space-y-2">
             {alerts.slice(0, 2).map((a) => {
@@ -506,9 +410,7 @@ export default function SuperAdminPortal() {
                       <strong className="text-white">{a.title}:</strong> {a.message}
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(a.created_at).toLocaleString('tr-TR')}
-                  </span>
+                  <span className="text-[10px] text-slate-400">{new Date(a.created_at).toLocaleString('tr-TR')}</span>
                 </div>
               )
             })}
@@ -518,11 +420,7 @@ export default function SuperAdminPortal() {
         {successMessage && (
           <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-400">
             <span>{successMessage}</span>
-            <button
-              type="button"
-              onClick={() => setSuccessMessage(null)}
-              className="text-slate-400 hover:text-white"
-            >
+            <button type="button" onClick={() => setSuccessMessage(null)} className="text-slate-400 hover:text-white">
               ✕
             </button>
           </div>
@@ -531,17 +429,12 @@ export default function SuperAdminPortal() {
         {error && (
           <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-400">
             <span>{error}</span>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="text-slate-400 hover:text-white"
-            >
+            <button type="button" onClick={() => setError(null)} className="text-slate-400 hover:text-white">
               ✕
             </button>
           </div>
         )}
 
-        {/* Navigation Tabs */}
         <nav className="mb-6 flex flex-wrap gap-2 border-b border-slate-800 pb-2">
           {[
             { key: 'overview', label: '🌐 Genel Bakış', count: undefined },
@@ -565,9 +458,7 @@ export default function SuperAdminPortal() {
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
-                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
-                    {tab.count}
-                  </span>
+                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">{tab.count}</span>
                 )}
               </button>
             )
@@ -578,579 +469,87 @@ export default function SuperAdminPortal() {
           <LoadingSkeleton rows={6} />
         ) : (
           <>
-            {/* =========================================================================
-                TAB 1: GENEL BAKIŞ
-               ========================================================================= */}
             {activeTab === 'overview' && summary && (
-              <div className="space-y-6">
-                <section aria-label="Ağ Geneli KPI'lar" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Toplam Kulüp (Tenant)
-                    </span>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-3xl font-extrabold text-white">{summary.tenant_count}</span>
-                      <span className="text-xs text-emerald-400 font-semibold">({summary.active_tenant_count} Aktif)</span>
-                      {summary.suspended_tenant_count > 0 && (
-                        <span className="text-xs text-rose-400 font-semibold">({summary.suspended_tenant_count} Askıda)</span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-[11px] text-slate-500">Federasyona bağlı lisanslı kulüpler</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Ağ Geneli Toplam Üye
-                    </span>
-                    <div className="mt-2 text-3xl font-extrabold text-teal-400">
-                      {summary.member_count.toLocaleString('tr-TR')}
-                    </div>
-                    <p className="mt-1 text-[11px] text-slate-500">Kayıtlı tekil sporcu sayısı</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Aktif Turnike Aboneliği
-                    </span>
-                    <div className="mt-2 text-3xl font-extrabold text-emerald-400">
-                      {summary.active_membership_count.toLocaleString('tr-TR')}
-                    </div>
-                    <p className="mt-1 text-[11px] text-slate-500">Geçiş yetkisi olan aktif paketler</p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Tahsil Edilen Ağ Cirosu
-                    </span>
-                    <div className="mt-2 text-3xl font-extrabold text-white">
-                      {formatMinor(summary.revenue_minor)}
-                    </div>
-                    <p className="mt-1 text-[11px] text-slate-500">Tüm kulüplerin konsolide tahsilatı</p>
-                  </div>
-                </section>
-
-                <div className="grid gap-6 lg:grid-cols-2">
-                  {/* Hızlı Kulüp Durumu */}
-                  <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h2 className="text-sm font-bold uppercase tracking-wide text-white">
-                        🏢 Bağlı Kulüpler & Durumlar
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => setTab('gyms')}
-                        className="text-xs text-teal-400 hover:underline"
-                      >
-                        Tümünü Yönet ({tenants.length}) →
-                      </button>
-                    </div>
-                    <div className="divide-y divide-slate-800/80 text-xs">
-                      {tenants.slice(0, 5).map((t) => (
-                        <div key={t.id} className="flex items-center justify-between py-3">
-                          <div>
-                            <span className="font-bold text-white">{t.name}</span>
-                            <span className="ml-2 font-mono text-[11px] text-slate-500">[{t.location_code}]</span>
-                            <div className="text-[11px] text-slate-400">
-                              {t.member_count} üye · {t.active_membership_count} aktif abone · {formatMinor(t.revenue_minor)}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <StatusBadge status={t.status} />
-                            <button
-                              type="button"
-                              onClick={() => void enterTenant(t.id)}
-                              disabled={switching === t.id}
-                              className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-200 hover:bg-slate-700 transition"
-                            >
-                              {switching === t.id ? 'Bağlanıyor…' : 'Kulübe Geç'}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  {/* Son Sistem ve Denetim Olayları */}
-                  <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">
-                      📜 Son Sistem ve Audit Kayıtları
-                    </h2>
-                    {audit.length === 0 ? (
-                      <EmptyState title="Audit kaydı yok" description="Henüz bir sistem olayı kaydedilmedi." />
-                    ) : (
-                      <ul className="divide-y divide-slate-800/80 text-xs">
-                        {audit.slice(0, 6).map((event) => (
-                          <li key={event.id} className="flex items-center justify-between py-2.5">
-                            <span className="font-mono text-teal-400">{event.action}</span>
-                            <span className="text-slate-500">
-                              {event.resource_type} · {new Date(event.created_at).toLocaleString('tr-TR')}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-                </div>
-              </div>
+              <OverviewTab
+                summary={summary}
+                tenants={tenants}
+                audit={audit}
+                switching={switching}
+                onEnterTenant={enterTenant}
+                onGoGyms={() => setTab('gyms')}
+              />
             )}
-
-            {/* =========================================================================
-                TAB 2: KULÜPLER & SALONLAR (GYM DIRECTORY & LIFECYCLE)
-               ========================================================================= */}
             {activeTab === 'gyms' && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <input
-                      type="text"
-                      placeholder="Kulüp adı veya kod ile ara…"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs text-white placeholder-slate-500 focus:border-teal-500 focus:outline-none w-64"
-                    />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'SUSPENDED')}
-                      className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 focus:border-teal-500 focus:outline-none"
-                    >
-                      <option value="ALL">Tüm Durumlar</option>
-                      <option value="ACTIVE">Yalnızca Aktif</option>
-                      <option value="SUSPENDED">Yalnızca Askıda</option>
-                    </select>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddGymModal(true)}
-                    className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-500 transition shadow-sm"
-                  >
-                    + Yeni Kulüp Aç
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/90">
-                  <table className="min-w-full divide-y divide-slate-800 text-xs">
-                    <thead>
-                      <tr className="bg-slate-950/60 text-left text-slate-400 font-semibold">
-                        <th className="px-4 py-3.5">Kulüp & Kod</th>
-                        <th className="px-4 py-3.5">Durum</th>
-                        <th className="px-4 py-3.5">Toplam Üye</th>
-                        <th className="px-4 py-3.5">Aktif Abonelik</th>
-                        <th className="px-4 py-3.5">Toplam Ciro</th>
-                        <th className="px-4 py-3.5 text-right">Aksiyonlar</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
-                      {filteredTenants.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="py-8 text-center text-slate-500">
-                            Arama kriterine uygun kulüp bulunamadı.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredTenants.map((t) => (
-                          <tr key={t.id} className="hover:bg-slate-800/40 transition">
-                            <td className="px-4 py-3.5">
-                              <div className="font-bold text-white">{t.name}</div>
-                              <div className="font-mono text-[11px] text-slate-500">{t.location_code}</div>
-                              {t.suspension_reason && (
-                                <div className="mt-1 text-[10px] text-rose-400">
-                                  Gerekçe: {t.suspension_reason}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <StatusBadge status={t.status} />
-                            </td>
-                            <td className="px-4 py-3.5 font-medium">{t.member_count}</td>
-                            <td className="px-4 py-3.5 font-medium text-emerald-400">{t.active_membership_count}</td>
-                            <td className="px-4 py-3.5 font-bold text-white">{formatMinor(t.revenue_minor)}</td>
-                            <td className="px-4 py-3.5 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => void enterTenant(t.id)}
-                                  disabled={switching === t.id}
-                                  className="rounded-lg bg-teal-600/20 border border-teal-500/30 px-3 py-1 text-xs font-bold text-teal-300 hover:bg-teal-600/30 transition"
-                                >
-                                  {switching === t.id ? 'Bağlanıyor…' : 'Kulübe Geç'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setBreakGlassTarget(t)
-                                    setBgReason('')
-                                    setBgTicket('')
-                                    setBgError(null)
-                                  }}
-                                  className="rounded-lg bg-purple-950/60 border border-purple-800/80 px-2.5 py-1 text-xs font-medium text-purple-300 hover:bg-purple-900/60 transition"
-                                  title="Denetimli Acil Destek Girişi"
-                                >
-                                  Break-Glass
-                                </button>
-                                {t.status === 'ACTIVE' ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSuspendTarget(t)
-                                      setSuspendReason('')
-                                      setSuspendError(null)
-                                    }}
-                                    className="rounded-lg bg-rose-950/60 border border-rose-800/80 px-2.5 py-1 text-xs font-medium text-rose-300 hover:bg-rose-900/60 transition"
-                                  >
-                                    Askıya Al
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleReactivateGym(t)}
-                                    className="rounded-lg bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-900/60 transition"
-                                  >
-                                    Yeniden Aç
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <GymsTab
+                tenants={filteredTenants}
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                switching={switching}
+                onSearchChange={setSearchQuery}
+                onStatusFilterChange={setStatusFilter}
+                onOpenAddGym={() => setShowAddGymModal(true)}
+                onEnterTenant={enterTenant}
+                onOpenBreakGlass={(t) => {
+                  setBreakGlassTarget(t)
+                  setBgReason('')
+                  setBgTicket('')
+                  setBgError(null)
+                }}
+                onOpenSuspend={(t) => {
+                  setSuspendTarget(t)
+                  setSuspendReason('')
+                  setSuspendError(null)
+                }}
+                onReactivate={handleReactivateGym}
+              />
             )}
-
-            {/* =========================================================================
-                TAB 3: FEDERASYON PASAPORTU (CROSS-CLUB ROAMING)
-               ========================================================================= */}
             {activeTab === 'passport' && (
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <h2 className="text-sm font-bold uppercase tracking-wide text-white">
-                        🛂 Federasyon Pasaportu ve Dolaşım Matrisi
-                      </h2>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Sporcuların kendi kayıtlı kulüpleri dışındaki federasyon salonlarına misafir olarak girebilme
-                        kuralları ve mahsuplaşma ayarları.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/90">
-                  <table className="min-w-full divide-y divide-slate-800 text-xs">
-                    <thead>
-                      <tr className="bg-slate-950/60 text-left text-slate-400 font-semibold">
-                        <th className="px-4 py-3.5">Kulüp Adı</th>
-                        <th className="px-4 py-3.5">Pasaport Durumu</th>
-                        <th className="px-4 py-3.5">Kabul Edilen Paket Seviyeleri</th>
-                        <th className="px-4 py-3.5">Aylık Misafir Giriş Limiti</th>
-                        <th className="px-4 py-3.5">Ziyaret Başı Mahsuplaşma</th>
-                        <th className="px-4 py-3.5 text-right">Aksiyon</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
-                      {tenants.map((t) => {
-                        const p = passports.find((cfg) => cfg.tenant_id === t.id)
-                        return (
-                          <tr key={t.id} className="hover:bg-slate-800/40 transition">
-                            <td className="px-4 py-3.5 font-bold text-white">{t.name}</td>
-                            <td className="px-4 py-3.5">
-                              {p?.is_active ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-                                  Dolaşıma Açık
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-400">
-                                  Kapalı
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3.5 font-mono text-[11px] text-teal-300">
-                              {p?.allowed_home_gym_tiers ?? 'VIP,GOLD'}
-                            </td>
-                            <td className="px-4 py-3.5 font-medium">
-                              {p?.rules?.max_monthly_roaming_visits ?? 5} ziyaret / ay
-                            </td>
-                            <td className="px-4 py-3.5 font-medium text-amber-400">
-                              {p?.rules?.guest_fee_minor ? formatMinor(p.rules.guest_fee_minor) : '₺0,00'}
-                            </td>
-                            <td className="px-4 py-3.5 text-right">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setPassportTarget(t)
-                                  setPassportActive(p?.is_active ?? true)
-                                  setPassportTiers(p?.allowed_home_gym_tiers ?? 'VIP,GOLD')
-                                  setPassportMaxVisits(p?.rules?.max_monthly_roaming_visits ?? 5)
-                                  setPassportFeeMinor((p?.rules?.guest_fee_minor ?? 0) / 100)
-                                  setPassportError(null)
-                                }}
-                                className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200 hover:bg-slate-700 transition"
-                              >
-                                Kuralları Düzenle
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <PassportTab
+                tenants={tenants}
+                passports={passports}
+                onEdit={(t, p) => {
+                  setPassportTarget(t)
+                  setPassportActive(p?.is_active ?? true)
+                  setPassportTiers(p?.allowed_home_gym_tiers ?? 'VIP,GOLD')
+                  setPassportMaxVisits(p?.rules?.max_monthly_roaming_visits ?? 5)
+                  setPassportFeeMinor((p?.rules?.guest_fee_minor ?? 0) / 100)
+                  setPassportError(null)
+                }}
+              />
             )}
-
-            {/* =========================================================================
-                TAB 4: UYUMLULUK & DENETİM (COMPLIANCE & AUDITS)
-               ========================================================================= */}
             {activeTab === 'compliance' && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wide text-white">
-                      🛡️ Federasyon Muayene, Kalite ve Sertifikasyon Kayıtları
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-400">
-                      TSE, ISO, Hijyen ve Antrenör Yeterlilik denetimlerinin resmi sicili.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowComplianceModal(true)
-                      setCompCertName('')
-                      setCompNotes('')
-                      setCompError(null)
-                    }}
-                    className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-500 transition shadow-sm"
-                  >
-                    + Yeni Denetim Kaydı Ekle
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/90">
-                  <table className="min-w-full divide-y divide-slate-800 text-xs">
-                    <thead>
-                      <tr className="bg-slate-950/60 text-left text-slate-400 font-semibold">
-                        <th className="px-4 py-3.5">Kulüp</th>
-                        <th className="px-4 py-3.5">Sertifika / Standart</th>
-                        <th className="px-4 py-3.5">Sonuç Durumu</th>
-                        <th className="px-4 py-3.5">Denetim Tarihi</th>
-                        <th className="px-4 py-3.5">Denetçi Notları</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
-                      {compliance.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-500">
-                            Henüz kayıtlı bir denetim veya sertifikasyon kaydı bulunmuyor.
-                          </td>
-                        </tr>
-                      ) : (
-                        compliance.map((c) => {
-                          const t = tenants.find((item) => item.id === c.tenant_id)
-                          return (
-                            <tr key={c.id} className="hover:bg-slate-800/40 transition">
-                              <td className="px-4 py-3.5 font-bold text-white">{t?.name ?? c.tenant_id.slice(0, 8)}</td>
-                              <td className="px-4 py-3.5 font-semibold text-teal-300">{c.certification_name}</td>
-                              <td className="px-4 py-3.5">
-                                <StatusBadge status={c.status} />
-                              </td>
-                              <td className="px-4 py-3.5 text-slate-400">
-                                {new Date(c.audit_date).toLocaleDateString('tr-TR')}
-                              </td>
-                              <td className="px-4 py-3.5 text-slate-400">{c.auditor_notes ?? '—'}</td>
-                            </tr>
-                          )
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <ComplianceTab
+                tenants={tenants}
+                compliance={compliance}
+                onOpenAdd={() => {
+                  setShowComplianceModal(true)
+                  setCompCertName('')
+                  setCompNotes('')
+                  setCompError(null)
+                }}
+              />
             )}
-
-            {/* =========================================================================
-                TAB 5: AĞ DUYURULARI (NETWORK ALERTS)
-               ========================================================================= */}
             {activeTab === 'alerts' && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wide text-white">
-                      📢 Federasyon ve Ağ Düzeyinde Duyuru Yayını
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Tüm kulüplere veya seçili bir kulübün yönetim paneline resmi duyuru ve uyarılar yayınlayın.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAlertModal(true)
-                      setAlertTitle('')
-                      setAlertMessage('')
-                      setAlertSeverity('INFO')
-                      setAlertTargetTenant('')
-                      setAlertError(null)
-                    }}
-                    className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-500 transition shadow-sm"
-                  >
-                    + Yeni Duyuru Yayınla
-                  </button>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  {alerts.length === 0 ? (
-                    <div className="col-span-2">
-                      <EmptyState title="Aktif duyuru yok" description="Ağ genelinde yayınlanmış bir duyuru bulunmuyor." />
-                    </div>
-                  ) : (
-                    alerts.map((a) => {
-                      const t = tenants.find((item) => item.id === a.target_tenant_id)
-                      const border =
-                        a.severity === 'CRITICAL'
-                          ? 'border-rose-800/80 bg-rose-950/30'
-                          : a.severity === 'WARNING'
-                            ? 'border-amber-800/80 bg-amber-950/30'
-                            : a.severity === 'MAINTENANCE'
-                              ? 'border-purple-800/80 bg-purple-950/30'
-                              : 'border-teal-800/80 bg-teal-950/30'
-                      return (
-                        <div key={a.id} className={`rounded-2xl border p-5 ${border} flex flex-col justify-between`}>
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-slate-900 px-2 py-0.5 text-white">
-                                {a.severity}
-                              </span>
-                              <span className="text-[11px] text-slate-400">
-                                {new Date(a.created_at).toLocaleString('tr-TR')}
-                              </span>
-                            </div>
-                            <h3 className="mt-3 text-sm font-bold text-white">{a.title}</h3>
-                            <p className="mt-2 text-xs leading-relaxed text-slate-300">{a.message}</p>
-                          </div>
-                          <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 text-[11px]">
-                            <span className="text-slate-400">
-                              Hedef: <strong className="text-slate-200">{t ? t.name : 'Tüm Federasyon Kulüpleri'}</strong>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => void handleDeleteAlert(a.id)}
-                              className="text-rose-400 hover:underline font-semibold"
-                            >
-                              Yayından Kaldır
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              </div>
+              <AlertsTab
+                tenants={tenants}
+                alerts={alerts}
+                onOpenCreate={() => {
+                  setShowAlertModal(true)
+                  setAlertTitle('')
+                  setAlertMessage('')
+                  setAlertSeverity('INFO')
+                  setAlertTargetTenant('')
+                  setAlertError(null)
+                }}
+                onDelete={handleDeleteAlert}
+              />
             )}
-
-            {/* =========================================================================
-                TAB 6: RAPORLAR & ANALİTİK (CROSS-TENANT ANALYTICS)
-               ========================================================================= */}
             {activeTab === 'reports' && (
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wide text-white">
-                      📈 Konsolide Ağ Analitiği & Finansal Raporlar
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Tüm kulüplerin toplam ciro, turnike geçiş ve büyüme verileri.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={exportCSV}
-                    className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-bold text-teal-400 hover:bg-slate-800 transition"
-                  >
-                    📥 Konsolide Ağ Verisini İndir (.csv)
-                  </button>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Konsolide Ciro
-                    </span>
-                    <div className="mt-2 text-2xl font-extrabold text-white">
-                      {analytics ? formatMinor(analytics.total_revenue_minor) : '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Toplam Turnike Geçişi
-                    </span>
-                    <div className="mt-2 text-2xl font-extrabold text-teal-400">
-                      {analytics ? analytics.total_checkins.toLocaleString('tr-TR') : '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Kulüp Başına Ortalama Ciro
-                    </span>
-                    <div className="mt-2 text-2xl font-extrabold text-emerald-400">
-                      {analytics && tenants.length > 0
-                        ? formatMinor(Math.trunc(analytics.total_revenue_minor / tenants.length))
-                        : '—'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/90">
-                  <table className="min-w-full divide-y divide-slate-800 text-xs">
-                    <thead>
-                      <tr className="bg-slate-950/60 text-left text-slate-400 font-semibold">
-                        <th className="px-4 py-3.5">Kulüp</th>
-                        <th className="px-4 py-3.5">Turnike Geçiş Adedi</th>
-                        <th className="px-4 py-3.5">Tahsil Edilen Ciro</th>
-                        <th className="px-4 py-3.5">Ağ Cirosundaki Payı</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
-                      {tenants.map((t) => {
-                        const clubRev = analytics?.revenue_by_tenant_minor[t.id] ?? t.revenue_minor
-                        const totalRev = analytics?.total_revenue_minor ?? 1
-                        const share = totalRev > 0 ? ((clubRev / totalRev) * 100).toFixed(1) : '0'
-                        const checkins = analytics?.checkins_by_tenant[t.id] ?? 0
-                        return (
-                          <tr key={t.id} className="hover:bg-slate-800/40 transition">
-                            <td className="px-4 py-3.5 font-bold text-white">{t.name}</td>
-                            <td className="px-4 py-3.5 font-medium text-teal-300">{checkins} geçiş</td>
-                            <td className="px-4 py-3.5 font-bold text-white">{formatMinor(clubRev)}</td>
-                            <td className="px-4 py-3.5">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-24 rounded-full bg-slate-800 overflow-hidden">
-                                  <div
-                                    className="h-full bg-teal-400 rounded-full"
-                                    style={{ width: `${Math.min(100, Number(share))}%` }}
-                                  />
-                                </div>
-                                <span className="text-[11px] text-slate-400">%{share}</span>
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <ReportsTab tenants={tenants} analytics={analytics} onExportCsv={exportCSV} />
             )}
           </>
         )}
 
-        {/* =========================================================================
-            MODALLAR
-           ========================================================================= */}
-
-        {/* Modal: Yeni Kulüp Aç */}
         {showAddGymModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
@@ -1223,7 +622,6 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        {/* Modal: Askıya Al */}
         {suspendTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-rose-900/80 bg-slate-900 p-6 shadow-xl">
@@ -1266,7 +664,6 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        {/* Modal: Break-Glass Acil Destek Girişi */}
         {breakGlassTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-purple-900/80 bg-slate-900 p-6 shadow-xl">
@@ -1331,7 +728,6 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        {/* Modal: Pasaport Düzenle */}
         {passportTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
@@ -1408,7 +804,6 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        {/* Modal: Yeni Denetim Kaydı Ekle */}
         {showComplianceModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
@@ -1484,7 +879,6 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        {/* Modal: Yeni Duyuru Yayınla */}
         {showAlertModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">

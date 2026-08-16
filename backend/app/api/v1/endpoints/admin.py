@@ -13,9 +13,29 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import FederationScope, get_db, get_federation_scope
+from app.services.break_glass import BreakGlassService
 from app.services.federation import MAX_TENANT_PAGE, FederationService
 
 router = APIRouter()
+
+
+async def _require_superuser_break_glass(
+    db: AsyncSession, scope: FederationScope, tenant_id: UUID | None
+) -> None:
+    """Platform superusers must hold a live break-glass ticket for tenant writes."""
+    if not scope.user.is_superuser:
+        return
+    bg = BreakGlassService(db)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=403,
+            detail="break_glass_required",
+        )
+    active = await bg.check_active_session(
+        actor_id=scope.user.id, tenant_id=tenant_id
+    )
+    if active is None:
+        raise HTTPException(status_code=403, detail="break_glass_required")
 
 
 # ----- Schemas -----
@@ -184,6 +204,11 @@ async def create_tenant(
     db: AsyncSession = Depends(get_db),
 ):
     """Provision a new gym tenant under an authorized organization."""
+    if scope.user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail="break_glass_required",
+        )
     if scope.org_ids is not None and body.organization_id not in scope.org_ids:
         raise HTTPException(
             status_code=403, detail="Bu organizasyon için kulüp oluşturma yetkiniz yok."
@@ -245,6 +270,7 @@ async def suspend_tenant(
     db: AsyncSession = Depends(get_db),
 ):
     """Suspend a tenant for policy or compliance violations."""
+    await _require_superuser_break_glass(db, scope, tenant_id)
     svc = FederationService(db)
     tenant = await svc.get_tenant(tenant_id, scope.org_ids)
     if tenant is None:
@@ -275,6 +301,7 @@ async def reactivate_tenant(
     db: AsyncSession = Depends(get_db),
 ):
     """Reactivate a suspended tenant."""
+    await _require_superuser_break_glass(db, scope, tenant_id)
     svc = FederationService(db)
     tenant = await svc.get_tenant(tenant_id, scope.org_ids)
     if tenant is None:

@@ -483,6 +483,128 @@ async def list_my_consents(
     return list(result.scalars().all())
 
 
+class MeDsarRequestResponse(BaseModel):
+    id: UUID
+    kind: str
+    status: str
+    due_at: datetime
+    created: bool = False
+    download_url: str | None = None
+    rejection_reason: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+@router.get("/dsar", response_model=list[MeDsarRequestResponse])
+async def list_my_dsar(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarService
+
+    svc = DsarService(db)
+    rows = await svc.list_for_member(tenant_id, member.id)
+    out: list[MeDsarRequestResponse] = []
+    for row in rows:
+        out.append(
+            MeDsarRequestResponse(
+                id=row.id,
+                kind=row.kind,
+                status=row.status,
+                due_at=row.due_at,
+                download_url=await svc.download_url(tenant_id, row),
+                rejection_reason=row.rejection_reason,
+            )
+        )
+    return out
+
+
+@router.post("/dsar/export", response_model=MeDsarRequestResponse, status_code=201)
+async def request_my_dsar_export(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Package the bound member's self-service data. Erasure is not this path."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarService
+
+    svc = DsarService(db)
+    try:
+        row, created = await svc.request_export(
+            tenant_id, member, requested_by_user_id=current_user.id
+        )
+        await db.commit()
+        await db.refresh(row)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return MeDsarRequestResponse(
+        id=row.id,
+        kind=row.kind,
+        status=row.status,
+        due_at=row.due_at,
+        created=created,
+        download_url=await svc.download_url(tenant_id, row),
+        rejection_reason=row.rejection_reason,
+    )
+
+
+@router.post("/dsar/erasure", response_model=MeDsarRequestResponse, status_code=201)
+async def request_my_dsar_erasure(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Anonymize the bound member. Open invoices are a legal hold (409)."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:write",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarLegalHold, DsarService
+
+    svc = DsarService(db)
+    try:
+        row, created = await svc.request_erasure(
+            tenant_id, member, requested_by_user_id=current_user.id
+        )
+        await db.commit()
+        await db.refresh(row)
+    except DsarLegalHold as e:
+        await db.commit()
+        raise HTTPException(status_code=409, detail=e.reason) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return MeDsarRequestResponse(
+        id=row.id,
+        kind=row.kind,
+        status=row.status,
+        due_at=row.due_at,
+        created=created,
+        download_url=None,
+        rejection_reason=row.rejection_reason,
+    )
+
+
 @router.post("/consents", response_model=MeConsentRecordResponse)
 async def record_my_consent(
     body: MeConsentRecordRequest,

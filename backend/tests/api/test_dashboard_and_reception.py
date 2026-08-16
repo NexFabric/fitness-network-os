@@ -58,7 +58,10 @@ async def _staff_user(
     perms_needed = [
         "gym:read",
         "members:read",
+        "members:read:all",
         "members:write",
+        "reception:read",
+        "finance:read",
         "checkins:read",
         "checkins:write",
         "access:override",
@@ -245,6 +248,7 @@ async def test_dashboard_kpis_aggregation(api_client, pg_engine):
     assert data["past_due_invoices_amount_minor"] == 10000
     assert data["month_collected_amount_minor"] == 5000
     assert data["total_outstanding_debt_minor"] == 10000
+    assert data["finance_visible"] is True
 
 
 @pytest.mark.asyncio

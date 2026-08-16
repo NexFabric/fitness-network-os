@@ -1,9 +1,10 @@
 # Uygulama hazır — çalıştırma özeti
 
-**Tarih:** 2026-08-13
-**Main:** `837cec4` — PR #55 ve #57 merge edildi, açık PR yok.
-**Alembic head:** `w6d7e8f9a0b1`.
+**Tarih:** 2026-08-16
+**Branch:** `feat/public-site-modernization-and-seo`
+**Alembic head:** `xe6f7a8b9c0d`.
 **Production-ready?** **NO** — kod kapıları kapandı; restore/PITR tatbikatı, gerçek S3 staging kanıtı ve bağımsız pentest açık.
+**Privileged MFA:** `GYM_OWNER` / staff / federation login TOTP ister. `seed_demo.py` MFA’sız owner üretir ve `/mfa/setup`’a düşer; portal E2E için `seed_role_matrix.py` kullan.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
 ## Servis URL’leri
@@ -35,6 +36,7 @@ alembic upgrade head
 DATABASE_URL=postgresql+asyncpg://fitness_app:fitness_app_password@localhost:5433/fitness_os
 MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_os
 REDIS_URL=redis://localhost:6379/0
+ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
 ```
 
 If role `fitness_app` is missing (volume predates `postgres-init.sql`), create it once:
@@ -88,29 +90,31 @@ uv run python scripts/seed_role_matrix.py   # idempotent; prints credentials as 
 |-------|------|----------|
 | `e2e.owner@e2e.local` | `GYM_OWNER` | ops console |
 | `e2e.trainer@e2e.local` | `TRAINER` | trainer portal (assigned members only) |
-| `e2e.member@e2e.local` | `MEMBER` | athlete portal |
+| `e2e.member@e2e.local` | `MEMBER` | athlete portal (MFA yok) |
 | `e2e.analyst@e2e.local` | `FEDERATION_ANALYST` | federation console |
+| `e2e.desk@e2e.local` | `FRONT_DESK` | resepsiyon (seed güncellenince) |
 
-Password for all four: `E2ePortal123!` (local fixture, never a real secret).
-Routing after login is role-based, and cross-portal URLs are denied by
-`RequireRole` — see `docs/RBAC.md`. This seed also backs the Playwright suite:
+Password: `E2ePortal123!`. Staff/owner/analyst için TOTP: `E2E_OWNER_TOTP_SECRET` (varsayılan `JBSWY3DPEHPK3PXP`).
+`docker compose up` now runs `alembic upgrade head` via the `migrate` one-shot
+before API/workers start. Vite (`:5173` / `:5174`) still runs on the host.
 
 ```bash
-cd frontend/e2e && npx playwright test    # 21 tests, starts :5173/:5174 itself
+cd frontend/e2e && npx playwright test    # ~40 test; kendi uvicorn :8000 + Vite’ı açar
+# config backend/.env yükler (ENCRYPTION_KEY seed TOTP ile eşleşmeli)
 ```
 
-### Password login (preferred API check)
+### Password + MFA login (API check)
 
 ```bash
 # Get CSRF
 curl -sS -c cookie.txt http://localhost:8000/api/v1/auth/csrf
 
-# Login
+# Privileged login needs a current TOTP in mfa_code (owner/trainer/desk/analyst).
 curl -sS -X POST http://localhost:8000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -H 'X-CSRF-Token: <token>' \
   -b cookie.txt -c cookie.txt \
-  -d '{"email":"demo.admin@demo.local","password":"DemoAdmin123!"}'
+  -d '{"email":"e2e.owner@e2e.local","password":"E2ePortal123!","mfa_code":"<totp>"}'
 
 # Check API
 curl -sS \
@@ -158,8 +162,14 @@ non-extractable `CryptoKey` — the plaintext is never stored.
 Every later device request must carry `X-Device-Timestamp`, `X-Device-Nonce` and
 `X-Device-Signature` = HMAC-SHA256 over
 `METHOD\npath\ntimestamp\nnonce\nsha256(body)`, within ±300s. A request without a
-valid signature is 401 regardless of the cookie (ADR-044). Unpaired scanners keep
-working through the staff path `/api/v1/access/qr/validate`.
+valid signature is 401 regardless of the cookie (ADR-044). Unpaired scanners must
+pair via device ID + API key (`POST /devices/auth`); there is no staff-login fallback.
+
+Compose starts migrate → API + notification/outbox/report/retention workers.
+It does **not** start Vite (`:5173` / `:5174`). Davet kabul: `/invite?token=…`.
+Kurulum sihirbazı: `/onboarding`. Elle kanıt şablonu: `docs/ops/HAND1_BROWSER_PROOF.md`.
+Production compose (`docker-compose.prod.yml`) needs a real `.env` from
+`.env.production.example` — empty S3/KMS/Fernet will fail closed at boot.
 
 ## API surface notes
 

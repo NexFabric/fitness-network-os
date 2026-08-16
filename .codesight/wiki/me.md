@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Me subsystem handles **13 routes** and touches: auth, db.
+The Me subsystem handles **16 routes** and touches: auth, db.
 
 ## Routes
 
@@ -21,6 +21,12 @@ The Me subsystem handles **13 routes** and touches: auth, db.
 - `POST` `/entitlements/check` → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
   `backend/app/api/v1/endpoints/me.py`
 - `GET` `/consents` → in: AsyncSessio, out: MeSessionResponse [auth, db]
+  `backend/app/api/v1/endpoints/me.py`
+- `GET` `/dsar` → in: AsyncSessio, out: MeSessionResponse [auth]
+  `backend/app/api/v1/endpoints/me.py`
+- `POST` `/dsar/export` → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
+  `backend/app/api/v1/endpoints/me.py`
+- `POST` `/dsar/erasure` → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
   `backend/app/api/v1/endpoints/me.py`
 - `POST` `/consents` → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
   `backend/app/api/v1/endpoints/me.py`

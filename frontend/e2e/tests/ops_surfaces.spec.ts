@@ -1,5 +1,43 @@
+import { execFile } from 'node:child_process'
+import path from 'node:path'
+import { promisify } from 'node:util'
 import { test, expect, type Page } from '@playwright/test'
 import { completeOwnerMfaIfNeeded } from './helpers/auth'
+
+const execFileAsync = promisify(execFile)
+const backendDir = path.resolve(process.cwd(), '../../backend')
+
+async function drainReportQueue() {
+  for (let i = 0; i < 8; i += 1) {
+    const { stdout } = await execFileAsync(
+      'uv',
+      [
+        'run',
+        'python',
+        '-c',
+        'import asyncio; from app.workers.report import run_cycle; print(asyncio.run(run_cycle()))',
+      ],
+      {
+        cwd: backendDir,
+        env: {
+          ...process.env,
+          DATABASE_URL:
+            process.env.DATABASE_URL ??
+            'postgresql+asyncpg://fitness_app:fitness_app_password@localhost:5433/fitness_os',
+          MIGRATOR_DATABASE_URL:
+            process.env.MIGRATOR_DATABASE_URL ??
+            'postgresql+asyncpg://postgres:postgres@localhost:5433/fitness_os',
+          REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379/0',
+          ENCRYPTION_KEY:
+            process.env.ENCRYPTION_KEY ??
+            'MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=',
+          ENVIRONMENT: 'development',
+        },
+      },
+    )
+    if (Number.parseInt(stdout.trim(), 10) === 0) return
+  }
+}
 
 /**
  * The operations surfaces added on top of endpoints that had no UI:
@@ -94,6 +132,19 @@ test.describe('reports', () => {
     // The run is queued or already finished — either way the panel appears and
     // the status is rendered rather than swallowed.
     await expect(item.getByRole('button', { name: 'Durumu yenile' })).toBeVisible()
+
+    await drainReportQueue()
+    await item.getByRole('button', { name: 'Durumu yenile' }).click()
+    const artifact = item.getByRole('link', { name: 'Çıktıyı aç' })
+    await expect(artifact).toBeVisible({ timeout: 15_000 })
+    const href = await artifact.getAttribute('href')
+    expect(href).toBeTruthy()
+    if (href?.startsWith('http')) {
+      const res = await page.request.get(href)
+      expect(res.status()).toBe(200)
+    } else {
+      expect(href).toMatch(/^file:\/\//)
+    }
 
     // And it survives a reload, because runs now come from the list endpoint.
     await page.reload()

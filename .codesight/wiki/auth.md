@@ -2,13 +2,15 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Auth subsystem handles **6 routes** and touches: auth, db.
+The Auth subsystem handles **7 routes** and touches: auth, db.
 
 ## Routes
 
 - `GET` `/csrf` → out: CsrfResponse [auth]
   `backend/app/api/v1/endpoints/auth.py`
 - `POST` `/login` → in: LoginRequest, out: CsrfResponse [auth, db]
+  `backend/app/api/v1/endpoints/auth.py`
+- `POST` `/invite/accept` → in: LoginRequest, out: CsrfResponse [auth]
   `backend/app/api/v1/endpoints/auth.py`
 - `POST` `/password` → in: LoginRequest, out: CsrfResponse [auth, db]
   `backend/app/api/v1/endpoints/auth.py`

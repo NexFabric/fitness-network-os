@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { completeOwnerMfaIfNeeded } from './helpers/auth'
 
 const PASSWORD = 'E2ePortal123!'
 const ANALYST_EMAIL = 'e2e.analyst@e2e.local'
@@ -8,6 +9,7 @@ async function loginFederationAdmin(page: Page) {
   await page.fill('input[type="email"]', ANALYST_EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
   await page.click('button[type="submit"]')
+  await completeOwnerMfaIfNeeded(page, ANALYST_EMAIL)
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15_000 })
 }
 

@@ -1,3 +1,10 @@
+"""Growth CRM tables are schema-only.
+
+There is no public API. Do not add endpoints or drop these tables: they carry
+tenant_id + RLS and the money-int / RLS tests. Expand only with a product
+decision and an ADR.
+"""
+
 from datetime import datetime
 from uuid import UUID
 

@@ -15,6 +15,7 @@ _BASE_PROD = {
     "REPORT_STORAGE_PROVIDER": "s3",
     "S3_BUCKET_NAME": "prod-reports",
     "METRICS_BEARER_TOKEN": "x" * 32,
+    "ENCRYPTION_KEY": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
 }
 
 
@@ -41,3 +42,16 @@ def test_production_accepts_valid_aws_kms_config():
         }
     )
     s.validate_production()  # Does not raise
+
+
+def test_production_rejects_missing_encryption_key():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "alias/gym-qr",
+            "ENCRYPTION_KEY": "",
+        }
+    )
+    with pytest.raises(RuntimeError, match="ENCRYPTION_KEY"):
+        s.validate_production()

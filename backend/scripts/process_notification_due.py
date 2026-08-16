@@ -45,7 +45,10 @@ async def process_due_for_tenant(
 
     token = current_tenant_id_var.set(tenant_id)
     try:
-        await session.execute(text(f"SET LOCAL app.current_tenant_id = '{tenant_id}'"))
+        await session.execute(
+            text("SELECT set_config('app.current_tenant_id', :tid, true)"),
+            {"tid": str(tenant_id)},
+        )
         svc = NotificationService(session)
         stats = await svc.process_due_failed(
             tenant_id, limit=limit, max_attempts=max_attempts

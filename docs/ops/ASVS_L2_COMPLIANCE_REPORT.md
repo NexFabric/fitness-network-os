@@ -20,7 +20,7 @@
 ## 1. Architecture, Design and Threat Modeling
 - [x] Multi-tenant isolation enforced at the database layer via PostgreSQL RLS with `FORCE ROW LEVEL SECURITY`; context set transaction-scoped (`SET LOCAL app.current_tenant_id`) and re-armed after commit (`app/db/session.py`).
 - [x] Modular monolith (Auth, Gym Core, Access, Finance, Outbox). No unauthenticated internal inter-service channels.
-- [x] `device_sessions` carries `tenant_id` but deliberately has no RLS policy: it is the bootstrap lookup that *derives* the tenant, so a tenant policy there would fail closed on every device request. It is the only pre-context read — `devices` and `device_nonces` are queried after `SET LOCAL app.current_tenant_id` and keep full RLS. The row holds a hashed token only, and possession of it is insufficient without the signing secret.
+- [x] `device_sessions` carries `tenant_id` but deliberately has no RLS policy: it is the bootstrap lookup that *derives* the tenant, so a tenant policy there would fail closed on every device request. It is the only pre-context read — `devices` and `device_nonces` are queried after `SET LOCAL app.current_tenant_id` and keep full RLS. The session cookie hash is stored as SHA-256. Signing material is Fernet-wrapped (`fernet:hmac:`) under `ENCRYPTION_KEY`; a cookie alone is still not a usable credential (ADR-044).
 
 ## 2. Authentication
 - [x] Password storage uses Argon2id (`passlib.context.CryptContext`). No MD5/SHA1 legacy hashes.

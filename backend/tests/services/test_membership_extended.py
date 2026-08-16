@@ -69,6 +69,23 @@ async def test_start_and_overlap(pg_session_maker, setup_data):
         # Should succeed
         m1 = await service.start_membership(member_id, pv1_id, now, tenant_id)
         assert m1.status == "ACTIVE"
+        from sqlalchemy import select as sa_select
+
+        from app.core.event_types import MEMBERSHIP_ACTIVATED_V1
+        from app.models.outbox import OutboxEvent
+
+        events = list(
+            (
+                await session.execute(
+                    sa_select(OutboxEvent).where(
+                        OutboxEvent.tenant_id == tenant_id,
+                        OutboxEvent.event_type == MEMBERSHIP_ACTIVATED_V1,
+                    )
+                )
+            ).scalars()
+        )
+        assert len(events) == 1
+        assert str(m1.id) in str(events[0].payload)
         await session.commit()
 
     async with pg_session_maker() as session:

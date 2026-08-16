@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { ArrowRight, ShieldCheck, Terminal, Cpu, Activity, Lock } from "lucide-react";
 
 export function Hero() {
@@ -47,7 +48,8 @@ export function Hero() {
             style={{ textWrap: "balance" }}
           >
             Spor kulüpleri, stüdyolar ve tesis zincirleri için yüksek güvenlikli
-            işletim sistemi. Donanım entegrasyonu, dinamik QR turnike ve sıfır mutabakat hatası.
+            işletim sistemi. Donanım entegrasyonu, dinamik QR turnike ve kuruş
+            cinsinden faturalama.
           </motion.p>
 
           {/* Premium Button Actions */}
@@ -57,14 +59,14 @@ export function Hero() {
             transition={{ duration: 0.45, delay: 0.24 }}
             className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
           >
-            <a
+            <Link
               href="/#demo"
               className="btn-primary group inline-flex h-12 items-center gap-2 rounded-xl px-7 text-sm font-semibold text-white"
             >
               Demoyu başlat
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
-            <a
+            </Link>
+            <Link
               href="/#features"
               className="btn-secondary inline-flex h-12 items-center gap-2 rounded-xl px-6 text-sm font-medium text-foreground"
             >
@@ -72,7 +74,7 @@ export function Hero() {
               <span aria-hidden="true" className="ml-1">
                 →
               </span>
-            </a>
+            </Link>
           </motion.div>
         </div>
 
