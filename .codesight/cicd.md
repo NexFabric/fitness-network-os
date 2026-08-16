@@ -42,7 +42,7 @@
   - `actions/checkout@v7`
   - `actions/setup-python@v7`
   - `actions/setup-node@v7`
-  - `actions/upload-artifact@v4`
+  - `actions/upload-artifact@v7`
 - **codeql** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v7`
   - `github/codeql-action/init@v4`

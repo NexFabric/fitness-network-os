@@ -48,12 +48,12 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **73** files
-- `backend/app/models/tenant.py` — imported by **67** files
-- `backend/app/models/organization.py` — imported by **60** files
+- `backend/app/models/user.py` — imported by **75** files
+- `backend/app/models/tenant.py` — imported by **69** files
+- `backend/app/models/organization.py` — imported by **62** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/member.py` — imported by **45** files
-- `backend/app/models/rbac.py` — imported by **44** files
+- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **45** files
 
 ## Required Environment Variables
 
@@ -69,7 +69,6 @@ Changes to these files have the widest blast radius across the codebase:
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`
 - `SMTP_USER` — `backend/app/services/notification_providers.py`
 - `TEST_DATABASE_URL` — `backend/scripts/check_permissions_db.py`
-- _...1 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-08-16_

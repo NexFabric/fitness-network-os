@@ -12,18 +12,19 @@ import json
 import sys
 from pathlib import Path
 
-# Anti-regression floors from GitHub CI on 1bf1975 (2026-08-16):
-# finance HTTP 39.36, booking 33.00, notification worker 44.19.
-# Do not invent a 70% bar those files do not have.
+# Per-module floors. P1 depth raise (2026-08-16) is measured on the tests
+# that execute these modules, then buffered a few points below:
+# finance HTTP 66%, booking 99%, data_import 97%, dsar 100%.
+# Remaining worker floors stay at the prior anti-regression bars.
 FLOORS: dict[str, float] = {
     "app/core/security.py": 70.0,
     "app/core/session_policy.py": 80.0,
     "app/services/finance.py": 75.0,
-    "app/api/v1/endpoints/finance.py": 38.0,
+    "app/api/v1/endpoints/finance.py": 60.0,
     "app/services/access.py": 80.0,
-    "app/services/booking.py": 32.0,
-    "app/services/data_import.py": 30.0,
-    "app/services/dsar.py": 48.0,
+    "app/services/booking.py": 85.0,
+    "app/services/data_import.py": 85.0,
+    "app/services/dsar.py": 88.0,
     "app/workers/report.py": 70.0,
     "app/workers/notification.py": 43.0,
     "app/workers/outbox.py": 60.0,

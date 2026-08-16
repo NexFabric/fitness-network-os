@@ -32,7 +32,7 @@
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
 - `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
 - `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
-- `VITE_API_URL` **required** — frontend/admin-web/src/api/client.ts
+- `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 
 ## Config Files
