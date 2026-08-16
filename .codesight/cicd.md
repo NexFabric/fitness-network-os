@@ -43,9 +43,9 @@
   - `actions/upload-artifact@v4`
 - **codeql** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v5`
-  - `github/codeql-action/init@v3`
-  - `github/codeql-action/analyze@v3`
-- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site, production-image, browser-e2e)
+  - `github/codeql-action/init@v4`
+  - `github/codeql-action/analyze@v4`
+- **all-green** on `ubuntu-latest` — 1 steps
 
 ---
 _Source: .github/workflows/ci.yml_

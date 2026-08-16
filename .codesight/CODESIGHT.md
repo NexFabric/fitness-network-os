@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 141 routes | 86 models | 64 components | 74 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,000 tokens. **Saves ~144,400 tokens per conversation.**
-> **Last scanned:** 2026-08-16 09:19 — re-run after significant changes
+> 141 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,300 tokens. **Saves ~144,700 tokens per conversation.**
+> **Last scanned:** 2026-08-16 09:48 — re-run after significant changes
 
 ---
 
@@ -1016,6 +1016,7 @@
 - `backend/alembic/versions/xc4d5e6f7a8b_session_step_up_and_idle.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xd5e6f7a8b9c_account_invites.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xe6f7a8b9c0d_dsar_requests.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xf7a8b9c0d1e_align_model_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
@@ -1288,9 +1289,9 @@
   - `actions/upload-artifact@v4`
 - **codeql** on `ubuntu-latest` — 3 steps
   - `actions/checkout@v5`
-  - `github/codeql-action/init@v3`
-  - `github/codeql-action/analyze@v3`
-- **all-green** on `ubuntu-latest` — 1 steps (needs: test, admin-web, scanner-pwa, public-site, production-image, browser-e2e)
+  - `github/codeql-action/init@v4`
+  - `github/codeql-action/analyze@v4`
+- **all-green** on `ubuntu-latest` — 1 steps
 
 ---
 _Source: .github/workflows/ci.yml_

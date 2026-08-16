@@ -411,16 +411,26 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v5
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
-          languages: python, javascript
-      - uses: github/codeql-action/analyze@v3
+          languages: python, javascript-typescript
+      - uses: github/codeql-action/analyze@v4
 
   all-green:
     name: All Required Checks Passed
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [test, admin-web, scanner-pwa, public-site, production-image, browser-e2e]
+    needs:
+      [
+        test,
+        admin-web,
+        scanner-pwa,
+        public-site,
+        production-image,
+        frontend-images,
+        browser-e2e,
+        codeql,
+      ]
     steps:
       - name: Ready to merge
         run: echo "All required checks passed!"

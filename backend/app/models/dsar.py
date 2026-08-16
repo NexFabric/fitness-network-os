@@ -5,7 +5,16 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, String, Text, Uuid
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    String,
+    Text,
+    Uuid,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TenantMixin
@@ -49,5 +58,12 @@ class DsarRequest(Base, TenantMixin):
             ["tenant_id", "member_id"],
             ["members.tenant_id", "members.id"],
             name="fk_dsar_requests_member_tenant",
+        ),
+        Index(
+            "ix_dsar_requests_tenant_dedupe",
+            "tenant_id",
+            "dedupe_key",
+            unique=True,
+            postgresql_where=text("dedupe_key IS NOT NULL"),
         ),
     )

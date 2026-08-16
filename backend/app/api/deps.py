@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_session_token_from_cookie
 from app.core.session_policy import (
+    LAST_SEEN_THROTTLE,
     PRIVILEGED_IDLE,
     PRIVILEGED_ROLE_NAMES,
     STEP_UP_MAX_AGE,
@@ -145,8 +146,9 @@ async def _get_user_and_session(
         session.is_revoked = True
         await db.commit()
         raise HTTPException(status_code=401, detail="session_idle")
-    session.last_seen_at = now
-    await db.commit()
+    if prev_seen is None or prev_seen.tzinfo is None or now - prev_seen >= LAST_SEEN_THROTTLE:
+        session.last_seen_at = now
+        await db.commit()
 
     return user, session
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-16  
 **Branch:** `feat/public-site-modernization-and-seo`  
-**Alembic head:** `xe6f7a8b9c0d`  
+**Alembic head:** `xf7a8b9c0d1e`  
 **Program:** Phase 27–29 — in-repo closure  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
@@ -57,6 +57,7 @@ Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 | IMG-1 | Frontend Dockerfiles use workspace lockfile + SPA nginx; prod compose has ENCRYPTION_KEY + admin/scanner images |
 | MIG-1 | Dev compose `migrate` one-shot before API/workers |
 | COV-1b | Measured 72%; CI `--cov-fail-under=70` |
+| IDX-1 | Model/DB index alignment (`xf7a8b9c0d1e`) so `alembic check` can pass |
 
 Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they are not re-listed.
 

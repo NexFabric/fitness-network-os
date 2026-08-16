@@ -4,6 +4,7 @@ from datetime import timedelta
 
 STEP_UP_MAX_AGE = timedelta(minutes=5)
 PRIVILEGED_IDLE = timedelta(minutes=30)
+LAST_SEEN_THROTTLE = timedelta(seconds=120)
 STEP_UP_REQUIRED = "step_up_required"
 
 PRIVILEGED_ROLE_NAMES = frozenset(

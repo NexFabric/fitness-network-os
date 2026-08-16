@@ -3,7 +3,7 @@
 Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**. Diğer
 dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler.
 
-**Branch:** `feat/public-site-modernization-and-seo` · **Alembic head:** `xe6f7a8b9c0d` · Phase 29 + invite + HAND-1 e2e + DSAR export/erasure + god-page split.
+**Branch:** `feat/public-site-modernization-and-seo` · **Alembic head:** `xf7a8b9c0d1e` · Phase 29 + invite + HAND-1 e2e + DSAR + god-page split + index drift fix.
 
 ---
 
