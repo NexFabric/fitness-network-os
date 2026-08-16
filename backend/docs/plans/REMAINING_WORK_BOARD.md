@@ -1,10 +1,11 @@
 # Remaining Work Board
 
 **Date:** 2026-08-16  
-**Branch:** `feat/production-certification-closure` (from `main` @ `ee6597e`)  
-**Last code:** `ee6597e`  
+**Branch:** `feat/production-certification-closure` — PR **#89 OPEN** (until merged)  
+**Last code:** `6530739` (campaign tip; `origin/main` still `ee6597e`)  
 **Alembic head:** `xi0d1e2f3a4b`  
 **Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#83`/`#84` · `#64/#66/#68` (CI actions)  
+**Campaign landings:** migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · EXTERNAL_GATES **UNVERIFIED**  
 **CI:** every merge passed required CI. Merge gate is CI only (review requirement removed 2026-08-16, single maintainer).  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  

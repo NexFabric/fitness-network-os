@@ -5,10 +5,11 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Alan | Değer |
 |---|---|
-| Branch | `feat/production-certification-closure` — PR **#89 OPEN** |
-| Last code | `a82e5f5` (campaign tip; `origin/main` still `ee6597e`) |
+| Branch | `feat/production-certification-closure` — PR **#89 OPEN** (until merged) |
+| Last code | `6530739` (campaign tip; `origin/main` still `ee6597e`) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
 | Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#83`/`#84` frontend deps · `#64/#66/#68` CI action bump |
+| Campaign landings (PR #89) | migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · EXTERNAL_GATES **UNVERIFIED** |
 | CI | `main` üzerindeki her merge required CI'dan geçti. Merge kapısı **yalnız CI** — review zorunluluğu yok (2026-08-16, tek geliştirici). |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
