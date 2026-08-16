@@ -129,13 +129,22 @@ async def _select_one(url: str) -> None:
 
     from sqlalchemy.engine.url import make_url
 
-    ssl = database_ssl_connect_arg(url)
-    if ssl is None:
+    ssl_arg = database_ssl_connect_arg(url)
+    if ssl_arg is None:
         raise RuntimeError("expected ssl connect arg for sslmode=require")
+    if ssl_arg is True:
+        # asyncpg 0.31 treats ssl=True as the default verifying context.
+        # sslmode=require is encrypt-only; this drill uses a 1-day self-signed cert.
+        import ssl as sslmod
+
+        ctx = sslmod.SSLContext(sslmod.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = sslmod.CERT_NONE
+        ssl_arg = ctx
     # asyncpg.connect rejects sslmode=; the app helper maps it to ssl=.
     engine = create_async_engine(
         make_url(url).difference_update_query(["sslmode"]),
-        connect_args={"ssl": ssl},
+        connect_args={"ssl": ssl_arg},
     )
     async with engine.connect() as conn:
         value = (await conn.execute(text("SELECT 1"))).scalar_one()
