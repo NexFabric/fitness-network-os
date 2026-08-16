@@ -1,9 +1,9 @@
 # Uygulama hazır — çalıştırma özeti
 
 **Tarih:** 2026-08-16
-**Branch:** `feat/public-site-modernization-and-seo`
+**Branch:** `main` (PR #62 → `ae6267d`)
 **Alembic head:** `xi0d1e2f3a4b`.
-**Production-ready?** **NO** — kod kapıları kapandı; restore/PITR tatbikatı, gerçek S3 staging kanıtı ve bağımsız pentest açık.
+**Production-ready?** **NO** — kod kapıları kapandı; S3/PITR/observability tatbikatları **yerelde** koştu (`docs/ops/`), ama üretim AWS kovası, off-host WAL arşivleme, gerçek pager ve bağımsız pentest açık.
 **Privileged MFA:** `GYM_OWNER` / staff / federation login TOTP ister. `seed_demo.py` MFA’sız owner üretir ve `/mfa/setup`’a düşer; portal E2E için `seed_role_matrix.py` kullan.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
 
@@ -17,6 +17,32 @@
 | Scanner PWA | http://localhost:5174/ | camera QR or paste → GRANT/DENY (Access brand) |
 | Postgres | localhost:**5433** | mapped from container 5432 |
 | Redis | localhost:6379 | docker |
+| Grafana | http://localhost:3001 | `admin` / `${GRAFANA_ADMIN_PASSWORD:-admin}` — obs overlay |
+| Prometheus | http://localhost:9090 | obs overlay |
+| Alertmanager | http://localhost:9093 | obs overlay; receiver'lar bilinçli olarak null |
+| MinIO | http://localhost:9000 (konsol :9001) | storage overlay; S3 kanıtı için |
+
+## 0) İsteğe bağlı overlay'ler
+
+```bash
+# Gözlemlenebilirlik: Prometheus + Alertmanager + Grafana
+docker compose -f docker-compose.yml -f docker-compose.obs.yml up -d
+
+# Gerçek S3 (MinIO) — rapor deposu kanıtı için
+docker compose -f docker-compose.yml -f docker-compose.storage.yml up -d minio minio-init
+```
+
+Tatbikatlar (hepsi kendi kanıtını basar):
+
+```bash
+./ops/observability/alert_fire_drill.sh          # alert gerçekten ateşliyor mu
+cd backend && ./.venv/bin/python scripts/s3_runtime_proof.py   # gerçek S3 API'sine karşı 10 kontrol
+./backend/scripts/dr_restore_drill.sh            # dump/restore
+./backend/scripts/pitr_drill.sh                  # zaman-noktası kurtarma
+```
+
+`alert_fire_drill.sh` backend'i **kasten durdurur** ve sonra geri başlatır —
+E2E testinin ortasında çalıştırma.
 
 ## 1) Infra + migrate
 
