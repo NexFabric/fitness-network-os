@@ -57,7 +57,8 @@ jobs:
           echo "EVIDENCE-MISSING: confirmation input must be exactly 'deploy'"
           exit 1
 
-      # Same required set as docker-compose.prod.yml long-lived `backend`.
+      # Same required set as docker-compose.prod.yml long-lived processes.
+      # Backend email is disabled; SMTP is required for mail-sending workers.
       # MIGRATOR_DATABASE_URL is migrate-only and must not be required here.
       - name: Refuse missing deploy secrets
         env:
@@ -88,7 +89,7 @@ jobs:
             require "$name"
           done
 
-          # Compose backend hardcodes smtp. Empty var means smtp.
+          # Mail-sending workers default to smtp. Empty var means smtp.
           provider="$(printf '%s' "${NOTIFICATION_EMAIL_PROVIDER:-smtp}" | tr '[:upper:]' '[:lower:]')"
           if [ "$provider" = "smtp" ]; then
             for name in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS SMTP_FROM; do

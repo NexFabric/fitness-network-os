@@ -48,15 +48,11 @@ services:
         condition: service_completed_successfully
     environment:
       <<: *runtime-env
+      COMPONENT_NAME: web
       CORS_ORIGINS: https://admin.gymclubnex.com,https://scanner.gymclubnex.com
       ALLOWED_HOSTS: api.gymclubnex.com
-      NOTIFICATION_EMAIL_PROVIDER: smtp
+      NOTIFICATION_EMAIL_PROVIDER: disabled
       METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      SMTP_FROM: ${SMTP_FROM}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/live"]
       interval: 30s
@@ -74,7 +70,12 @@ services:
     environment:
       <<: *runtime-env
       COMPONENT_NAME: worker
-      NOTIFICATION_EMAIL_PROVIDER: disabled
+      NOTIFICATION_EMAIL_PROVIDER: smtp
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
     restart: unless-stopped
     depends_on:
       migrate:
@@ -93,7 +94,7 @@ services:
       COMPONENT_NAME: worker
       NOTIFICATION_EMAIL_PROVIDER: smtp
       SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
