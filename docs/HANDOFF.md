@@ -65,6 +65,9 @@ açık dal yok. Kalan her şey dış kanıt gerektiriyor — aşağıdaki tabloy
 - **TZ-1** `generate_sessions` `Location.timezone` (`ZoneInfo`); unique schedule+start.
 - **KPI-1** dashboard member KPI `visible_member_ids`.
 - **MEM-T** membership mutation `tenant_id` pin; class book `required_entitlement_type` check+consume; PT availability varsa saat filtresi.
+- **TD-1** `admin-web` ve `scanner-pwa` React render & hook yan etkileri temizlendi (0 error, 0 warning).
+- **TD-4** `.github/workflows/ops-drills.yml` haftalık periyodik tatbikat workflow'u eklendi.
+- **ADV-SEC** `backend/tests/api/test_adversarial_security.py` in-repo BOLA/IDOR/forgery/break-glass testleri eklendi (%100 yeşil).
 
 Önceki mercek (B1 / Fed HQ / #55–#60) checklist’te duruyor; burada tekrar edilmez.
 

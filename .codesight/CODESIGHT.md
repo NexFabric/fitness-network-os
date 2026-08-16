@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 80 lib files | 24 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~146,800 tokens per conversation.**
-> **Last scanned:** 2026-08-16 14:53 — re-run after significant changes
+> **Last scanned:** 2026-08-16 15:43 — re-run after significant changes
 
 ---
 
@@ -1138,20 +1138,20 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **69** files
-- `backend/app/models/tenant.py` — imported by **60** files
-- `backend/app/models/organization.py` — imported by **53** files
+- `backend/app/models/user.py` — imported by **70** files
+- `backend/app/models/tenant.py` — imported by **61** files
+- `backend/app/models/organization.py` — imported by **54** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/rbac.py` — imported by **42** files
-- `backend/app/models/member.py` — imported by **41** files
+- `backend/app/models/rbac.py` — imported by **43** files
+- `backend/app/models/member.py` — imported by **42** files
 - `backend/app/db/base.py` — imported by **38** files
-- `backend/app/db/session.py` — imported by **33** files
+- `backend/app/db/session.py` — imported by **34** files
 - `frontend/admin-web/src/components/ui/index.ts` — imported by **30** files
+- `backend/app/main.py` — imported by **29** files
 - `backend/app/models/membership.py` — imported by **28** files
-- `backend/app/main.py` — imported by **28** files
 - `frontend/admin-web/src/api/client.ts` — imported by **27** files
 - `backend/app/core/authorization.py` — imported by **25** files
-- `backend/app/models/location.py` — imported by **23** files
+- `backend/app/models/location.py` — imported by **24** files
 - `backend/app/db/rls.py` — imported by **22** files
 - `backend/app/core/config.py` — imported by **19** files
 - `backend/app/models/access.py` — imported by **19** files
@@ -1161,23 +1161,23 @@
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +64 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +55 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +48 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +65 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +56 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +49 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +37 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +36 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +38 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +37 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
-- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +28 more
+- `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +29 more
 - `frontend/admin-web/src/components/ui/index.ts` ← `frontend/admin-web/src/components/MemberMemberships.tsx`, `frontend/admin-web/src/components/RequireAuth.tsx`, `frontend/admin-web/src/pages/Classes.tsx`, `frontend/admin-web/src/pages/Dashboard.tsx`, `frontend/admin-web/src/pages/DataImport.tsx` +25 more
-- `backend/app/models/membership.py` ← `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +23 more
+- `backend/app/main.py` ← `backend/tests/api/test_admin_federation.py`, `backend/tests/api/test_admin_federation_complete.py`, `backend/tests/api/test_adversarial_security.py`, `backend/tests/api/test_auth_login.py`, `backend/tests/api/test_class_booking_engine.py` +24 more
 
 ---
 
 # Test Coverage
 
 > **33%** of routes and models are covered by tests
-> 105 test files found
+> 106 test files found
 
 ## Covered Routes
 
@@ -1265,11 +1265,12 @@
 
 # CI/CD Pipelines
 
-## GitHub Actions (1 workflow)
+## GitHub Actions (2 workflows)
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
 | CI | push, pull_request | 12 | — | — |
+| Ops Drills & Recovery Verification | schedule, workflow_dispatch | 1 | s3 | — |
 
 ### CI
 
@@ -1313,7 +1314,7 @@
 - **all-green** on `ubuntu-latest` — 1 steps
 
 ---
-_Source: .github/workflows/ci.yml_
+_Source: .github/workflows/ci.yml, .github/workflows/ops-drills.yml_
 _Generated by codesight-cicd-plugin_
 
 ---

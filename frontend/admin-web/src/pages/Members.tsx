@@ -110,13 +110,11 @@ export default function Members() {
   }, [loadMembers])
 
   const toggleCreate = () => {
-    setShowCreate((prev) => {
-      const next = !prev
-      if (next && !form.member_number) {
-        setForm((f) => ({ ...f, member_number: generateMemberNumber(members) }))
-      }
-      return next
-    })
+    const next = !showCreate
+    setShowCreate(next)
+    if (next && !form.member_number) {
+      setForm((f) => ({ ...f, member_number: generateMemberNumber(members) }))
+    }
   }
 
   const filtered = useMemo(() => {

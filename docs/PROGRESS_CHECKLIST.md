@@ -203,8 +203,11 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 - [x] **KPI-1** Dashboard member KPIs use `visible_member_ids`
 - [x] **MEM-T** Membership mutations pin `tenant_id`; class book honors `required_entitlement_type` (check + consume)
 
-### Executed 2026-08-16 — real runtime drills
+### Executed 2026-08-16 — real runtime drills & code hardening
 
+- [x] **TD-1** Frontend React hook & render correctness: refactored all impure state updates, sync `setState` in `useEffect` calls, and hook dependency loops across `frontend/admin-web` and `frontend/scanner-pwa` (0 lint errors, 0 warnings).
+- [x] **TD-4** Scheduled Ops Drills CI: added `.github/workflows/ops-drills.yml` with scheduled weekly Sunday run + `workflow_dispatch` for automated S3 runtime proof and Alertmanager drills.
+- [x] **ADV-SEC** In-repo adversarial penetration testing suite (`backend/tests/api/test_adversarial_security.py`): verified cross-tenant IDOR/BOLA, header forgery, forged bearer tokens, revoked sessions, expired sessions, and superuser break-glass enforcement (100% pass).
 - [x] **P1-3b-RT** Real S3 API proof — 10/10 against MinIO with the actual `S3StorageProvider`: SSE `AES256` at rest, tenant-scoped key layout, anonymous GET rejected 403, presigned GET serves byte-identical payload, cross-tenant presign refused, delete verified. Evidence `docs/ops/S3_RUNTIME_PROOF.md`; drill `backend/scripts/s3_runtime_proof.py`. **Production AWS bucket + policy still open** (see P2-3-IAM)
 - [x] **P1-10** Restore **and** PITR drills executed. Dump/restore: 632K, 8 tenants / 33 members / 72 RLS tables. PITR (`backend/scripts/pitr_drill.sh`): base backup → WAL replay to a target timestamp → the post-target write is correctly absent, archiver 6/0. Evidence `docs/ops/DR_RESTORE_STATUS.md`. **Local throwaway container, not the production host**
 - [x] **P2-OBS** Prometheus + Alertmanager + Grafana landed (`docker-compose.obs.yml`, `ops/observability/`). 7 alert rules bound to metrics that actually exist; 9-panel dashboard provisioned. Alert path drilled end-to-end: `inactive → pending → firing → delivered to Alertmanager → resolved`. Evidence `docs/ops/OBSERVABILITY.md`. **Receivers are null by design; no tracing**
