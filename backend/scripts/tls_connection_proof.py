@@ -12,9 +12,13 @@ import asyncio
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
+
+# uv run python scripts/*.py puts scripts/ on sys.path[0], not backend/.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 CONTAINER = os.environ.get("TLS_PROOF_CONTAINER", "fitness-os-tls-proof")
 IMAGE = os.environ.get("TLS_PROOF_IMAGE", "postgres:16")
