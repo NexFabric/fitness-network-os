@@ -20,7 +20,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Ne arıyorsan | Dosya |
 |---|---|
-| Kod nerede (rota/model/dosya haritası) | `.codesight/wiki/index.md` — ~200 token, AST'den üretilir, pre-commit ile tazelenir |
+| Kod nerede (rota/model/dosya haritası) | `.codesight/wiki/index.md` — 2026-08-16 yenilendi: 142 rota / 86 model / 64 bileşen / 30 madde. AST'den üretilir; `npx codesight --wiki` |
 | Ne yapıldı / ne yapılmadı (**otorite**) | `docs/PROGRESS_CHECKLIST.md` |
 | Kapanan kampanya — **tekrar etme** | `docs/CAMPAIGN_REGISTER.md` |
 | Kalan iş listesi | `backend/docs/plans/REMAINING_WORK_BOARD.md` |
@@ -93,6 +93,7 @@ ops-drills PR'ı açma. Kayıt: `docs/CAMPAIGN_REGISTER.md`.
 
 | # | İş | Kim | Not |
 |---|---|---|---|
+| 0 | **Canlı test** | insan | In-repo dalga kapandı. Operatör kendi canlı/staging turunu yapar. Ajan imzalamaz, Phase 26 işaretlemez. |
 | 1 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. Ajan imzalayamaz. |
 | 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. `docs/ops/PENTEST_BRIEF.md`. |
 | 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır. Kimlik bilgisi gelince tek komut. |

@@ -10,6 +10,9 @@ iki kez doğrulanır — `scripts/check_permissions.py` (YAML iç tutarlılığ�
 `scripts/check_permissions_db.py` (YAML ↔ PostgreSQL). Doküman ile YAML
 ayrışırsa **YAML doğrudur**.
 
+**2026-08-16:** 11 kanonik rol değişmedi. `Scope.LOCATION` bilinçli ertelendi —
+açma. IsolationProvider icat etme. Sistem haritası: `docs/ARCHITECTURE.md`.
+
 ---
 
 ## 1. Roller (11)

@@ -80,6 +80,15 @@ Index of UNVERIFIED rows: `docs/ops/EXTERNAL_GATES.md`.
 
 ---
 
+## Wave close (2026-08-16, docs)
+
+In-repo certification wave is **closed**. Architecture (`docs/ARCHITECTURE.md`)
+and `.codesight/wiki/` were refreshed against `1b42ab4`. The next step is a
+**human live test** — not another agent rewrite of TLS / coverage / migrate /
+ops-drills. After live test: HAND-1 signature + external gates.
+
+---
+
 ## How the next agent should start
 
 1. Read this file + `docs/HANDOFF.md` + `docs/PROGRESS_CHECKLIST.md`.

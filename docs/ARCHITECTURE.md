@@ -1,12 +1,16 @@
 # GymClubNex (Fitness Network OS) — Sistem Mimarisi
 
-**Son güncelleme:** 2026-08-16
-**Kaynak:** Bu doküman `~/.gemini/antigravity-cli/brain/` altında, git dışında tutulan
-bir taslaktan repo'ya taşındı ve koda karşı doğrulanarak düzeltildi. Mimari
-doküman artık yalnızca burada yaşar.
+**Son güncelleme:** 2026-08-16  
+**Last code:** `1b42ab4` (`main`, PR **#94**) · Alembic `xi0d1e2f3a4b`  
+**Production-ready?** **NO** · Phase 26 PASS? **NO / NOT VERIFIED**  
+**Sözleşme:** `docs/MASTER_SPEC.md` + `docs/PRODUCTION_READINESS.md`  
+**Kapanan kampanya (tekrar etme):** `docs/CAMPAIGN_REGISTER.md`  
+**Pickup:** `docs/HANDOFF.md`
 
-**İlgili:** `AGENTS.md` (kurallar) · `docs/MASTER_SPEC.md` (gereksinimler) ·
-`docs/RBAC.md` (yetki matrisi) · `docs/adr/` (mimari kararlar)
+Bu dosya *nasıl durduğunu* anlatır. Kod nerede diye `.codesight/wiki/index.md`
+oku; değiştirmeden önce kaynağı oku.
+
+**İlgili:** `AGENTS.md` · `docs/RBAC.md` · `docs/adr/` (ADR-043, ADR-044)
 
 ---
 
@@ -15,7 +19,7 @@ doküman artık yalnızca burada yaşar.
 ```mermaid
 graph TD
     subgraph Client_Layer ["İstemci Katmanı"]
-        A["Admin Web (Vite :5173)<br/>4 rol portalı + ops konsolu"]
+        A["Admin Web (Vite :5173)<br/>5 portal yüzeyi + HQ"]
         B["Scanner PWA (Vite :5174)<br/>turnike kiosk"]
         C["public-site<br/>pazarlama sitesi"]
     end
@@ -33,6 +37,8 @@ graph TD
         J[Finance - amount_minor]
         K[Outbox / Inbox]
         L["Federation (cross-tenant read)"]
+        P[Booking class + PT]
+        Q[DSAR export / erasure]
     end
 
     subgraph Data ["Veri Katmanı"]
@@ -44,8 +50,8 @@ graph TD
     A --> D
     B --> D
     D --> E --> F
-    F --> G & H & I & J & K & L
-    G & H & I & J & K & L --> M
+    F --> G & H & I & J & K & L & P & Q
+    G & H & I & J & K & L & P & Q --> M
     E --> N
     K --> O
 ```
@@ -250,32 +256,66 @@ graph TD
    - Asil listedeki bir üye rezervasyonunu iptal ettiğinde (`cancel_booking`), 1. sıradaki yedek (`waitlist_position = 1`) anında `CONFIRMED` statüsüne yükseltilir, `waitlist_position` alanı temizlenir ve `class.booking_promoted.v1` eventi üretilir.
    - Kalan tüm yedek üyelerin sıraları (`2..N`) tek bir atomik sorguyla kaydırılır (`waitlist_position = waitlist_position - 1`).
 4. **Geç İptal Eşiği (`Cancellation Cutoff Window`):** Seans başlangıcına `cancellation_cutoff_minutes` süresinden daha az kalmışsa iptal işlemi `is_late_cancellation = True` olarak işaretlenir; kulüp no-show/hak yakma politikalarını işletebilir.
-5. **Antrenör Çakışma Önleme (PT Conflict Lock):** `PtBookingService`, antrenörün mevcut randevularını zaman aralığı (`start_time_utc < new_end AND end_time_utc > new_start`) üzerinde kilitler; çakışan randevu denemeleri `409 Conflict` ile reddedilir. Ayrıca PostgreSQL seviyesinde `btree_gist` eklentisiyle `ex_pt_appointments_no_overlap` EXCLUDE kısıtı (Alembic head `xi0d1e2f3a4b`) çift randevuyu veritabanı motoru düzeyinde bloke eder.
+5. **Antrenör Çakışma Önleme (PT):** `book_appointment` çakışmayı önce SELECT ile bakar, insert `flush` eder. Eşzamanlı ilk insert'te `FOR UPDATE` + EXCLUDE deadlock verdiği için **PT insert yolunda `FOR UPDATE` yoktur**; çift rezervasyonu PostgreSQL `btree_gist` `ex_pt_appointments_no_overlap` (Alembic `xi0d1e2f3a4b`) ve `IntegrityError` → `409` tutar. İptal hâlâ satırı `FOR UPDATE` ile kilitler. `ExcludeConstraint` ORM'de yoktur (SQLite `create_all` kırılır); `env.py` bu constraint'i autogenerate'den düşürür.
 6. **PostgreSQL RLS & Composite FK:** 6 tablo (`class_types`, `class_schedules`, `class_sessions`, `class_bookings`, `trainer_availabilities`, `pt_appointments`) `TenantMixin` ve PostgreSQL RLS ile yalıtılmıştır.
 
 ---
 
-## 8. Bilinen açık maddeler
+## 8. Üretim runtime (compose) — landed, tekrar yazma
+
+`docker-compose.prod.yml` tek süreç değil. `x-runtime-env` paylaşılır;
+ayrıcalıklı migrator DSN yalnız migrate servisindedir.
+
+| Servis | `COMPONENT_NAME` | Rol |
+|---|---|---|
+| `migrate` | `migrate` | One-shot Alembic. Tek `MIGRATOR_DATABASE_URL` sahibi. |
+| `web` | `web` | FastAPI. Uygulama DSN; migrator DSN yok. |
+| `outbox-worker` / `notification-worker` | `worker` | Outbox + e-posta. `PRODUCTION_PRIVATE_NETWORK` paylaşır. |
+| `admin-web` / `scanner-pwa` | — | SPA image + nginx. |
+
+Kurallar (`Settings.validate_production()`, `alembic/env.py`):
+
+- Üretimde DB/Redis TLS (`sslmode=require|verify-full`, `rediss://`) **veya**
+  `PRODUCTION_PRIVATE_NETWORK=1`. Aksi fail-closed.
+- CORS origin'leri `https://`.
+- `MIGRATOR_DATABASE_URL` `COMPONENT_NAME=migrate` dışında yasak.
+- IsolationProvider somutlaştırılmaz. `Scope.LOCATION` açılmaz.
+
+Haftalık kanıt: `.github/workflows/ops-drills.yml` (dump/restore, PITR, S3
+MinIO, TLS smoke, alert). Tip `1b42ab4` run `31968740247` SUCCESS. Bu
+üretim AWS / off-host WAL / gerçek pager değildir.
+
+---
+
+## 9. Bilinen açık maddeler
 
 Bu bölüm doküman ile gerçeğin ayrışmasını önlemek içindir.
+Kapanan in-repo ID'ler: `docs/CAMPAIGN_REGISTER.md`.
 
-- `device_sessions` tablosunda RLS yok (yukarıdaki gerekçe — bilinçli tasarım).
-- Ağır federasyon analitiği için rollup tablosu henüz yok (ADR-043 yol 3, ertelendi).
-- Login rate limit normalde Redis'te ortak pencere kullanır; **Redis erişilemezse
-  süreç-içi pencereye düşer** — yani çok süreçli kurulumda limit süreç sayısı kadar
-  çarpılır. Bilinçli fail-open (login cache kesintisinde kapanmasın), `rate_limit.redis_*`
-  uyarısıyla loglanır.
-- Üretimde raporlar özel S3/MinIO storage'a yazılır: server-side encryption,
-  tenant-bound key, kısa ömürlü presigned URL, bounded cleanup. Kod `main`'de;
-  **gerçek bir kovaya hiç yazmadı** — staging kanıtı için kova ve kimlik bilgisi gerekir.
-- QR imza sırları için AWS KMS zarf şifrelemesi (`kms:enc:` ile `GenerateDataKey` & `Decrypt`) ve fail-closed production boot kontrolleri `app.core.qr_crypto` altında uygulanmıştır; yerel geliştirmede `local:hmac:` kullanılır.
-- `/metrics` gerçek request/dependency/outbox Prometheus metrikleri üretir; scraper,
-  dashboard, alert ve trace backend'i dış altyapı işi olarak açıktır.
-- Privileged roller için password-only erişim kapalıdır: kısa ömürlü restricted
-  setup session, TOTP kayıt UX'i ve başarılı kayıt sonrası session rotation.
-- Personel ve sporcu hesap davetleri `INVITE-1` mekanizmasıyla (`account_invites`,
-  Alembic `xd5e6f7a8b9c`) açılır: API tek kullanımlık açık parola dönmez (`INVITE-OTP`);
-  tek kullanımlık hash'lenmiş davet belirteci (`invite_token`) üretilir. Kullanıcı
-  `/invite?token=...` ekranından ve public `POST /api/v1/auth/invite/accept` ucu
-  üzerinden kendi parolasını belirler.
-- Phase 26 çıkış kapısı **geçilmedi**: dış pentest kanıtı yok.
+**Bilinçli tasarım (açık değil):**
+
+- `device_sessions` tablosunda RLS yok (yukarıdaki gerekçe).
+- Ağır federasyon analitiği için rollup tablosu yok (ADR-043 yol 3, ertelendi).
+- Login rate limit Redis düşünce süreç-içi pencereye düşer — çok süreçte limit
+  çarpılır. Bilinçli fail-open; `rate_limit.redis_*` loglanır.
+- IsolationProvider abstraction durur — icat etme. `Scope.LOCATION` ertelendi.
+
+**Kodda landed, üretim kanıtı ayrı:**
+
+- Rapor storage S3 API'sine karşı **MinIO 10/10** (`docs/ops/S3_RUNTIME_PROOF.md`).
+  **AWS kova + IAM hâlâ UNVERIFIED** (P1-3b-PROD / P2-3-IAM).
+- QR sırları: üretim `kms:enc:` / `fernet:hmac:`; yerel `local:hmac:`.
+  Canlı KMS alias rotate edilmedi.
+- `/metrics` + yerel Prometheus / Alertmanager / Grafana + null-receiver drill
+  landed (`docs/ops/OBSERVABILITY.md`). Gerçek pager + tracing UNVERIFIED.
+- Lokal dump/restore + PITR geçti (`docs/ops/DR_RESTORE_STATUS.md`).
+  Off-host WAL / ölçülmüş RPO UNVERIFIED.
+- Privileged MFA, invite (`account_invites` / `INVITE-OTP`), DSAR export+erasure,
+  scanner HMAC (ADR-044) kodda.
+
+**İnsan / dış kapı (ajan kapatamaz):**
+
+- HAND-1 tarayıcı imzası boş.
+- P1-11 bağımsız pentest yok.
+- KVKK / LICENSE / live HA UNVERIFIED.
+- Phase 26 çıkış kapısı **geçilmedi**. Canlı yayın **NO-GO**.
