@@ -127,10 +127,16 @@ async def _select_one(url: str) -> None:
 
     from app.core.config import database_ssl_connect_arg
 
+    from sqlalchemy.engine.url import make_url
+
     ssl = database_ssl_connect_arg(url)
     if ssl is None:
         raise RuntimeError("expected ssl connect arg for sslmode=require")
-    engine = create_async_engine(url, connect_args={"ssl": ssl})
+    # asyncpg.connect rejects sslmode=; the app helper maps it to ssl=.
+    engine = create_async_engine(
+        make_url(url).difference_update_query(["sslmode"]),
+        connect_args={"ssl": ssl},
+    )
     async with engine.connect() as conn:
         value = (await conn.execute(text("SELECT 1"))).scalar_one()
     await engine.dispose()
