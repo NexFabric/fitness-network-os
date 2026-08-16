@@ -19,6 +19,9 @@ from pathlib import Path
 CONTAINER = os.environ.get("TLS_PROOF_CONTAINER", "fitness-os-tls-proof")
 IMAGE = os.environ.get("TLS_PROOF_IMAGE", "postgres:16")
 PASSWORD = "tls-proof-pass"
+# Official postgres:16 (Debian) image: postgres uid/gid is 999.
+POSTGRES_UID = 999
+POSTGRES_GID = 999
 
 
 def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
@@ -40,8 +43,61 @@ def _cleanup() -> None:
     )
 
 
+def _chown(path: Path, uid: int, gid: int) -> None:
+    try:
+        os.chown(path, uid, gid)
+        return
+    except OSError:
+        if os.geteuid() == 0:
+            raise
+    _run(["sudo", "-n", "chown", f"{uid}:{gid}", str(path)])
+
+
+def _own_for_postgres(*paths: Path) -> None:
+    """Own certs as 999:999 on the host before bind-mount.
+
+    postgres:16 refuses ssl=on when the key is runner-owned; the process
+    then exits and a later docker exec chown races a dead PID.
+    """
+    for path in paths:
+        _chown(path, POSTGRES_UID, POSTGRES_GID)
+
+
+def _rmtree(path: Path) -> None:
+    try:
+        shutil.rmtree(path)
+        return
+    except OSError:
+        pass
+    subprocess.run(
+        ["sudo", "-n", "rm", "-rf", str(path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    shutil.rmtree(path, ignore_errors=True)
+
+
+def _container_logs() -> str:
+    logs = subprocess.run(
+        ["docker", "logs", CONTAINER],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return (logs.stderr or logs.stdout or "").strip()
+
+
 def _wait_ready() -> None:
     for _ in range(40):
+        state = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Running}}", CONTAINER],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if state.returncode == 0 and state.stdout.strip() == "false":
+            break
         probe = subprocess.run(
             [
                 "docker",
@@ -57,7 +113,8 @@ def _wait_ready() -> None:
         if probe.returncode == 0:
             return
         time.sleep(0.5)
-    raise RuntimeError("tls postgres did not become ready")
+    detail = _container_logs()
+    raise RuntimeError(f"tls postgres did not become ready: {detail}")
 
 
 async def _select_one(url: str) -> None:
@@ -107,10 +164,9 @@ def main() -> int:
                 str(key),
             ]
         )
+        cert.chmod(0o644)
         key.chmod(0o600)
-        # Bind-mounts stay :ro and runner-owned. Copy + chown as root into
-        # the writable image FS *before* postgres starts so ssl=on does not
-        # crash the container (GHA then failed docker exec on a dead PID).
+        _own_for_postgres(cert, key)
         _run(
             [
                 "docker",
@@ -118,30 +174,21 @@ def main() -> int:
                 "-d",
                 "--name",
                 CONTAINER,
-                "--user",
-                "root",
                 "-e",
                 f"POSTGRES_PASSWORD={PASSWORD}",
                 "-v",
-                f"{cert}:/tmp/tls/server.crt:ro",
+                f"{cert}:/var/lib/postgresql/server.crt:ro",
                 "-v",
-                f"{key}:/tmp/tls/server.key:ro",
+                f"{key}:/var/lib/postgresql/server.key:ro",
                 "-p",
                 "55432:5432",
-                "--entrypoint",
-                "bash",
                 IMAGE,
-                "-lc",
-                (
-                    "install -o postgres -g postgres -m 644 /tmp/tls/server.crt "
-                    "/var/lib/postgresql/server.crt && "
-                    "install -o postgres -g postgres -m 600 /tmp/tls/server.key "
-                    "/var/lib/postgresql/server.key && "
-                    "exec docker-entrypoint.sh postgres "
-                    "-c ssl=on "
-                    "-c ssl_cert_file=/var/lib/postgresql/server.crt "
-                    "-c ssl_key_file=/var/lib/postgresql/server.key"
-                ),
+                "-c",
+                "ssl=on",
+                "-c",
+                "ssl_cert_file=/var/lib/postgresql/server.crt",
+                "-c",
+                "ssl_key_file=/var/lib/postgresql/server.key",
             ]
         )
         _wait_ready()
@@ -154,7 +201,7 @@ def main() -> int:
         return 0
     finally:
         _cleanup()
-        shutil.rmtree(work, ignore_errors=True)
+        _rmtree(work)
 
 
 if __name__ == "__main__":
