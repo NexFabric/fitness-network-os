@@ -83,7 +83,7 @@
 - `POST` `/dsar/export` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/dsar/erasure` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
-- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth] ✓
 - `POST` `/classes/sessions/{session_id}/book` params(session_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/classes/bookings/{booking_id}/cancel` params(booking_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `GET` `/classes/bookings` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]

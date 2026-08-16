@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { completeOwnerMfaIfNeeded } from './helpers/auth';
+import { acceptOwnerStepUp, completeOwnerMfaIfNeeded } from './helpers/auth';
 
 const PASSWORD = 'E2ePortal123!';
 const OWNER = 'e2e.owner@e2e.local';
@@ -32,11 +32,25 @@ async function loginTrainer(page: Page) {
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 });
 }
 
+function toDatetimeLocal(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 test.describe.serial('Group Class & PT Booking Engine E2E Flows', () => {
   const uniqueClassName = `E2E Pilates ${Date.now() % 10000}`;
+  const locationName = `E2E Ders Şube ${Date.now() % 10000}`;
 
   test('1. admin creates class type and session', async ({ page }) => {
+    acceptOwnerStepUp(page);
     await loginOwner(page);
+
+    // Role-matrix seed creates no locations; session create requires one.
+    await page.goto('/locations');
+    await page.fill('#location_name', locationName);
+    await page.click('form button[type="submit"]');
+    await expect(page.getByText('Şube başarıyla oluşturuldu.')).toBeVisible();
+
     await page.goto('/classes');
     await page.waitForLoadState('networkidle');
 
@@ -54,15 +68,23 @@ test.describe.serial('Group Class & PT Booking Engine E2E Flows', () => {
     await page.getByRole('button', { name: '+ Yeni Seans Ekle' }).click();
     await expect(page.getByText('Yeni Ders Seansı Planla')).toBeVisible();
 
-    await page.locator('select').first().selectOption({ label: `${uniqueClassName} (45 dk)` });
+    const sessionForm = page.locator('form', { hasText: 'Ders Tipi' });
+    await sessionForm.locator('select').nth(0).selectOption({ label: `${uniqueClassName} (45 dk)` });
+    await sessionForm.locator('select').nth(1).selectOption({ label: locationName });
 
-    const tomorrow = new Date(Date.now() + 86400000);
-    const startStr = new Date(tomorrow.setHours(14, 0, 0, 0)).toISOString().slice(0, 16);
-    const endStr = new Date(tomorrow.setHours(14, 45, 0, 0)).toISOString().slice(0, 16);
+    const start = new Date(Date.now() + 86400000);
+    start.setHours(14, 0, 0, 0);
+    const end = new Date(start.getTime() + 45 * 60 * 1000);
 
-    await page.fill('input[type="datetime-local"] >> nth=0', startStr);
-    await page.fill('input[type="datetime-local"] >> nth=1', endStr);
+    await sessionForm.locator('input[type="datetime-local"]').nth(0).fill(toDatetimeLocal(start));
+    await sessionForm.locator('input[type="datetime-local"]').nth(1).fill(toDatetimeLocal(end));
+
+    const created = page.waitForResponse(
+      (res) => res.url().includes('/classes/sessions') && res.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Seansı Ekle', exact: true }).click();
+    const createRes = await created;
+    expect(createRes.ok(), await createRes.text()).toBeTruthy();
 
     await expect(page.getByText('Ders seansı başarıyla takvime eklendi.')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('heading', { name: uniqueClassName })).toBeVisible();

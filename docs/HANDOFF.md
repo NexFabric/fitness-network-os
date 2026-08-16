@@ -55,8 +55,8 @@ Grup Dersi & PT Takvimi / Rezervasyon Motoru (Milestone B1) ve Phase 0–27.4 + 
 **Test tabanı:** GitHub CI ve lokalde backend pytest + Playwright
 (gerçek Chromium + gerçek backend). Kapılar: ruff, mypy, `alembic check`,
 `check_tenancy`, `check_permissions`, `check_permissions_db`,
-`check_no_money_floats`, 3 frontend build. CodeQL workflow bu repoda yok
-(HANDOFF bunu kapı diye saymaz).
+`check_no_money_floats`, 3 frontend build, Playwright E2E, repo CodeQL
+(`javascript-typescript` + `python`; GitHub Default Setup kapalı — SARIF çakışması).
 
 ---
 

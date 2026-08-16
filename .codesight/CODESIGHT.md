@@ -5,7 +5,7 @@
 
 > 141 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~15,600 tokens. Without it, AI exploration would cost ~160,300 tokens. **Saves ~144,700 tokens per conversation.**
-> **Last scanned:** 2026-08-16 09:58 — re-run after significant changes
+> **Last scanned:** 2026-08-16 10:16 — re-run after significant changes
 
 ---
 
@@ -94,7 +94,7 @@
 - `POST` `/dsar/export` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/dsar/erasure` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/consents` params() → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
-- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth]
+- `GET` `/classes/sessions` params() → in: AsyncSessio, out: MeSessionResponse [auth] ✓
 - `POST` `/classes/sessions/{session_id}/book` params(session_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `POST` `/classes/bookings/{booking_id}/cancel` params(booking_id) → in: MeEntitlementCheckRequest, out: MeSessionResponse [auth]
 - `GET` `/classes/bookings` params() → in: AsyncSessio, out: MeSessionResponse [auth, db]
@@ -1168,6 +1168,7 @@
 - GET:
 - POST:
 - GET:/member
+- GET:/classes/sessions
 - GET:/status
 - POST:/advance
 - GET:/health

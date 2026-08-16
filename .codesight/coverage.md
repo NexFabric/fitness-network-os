@@ -10,6 +10,7 @@
 - GET:
 - POST:
 - GET:/member
+- GET:/classes/sessions
 - GET:/status
 - POST:/advance
 - GET:/health
