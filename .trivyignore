@@ -1,13 +1,8 @@
-# Trivy ignore list for GymClubNex backend container image
-# Only unpatchable Debian 12 (bookworm) upstream OS packages with no fix available in Debian security tracker.
-# All application Python packages in uv.lock have 0 vulnerabilities.
+# Evidence: docs/ops/IMAGE_CVE_TRIAGE.md
+# Image: python:3.12-slim @ Debian 13.6 (trixie). No Debian fix published.
+# Review by: 2026-09-17. Application Python packages in uv.lock: 0 HIGH/CRITICAL.
 
-# Debian base packages (perl-base, util-linux, libsqlite3) - fix deferred / affected upstream in Debian 12
-CVE-2026-42496
-CVE-2026-57433
-CVE-2026-8376
-CVE-2026-42497
-CVE-2026-48962
-CVE-2026-57432
-CVE-2026-9538
-CVE-2026-53615
+CVE-2026-41992
+CVE-2026-54369
+CVE-2025-69720
+CVE-2026-13221

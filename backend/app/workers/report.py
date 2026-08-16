@@ -4,7 +4,11 @@ import logging
 from sqlalchemy import select, text
 
 from app.api.deps import current_tenant_id_var
-from app.core.metrics import REPORT_EXECUTION, WORKER_HEARTBEAT, start_worker_metrics_server
+from app.core.metrics import (
+    REPORT_EXECUTION,
+    WORKER_HEARTBEAT,
+    start_worker_metrics_server,
+)
 from app.db.session import AsyncSessionLocal
 from app.models.report import REPORT_STATUS_PENDING, ReportRun
 from app.models.tenant import Tenant, TenantStatus

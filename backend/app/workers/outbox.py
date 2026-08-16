@@ -8,11 +8,11 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_tenant_id_var
-from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
 from app.core.event_types import (
     NOTIFICATION_REQUESTED_V1,
     REPORT_RUN_REQUESTED_V1,
 )
+from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
 from app.db.session import AsyncSessionLocal
 from app.models.outbox import OutboxEvent
 from app.models.tenant import Tenant, TenantStatus

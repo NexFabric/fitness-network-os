@@ -64,7 +64,10 @@ def start_worker_metrics_server(port: int | None = None) -> bool:
     try:
         from prometheus_client import start_http_server
 
-        start_http_server(target_port, addr="0.0.0.0")
+        # Private compose network only. METRICS_PORT is not published to
+        # the host in docker-compose.yml / docker-compose.prod.yml.
+        # Prometheus scrapes worker:<port> on that overlay.
+        start_http_server(target_port, addr="0.0.0.0")  # nosec B104
         logger.info("Worker metrics server started on port %d", target_port)
         return True
     except Exception as exc:  # noqa: BLE001
