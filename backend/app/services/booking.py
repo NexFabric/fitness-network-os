@@ -633,6 +633,16 @@ class ClassBookingService:
             )
             db.add(booking)
             await db.flush()
+            if class_type.required_entitlement_type:
+                consumed = await EntitlementService.consume_access(
+                    db,
+                    tenant_id,
+                    member_id,
+                    class_type.required_entitlement_type,
+                    idempotency_key=f"class-book:{booking.id}",
+                )
+                if not consumed.get("granted"):
+                    raise BookingForbidden("Bu ders için geçerli hakkınız bulunmuyor.")
 
             # Emit outbox event
             await outbox.enqueue(
@@ -786,6 +796,20 @@ class ClassBookingService:
             top_wait_res = await db.execute(top_wait_stmt)
             top_wait = top_wait_res.scalar_one_or_none()
 
+            if top_wait:
+                class_type = await ClassBookingService.get_class_type(
+                    db, tenant_id, session.class_type_id
+                )
+                if class_type.required_entitlement_type:
+                    consumed = await EntitlementService.consume_access(
+                        db,
+                        tenant_id,
+                        top_wait.member_id,
+                        class_type.required_entitlement_type,
+                        idempotency_key=f"class-book:{top_wait.id}",
+                    )
+                    if not consumed.get("granted"):
+                        top_wait = None
             if top_wait:
                 # Promote top waitlist to CONFIRMED
                 top_wait.status = ClassBookingStatus.CONFIRMED
@@ -1007,16 +1031,12 @@ class PtBookingService:
         )
 
         # Check conflicting PT appointment for trainer
-        conflict_stmt = (
-            select(PtAppointment)
-            .where(
-                PtAppointment.tenant_id == tenant_id,
-                PtAppointment.trainer_user_id == trainer_user_id,
-                PtAppointment.status == PtAppointmentStatus.CONFIRMED,
-                PtAppointment.start_time_utc < end_time_utc,
-                PtAppointment.end_time_utc > start_time_utc,
-            )
-            .with_for_update()
+        conflict_stmt = select(PtAppointment).where(
+            PtAppointment.tenant_id == tenant_id,
+            PtAppointment.trainer_user_id == trainer_user_id,
+            PtAppointment.status == PtAppointmentStatus.CONFIRMED,
+            PtAppointment.start_time_utc < end_time_utc,
+            PtAppointment.end_time_utc > start_time_utc,
         )
         conf_res = await db.execute(conflict_stmt)
         if conf_res.scalar_one_or_none():

@@ -244,7 +244,7 @@ async def test_class_type_and_schedule_flow(pg_session_maker, api_client: AsyncC
     assert len(sessions) >= 1
     assert sessions[0]["class_type_name"] == "Reformer Pilates"
     assert sessions[0]["capacity"] == 6
-    start_utc = datetime.fromisoformat(sessions[0]["start_time_utc"].replace("Z", "+00:00"))
+    start_utc = datetime.fromisoformat(sessions[0]["start_time_utc"])
     assert start_utc.hour != 10 or start_utc.tzinfo is None
     # Istanbul 10:00 is 07:00Z (winter) or 06:00Z (summer), never 10:00Z.
     assert start_utc.astimezone(UTC).hour in {6, 7}
@@ -564,6 +564,67 @@ async def test_pt_appointment_conflict_prevention(
     )
     assert res3.status_code == 201
     assert res3.json()["status"] == "CONFIRMED"
+
+
+@pytest.mark.asyncio
+async def test_concurrent_pt_first_slot_one_wins(pg_session_maker, api_client: AsyncClient):
+    """EXCLUDE constraint: two empty-slot inserts cannot both confirm."""
+    async with pg_session_maker() as db:
+        org = Organization(
+            id=uuid4(), name="FitNet PT2", domain=f"fitnet-pt2-{uuid4().hex[:6]}.com"
+        )
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            organization_id=org.id,
+            name="Club PT Race",
+            location_code=f"PTR-{uuid4().hex[:4]}",
+        )
+        db.add(tenant)
+        await db.flush()
+        await db.execute(
+            select(func.set_config("app.current_tenant_id", str(tenant.id), True))
+        )
+        loc = Location(
+            id=uuid4(), tenant_id=tenant.id, name="PT Race", timezone="UTC"
+        )
+        db.add(loc)
+        trainer_user, _ = await _create_user_with_role(
+            db, role_name="TRAINER", tenant_id=tenant.id, perms=["pt:write"]
+        )
+        user1, tok1 = await _create_user_with_role(
+            db, role_name="MEMBER", tenant_id=tenant.id, perms=["pt:book:self", "pt:read:self"]
+        )
+        await _create_member_for_user(db, tenant.id, user1.id, "Ann", "One")
+        user2, tok2 = await _create_user_with_role(
+            db, role_name="MEMBER", tenant_id=tenant.id, perms=["pt:book:self", "pt:read:self"]
+        )
+        await _create_member_for_user(db, tenant.id, user2.id, "Ben", "Two")
+        await db.commit()
+
+    start_t = datetime.now(UTC) + timedelta(days=3, hours=8)
+    end_t = start_t + timedelta(hours=1)
+    body = {
+        "trainer_user_id": str(trainer_user.id),
+        "location_id": str(loc.id),
+        "start_time_utc": start_t.isoformat(),
+        "end_time_utc": end_t.isoformat(),
+    }
+    res1, res2 = await asyncio.gather(
+        api_client.post(
+            "/api/v1/me/pt/appointments",
+            headers={"Authorization": f"Bearer {tok1}", "X-Tenant-ID": str(tenant.id)},
+            json=body,
+        ),
+        api_client.post(
+            "/api/v1/me/pt/appointments",
+            headers={"Authorization": f"Bearer {tok2}", "X-Tenant-ID": str(tenant.id)},
+            json=body,
+        ),
+    )
+    codes = sorted([res1.status_code, res2.status_code])
+    assert codes == [201, 409], (res1.status_code, res1.text, res2.status_code, res2.text)
 
 
 @pytest.mark.asyncio
