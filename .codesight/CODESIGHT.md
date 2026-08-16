@@ -4,8 +4,8 @@
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
 > 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 35% test coverage
-> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 18:52 — re-run after significant changes
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,100 tokens per conversation.**
+> **Last scanned:** 2026-08-16 19:20 — re-run after significant changes
 
 ---
 
@@ -1031,7 +1031,9 @@
 - `backend/scripts/check_release_truth.py`
   - function require: (path, *needles) -> list[str]
   - function forbid: (path, *needles) -> list[str]
+  - function exclusive_pair_errors: (path, text, left, right) -> list[str]
   - function forbid_both: (path, left, right) -> list[str]
+  - function authority_exclusive_errors: (path, text) -> list[str]
   - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
 - `backend/scripts/kms_iam_verify.py`
