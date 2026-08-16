@@ -37,7 +37,9 @@ def main() -> int:
             server.login(user, password)
         server.send_message(msg)
     print(f"SMTP proof: sent via {host}:{port} to {to_addr}")
-    print("DKIM/SPF/DMARC: not asserted by this script — record in docs/ops/SMTP_PROOF.md")
+    print(
+        "DKIM/SPF/DMARC: not asserted by this script — record in docs/ops/SMTP_PROOF.md"
+    )
     return 0
 
 
