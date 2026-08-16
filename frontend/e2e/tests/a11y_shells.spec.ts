@@ -23,6 +23,30 @@ test.describe('accessibility regression (serious/critical)', () => {
     await assertNoBlockingViolations(page, 'reception')
   })
 
+  test('owner dashboard shell', async ({ page }) => {
+    await loginAsOwner(page)
+    // /dashboard is not registered; the catch-all lands on the index dashboard.
+    await page.goto('/dashboard')
+    await expect(
+      page.getByRole('heading', { name: 'Operasyonlar & Gösterge Paneli' }),
+    ).toBeVisible()
+    await assertNoBlockingViolations(page, 'dashboard')
+  })
+
+  test('owner members shell', async ({ page }) => {
+    await loginAsOwner(page)
+    await page.goto('/members')
+    await expect(page.getByRole('heading', { name: 'Üyeler', exact: true })).toBeVisible()
+    await assertNoBlockingViolations(page, 'members')
+  })
+
+  test('owner plans shell', async ({ page }) => {
+    await loginAsOwner(page)
+    await page.goto('/plans')
+    await expect(page.getByRole('heading', { name: 'Planlar', exact: true })).toBeVisible()
+    await assertNoBlockingViolations(page, 'plans')
+  })
+
   test('member portal shell', async ({ page }) => {
     await page.goto('/login')
     await page.locator('input[type="email"]').fill('e2e.member@e2e.local')
