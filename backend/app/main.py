@@ -180,6 +180,15 @@ def create_app() -> FastAPI:
                 return Response(content="Unauthorized", status_code=401)
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
+    from app.services.booking import BookingError
+
+    @app.exception_handler(BookingError)
+    async def booking_error_handler(request: Request, exc: BookingError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         from app.api.deps import current_tenant_id_var

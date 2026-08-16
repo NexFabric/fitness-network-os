@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-16  
 **Branch:** `feat/public-site-modernization-and-seo`  
-**Alembic head:** `xf7a8b9c0d1e`  
+**Alembic head:** `xg8b9c0d1e2f`  
 **Program:** Phase 27–29 — in-repo closure  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
@@ -59,6 +59,8 @@ Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 | COV-1b | Measured 72%; CI `--cov-fail-under=70` |
 | IDX-1 | Model/DB index alignment (`xf7a8b9c0d1e`) so `alembic check` can pass |
 | STAFF-2 | Staff list returns `email`; class/PT picker uses tenant-isolated `GET /classes/trainers` (UserRole TRAINER mapping, not `first_name`); seed writes trainer/desk `staff` rows |
+| UR-1 | Partial unique grants on `user_roles` (`xg8b9c0d1e2f`) |
+| BK-ERR | `booking.py` raises `BookingError`; DSAR swallows only not-found/conflict |
 
 Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they are not re-listed.
 

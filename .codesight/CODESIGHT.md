@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 75 lib files | 19 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~160,800 tokens. **Saves ~145,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 11:11 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 76 lib files | 19 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~161,100 tokens. **Saves ~145,400 tokens per conversation.**
+> **Last scanned:** 2026-08-16 11:31 — re-run after significant changes
 
 ---
 
@@ -1018,6 +1018,7 @@
 - `backend/alembic/versions/xd5e6f7a8b9c_account_invites.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xe6f7a8b9c0d_dsar_requests.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/xf7a8b9c0d1e_align_model_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
@@ -1121,11 +1122,11 @@
 
 ## Most Imported Files (change these carefully)
 
-- `backend/app/models/user.py` — imported by **68** files
-- `backend/app/models/tenant.py` — imported by **59** files
-- `backend/app/models/organization.py` — imported by **52** files
+- `backend/app/models/user.py` — imported by **69** files
+- `backend/app/models/tenant.py` — imported by **60** files
+- `backend/app/models/organization.py` — imported by **53** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/rbac.py` — imported by **41** files
+- `backend/app/models/rbac.py` — imported by **42** files
 - `backend/app/models/member.py` — imported by **41** files
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **33** files
@@ -1144,11 +1145,11 @@
 
 ## Import Map (who imports what)
 
-- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +63 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +54 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +47 more
+- `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +64 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +55 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +48 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
-- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +36 more
+- `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +37 more
 - `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +36 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
 - `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +28 more
@@ -1160,7 +1161,7 @@
 # Test Coverage
 
 > **33%** of routes and models are covered by tests
-> 104 test files found
+> 105 test files found
 
 ## Covered Routes
 

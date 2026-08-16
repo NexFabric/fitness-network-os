@@ -865,10 +865,10 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **68** files
-- `backend/app/models/tenant.py` — imported by **59** files
-- `backend/app/models/organization.py` — imported by **52** files
-- `backend/app/models/rbac.py` — imported by **41** files
+- `backend/app/models/user.py` — imported by **69** files
+- `backend/app/models/tenant.py` — imported by **60** files
+- `backend/app/models/organization.py` — imported by **53** files
+- `backend/app/models/rbac.py` — imported by **42** files
 - `backend/app/models/member.py` — imported by **41** files
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **33** files

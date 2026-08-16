@@ -10,7 +10,33 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from fastapi import HTTPException, status
+
+class BookingError(Exception):
+    """HTTP-facing booking failure. Mapped at the API edge / FastAPI handler."""
+
+    status_code = 400
+
+    def __init__(self, detail: str):
+        self.detail = detail
+        super().__init__(detail)
+
+
+class BookingNotFound(BookingError):
+    status_code = 404
+
+
+class BookingConflict(BookingError):
+    status_code = 409
+
+
+class BookingForbidden(BookingError):
+    status_code = 403
+
+
+class BookingInvalid(BookingError):
+    status_code = 400
+
+
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -99,10 +125,7 @@ class ClassBookingService:
         result = await db.execute(stmt)
         class_type = result.scalar_one_or_none()
         if not class_type:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ders tipi bulunamadı.",
-            )
+            raise BookingNotFound("Ders tipi bulunamadı.")
         return class_type
 
     @staticmethod
@@ -131,10 +154,7 @@ class ClassBookingService:
         if not await StaffService.has_tenant_role(
             db, tenant_id, trainer_user_id, CLASS_TRAINER_ROLES
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Eğitmen bu kulüpte tanımlı değil.",
-            )
+            raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
 
     @staticmethod
     async def create_schedule(
@@ -194,10 +214,7 @@ class ClassBookingService:
         result = await db.execute(stmt)
         schedule = result.scalar_one_or_none()
         if not schedule:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ders programı şablonu bulunamadı.",
-            )
+            raise BookingNotFound("Ders programı şablonu bulunamadı.")
         updates = data.model_dump(exclude_unset=True)
         if "trainer_user_id" in updates and updates["trainer_user_id"] is not None:
             await ClassBookingService._require_class_trainer(
@@ -222,10 +239,7 @@ class ClassBookingService:
         result = await db.execute(stmt)
         schedule = result.scalar_one_or_none()
         if not schedule or not schedule.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Aktif ders programı şablonu bulunamadı.",
-            )
+            raise BookingNotFound("Aktif ders programı şablonu bulunamadı.")
 
         created_sessions: list[ClassSession] = []
         curr = start_date.date()
@@ -435,10 +449,7 @@ class ClassBookingService:
         )
         target_session = next((s for s in session_list if s.id == session_id), None)
         if not target_session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ders seansı bulunamadı.",
-            )
+            raise BookingNotFound("Ders seansı bulunamadı.")
 
         # 2. Fetch Attendees
         stmt = (
@@ -532,22 +543,13 @@ class ClassBookingService:
         session = sess_res.scalar_one_or_none()
 
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ders seansı bulunamadı.",
-            )
+            raise BookingNotFound("Ders seansı bulunamadı.")
 
         if session.status != ClassSessionStatus.SCHEDULED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Bu ders seansı rezervasyona kapalıdır.",
-            )
+            raise BookingInvalid("Bu ders seansı rezervasyona kapalıdır.")
 
         if session.start_time_utc <= now:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Geçmiş seanslara rezervasyon yapılamaz.",
-            )
+            raise BookingInvalid("Geçmiş seanslara rezervasyon yapılamaz.")
 
         # 2. Check if member already has active reservation (CONFIRMED or WAITLISTED)
         existing_stmt = select(ClassBooking).where(
@@ -560,10 +562,7 @@ class ClassBookingService:
         )
         existing_res = await db.execute(existing_stmt)
         if existing_res.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Zaten bu derse aktif rezervasyonunuz bulunmaktadır.",
-            )
+            raise BookingInvalid("Zaten bu derse aktif rezervasyonunuz bulunmaktadır.")
 
         # 3. Count current CONFIRMED bookings under the lock
         count_stmt = select(func.count(ClassBooking.id)).where(
@@ -668,25 +667,16 @@ class ClassBookingService:
         booking = b_res.scalar_one_or_none()
 
         if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Rezervasyon bulunamadı.",
-            )
+            raise BookingNotFound("Rezervasyon bulunamadı.")
 
         if member_id and not is_staff and booking.member_id != member_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Başka bir üyenin rezervasyonunu iptal edemezsiniz.",
-            )
+            raise BookingForbidden("Başka bir üyenin rezervasyonunu iptal edemezsiniz.")
 
         if booking.status not in [
             ClassBookingStatus.CONFIRMED,
             ClassBookingStatus.WAITLISTED,
         ]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Bu rezervasyon zaten {booking.status.value} durumundadır.",
-            )
+            raise BookingInvalid(f"Bu rezervasyon zaten {booking.status.value} durumundadır.")
 
         # 2. Lock the Session
         sess_stmt = (
@@ -812,10 +802,7 @@ class ClassBookingService:
     ) -> ClassBooking:
         """Mark attendee as ATTENDED or NO_SHOW (trainer / front-desk)."""
         if status_val not in [ClassBookingStatus.ATTENDED, ClassBookingStatus.NO_SHOW]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Geçersiz yoklama durumu.",
-            )
+            raise BookingInvalid("Geçersiz yoklama durumu.")
 
         stmt = (
             select(ClassBooking)
@@ -826,18 +813,9 @@ class ClassBookingService:
         booking = res.scalar_one_or_none()
 
         if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Rezervasyon bulunamadı.",
-            )
-        if (
-            status_val == ClassBookingStatus.ATTENDED
-            and booking.status != ClassBookingStatus.CONFIRMED
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Yalnızca asil listedeki rezervasyon yoklamaya alınır.",
-            )
+            raise BookingNotFound("Rezervasyon bulunamadı.")
+        if booking.status != ClassBookingStatus.CONFIRMED:
+            raise BookingConflict("Yalnızca asil listedeki rezervasyon yoklamaya alınır.")
 
         booking.status = status_val
         if status_val == ClassBookingStatus.ATTENDED:
@@ -861,10 +839,7 @@ class PtBookingService:
         if not await StaffService.has_tenant_role(
             db, tenant_id, data.trainer_user_id, CLASS_TRAINER_ROLES
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Eğitmen bu kulüpte tanımlı değil.",
-            )
+            raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
         avail = TrainerAvailability(
             id=uuid4(),
             tenant_id=tenant_id,
@@ -915,24 +890,15 @@ class PtBookingService:
         now = datetime.now(UTC)
 
         if start_time_utc <= now:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Geçmiş saatlere PT randevusu alınamaz.",
-            )
+            raise BookingInvalid("Geçmiş saatlere PT randevusu alınamaz.")
 
         if end_time_utc <= start_time_utc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Bitiş saati başlangıç saatinden sonra olmalıdır.",
-            )
+            raise BookingInvalid("Bitiş saati başlangıç saatinden sonra olmalıdır.")
 
         if not await StaffService.has_tenant_role(
             db, tenant_id, trainer_user_id, PT_TRAINER_ROLES
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Eğitmen bu kulüpte tanımlı değil.",
-            )
+            raise BookingInvalid("Eğitmen bu kulüpte tanımlı değil.")
 
         # Check conflicting PT appointment for trainer
         conflict_stmt = (
@@ -948,10 +914,7 @@ class PtBookingService:
         )
         conf_res = await db.execute(conflict_stmt)
         if conf_res.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Antrenör seçilen saat aralığında doludur.",
-            )
+            raise BookingConflict("Antrenör seçilen saat aralığında doludur.")
 
         appointment = PtAppointment(
             id=uuid4(),
@@ -1002,22 +965,13 @@ class PtBookingService:
         appt = res.scalar_one_or_none()
 
         if not appt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="PT randevusu bulunamadı.",
-            )
+            raise BookingNotFound("PT randevusu bulunamadı.")
 
         if member_id and not is_staff and appt.member_id != member_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Başka bir üyenin randevusunu iptal edemezsiniz.",
-            )
+            raise BookingForbidden("Başka bir üyenin randevusunu iptal edemezsiniz.")
 
         if appt.status != PtAppointmentStatus.CONFIRMED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Randevu zaten {appt.status.value} durumundadır.",
-            )
+            raise BookingInvalid(f"Randevu zaten {appt.status.value} durumundadır.")
 
         appt.status = PtAppointmentStatus.CANCELLED
         appt.cancelled_at = datetime.now(UTC)

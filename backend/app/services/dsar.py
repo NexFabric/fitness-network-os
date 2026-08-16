@@ -6,7 +6,6 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +30,12 @@ from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.member import Member, Note
 from app.models.membership import Membership
 from app.models.user import User, UserSession
+from app.services.booking import (
+    BookingConflict,
+    BookingNotFound,
+    ClassBookingService,
+    PtBookingService,
+)
 from app.services.storage import get_storage_provider
 
 HOLD_OPEN_INVOICES = "legal_hold_open_invoices"
@@ -225,8 +230,6 @@ class DsarService:
     async def _anonymize_member(
         self, tenant_id: UUID, member: Member, now: datetime
     ) -> None:
-        from app.services.booking import ClassBookingService, PtBookingService
-
         bookings = list(
             (
                 await self.db.execute(
@@ -250,7 +253,7 @@ class DsarService:
                     reason="dsar_erasure",
                     is_staff=True,
                 )
-            except HTTPException:
+            except (BookingNotFound, BookingConflict):
                 continue
 
         pts = list(
@@ -273,7 +276,7 @@ class DsarService:
                     member_id=member.id,
                     is_staff=True,
                 )
-            except HTTPException:
+            except (BookingNotFound, BookingConflict):
                 continue
 
         memberships = list(
