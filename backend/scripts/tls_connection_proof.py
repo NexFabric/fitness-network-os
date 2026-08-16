@@ -123,11 +123,10 @@ def _wait_ready() -> None:
 
 async def _select_one(url: str) -> None:
     from sqlalchemy import text
+    from sqlalchemy.engine.url import make_url
     from sqlalchemy.ext.asyncio import create_async_engine
 
     from app.core.config import database_ssl_connect_arg
-
-    from sqlalchemy.engine.url import make_url
 
     ssl_arg = database_ssl_connect_arg(url)
     if ssl_arg is None:
