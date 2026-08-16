@@ -57,3 +57,41 @@ async def test_report_run_cycle_executes_pending(pg_engine, pg_session_maker):
         assert row is not None
         assert row.status == REPORT_STATUS_SUCCEEDED
         assert row.status != REPORT_STATUS_PENDING
+
+
+@pytest.mark.asyncio
+async def test_report_run_cycle_isolates_execute_error(pg_engine, pg_session_maker):
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(name="Rpt Err Org", domain=f"rpte-{uuid4().hex[:8]}.com")
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="Rpt Err Tenant",
+            organization_id=org.id,
+            location_code=f"RE-{uuid4().hex[:6]}",
+            status=TenantStatus.ACTIVE.value,
+        )
+        db.add(tenant)
+        await db.flush()
+        svc = ReportService(db)
+        defn = await svc.create_definition(tenant.id, code="wkr_err", name="Worker err")
+        await svc.request_run(
+            tenant.id, definition_code=defn.code, enqueue_outbox=False
+        )
+        await db.commit()
+
+    class _Boom:
+        def __init__(self, *_a, **_k):
+            pass
+
+        async def execute_run(self, *_a, **_k):
+            raise RuntimeError("report boom")
+
+    with (
+        patch("app.workers.report.AsyncSessionLocal", pg_session_maker),
+        patch("app.workers.report.ReportService", _Boom),
+    ):
+        processed = await run_cycle()
+    assert processed == 0

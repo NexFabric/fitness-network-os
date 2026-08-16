@@ -59,6 +59,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
       - NOTIFICATION_EMAIL_PROVIDER=console
+      - METRICS_PORT=8002
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +81,7 @@ services:
       - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
       - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      - METRICS_PORT=8001
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,6 +103,7 @@ services:
       - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
       - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      - METRICS_PORT=8003
     depends_on:
       postgres:
         condition: service_healthy
@@ -122,6 +125,7 @@ services:
       - MIGRATOR_DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fitness_os
       - REDIS_URL=redis://redis:6379/0
       - ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+      - METRICS_PORT=8004
     depends_on:
       postgres:
         condition: service_healthy

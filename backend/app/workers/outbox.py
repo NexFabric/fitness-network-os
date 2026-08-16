@@ -12,6 +12,7 @@ from app.core.event_types import (
     NOTIFICATION_REQUESTED_V1,
     REPORT_RUN_REQUESTED_V1,
 )
+from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
 from app.db.session import AsyncSessionLocal
 from app.models.outbox import OutboxEvent
 from app.models.tenant import Tenant, TenantStatus
@@ -151,10 +152,12 @@ async def run_outbox_cycle(
 
 async def run_worker() -> None:
     logger.info("Starting Outbox & Inbox Worker")
+    start_worker_metrics_server()
     while True:
         try:
             async with AsyncSessionLocal() as db:
                 cycle_stats = await run_outbox_cycle(db)
+                WORKER_HEARTBEAT.labels(worker="outbox").set_to_current_time()
                 total_activity = (
                     cycle_stats["outbox_published"]
                     + cycle_stats["outbox_failed"]

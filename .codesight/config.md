@@ -11,6 +11,7 @@
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
+- `METRICS_PORT` **required** — backend/app/core/metrics.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
@@ -21,12 +22,13 @@
 - `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
 - `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
 - `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
+- `SMTP_CA_BUNDLE` **required** — backend/app/services/notification_providers.py
 - `SMTP_FROM` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_HOST` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
 - `SMTP_PROOF_TO` (has default) — backend/scripts/smtp_delivery_proof.py
-- `SMTP_STARTTLS` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_STARTTLS` (has default) — backend/app/services/notification_providers.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py

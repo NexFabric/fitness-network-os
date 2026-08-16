@@ -5,6 +5,11 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_tenant_id_var
+from app.core.metrics import (
+    RETENTION_RECORDS,
+    WORKER_HEARTBEAT,
+    start_worker_metrics_server,
+)
 from app.db.session import AsyncSessionLocal
 from app.models.tenant import Tenant, TenantStatus
 from app.services.retention import DataRetentionService
@@ -36,18 +41,26 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
             try:
                 service = DataRetentionService(db)
                 stats = await service.enforce_policies_for_tenant(tenant.id)
+                for model, count in stats.items():
+                    if count:
+                        RETENTION_RECORDS.labels(model=str(model)).inc(count)
                 affected = sum(stats.values())
                 if affected > 0:
                     total_affected += affected
                     logger.info(
                         f"Retention sweep completed for tenant {tenant.id}: {stats}"
                     )
+                await db.commit()
+            except Exception:
+                logger.exception("Error in retention sweep for tenant %s", tenant.id)
+                await db.rollback()
             finally:
                 current_tenant_id_var.reset(token)
                 if db.bind and db.bind.dialect.name == "postgresql":
-                    await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
+                    await db.execute(
+                        text("SELECT set_config('app.current_tenant_id', '', true)")
+                    )
 
-        await db.commit()
         return total_affected
 
     if db_override is not None:
@@ -59,9 +72,11 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
 
 async def run_worker() -> None:
     logger.info("Starting Data Retention Worker")
+    start_worker_metrics_server()
     while True:
         try:
             affected = await run_retention_sweep()
+            WORKER_HEARTBEAT.labels(worker="retention").set_to_current_time()
             if affected > 0:
                 logger.info(f"Total retention records processed: {affected}")
             # Sleep 1 hour between retention sweeps

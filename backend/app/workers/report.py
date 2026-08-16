@@ -4,6 +4,11 @@ import logging
 from sqlalchemy import select, text
 
 from app.api.deps import current_tenant_id_var
+from app.core.metrics import (
+    REPORT_EXECUTION,
+    WORKER_HEARTBEAT,
+    start_worker_metrics_server,
+)
 from app.db.session import AsyncSessionLocal
 from app.models.report import REPORT_STATUS_PENDING, ReportRun
 from app.models.tenant import Tenant, TenantStatus
@@ -46,19 +51,28 @@ async def run_cycle() -> int:
                     logger.info(f"Executing report run {run.id} for tenant {tenant.id}")
                     await service.execute_run(tenant.id, run.id)
                     processed += 1
+                    REPORT_EXECUTION.labels(outcome="success").inc()
+                await db.commit()
+            except Exception:
+                logger.exception("Error executing reports for tenant %s", tenant.id)
+                REPORT_EXECUTION.labels(outcome="error").inc()
+                await db.rollback()
             finally:
                 current_tenant_id_var.reset(token)
                 if db.bind and db.bind.dialect.name == "postgresql":
-                    await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
-        await db.commit()
+                    await db.execute(
+                        text("SELECT set_config('app.current_tenant_id', '', true)")
+                    )
     return processed
 
 
 async def run_worker() -> None:
     logger.info("Starting Report Worker")
+    start_worker_metrics_server()
     while True:
         try:
             processed = await run_cycle()
+            WORKER_HEARTBEAT.labels(worker="report").set_to_current_time()
             if processed == 0:
                 await asyncio.sleep(5)
         except Exception as e:  # noqa: BLE001

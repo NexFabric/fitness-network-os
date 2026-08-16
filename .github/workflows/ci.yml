@@ -440,10 +440,8 @@ jobs:
     name: Container image scan
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Independent of the test graph. An upstream scanner outage must not
-    # skip pytest. Not part of all-green until HIGH/CRITICAL are zero on
-    # a known-good baseline.
-    continue-on-error: true
+    # Hard gate: HIGH/CRITICAL with no .trivyignore row fails merge.
+    # Independent of `test.needs` so a scanner outage does not skip pytest.
     steps:
       - uses: actions/checkout@v7
 
@@ -454,9 +452,11 @@ jobs:
         run: >
           docker run --rm
           -v /var/run/docker.sock:/var/run/docker.sock
+          -v "$PWD/.trivyignore:/.trivyignore"
           aquasec/trivy:0.58.1 image
           --severity HIGH,CRITICAL
-          --exit-code 0
+          --ignorefile /.trivyignore
+          --exit-code 1
           --no-progress
           fitness-network-os:scan
 
@@ -474,6 +474,7 @@ jobs:
         frontend-images,
         browser-e2e,
         codeql,
+        image-scan,
       ]
     steps:
       - name: Ready to merge

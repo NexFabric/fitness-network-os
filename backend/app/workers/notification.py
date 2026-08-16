@@ -4,6 +4,11 @@ import logging
 from sqlalchemy import select, text
 
 from app.api.deps import current_tenant_id_var
+from app.core.metrics import (
+    NOTIFICATION_DISPATCH,
+    WORKER_HEARTBEAT,
+    start_worker_metrics_server,
+)
 from app.db.session import AsyncSessionLocal
 from app.models.tenant import Tenant, TenantStatus
 from app.services.notification import NotificationService
@@ -37,19 +42,37 @@ async def run_cycle() -> int:
                 processed += sent_count + failed_count
                 if sent_count > 0 or failed_count > 0:
                     logger.info("Processed notifications for %s: %s", tenant.id, res)
+                if sent_count:
+                    NOTIFICATION_DISPATCH.labels(channel="all", outcome="sent").inc(
+                        sent_count
+                    )
+                if failed_count:
+                    NOTIFICATION_DISPATCH.labels(channel="all", outcome="failed").inc(
+                        failed_count
+                    )
+                # Commit per tenant to release row locks and isolate failure
+                await db.commit()
+            except Exception:
+                logger.exception(
+                    "Error processing notifications for tenant %s", tenant.id
+                )
+                await db.rollback()
             finally:
                 current_tenant_id_var.reset(token)
                 if db.bind and db.bind.dialect.name == "postgresql":
-                    await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
-        await db.commit()
+                    await db.execute(
+                        text("SELECT set_config('app.current_tenant_id', '', true)")
+                    )
     return processed
 
 
 async def run_worker() -> None:
     logger.info("Starting Notification Worker")
+    start_worker_metrics_server()
     while True:
         try:
             processed = await run_cycle()
+            WORKER_HEARTBEAT.labels(worker="notification").set_to_current_time()
             if processed == 0:
                 await asyncio.sleep(5)
         except Exception as e:  # noqa: BLE001
