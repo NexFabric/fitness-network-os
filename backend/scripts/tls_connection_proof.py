@@ -12,17 +12,30 @@ import asyncio
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
 
+# uv run python scripts/*.py puts scripts/ on sys.path[0], not backend/.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 CONTAINER = os.environ.get("TLS_PROOF_CONTAINER", "fitness-os-tls-proof")
 IMAGE = os.environ.get("TLS_PROOF_IMAGE", "postgres:16")
 PASSWORD = "tls-proof-pass"
+# Official postgres:16 (Debian) image: postgres uid/gid is 999.
+POSTGRES_UID = 999
+POSTGRES_GID = 999
 
 
 def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, check=True, text=True, capture_output=True, **kwargs)
+    try:
+        return subprocess.run(cmd, check=True, text=True, capture_output=True, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "").strip()
+        if detail:
+            raise RuntimeError(f"{cmd[0]} failed ({exc.returncode}): {detail}") from exc
+        raise
 
 
 def _cleanup() -> None:
@@ -34,8 +47,61 @@ def _cleanup() -> None:
     )
 
 
+def _chown(path: Path, uid: int, gid: int) -> None:
+    try:
+        os.chown(path, uid, gid)
+        return
+    except OSError:
+        if os.geteuid() == 0:
+            raise
+    _run(["sudo", "-n", "chown", f"{uid}:{gid}", str(path)])
+
+
+def _own_for_postgres(*paths: Path) -> None:
+    """Own certs as 999:999 on the host before bind-mount.
+
+    postgres:16 refuses ssl=on when the key is runner-owned; the process
+    then exits and a later docker exec chown races a dead PID.
+    """
+    for path in paths:
+        _chown(path, POSTGRES_UID, POSTGRES_GID)
+
+
+def _rmtree(path: Path) -> None:
+    try:
+        shutil.rmtree(path)
+        return
+    except OSError:
+        pass
+    subprocess.run(
+        ["sudo", "-n", "rm", "-rf", str(path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    shutil.rmtree(path, ignore_errors=True)
+
+
+def _container_logs() -> str:
+    logs = subprocess.run(
+        ["docker", "logs", CONTAINER],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return (logs.stderr or logs.stdout or "").strip()
+
+
 def _wait_ready() -> None:
     for _ in range(40):
+        state = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Running}}", CONTAINER],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if state.returncode == 0 and state.stdout.strip() == "false":
+            break
         probe = subprocess.run(
             [
                 "docker",
@@ -51,19 +117,34 @@ def _wait_ready() -> None:
         if probe.returncode == 0:
             return
         time.sleep(0.5)
-    raise RuntimeError("tls postgres did not become ready")
+    detail = _container_logs()
+    raise RuntimeError(f"tls postgres did not become ready: {detail}")
 
 
 async def _select_one(url: str) -> None:
     from sqlalchemy import text
+    from sqlalchemy.engine.url import make_url
     from sqlalchemy.ext.asyncio import create_async_engine
 
     from app.core.config import database_ssl_connect_arg
 
-    ssl = database_ssl_connect_arg(url)
-    if ssl is None:
+    ssl_arg = database_ssl_connect_arg(url)
+    if ssl_arg is None:
         raise RuntimeError("expected ssl connect arg for sslmode=require")
-    engine = create_async_engine(url, connect_args={"ssl": ssl})
+    if ssl_arg is True:
+        # asyncpg 0.31 treats ssl=True as the default verifying context.
+        # sslmode=require is encrypt-only; this drill uses a 1-day self-signed cert.
+        import ssl as sslmod
+
+        ctx = sslmod.SSLContext(sslmod.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = sslmod.CERT_NONE
+        ssl_arg = ctx
+    # asyncpg.connect rejects sslmode=; the app helper maps it to ssl=.
+    engine = create_async_engine(
+        make_url(url).difference_update_query(["sslmode"]),
+        connect_args={"ssl": ssl_arg},
+    )
     async with engine.connect() as conn:
         value = (await conn.execute(text("SELECT 1"))).scalar_one()
     await engine.dispose()
@@ -101,7 +182,9 @@ def main() -> int:
                 str(key),
             ]
         )
+        cert.chmod(0o644)
         key.chmod(0o600)
+        _own_for_postgres(cert, key)
         _run(
             [
                 "docker",
@@ -126,26 +209,6 @@ def main() -> int:
                 "ssl_key_file=/var/lib/postgresql/server.key",
             ]
         )
-        # postgres image may refuse the key because it is root-owned; fix inside.
-        _run(
-            [
-                "docker",
-                "exec",
-                "-u",
-                "root",
-                CONTAINER,
-                "bash",
-                "-lc",
-                (
-                    "chown postgres:postgres /var/lib/postgresql/server.key "
-                    "/var/lib/postgresql/server.crt && "
-                    "chmod 600 /var/lib/postgresql/server.key"
-                ),
-            ]
-        )
-        subprocess.run(
-            ["docker", "restart", CONTAINER], check=True, capture_output=True
-        )
         _wait_ready()
         url = (
             f"postgresql+asyncpg://postgres:{PASSWORD}@127.0.0.1:55432"
@@ -156,7 +219,7 @@ def main() -> int:
         return 0
     finally:
         _cleanup()
-        shutil.rmtree(work, ignore_errors=True)
+        _rmtree(work)
 
 
 if __name__ == "__main__":
