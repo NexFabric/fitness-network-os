@@ -1,7 +1,7 @@
 # Knowledge Map — docs
-> 21 notes · 2 decisions · 0 open questions
+> 22 notes · 2 decisions · 0 open questions
 
-> **AI Primer:** This knowledge base has 21 notes. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
+> **AI Primer:** This knowledge base has 22 notes. Most recent decision: Federation-scope reads are served **without changing any existing RLS policy and.
 
 ## Key Decisions (2)
 - Federation-scope reads are served **without changing any existing RLS policy and
@@ -10,7 +10,7 @@
 ## Hub Notes (most referenced)
 - `plans/SHELF_NU_ADAPTATION_REFERENCE.md` — **2** incoming references — Shelf.nu Reference and Fitness Network OS Adaptation Plan
 
-## Note Index (21)
+## Note Index (22)
 
 ### Decision Records (2)
 - `adr/ADR-043-federation-scope-reads.md` — **Status:** Accepted
@@ -19,7 +19,7 @@
 ### Specs & PRDs (1)
 - `plans/phase11_money_floats.md` — **Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)
 
-### General Notes (18)
+### General Notes (19)
 - `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-12
 - `CORE_GATE_CLOSURE.md` — **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.
 - `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**.
@@ -30,6 +30,7 @@
 - `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-16
 - `RBAC.md` — **Son güncelleme:** 2026-08-12
 - `REVIEW_CHECKPOINT.md` — **Main HEAD:** `837cec4`; no open PRs
+- `TECH_DEBT.md` — Items that are real work, not bumps. Each one was found by something concrete
 - `WAVE_5_5B_CORE_CORRECTNESS.md` — **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.
 - `ops/ASVS_L2_COMPLIANCE_REPORT.md` — **Project:** GymClubNex (Fitness Network OS)
 - `ops/ASVS_PENTEST_STATUS.md` — **Status:** **UNVERIFIED** (Phase 27 P1-11 / Phase 26)
