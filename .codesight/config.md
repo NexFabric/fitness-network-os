@@ -11,9 +11,14 @@
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
+- `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
+- `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example
+- `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
+- `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
+- `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py

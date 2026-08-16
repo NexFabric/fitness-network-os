@@ -8,7 +8,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Branch | `feat/public-site-modernization-and-seo` |
 | Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) — merge kapısı **yalnız CI**. Onay kuralı 2026-08-16'da repo sahibi kararıyla kaldırıldı. Merge durumu için otorite: `git log origin/main`. |
+| PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) **MERGED** → `main` `ae6267d` (squash, 2026-08-16). Merge kapısı yalnız CI. |
 | CI | Kod `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. Sonraki **docs-only** SHA'lar ayrıca iddia edilmez. |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
@@ -26,6 +26,10 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Mimari kararlar | `docs/adr/` (ADR-043 federasyon okuma, ADR-044 cihaz imzalama) |
 | Güvenlik öz-değerlendirmesi | `docs/ops/ASVS_L2_COMPLIANCE_REPORT.md` |
 | Pentest / dış kanıt kapısı | `docs/ops/ASVS_PENTEST_STATUS.md` (UNVERIFIED) |
+| Gözlemlenebilirlik (kurulum + alert tatbikatı) | `docs/ops/OBSERVABILITY.md` |
+| S3 rapor deposu çalışma zamanı kanıtı | `docs/ops/S3_RUNTIME_PROOF.md` |
+| Yedek / restore / **PITR** tatbikatları | `docs/ops/DR_RESTORE_STATUS.md` |
+| KMS / IAM kurulum + rotation (NOT VERIFIED) | `docs/ops/KMS_IAM_RUNBOOK.md` |
 | Elle tarayıcı tutanağı | `docs/ops/HAND1_BROWSER_PROOF.md` (imza **boş**) |
 | Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` |
 | Kurallar / mühendislik sözleşmesi | `AGENTS.md` (`CLAUDE.md` buna sembolik bağ — tek kaynak) |
@@ -75,17 +79,23 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 | # | İş | Kim | Not |
 |---|---|---|---|
 | 1 | **HAND-1** insan imzası | insan | `docs/ops/HAND1_BROWSER_PROOF.md` imza tablosu boş. Playwright kapsar; tutanak insan işi. |
-| 2 | S3 / PITR / pentest / OBS / KMS IAM | A-OPS | Dış kanıt. Kod fail-closed. Uydurma. |
+| 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. |
+| 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır: `ops/iam/`, `backend/scripts/kms_iam_verify.py`. Kimlik bilgisi gelince tek komut. |
+| 4 | Üretim S3 kovası / off-host WAL / gerçek pager | A-OPS | Yerel tatbikatlar geçti; üretim altyapısı ayrı. |
+
+**2026-08-16'da kapananlar:** P1-3b-RT (gerçek S3 API'sine karşı 10/10),
+P1-10 (dump/restore **ve** PITR tatbikatı), P2-OBS (Prometheus/Alertmanager/
+Grafana + uçtan uca ateşlenen alert). Kanıtlar `docs/ops/` altında.
 
 ## Bu makineden kapatılamayanlar
 
 | Madde | Neden |
 |---|---|
 | HAND-1 imza | İnsan tıklama tutanağı; ajan imzalayamaz |
-| P1-3b-RT | Gerçek S3/MinIO kovası + kimlik bilgisi |
-| P2-3-IAM | Üretim KMS alias / IAM / rotation + canlı decrypt |
-| P1-10 | Gerçek altyapıda restore/PITR tatbikatı |
-| P1-11 / Phase 26 | Dış pentest + bağımsız APPROVE |
+| P2-3-IAM | Üretim KMS alias / IAM / rotation + canlı decrypt — AWS kimlik bilgisi yok |
+| P1-3b-PROD | Gerçek AWS kovası (MinIO S3-uyumlu, AWS değil) |
+| P1-10-PROD | Üretim host'unda off-host WAL arşivleme + ölçülmüş RPO |
+| P1-11 / Phase 26 | Dış pentest + bağımsız güvenlik onayı |
 | ISO-1 | IsolationProvider abstraction — icat etme, RLS’i değiştirme |
 | Scope.LOCATION | Bilinçli ertelendi; şimdi açma |
 

@@ -4,7 +4,7 @@
 **Branch:** `feat/public-site-modernization-and-seo`  
 **Last code:** `ab860f0`  
 **Alembic head:** `xi0d1e2f3a4b`  
-**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) — merge gate is **CI only** (review requirement removed 2026-08-16). Merge status authority: `git log origin/main`.  
+**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) **MERGED** to `main` as `ae6267d` (squash, 2026-08-16). Merge gate is CI only.  
 **CI:** `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**.  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
@@ -24,7 +24,10 @@ Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 | Member portal bind + staff email hook + compose workers | 🟢 landed (this branch) |
 | Playwright E2E | 🟢 required CI gate |
 | Invite token + onboarding wizard UI | 🟢 landed (this branch) |
-| DR / pentest / real S3 / KMS IAM | 🔴 UNVERIFIED (external) |
+| DR restore + PITR drills | 🟢 executed 2026-08-16 (local container) |
+| S3 report storage against a real S3 API | 🟢 10/10 (MinIO) — AWS bucket/IAM still open |
+| Metrics → scrape → alert → dashboard | 🟢 landed + alert path drilled |
+| Pentest / production AWS bucket / KMS IAM | 🔴 UNVERIFIED (external) |
 | Independent **security** APPROVE (P1-11 / Phase 26) — not the merge gate | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
 
@@ -86,11 +89,15 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 
 | ID | Item | Owner |
 |----|------|-------|
-| P1-3b-RT | S3/MinIO **runtime** proof — real bucket + credentials | A-OPS |
-| P1-10 | Actual restore/PITR drill evidence | A-OPS |
-| P1-11 | ASVS/pentest + independent APPROVE | A-OPS + human |
-| P2-OBS | Scraper / dashboard / traces / alert rules | A-OPS |
-| P2-3-IAM | Production KMS alias / IAM / rotation proof | A-OPS |
+| ~~P1-3b-RT~~ | **Closed 2026-08-16** — 10/10 against a real S3 API (MinIO) with the actual provider. `docs/ops/S3_RUNTIME_PROOF.md` | — |
+| ~~P1-10~~ | **Closed 2026-08-16** — dump/restore **and** PITR drill both passed. `docs/ops/DR_RESTORE_STATUS.md` | — |
+| ~~P2-OBS~~ | **Closed 2026-08-16** — Prometheus/Alertmanager/Grafana + 7 rules + drilled alert path. `docs/ops/OBSERVABILITY.md` | — |
+| P1-11 | ASVS/pentest by an independent third party | A-OPS + human |
+| P2-3-IAM | Production KMS alias / IAM / rotation. Artifacts + verifier landed; **never run against real AWS** | A-OPS |
+| P1-3b-PROD | Real **AWS** bucket + policy + public-access block + SSE-KMS | A-OPS |
+| P1-10-PROD | Off-host continuous WAL archiving + RPO measured on the production host | A-OPS |
+| P2-OBS-PROD | Real Alertmanager receiver from a secret + distributed tracing | A-OPS |
+| HAND-1 | Human sign-off of the browser proof | human |
 | ISO-1 | IsolationProvider — do not invent; keep abstraction | — |
 
 GitHub Settings (2026-08-16, `gh` API): Default CodeQL Setup = **not-configured**. `main` required checks: Unit tests, FE builds, Frontend Images, Playwright, CodeQL, All Required Checks Passed. **No review requirement** (removed 2026-08-16, single maintainer); conversation resolution, `enforce_admins`, `strict` still on. `delete_branch_on_merge` + Dependabot security updates enabled.
