@@ -3,7 +3,7 @@
 **Date:** 2026-08-16  
 **Authority:** `docs/PROGRESS_CHECKLIST.md`  
 **Pickup:** `docs/HANDOFF.md`  
-**Last code on `main`:** `1b42ab4`  
+**Last code on `main`:** `48b3c79`  
 **Alembic head:** `xi0d1e2f3a4b`  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
@@ -40,9 +40,9 @@ Ops-drills on tip `1b42ab4`: GitHub run **`31968740247` SUCCESS**. First post-#8
 
 | Item | State | Owner rule |
 |---|---|---|
-| PR **#95** `feat/p1-critical-test-depth` | rebase / CI; do not invent new floors above measured CI | one agent only |
-| PR **#92** Dependabot `github-actions` | MERGEABLE; must be up to date with `main` before merge | one agent only |
-| `main` CI `1b42ab4` run `31968735637` | watch only | do not re-dispatch unless red |
+| PR **#95** | **MERGED** `48b3c79` | do not reopen |
+| PR **#92** | **MERGED** `4d5291d` | do not reopen |
+| PR **#96** | **MERGED** `94eafb5` | do not reopen |
 | PR **#86** React 19 | **do not merge** | leave open |
 
 ---
@@ -112,6 +112,6 @@ ops-drills. After live test: HAND-1 signature + external gates.
 3. If an ID is in the closed table above, **stop**. Tick it if a checklist still shows `[ ]`; do not write new code.
 4. If a PR is in flight, **watch it**. Rebase only when merge is blocked
    and you will merge immediately. Do not open a sibling. Do not farm CI.
-5. After `#95` lands, remaining agent-doable work is none in-repo.
+5. `#95`/`#96`/`#92` landed. Remaining agent-doable work is none in-repo.
    Human live test + HAND-1 + external gates. Refuse IsolationProvider /
    Scope.LOCATION / React 19 / HAND-1 signatures.

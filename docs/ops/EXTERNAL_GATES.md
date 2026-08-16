@@ -6,7 +6,7 @@ local drill does **not** change that. Do not write PASS, VERIFIED, or
 Phase 26 GO here.
 
 In-repo certification that *supports* these gates already landed
-(#89–#94, `1b42ab4`). Do not re-implement packets, verifiers, or
+(#89–#96, tip `48b3c79`). Do not re-implement packets, verifiers, or
 compose TLS. See `docs/CAMPAIGN_REGISTER.md`. Local MinIO / local PITR /
 null-receiver drills are **not** the rows below.
 

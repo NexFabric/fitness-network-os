@@ -1,7 +1,7 @@
 # GymClubNex (Fitness Network OS) — Sistem Mimarisi
 
 **Son güncelleme:** 2026-08-16  
-**Last code:** `1b42ab4` (`main`, PR **#94**) · Alembic `xi0d1e2f3a4b`  
+**Last code:** `48b3c79` (`main`, PR **#95**) · Alembic `xi0d1e2f3a4b`  
 **Production-ready?** **NO** · Phase 26 PASS? **NO / NOT VERIFIED**  
 **Sözleşme:** `docs/MASTER_SPEC.md` + `docs/PRODUCTION_READINESS.md`  
 **Kapanan kampanya (tekrar etme):** `docs/CAMPAIGN_REGISTER.md`  

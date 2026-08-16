@@ -6,9 +6,9 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Alan | Değer |
 |---|---|
 | Branch | `main` |
-| Last code | `1b42ab4` (PR **#89** / **#91** / **#93** / **#94** MERGED, 2026-08-16) |
+| Last code | `48b3c79` (PR **#95** MERGED, 2026-08-16) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
-| Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#83`/`#84` frontend deps · `#64/#66/#68` CI action bump · `#89` → `e05e29f` (sertifikasyon) · `#91` → `27fff12` (truth) · `#93` → `d9a5c9d` (release-truth gate) · `#94` → `1b42ab4` (TLS proof chown) |
+| Bu turda merge edilenler | `#62` → `ae6267d` · `#78` → `fb3a26d` · `#80` → `d56b6a0` · `#83`/`#84` · `#64/#66/#68` · `#89` → `e05e29f` · `#91` → `27fff12` · `#93` → `d9a5c9d` · `#94` → `1b42ab4` · `#92` → `4d5291d` · `#96` → `94eafb5` · `#95` → `48b3c79` |
 | Campaign landings | **#89–#94 MERGED** — migrate gate · migrator isolation · TLS · ops-drills PITR (CI `31968740247` SUCCESS) · coverage floors · Safety CLI dropped · release-truth checker. Do **not** redo. Register: `docs/CAMPAIGN_REGISTER.md`. EXTERNAL_GATES **UNVERIFIED**. |
 | CI | `main` üzerindeki her merge required CI'dan geçti. Merge kapısı **yalnız CI** — review zorunluluğu yok (2026-08-16, tek geliştirici). |
 | Production-ready? | **NO** |
@@ -46,7 +46,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `git log origin/main` otoritedir. Tip `1b42ab4` (#94). Sertifikasyon **#89** `e05e29f` olarak `main`'dedir; ardından **#91 / #93 / #94**. Kapanan ID'ler `docs/CAMPAIGN_REGISTER.md` — tekrar implement etme. Bir SHA'nın CI'sini görmeden yeşil iddia etme.
+2. `git log origin/main` otoritedir. Tip `48b3c79` (#95). Sertifikasyon **#89–#94**, sonra **#92 / #96 / #95**. Kapanan ID'ler `docs/CAMPAIGN_REGISTER.md` — tekrar implement etme. Bir SHA'nın CI'sini görmeden yeşil iddia etme.
 3. **Merge kapısı CI’dır.** Bu tek geliştiricili repoda “1 onaylayan review” kuralı yapısal olarak imkânsızdı (yazar kendi PR’ını onaylayamaz) ve 2026-08-16’da repo sahibi kararıyla kaldırıldı. `enforce_admins`, `strict` ve 11 required check **yerinde** — bunlara dokunma. Yeşil CI olmadan merge etme.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -56,7 +56,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Şu an ne durumda
 
 Ürün kodu `main`'de (Phase 0–27.4 + Waves 1–3 + Fed HQ + B1 + Phase 29 + RC).
-Sertifikasyon kapanışı **#89–#94** `main`'dedir (`1b42ab4`). Safety CLI düşürüldü
+Sertifikasyon kapanışı **#89–#94** `main`'dedir; tip `48b3c79` (#95). Safety CLI düşürüldü
 (pip-audit SCA), migrator DSN yalnız `migrate` servisinde, worker'lar
 `PRODUCTION_PRIVATE_NETWORK` alır, ops-drills dump/restore + PITR GitHub'da
 yeşil (`31968740247` @ `1b42ab4`). Bu işleri yeniden yazma. Merge yalnız
@@ -98,8 +98,7 @@ ops-drills PR'ı açma. Kayıt: `docs/CAMPAIGN_REGISTER.md`.
 | 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. `docs/ops/PENTEST_BRIEF.md`. |
 | 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır. Kimlik bilgisi gelince tek komut. |
 | 4 | **P1-3b-PROD** / **P1-10-PROD** / **P2-OBS-PROD** | A-OPS | Yerel MinIO / PITR / null-receiver **kapalı**. Üretim AWS / WAL / pager ayrı. |
-| 5 | PR **#95** / **#92** | ajan (tek kopya) | Test-depth rebase+CI; Dependabot actions up-to-date merge. Kardeş PR açma. |
-| 6 | PR **#86** React 19 | — | **Merge etme.** |
+| 5 | PR **#86** React 19 | — | **Merge etme.** Dependabot açık kalsın. |
 
 **2026-08-16'da kapananlar (tekrar etme):**
 `#89` `e05e29f` · `#91` `27fff12` · `#93` `d9a5c9d` · `#94` `1b42ab4` ·

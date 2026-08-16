@@ -6,7 +6,7 @@ Bu iki specification (MASTER_SPEC.md ve PRODUCTION_READINESS.md) proje için sou
 
 **Context map:** `.codesight/wiki/index.md` — AST-derived route/model/file map, ~200 tokens to load. Read it before searching the tree; load the targeted article (e.g. `plans.md`, `devices.md`) instead of scanning the codebase. It says *where* things are, never *how* they work — always read the source before changing it. Regenerated automatically by `.git/hooks/pre-commit`; refresh manually with `npx codesight --wiki`.
 
-**Progress truth (2026-08-16):** Phase **27 / 27.1 / 27.2 / 27.3 / 27.4 + Waves 1–3 + Deep-Dive Hardening + Federation HQ + Milestone B1 + Phase 29 + RC closure** is **CODE LANDED** on `main` @ `1b42ab4`. PR **#89** / **#91** / **#93** / **#94** MERGED — **do not redo** (`docs/CAMPAIGN_REGISTER.md`). Merge gate is CI only. External AWS S3/KMS, off-host WAL, real pager, independent pentest, and HAND-1 human signature remain open. Checklist authority: `docs/PROGRESS_CHECKLIST.md`. Pickup: `docs/HANDOFF.md`. Phase **26 CORE MVP EXIT GATE remains NOT PASSED** — **not production-ready**.
+**Progress truth (2026-08-16):** Phase **27 / 27.1 / 27.2 / 27.3 / 27.4 + Waves 1–3 + Deep-Dive Hardening + Federation HQ + Milestone B1 + Phase 29 + RC closure** is **CODE LANDED** on `main` @ `48b3c79`. PR **#89–#94** / **#92** / **#96** / **#95** MERGED — **do not redo** (`docs/CAMPAIGN_REGISTER.md`). Merge gate is CI only. External AWS S3/KMS, off-host WAL, real pager, independent pentest, and HAND-1 human signature remain open. Checklist authority: `docs/PROGRESS_CHECKLIST.md`. Pickup: `docs/HANDOFF.md`. Phase **26 CORE MVP EXIT GATE remains NOT PASSED** — **not production-ready**.
 
 ## Temel Kurallar ve Mimari Kararlar
 
