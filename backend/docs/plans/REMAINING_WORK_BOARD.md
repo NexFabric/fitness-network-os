@@ -1,11 +1,11 @@
 # Remaining Work Board
 
 **Date:** 2026-08-16  
-**Branch:** `feat/public-site-modernization-and-seo`  
-**Last code:** `ab860f0`  
+**Branch:** `main` — no open branches, no open PRs  
+**Last code:** `d56b6a0`  
 **Alembic head:** `xi0d1e2f3a4b`  
-**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) **MERGED** to `main` as `ae6267d` (squash, 2026-08-16). Merge gate is CI only.  
-**CI:** `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**.  
+**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#64/#66/#68` (CI actions)  
+**CI:** every merge passed required CI. Merge gate is CI only (review requirement removed 2026-08-16, single maintainer).  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
 **Phase 26 PASS?** **NO / NOT VERIFIED**
