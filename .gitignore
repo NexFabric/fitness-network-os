@@ -35,6 +35,7 @@ logs
 # Coverage
 htmlcov/
 .coverage
+backend/coverage.json
 
 # Locally generated audit / coverage output — never committed
 reports/
