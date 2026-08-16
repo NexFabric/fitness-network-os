@@ -5,8 +5,8 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 
 | Alan | Değer |
 |---|---|
-| Branch | `feat/production-certification-closure` — PR **#89 OPEN** (until merged) |
-| Last code | `6530739` (campaign tip; `origin/main` still `ee6597e`) |
+| Branch | `main` |
+| Last code | `e05e29f` (PR **#89 MERGED**, 2026-08-16) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
 | Bu turda merge edilenler | `#62` → `ae6267d` (Phase 29 + RC) · `#78` → `fb3a26d` (ops tatbikatları) · `#80` → `d56b6a0` (bağımlılık partisi + HAND-1 + dependabot scope) · `#83`/`#84` frontend deps · `#64/#66/#68` CI action bump |
 | Campaign landings (PR #89) | migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · EXTERNAL_GATES **UNVERIFIED** |
@@ -45,7 +45,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `git log origin/main` otoritedir. Sertifikasyon PR **#89** açık olana kadar `main` dışındaki SHA'yı merged sayma. Bir SHA'nın CI'sini görmeden yeşil iddia etme.
+2. `git log origin/main` otoritedir. Sertifikasyon PR **#89** `main`'e squash-merge edildi (`e05e29f`). Bir SHA'nın CI'sini görmeden yeşil iddia etme.
 3. **Merge kapısı CI’dır.** Bu tek geliştiricili repoda “1 onaylayan review” kuralı yapısal olarak imkânsızdı (yazar kendi PR’ını onaylayamaz) ve 2026-08-16’da repo sahibi kararıyla kaldırıldı. `enforce_admins`, `strict` ve 11 required check **yerinde** — bunlara dokunma. Yeşil CI olmadan merge etme.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -55,7 +55,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Şu an ne durumda
 
 Ürün kodu `main`'de (Phase 0–27.4 + Waves 1–3 + Fed HQ + B1 + Phase 29 + RC).
-Sertifikasyon kapanışı PR **#89** üzerindedir — Safety CLI düşürüldü, migrator
+Sertifikasyon kapanışı PR **#89** `main`'dedir — Safety CLI düşürüldü, migrator
 DSN yalnız `migrate` servisinde, worker'lar `PRODUCTION_PRIVATE_NETWORK` alır,
 ops-drills dump/restore + PITR çalıştırır. Merge yalnız required CI yeşilse.
 
@@ -91,7 +91,7 @@ repo CodeQL (`javascript-typescript` + `python`). GitHub Default CodeQL Setup =
 | 2 | **P1-11** bağımsız pentest | dış taraf | Onay kuralının kaldırılması bunu kapatmaz. `docs/ops/PENTEST_BRIEF.md`. |
 | 3 | **P2-3-IAM** gerçek AWS KMS/IAM | A-OPS | Artefaktlar + doğrulayıcı hazır: `ops/iam/`, `backend/scripts/kms_iam_verify.py`. Kimlik bilgisi gelince tek komut. |
 | 4 | Üretim S3 kovası / off-host WAL / gerçek pager | A-OPS | Yerel tatbikatlar geçti; üretim altyapısı ayrı. |
-| 5 | PR **#89** required CI + merge | ajan | Security artık pip-audit; Unit/Playwright GitHub'da. Yeşil olmadan merge yok. |
+| 5 | PR **#89** | — | **MERGED** `e05e29f`. In-repo certification landed. External gates still UNVERIFIED. |
 
 **2026-08-16'da kapananlar:** P1-3b-RT (gerçek S3 API'sine karşı 10/10),
 P1-10 (dump/restore **ve** PITR tatbikatı), P2-OBS (Prometheus/Alertmanager/
