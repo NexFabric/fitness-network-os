@@ -454,8 +454,10 @@ jobs:
         run: >
           docker run --rm
           -v /var/run/docker.sock:/var/run/docker.sock
+          -v "$PWD/.trivyignore:/.trivyignore"
           aquasec/trivy:0.58.1 image
           --severity HIGH,CRITICAL
+          --ignorefile /.trivyignore
           --exit-code 0
           --no-progress
           fitness-network-os:scan

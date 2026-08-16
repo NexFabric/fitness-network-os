@@ -112,7 +112,6 @@ class FailingNotificationProvider:
         )
 
 
-import smtplib
 from email.message import EmailMessage
 
 
@@ -161,14 +160,19 @@ class SmtpNotificationProvider:
         msg.set_content(_delivery_body(delivery))
 
         try:
-            # We use synchronous smtplib wrapped in a thread/executor conceptually,
-            # but for simplicity/MVP here we just block briefly or use aiosmtplib.
-            # Using smtplib directly is a blocking call, but OK for MVP exit gate.
             import asyncio
+            import smtplib
+            import ssl
 
             def _send():
+                context = ssl.create_default_context()
+                ca_bundle = os.environ.get("SMTP_CA_BUNDLE")
+                if ca_bundle:
+                    context.load_verify_locations(cafile=ca_bundle)
+
                 with smtplib.SMTP(host, port, timeout=10) as server:
-                    server.starttls()
+                    if os.environ.get("SMTP_STARTTLS", "1") != "0":
+                        server.starttls(context=context)
                     if user and password:
                         server.login(user, password)
                     server.send_message(msg)

@@ -8,7 +8,7 @@
 
 ## Scale
 
-142 API routes · 86 database models · 64 UI components · 83 library files · 6 middleware layers · 32 environment variables
+142 API routes · 86 database models · 64 UI components · 83 library files · 6 middleware layers · 34 environment variables
 
 ## Subsystems
 
@@ -62,13 +62,14 @@ Changes to these files have the widest blast radius across the codebase:
 - `CI` — `frontend/e2e/playwright.config.ts`
 - `ENVIRONMENT` — `backend/app/core/security.py`
 - `FITNESS_OS_TLS_SMOKE` — `backend/tests/test_asyncpg_tls_smoke.py`
+- `METRICS_PORT` — `backend/app/core/metrics.py`
 - `NEXT_PUBLIC_ADMIN_URL` — `frontend/public-site/src/components/Cta.tsx`
 - `S3_BUCKET_NAME` — `backend/scripts/kms_iam_verify.py`
 - `S3_ENDPOINT_URL` — `backend/scripts/s3_runtime_proof.py`
 - `S3_KMS_KEY_ID` — `backend/scripts/kms_iam_verify.py`
+- `SMTP_CA_BUNDLE` — `backend/app/services/notification_providers.py`
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`
-- `SMTP_USER` — `backend/app/services/notification_providers.py`
-- `TEST_DATABASE_URL` — `backend/scripts/check_permissions_db.py`
+- _...2 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-08-16_

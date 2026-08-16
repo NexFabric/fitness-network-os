@@ -42,12 +42,19 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
                     logger.info(
                         f"Retention sweep completed for tenant {tenant.id}: {stats}"
                     )
+                await db.commit()
+            except Exception:
+                logger.exception(
+                    "Error in retention sweep for tenant %s", tenant.id
+                )
+                await db.rollback()
             finally:
                 current_tenant_id_var.reset(token)
                 if db.bind and db.bind.dialect.name == "postgresql":
-                    await db.execute(text("SET LOCAL app.current_tenant_id = '';"))
+                    await db.execute(
+                        text("SELECT set_config('app.current_tenant_id', '', true)")
+                    )
 
-        await db.commit()
         return total_affected
 
     if db_override is not None:
@@ -59,9 +66,13 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
 
 async def run_worker() -> None:
     logger.info("Starting Data Retention Worker")
+    from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
+
+    start_worker_metrics_server()
     while True:
         try:
             affected = await run_retention_sweep()
+            WORKER_HEARTBEAT.labels(worker="retention").set_to_current_time()
             if affected > 0:
                 logger.info(f"Total retention records processed: {affected}")
             # Sleep 1 hour between retention sweeps

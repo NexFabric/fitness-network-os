@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import smtplib
+import ssl
 from email.message import EmailMessage
 
 
@@ -30,9 +31,14 @@ def main() -> int:
     msg["To"] = to_addr
     msg.set_content("smtp delivery proof — no PII")
 
+    context = ssl.create_default_context()
+    ca_bundle = os.environ.get("SMTP_CA_BUNDLE")
+    if ca_bundle:
+        context.load_verify_locations(cafile=ca_bundle)
+
     with smtplib.SMTP(host, port, timeout=10) as server:
         if starttls:
-            server.starttls()
+            server.starttls(context=context)
         if user and password:
             server.login(user, password)
         server.send_message(msg)

@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 36% test coverage
-> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 20:24 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 83 lib files | 34 env vars | 6 middleware | 36% test coverage
+> **Token savings:** this file is ~16,500 tokens. Without it, AI exploration would cost ~164,800 tokens. **Saves ~148,400 tokens per conversation.**
+> **Last scanned:** 2026-08-16 21:08 — re-run after significant changes
 
 ---
 
@@ -1096,6 +1096,7 @@
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
 - `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
+- `METRICS_PORT` **required** — backend/app/core/metrics.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
@@ -1106,12 +1107,13 @@
 - `S3_BUCKET_NAME` **required** — backend/scripts/kms_iam_verify.py
 - `S3_ENDPOINT_URL` **required** — backend/scripts/s3_runtime_proof.py
 - `S3_KMS_KEY_ID` **required** — backend/scripts/kms_iam_verify.py
+- `SMTP_CA_BUNDLE` **required** — backend/app/services/notification_providers.py
 - `SMTP_FROM` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_HOST` (has default) — backend/scripts/smtp_delivery_proof.py
 - `SMTP_PASS` **required** — backend/app/services/notification_providers.py
 - `SMTP_PORT` (has default) — backend/app/services/notification_providers.py
 - `SMTP_PROOF_TO` (has default) — backend/scripts/smtp_delivery_proof.py
-- `SMTP_STARTTLS` (has default) — backend/scripts/smtp_delivery_proof.py
+- `SMTP_STARTTLS` (has default) — backend/app/services/notification_providers.py
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
@@ -1191,7 +1193,7 @@
 # Test Coverage
 
 > **36%** of routes and models are covered by tests
-> 119 test files found
+> 120 test files found
 
 ## Covered Routes
 

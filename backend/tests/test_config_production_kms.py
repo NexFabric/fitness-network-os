@@ -14,6 +14,8 @@ _BASE_PROD = {
     "NOTIFICATION_EMAIL_PROVIDER": "disabled",
     "REPORT_STORAGE_PROVIDER": "s3",
     "S3_BUCKET_NAME": "prod-reports",
+    "S3_SSE_ALGORITHM": "aws:kms",
+    "S3_KMS_KEY_ID": "arn:aws:kms:eu-central-1:123456789012:key/s3-test",
     "METRICS_BEARER_TOKEN": "x" * 32,
     "ENCRYPTION_KEY": "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
 }
@@ -28,6 +30,37 @@ def test_database_ssl_connect_arg_modes():
     ctx = database_ssl_connect_arg("postgresql+asyncpg://u:p@h/db?sslmode=verify-full")
     assert ctx is not None
     assert ctx is not True
+
+
+def test_production_rejects_s3_sse_aes256():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "key-123",
+            "S3_SSE_ALGORITHM": "AES256",
+        }
+    )
+    with pytest.raises(
+        RuntimeError, match="S3_SSE_ALGORITHM must be aws:kms in production"
+    ):
+        s.validate_production()
+
+
+def test_production_rejects_missing_s3_kms_key_id():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "key-123",
+            "S3_SSE_ALGORITHM": "aws:kms",
+            "S3_KMS_KEY_ID": "",
+        }
+    )
+    with pytest.raises(
+        RuntimeError, match="S3_KMS_KEY_ID is required when ENVIRONMENT=production"
+    ):
+        s.validate_production()
 
 
 def test_production_rejects_qr_kms_mode_local():

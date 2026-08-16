@@ -157,10 +157,10 @@ class Settings(BaseSettings):
             errors.append("S3_BUCKET_NAME is required for production report storage")
         if not 60 <= self.REPORT_DOWNLOAD_URL_TTL_SECONDS <= 3600:
             errors.append("REPORT_DOWNLOAD_URL_TTL_SECONDS must be between 60 and 3600")
-        if self.S3_SSE_ALGORITHM not in {"AES256", "aws:kms"}:
-            errors.append("S3_SSE_ALGORITHM must be AES256 or aws:kms")
-        if self.S3_SSE_ALGORITHM == "aws:kms" and not self.S3_KMS_KEY_ID.strip():
-            errors.append("S3_KMS_KEY_ID is required when S3_SSE_ALGORITHM=aws:kms")
+        if self.S3_SSE_ALGORITHM != "aws:kms":
+            errors.append("S3_SSE_ALGORITHM must be aws:kms in production")
+        if not self.S3_KMS_KEY_ID or not self.S3_KMS_KEY_ID.strip():
+            errors.append("S3_KMS_KEY_ID is required when ENVIRONMENT=production")
 
         qr_kms_mode = self.QR_KMS_MODE.strip().lower()
         if qr_kms_mode != "aws_kms":

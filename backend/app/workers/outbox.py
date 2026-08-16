@@ -151,10 +151,14 @@ async def run_outbox_cycle(
 
 async def run_worker() -> None:
     logger.info("Starting Outbox & Inbox Worker")
+    from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
+
+    start_worker_metrics_server()
     while True:
         try:
             async with AsyncSessionLocal() as db:
                 cycle_stats = await run_outbox_cycle(db)
+                WORKER_HEARTBEAT.labels(worker="outbox").set_to_current_time()
                 total_activity = (
                     cycle_stats["outbox_published"]
                     + cycle_stats["outbox_failed"]
