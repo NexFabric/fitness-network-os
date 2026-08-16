@@ -1,7 +1,7 @@
 # GymClubNex (Fitness Network OS) — Sistem Mimarisi
 
 **Son güncelleme:** 2026-08-16  
-**Last code:** `1b42ab4` (`main`, PR **#94**) · Alembic `xi0d1e2f3a4b`  
+**Last code:** `48b3c79` (`main`, PR **#95**) · Alembic `xi0d1e2f3a4b`  
 **Production-ready?** **NO** · Phase 26 PASS? **NO / NOT VERIFIED**  
 **Sözleşme:** `docs/MASTER_SPEC.md` + `docs/PRODUCTION_READINESS.md`  
 **Kapanan kampanya (tekrar etme):** `docs/CAMPAIGN_REGISTER.md`  
@@ -21,7 +21,7 @@ graph TD
     subgraph Client_Layer ["İstemci Katmanı"]
         A["Admin Web (Vite :5173)<br/>5 portal yüzeyi + HQ"]
         B["Scanner PWA (Vite :5174)<br/>turnike kiosk"]
-        C["public-site<br/>pazarlama sitesi"]
+        C["public-site (:3000)<br/>pazarlama + /privacy /terms /kvkk"]
     end
 
     subgraph Gateway ["Güvenlik & API Katmanı (FastAPI :8000)"]
@@ -69,7 +69,7 @@ vardır. İkisi bire bir değildir — aşağıdaki tablo gerçek eşlemedir.
 | Portal | Rota | Erişebilen roller | İşlev |
 |---|---|---|---|
 | Federasyon Konsolu | `/superadmin` | `PLATFORM_SUPER_ADMIN`, `FEDERATION_ADMIN`, `FEDERATION_ANALYST`, `FEDERATION_SUPPORT` | Organizasyon/kulüp dizini, tenant başına metrikler, sistem audit kayıtları, tenant'a geçiş, pasaport kuralları, uyumluluk sicili ve ağ duyuruları |
-| Kulüp Operasyon Konsolu | `/` (+ `/classes`, `/members`, `/locations`, `/finance`) | `GYM_OWNER`, `GYM_ADMIN`, `GYM_MANAGER`, `ACCOUNTANT`, `FRONT_DESK` | Üye kaydı, abonelik, şube, finans, ders programı takvimi ve yoklama çekmecesi |
+| Kulüp Operasyon Konsolu | `/` + `/reception` `/classes` `/members` `/import` `/locations` `/finance` `/plans` `/devices` `/notifications` `/reports` `/staff` `/onboarding` `/dsar` | `GYM_OWNER`, `GYM_ADMIN`, `GYM_MANAGER`, `ACCOUNTANT`, `FRONT_DESK` (alt sayfalar rol ile daralır) | Üye, abonelik, şube, finans, ders, resepsiyon, cihaz, rapor, personel, onboarding, DSAR |
 | Antrenör Portalı | `/trainer` | `TRAINER` (+ `GYM_OWNER`, `GYM_ADMIN`) | Atanmış üyeler, turnike giriş geçmişi, hak kontrolü, grup dersleri ve 1-on-1 PT seansları canlı yoklama defteri |
 | Sporcu Portalı | `/member` | `MEMBER` | Üyelik/hak durumu, 60 sn'lik tek kullanımlık giriş QR'ı, grup dersi rezervasyonu (yedek sırası) ve birebir PT randevusu alma |
 | Kapı Okuyucu PWA | `:5174` (ayrı uygulama) | *cihaz principal'ı* — kullanıcı rolü değil | QR doğrulama, hak düşümü, röle tetikleme |
@@ -82,7 +82,31 @@ rollerinin açtığı** kartları gösterir. Rol yoksa boş durum gösterir.
 
 **Yönlendirme:** Login sonrası `homeRouteFor()`
 (`frontend/admin-web/src/auth/roles.ts`) kullanıcıyı en geniş yetkili portalına
-gönderir.
+gönderir. Giriş URL'i daima `http://127.0.0.1:5173/login`.
+
+Hesap / kapı sayfaları (rol gerekmez veya oturum yeter): `/login`,
+`/invite`, `/mfa/setup`, `/password/change`, `/portal`.
+
+### Yerel yüzeyler (dev)
+
+Kaynak: `READY_TO_RUN.md`. Vite/Next host'ta; API ve DB compose'da.
+
+| Port | Uygulama | Açılış |
+|---|---|---|
+| 5173 | Admin Web (5 portal) | http://127.0.0.1:5173/login |
+| 5174 | Scanner PWA | http://127.0.0.1:5174/ |
+| 3000 | public-site | http://127.0.0.1:3000/ · `/privacy` · `/terms` · `/kvkk` |
+| 8000 | FastAPI | http://127.0.0.1:8000/health · `/docs` · `/live` · `/ready` |
+| 5433 | Postgres | host → container 5432 |
+| 6379 | Redis | |
+| 3001 | Grafana (obs overlay) | http://127.0.0.1:3001/ |
+| 9090 | Prometheus | http://127.0.0.1:9090/ |
+| 9093 | Alertmanager | http://127.0.0.1:9093/ |
+| 9000 / 9001 | MinIO S3 + konsol | http://127.0.0.1:9001/ |
+
+Seed girişleri (`seed_role_matrix.py`, parola `E2ePortal123!`; staff TOTP
+`JBSWY3DPEHPK3PXP`): owner → `/`, desk → `/reception`, trainer → `/trainer`,
+member → `/member` (MFA yok), analyst → `/superadmin`.
 
 ### Yetkilendirme nerede uygulanır
 

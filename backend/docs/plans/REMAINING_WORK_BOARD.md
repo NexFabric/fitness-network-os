@@ -2,10 +2,10 @@
 
 **Date:** 2026-08-16  
 **Branch:** `main`  
-**Last code:** `1b42ab4` (PR **#89** / **#91** / **#93** / **#94** MERGED)  
+**Last code:** `48b3c79` (PR **#95** MERGED)  
 **Alembic head:** `xi0d1e2f3a4b`  
-**Merged 2026-08-16:** `#62`→`ae6267d` (Phase 29 + RC) · `#78`→`fb3a26d` (ops drills) · `#80`→`d56b6a0` (dependency batch + HAND-1 + dependabot scope) · `#83`/`#84` · `#64/#66/#68` (CI actions) · `#89`→`e05e29f` · `#91`→`27fff12` · `#93`→`d9a5c9d` · `#94`→`1b42ab4`  
-**Campaign landings:** **#89–#94 MERGED** — migrate gate · migrator isolation · TLS · ops-drills PITR (CI `31968740247` SUCCESS on `1b42ab4`) · coverage floors · Safety CLI dropped · release-truth checker. **Do not redo** — `docs/CAMPAIGN_REGISTER.md`. EXTERNAL_GATES **UNVERIFIED**.  
+**Merged 2026-08-16:** `#62`→`ae6267d` · `#78`→`fb3a26d` · `#80`→`d56b6a0` · `#83`/`#84` · `#64/#66/#68` · `#89`→`e05e29f` · `#91`→`27fff12` · `#93`→`d9a5c9d` · `#94`→`1b42ab4` · `#92`→`4d5291d` · `#96`→`94eafb5` · `#95`→`48b3c79`  
+**Campaign landings:** **#89–#96 MERGED** — migrate gate · migrator isolation · TLS · ops-drills PITR · coverage floors · Safety CLI dropped · release-truth · P1 test-depth. **Do not redo** — `docs/CAMPAIGN_REGISTER.md`. EXTERNAL_GATES **UNVERIFIED**.  
 **CI:** every merge passed required CI. Merge gate is CI only (review requirement removed 2026-08-16, single maintainer).  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
@@ -87,6 +87,9 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 | TRUTH-91 | PR **#91** `27fff12` — authority docs mark #89 MERGED |
 | REL-TRUTH | PR **#93** `d9a5c9d` — `check_release_truth.py` forbids stale OPEN vs MERGED |
 | TLS-PROOF | PR **#94** `1b42ab4` — host chown 999:999 + encrypt-only SSL context |
+| ACT-92 | PR **#92** `4d5291d` — github-actions bump |
+| DOCS-96 | PR **#96** `94eafb5` — campaign register, architecture, wiki |
+| P1-95 | PR **#95** `48b3c79` — booking / DSAR / import / finance HTTP test depth |
 | SAFETY-1 | Safety CLI removed from required CI; pip-audit is the SCA gate |
 | DRILLS-CI | ops-drills dump/restore + PITR green on tip (`31968740247` @ `1b42ab4`) |
 | REV-62 | Owner decision: review requirement removed; CI is the merge gate |
@@ -105,9 +108,7 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 
 | ID | Item | Owner |
 |----|------|-------|
-| CI-62 | Historical: `ab860f0` `31947417828` SUCCESS. Later SHAs ride required CI on merge. Do not re-claim. | — |
-| PR-95 | P1 test-depth (`feat/p1-critical-test-depth`). Rebase + required CI. **Do not open a sibling.** | one agent |
-| PR-92 | Dependabot github-actions. Merge only when up to date with `main` and All Green. | one agent |
+| CI-62 | Historical. Later SHAs ride required CI on merge. Do not re-claim. | — |
 | HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md`. Signature table is empty. **Do not agent-sign.** | human |
 
 ## Still open — cannot fake “complete”

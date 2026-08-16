@@ -2,7 +2,7 @@
 
 > **Stale snapshot (2026-08-13).** Live truth is `docs/HANDOFF.md` +
 > `docs/PROGRESS_CHECKLIST.md` + `docs/CAMPAIGN_REGISTER.md`.
-> Current `main` tip is `1b42ab4` (2026-08-16, #94). Do not treat the
+> Current `main` tip is `48b3c79` (2026-08-16, #95). Do not treat the
 > SHA / “no open PRs” / “1 approving review” lines below as current.
 
 **Date:** 2026-08-13  
