@@ -23,7 +23,7 @@ run it · what this does not close
 - `plans/phase11_money_floats.md` — **Status:** 🟢 LOCKED / CI VERIFIED on main (merge `607b087`)
 
 ### General Notes (22)
-- `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-12
+- `ARCHITECTURE.md` — **Son güncelleme:** 2026-08-16
 - `CORE_GATE_CLOSURE.md` — **Archive note (2026-08-09):** Phase **0–7 gate is COMPLETED**; Phases **8–15** also LOCKED on `main`.
 - `HANDOFF.md` — Bu dosya, projeyi devralan kişi ya da ajan için **tek giriş noktasıdır**.
 - `IMPLEMENTATION_MASTER_PLAN.md` — **Status:** Living roadmap (Phase 0–27)
@@ -31,7 +31,7 @@ run it · what this does not close
 - `PRODUCTION_READINESS.md` — **Sürüm:** v1.2 Phase 27 closure
 - `PRODUCTION_READINESS_P0_AND_CLOSURE_PLAN.md` — Bu plan, PR #59 üzerindeki release candidate (`feat/production-readiness-p0-and-dr`) için NO-GO kararına yol açan tüm P0 ve P1 mimari, runtime, güvenlik, iş man…
 - `PROGRESS_CHECKLIST.md` — **Last updated:** 2026-08-16
-- `RBAC.md` — **Son güncelleme:** 2026-08-12
+- `RBAC.md` — **Son güncelleme:** 2026-08-16
 - `REVIEW_CHECKPOINT.md` — **Main HEAD:** `837cec4`; no open PRs
 - `TECH_DEBT.md` — Items that are real work, not bumps. Each one was found by something concrete
 - `WAVE_5_5B_CORE_CORRECTNESS.md` — **Archive note (2026-08-09):** Phase **0–15** are CI VERIFIED / LOCKED on `main`.
