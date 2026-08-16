@@ -6,7 +6,7 @@ from app.core.config import Settings
 
 _REQUIRED = {
     "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
-    "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
+    "MIGRATOR_DATABASE_URL": None,
     "REDIS_URL": "redis://localhost:6379/0",
 }
 

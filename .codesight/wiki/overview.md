@@ -8,7 +8,7 @@
 
 ## Scale
 
-142 API routes · 86 database models · 64 UI components · 82 library files · 6 middleware layers · 29 environment variables
+142 API routes · 86 database models · 64 UI components · 83 library files · 6 middleware layers · 32 environment variables
 
 ## Subsystems
 
@@ -42,18 +42,18 @@
 
 **UI:** 64 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 82 files — see [libraries.md](./libraries.md)
+**Libraries:** 83 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
 - `backend/app/models/user.py` — imported by **71** files
-- `backend/app/models/tenant.py` — imported by **63** files
-- `backend/app/models/organization.py` — imported by **56** files
+- `backend/app/models/tenant.py` — imported by **65** files
+- `backend/app/models/organization.py` — imported by **58** files
 - `backend/app/api/deps.py` — imported by **47** files
 - `backend/app/models/rbac.py` — imported by **44** files
-- `backend/app/models/member.py` — imported by **43** files
+- `backend/app/models/member.py` — imported by **44** files
 
 ## Required Environment Variables
 
@@ -61,6 +61,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `AWS_KMS_KEY_ID` — `backend/app/core/qr_crypto.py`
 - `CI` — `frontend/e2e/playwright.config.ts`
 - `ENVIRONMENT` — `backend/app/core/security.py`
+- `FITNESS_OS_TLS_SMOKE` — `backend/tests/test_asyncpg_tls_smoke.py`
 - `NEXT_PUBLIC_ADMIN_URL` — `frontend/public-site/src/components/Cta.tsx`
 - `S3_BUCKET_NAME` — `backend/scripts/kms_iam_verify.py`
 - `S3_ENDPOINT_URL` — `backend/scripts/s3_runtime_proof.py`

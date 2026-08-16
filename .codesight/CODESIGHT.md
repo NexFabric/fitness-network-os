@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 82 lib files | 29 env vars | 6 middleware | 33% test coverage
-> **Token savings:** this file is ~16,300 tokens. Without it, AI exploration would cost ~163,900 tokens. **Saves ~147,600 tokens per conversation.**
-> **Last scanned:** 2026-08-16 17:36 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 33% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
+> **Last scanned:** 2026-08-16 17:54 — re-run after significant changes
 
 ---
 
@@ -1052,6 +1052,7 @@
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
 - `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
 - `backend/scripts/smtp_delivery_proof.py` — function main: () -> int
+- `backend/scripts/tls_connection_proof.py` — function main: () -> int
 - `backend/src/backend/__init__.py` — function main: () -> None
 - `frontend/admin-web/src/api/client.ts`
   - function getBaseUrl: () => string
@@ -1092,6 +1093,7 @@
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
+- `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
@@ -1111,6 +1113,8 @@
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
+- `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
+- `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
 - `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 
@@ -1147,11 +1151,11 @@
 ## Most Imported Files (change these carefully)
 
 - `backend/app/models/user.py` — imported by **71** files
-- `backend/app/models/tenant.py` — imported by **63** files
-- `backend/app/models/organization.py` — imported by **56** files
+- `backend/app/models/tenant.py` — imported by **65** files
+- `backend/app/models/organization.py` — imported by **58** files
 - `backend/app/api/deps.py` — imported by **47** files
 - `backend/app/models/rbac.py` — imported by **44** files
-- `backend/app/models/member.py` — imported by **43** files
+- `backend/app/models/member.py` — imported by **44** files
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **35** files
 - `backend/app/main.py` — imported by **30** files
@@ -1161,7 +1165,7 @@
 - `backend/app/core/authorization.py` — imported by **25** files
 - `backend/app/models/location.py` — imported by **24** files
 - `backend/app/db/rls.py` — imported by **22** files
-- `backend/app/core/config.py` — imported by **19** files
+- `backend/app/core/config.py` — imported by **20** files
 - `backend/app/models/access.py` — imported by **19** files
 - `backend/app/models/outbox.py` — imported by **17** files
 - `frontend/e2e/tests/helpers/auth.ts` — imported by **17** files
@@ -1170,11 +1174,11 @@
 ## Import Map (who imports what)
 
 - `backend/app/models/user.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +66 more
-- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +58 more
-- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +51 more
+- `backend/app/models/tenant.py` ← `backend/app/api/deps.py`, `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/app/services/resolution.py`, `backend/app/workers/notification.py` +60 more
+- `backend/app/models/organization.py` ← `backend/app/models/__init__.py`, `backend/app/services/federation.py`, `backend/scripts/seed_demo_tenant.py`, `backend/scripts/seed_role_matrix.py`, `backend/tests/api/test_admin_federation.py` +53 more
 - `backend/app/api/deps.py` ← `backend/app/api/v1/endpoints/access.py`, `backend/app/api/v1/endpoints/admin.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/break_glass.py`, `backend/app/api/v1/endpoints/classes.py` +42 more
 - `backend/app/models/rbac.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/onboarding.py`, `backend/app/models/__init__.py`, `backend/app/models/user.py` +39 more
-- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +38 more
+- `backend/app/models/member.py` ← `backend/app/api/v1/endpoints/auth.py`, `backend/app/api/v1/endpoints/dashboard.py`, `backend/app/api/v1/endpoints/reception.py`, `backend/app/models/__init__.py`, `backend/app/services/access.py` +39 more
 - `backend/app/db/base.py` ← `backend/alembic/env.py`, `backend/app/models/access.py`, `backend/app/models/audit.py`, `backend/app/models/booking.py`, `backend/app/models/break_glass.py` +33 more
 - `backend/app/db/session.py` ← `backend/app/api/deps.py`, `backend/app/api/v1/endpoints/memberships.py`, `backend/app/api/v1/endpoints/plans.py`, `backend/app/main.py`, `backend/app/workers/notification.py` +30 more
 - `backend/app/main.py` ← `backend/tests/api/test_admin_federation.py`, `backend/tests/api/test_admin_federation_complete.py`, `backend/tests/api/test_adversarial_security.py`, `backend/tests/api/test_auth_login.py`, `backend/tests/api/test_class_booking_engine.py` +25 more
@@ -1185,7 +1189,7 @@
 # Test Coverage
 
 > **33%** of routes and models are covered by tests
-> 113 test files found
+> 116 test files found
 
 ## Covered Routes
 

@@ -90,6 +90,7 @@ Older closed IDs (P0/P1/WAVE/FED/B1) remain as in the 2026-08-13 snapshot; they 
 | ~~COV-CRIT~~ | Critical-module coverage floors in CI — anti-regression floors landed | — |
 | ~~PERF-1~~ | k6 harness landed (not a claimed SLO) | — |
 | ~~A11Y-1~~ | axe Playwright regression spec landed | — |
+| ~~MIG-SEC~~ | Migrator DSN only on `COMPONENT_NAME=migrate`; TLS rule on migrator DSN; workers share `PRODUCTION_PRIVATE_NETWORK` | — |
 | HAND-1 | Human sign-off of `docs/ops/HAND1_BROWSER_PROOF.md` (Playwright covers invite / onboarding / portal bind / scanner pair / report link). Signature table is empty. | human |
 
 ## Still open — cannot fake “complete”

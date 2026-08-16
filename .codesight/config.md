@@ -10,6 +10,7 @@
 - `E2E_OWNER_TOTP_SECRET` (has default) — backend/scripts/seed_role_matrix.py
 - `ENCRYPTION_KEY` (has default) — backend/.env.example
 - `ENVIRONMENT` **required** — backend/app/core/security.py
+- `FITNESS_OS_TLS_SMOKE` **required** — backend/tests/test_asyncpg_tls_smoke.py
 - `MIGRATOR_DATABASE_URL` (has default) — backend/.env.example
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
@@ -29,6 +30,8 @@
 - `SMTP_USER` **required** — backend/app/services/notification_providers.py
 - `TEST_DATABASE_URL` **required** — backend/scripts/check_permissions_db.py
 - `TEST_RUNTIME_DATABASE_URL` (has default) — backend/tests/conftest.py
+- `TLS_PROOF_CONTAINER` (has default) — backend/scripts/tls_connection_proof.py
+- `TLS_PROOF_IMAGE` (has default) — backend/scripts/tls_connection_proof.py
 - `VITE_API_URL` (has default) — frontend/scanner-pwa/.env
 - `VITE_SCANNER_URL` (has default) — frontend/admin-web/src/pages/PortalHome.tsx
 

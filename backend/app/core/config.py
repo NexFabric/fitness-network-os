@@ -171,6 +171,13 @@ class Settings(BaseSettings):
         if not _is_valid_fernet_key(self.ENCRYPTION_KEY):
             errors.append("ENCRYPTION_KEY must be a valid Fernet key")
 
+        component = (self.COMPONENT_NAME or "web").strip().lower()
+        if component in {"web", "worker"} and self.MIGRATOR_DATABASE_URL is not None:
+            errors.append(
+                "MIGRATOR_DATABASE_URL must not be set on long-lived processes; "
+                "it belongs only on COMPONENT_NAME=migrate"
+            )
+
         if not self.PRODUCTION_PRIVATE_NETWORK:
             db_sslmode = _dsn_query_param(str(self.DATABASE_URL), "sslmode")
             if db_sslmode not in {"require", "verify-full"}:
@@ -182,6 +189,15 @@ class Settings(BaseSettings):
                 errors.append(
                     "REDIS_URL must use rediss:// unless PRODUCTION_PRIVATE_NETWORK=1"
                 )
+            if self.MIGRATOR_DATABASE_URL is not None:
+                mig_sslmode = _dsn_query_param(
+                    str(self.MIGRATOR_DATABASE_URL), "sslmode"
+                )
+                if mig_sslmode not in {"require", "verify-full"}:
+                    errors.append(
+                        "MIGRATOR_DATABASE_URL must include sslmode=require or "
+                        "sslmode=verify-full unless PRODUCTION_PRIVATE_NETWORK=1"
+                    )
 
         if errors:
             raise RuntimeError("Production configuration invalid: " + "; ".join(errors))

@@ -18,11 +18,16 @@ ops/deploy/smoke.sh
 
 A failed migrate is a failed deploy.
 
+`MIGRATOR_DATABASE_URL` is allowed **only** on `COMPONENT_NAME=migrate`.
+Long-lived backend/workers must not receive the schema-owner DSN;
+production boot fails if they do.
+
 ## Transport encryption
 
 `Settings.validate_production()` requires one of:
 
-- `DATABASE_URL` query `sslmode=require` or `sslmode=verify-full`, and
+- `DATABASE_URL` (and `MIGRATOR_DATABASE_URL` when set) query
+  `sslmode=require` or `sslmode=verify-full`, and
   `REDIS_URL` scheme `rediss://`
 - **or** `PRODUCTION_PRIVATE_NETWORK=1` — operator attestation that
   both endpoints are on a private network (VPC / RFC1918) and are not

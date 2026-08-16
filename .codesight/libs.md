@@ -104,6 +104,7 @@
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
 - `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
 - `backend/scripts/smtp_delivery_proof.py` — function main: () -> int
+- `backend/scripts/tls_connection_proof.py` — function main: () -> int
 - `backend/src/backend/__init__.py` — function main: () -> None
 - `frontend/admin-web/src/api/client.ts`
   - function getBaseUrl: () => string

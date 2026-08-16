@@ -7,7 +7,7 @@ from app.core.config import Settings, database_ssl_connect_arg
 _BASE_PROD = {
     "ENVIRONMENT": "production",
     "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
-    "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
+    "MIGRATOR_DATABASE_URL": None,
     "REDIS_URL": "rediss://localhost:6379/0",
     "CORS_ORIGINS": "https://admin.example.com",
     "ALLOWED_HOSTS": "api.example.com",
@@ -106,3 +106,69 @@ def test_production_rejects_missing_encryption_key():
     )
     with pytest.raises(RuntimeError, match="ENCRYPTION_KEY"):
         s.validate_production()
+
+
+def test_production_web_rejects_migrator_dsn():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "alias/gym-qr",
+            "COMPONENT_NAME": "web",
+            "MIGRATOR_DATABASE_URL": (
+                "postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require"
+            ),
+        }
+    )
+    with pytest.raises(RuntimeError, match="MIGRATOR_DATABASE_URL must not be set"):
+        s.validate_production()
+
+
+def test_production_worker_rejects_migrator_dsn():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "alias/gym-qr",
+            "COMPONENT_NAME": "worker",
+            "NOTIFICATION_EMAIL_PROVIDER": "disabled",
+            "MIGRATOR_DATABASE_URL": (
+                "postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require"
+            ),
+        }
+    )
+    with pytest.raises(RuntimeError, match="MIGRATOR_DATABASE_URL must not be set"):
+        s.validate_production()
+
+
+def test_production_migrate_rejects_plaintext_migrator_dsn():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "alias/gym-qr",
+            "COMPONENT_NAME": "migrate",
+            "NOTIFICATION_EMAIL_PROVIDER": "disabled",
+            "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
+        }
+    )
+    with pytest.raises(
+        RuntimeError, match="MIGRATOR_DATABASE_URL must include sslmode"
+    ):
+        s.validate_production()
+
+
+def test_production_migrate_accepts_tls_migrator_dsn():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "alias/gym-qr",
+            "COMPONENT_NAME": "migrate",
+            "NOTIFICATION_EMAIL_PROVIDER": "disabled",
+            "MIGRATOR_DATABASE_URL": (
+                "postgresql+asyncpg://u:p@localhost:5432/db?sslmode=verify-full"
+            ),
+        }
+    )
+    s.validate_production()
