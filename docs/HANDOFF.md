@@ -35,7 +35,8 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Elle tarayıcı tutanağı | `docs/ops/HAND1_BROWSER_PROOF.md` (imza **boş**) |
 | Public repo / lisans kararı | `docs/ops/REPO_VISIBILITY.md` (LICENSE yok — insan) |
 | Prod deploy / TLS / migrator | `docs/ops/PRODUCTION_DEPLOY.md` |
-| Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` |
+| Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` — portlar + hangi login nereye |
+| Açılış sayfaları / port haritası | `docs/ARCHITECTURE.md` §2 Yerel yüzeyler |
 | Kurallar / mühendislik sözleşmesi | `AGENTS.md` (`CLAUDE.md` buna sembolik bağ — tek kaynak) |
 
 `.codesight` haritası **nerede** olduğunu söyler, **nasıl çalıştığını** değil —

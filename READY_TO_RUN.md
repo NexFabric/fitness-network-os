@@ -1,8 +1,9 @@
 # Uygulama hazır — çalıştırma özeti
 
 **Tarih:** 2026-08-16
-**Branch:** `main` (PR #62 → `ae6267d`)
+**Branch:** `main` (tip `48b3c79`, PR **#95**)
 **Alembic head:** `xi0d1e2f3a4b`.
+**Sayfa / port haritası:** `docs/ARCHITECTURE.md` §2 (Yerel yüzeyler).
 **Production-ready?** **NO** — kod kapıları kapandı; S3/PITR/observability tatbikatları **yerelde** koştu (`docs/ops/`), ama üretim AWS kovası, off-host WAL arşivleme, gerçek pager ve bağımsız pentest açık.
 **Privileged MFA:** `GYM_OWNER` / staff / federation login TOTP ister. `seed_demo.py` MFA’sız owner üretir ve `/mfa/setup`’a düşer; portal E2E için `seed_role_matrix.py` kullan.
 **UI brand:** Admin teal staff console + Scanner “GymClubNex · Access” (`frontend/UI_BRAND_SYSTEM.md`).
@@ -11,10 +12,14 @@
 
 | Servis | URL | Not |
 |--------|-----|-----|
-| API health | http://localhost:8000/health | docker `backend` |
+| API health / live / ready | http://localhost:8000/health · `/live` · `/ready` | docker `backend` |
 | API Swagger | http://localhost:8000/docs | OpenAPI |
-| Admin Web | http://localhost:5173/ | Vite; login: http://localhost:5173/login (branded) |
-| Scanner PWA | http://localhost:5174/ | camera QR or paste → GRANT/DENY (Access brand) |
+| Admin Web — **giriş** | http://localhost:5173/login | Vite; login sonrası `homeRouteFor` |
+| Admin — ops | http://localhost:5173/ | dashboard; `/reception` `/members` `/locations` `/classes` `/finance` `/plans` `/staff` `/devices` `/notifications` `/reports` `/import` `/onboarding` `/dsar` |
+| Admin — trainer / member / HQ | `/trainer` `/member` `/superadmin` | aynı 5173; rol şart |
+| Admin — kapı | `/portal` `/invite` `/mfa/setup` `/password/change` | |
+| Scanner PWA | http://localhost:5174/ | camera QR or paste → GRANT/DENY |
+| public-site | http://localhost:3000/ | `/privacy` `/terms` `/kvkk` — API'ye bağlı değil |
 | Postgres | localhost:**5433** | mapped from container 5432 |
 | Redis | localhost:6379 | docker |
 | Grafana | http://localhost:3001 | `admin` / `${GRAFANA_ADMIN_PASSWORD:-admin}` — obs overlay |
@@ -160,7 +165,11 @@ npm run dev -- --port 5173
 # Scanner
 cd frontend/scanner-pwa
 echo 'VITE_API_URL=http://localhost:8000' > .env
-npm run dev
+npm run dev -- --port 5174
+
+# Pazarlama (API yok)
+cd frontend/public-site
+npm run dev -- --port 3000
 ```
 
 ### Pairing a scanner device (signed channel)
