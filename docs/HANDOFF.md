@@ -9,7 +9,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Last code | `ab860f0` (`ab860f095da250d9a5757f1ac83d80f6734cbb10`) |
 | Alembic head | `xi0d1e2f3a4b` (`pt_appointments` btree_gist EXCLUDE) |
 | PR | [#62](https://github.com/NexFabric/fitness-network-os/pull/62) OPEN · MERGEABLE · **BLOCKED `REVIEW_REQUIRED`** |
-| CI | `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. |
+| CI | Kod `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**. Sonraki **docs-only** SHA'lar ayrıca iddia edilmez. |
 | Production-ready? | **NO** |
 | Phase 26 PASS? | **NO / NOT VERIFIED** |
 
@@ -28,7 +28,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Pentest / dış kanıt kapısı | `docs/ops/ASVS_PENTEST_STATUS.md` (UNVERIFIED) |
 | Elle tarayıcı tutanağı | `docs/ops/HAND1_BROWSER_PROOF.md` (imza **boş**) |
 | Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` |
-| Kurallar / mühendislik sözleşmesi | `AGENTS.md` |
+| Kurallar / mühendislik sözleşmesi | `AGENTS.md` (`CLAUDE.md` buna sembolik bağ — tek kaynak) |
 
 `.codesight` haritası **nerede** olduğunu söyler, **nasıl çalıştığını** değil —
 değiştirmeden önce daima kaynağı oku.
@@ -38,7 +38,7 @@ değiştirmeden önce daima kaynağı oku.
 ## Devralan ajan — ilk 10 dakika
 
 1. Bu dosyayı + `docs/PROGRESS_CHECKLIST.md` + `backend/docs/plans/REMAINING_WORK_BOARD.md` oku.
-2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Bu oturum durdu; yeni docs SHA’nın CI’sini iddia etme.
+2. `gh pr view 62` ile PR’ı tazeleyin. Kod `ab860f0` ve docs `e6a2d6c` required CI **SUCCESS**. Daha yeni docs-only SHA’ların CI’sini görmeden iddia etme.
 3. **PR #62’yi merge etme.** GitHub yazarın (`emrahub`) kendi PR’ını onaylatmaz. Kullanıcı sözlü “onaylıyorum” ≠ GitHub `APPROVE`. İkinci bir insan hesabı gerekir. `enforce_admins` ve required check listesine dokunma.
 4. IsolationProvider icat etme. Scope.LOCATION’ı şimdi açma.
 5. Phase 26 PASS / production-ready / “yayına hazır” iddia etme.
@@ -147,4 +147,4 @@ ve bağımsız pentest **kodla kapanmış sayılmaz**.
 - HAND-1 tutanağına ajan imzası atma.
 - Phase 26 / production-ready işaretleme.
 - `enforce_admins` veya required check listesini “hız için” düşürme.
-- `reports/` untracked dizinini commit etme (yerel artık).
+- `reports/` içeriğini commit etme — yerel denetim çıktısı, `.gitignore`'da.

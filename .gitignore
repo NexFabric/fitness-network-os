@@ -35,7 +35,9 @@ logs
 # Coverage
 htmlcov/
 .coverage
-reports/coverage.json
+
+# Locally generated audit / coverage output — never committed
+reports/
 
 # Frontend
 node_modules/
