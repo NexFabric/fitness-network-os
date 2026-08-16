@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 78 lib files | 19 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~161,600 tokens. **Saves ~145,800 tokens per conversation.**
-> **Last scanned:** 2026-08-16 14:18 — re-run after significant changes
+> **Last scanned:** 2026-08-16 14:32 — re-run after significant changes
 
 ---
 
@@ -1262,38 +1262,38 @@
 > `.github/workflows/ci.yml`
 
 - **security** on `ubuntu-latest` — 7 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `trufflesecurity/trufflehog@a7082b69f5bc6167bbe27ebab82bf6707f267bf6`
   - `actions/setup-python@v7`
 - **sbom** on `ubuntu-latest` — 2 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610`
 - **lint** on `ubuntu-latest` — 11 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `actions/setup-python@v7`
 - **test** on `ubuntu-latest` — 9 steps (needs: security, lint)
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `actions/setup-python@v7`
 - **admin-web** on `ubuntu-latest` — 5 steps
-  - `actions/checkout@v5`
-  - `actions/setup-node@v5`
+  - `actions/checkout@v7`
+  - `actions/setup-node@v7`
 - **scanner-pwa** on `ubuntu-latest` — 5 steps
-  - `actions/checkout@v5`
-  - `actions/setup-node@v5`
+  - `actions/checkout@v7`
+  - `actions/setup-node@v7`
 - **production-image** on `ubuntu-latest` — 2 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
 - **frontend-images** on `ubuntu-latest` — 3 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
 - **public-site** on `ubuntu-latest` — 5 steps
-  - `actions/checkout@v5`
-  - `actions/setup-node@v5`
+  - `actions/checkout@v7`
+  - `actions/setup-node@v7`
 - **browser-e2e** on `ubuntu-latest` — 11 steps (needs: test, admin-web, scanner-pwa)
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `actions/setup-python@v7`
-  - `actions/setup-node@v5`
+  - `actions/setup-node@v7`
   - `actions/upload-artifact@v4`
 - **codeql** on `ubuntu-latest` — 3 steps
-  - `actions/checkout@v5`
+  - `actions/checkout@v7`
   - `github/codeql-action/init@v4`
   - `github/codeql-action/analyze@v4`
 - **all-green** on `ubuntu-latest` — 1 steps
