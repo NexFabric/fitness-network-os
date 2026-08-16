@@ -4,7 +4,7 @@
 **Branch:** `feat/public-site-modernization-and-seo`  
 **Last code:** `ab860f0`  
 **Alembic head:** `xi0d1e2f3a4b`  
-**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) OPEN · **BLOCKED `REVIEW_REQUIRED`**  
+**PR:** [#62](https://github.com/NexFabric/fitness-network-os/pull/62) — merge gate is **CI only** (review requirement removed 2026-08-16). Merge status authority: `git log origin/main`.  
 **CI:** `ab860f0` `31947417828` **SUCCESS**. Docs `e6a2d6c` `31947732456` **SUCCESS**.  
 **Program:** Phase 27–29 + RC closure  
 **Production-ready?** **NO**  
@@ -25,7 +25,7 @@ Authority checklist: `docs/PROGRESS_CHECKLIST.md`
 | Playwright E2E | 🟢 required CI gate |
 | Invite token + onboarding wizard UI | 🟢 landed (this branch) |
 | DR / pentest / real S3 / KMS IAM | 🔴 UNVERIFIED (external) |
-| Independent APPROVE | 🔴 human |
+| Independent **security** APPROVE (P1-11 / Phase 26) — not the merge gate | 🔴 human |
 | Public launch | 🔴 **NO-GO** |
 
 ---
