@@ -34,7 +34,7 @@ jobs:
           python-version: "3.12"
           
       - name: Install security tools
-        run: pip install bandit==1.8.6 pip-audit==2.9.0 uv==0.11.21 safety==3.2.14 "typer==0.12.5" setuptools
+        run: pip install bandit==1.8.6 pip-audit==2.9.0 uv==0.11.21
         
       - name: SAST Scan (Bandit)
         working-directory: ./backend
@@ -45,10 +45,8 @@ jobs:
         run: |
           uv export --frozen --format requirements-txt --no-hashes --no-emit-workspace > requirements.txt
           pip-audit -r requirements.txt
-          
-      - name: Dependency Vulnerability Scan (Safety)
-        working-directory: ./backend
-        run: safety check
+        # Safety's `check` CLI no longer boots against current typer/click
+        # (TypeError / missing rich_utils). pip-audit is the hard SCA gate.
 
   # SBOM generation is a compliance artifact, not a merge gate. It lives in
   # its own job because `anchore/sbom-action` downloads syft from GitHub
