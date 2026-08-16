@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 83 lib files | 32 env vars | 6 middleware | 33% test coverage
 > **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~164,600 tokens. **Saves ~148,200 tokens per conversation.**
-> **Last scanned:** 2026-08-16 18:10 — re-run after significant changes
+> **Last scanned:** 2026-08-16 18:11 — re-run after significant changes
 
 ---
 
@@ -1339,11 +1339,12 @@
 
 ### Secrets
 
-- `AWS_KMS_KEY_ID`
 - `DATABASE_URL`
 - `ENCRYPTION_KEY`
+- `METRICS_BEARER_TOKEN`
 - `REDIS_URL`
-- `S3_BUCKET_NAME`
+- `SMTP_PASS`
+- `SMTP_USER`
 
 ---
 _Source: .github/workflows/ci.yml, .github/workflows/deploy.yml, .github/workflows/ops-drills.yml_

@@ -62,11 +62,12 @@
 
 ### Secrets
 
-- `AWS_KMS_KEY_ID`
 - `DATABASE_URL`
 - `ENCRYPTION_KEY`
+- `METRICS_BEARER_TOKEN`
 - `REDIS_URL`
-- `S3_BUCKET_NAME`
+- `SMTP_PASS`
+- `SMTP_USER`
 
 ---
 _Source: .github/workflows/ci.yml, .github/workflows/deploy.yml, .github/workflows/ops-drills.yml_

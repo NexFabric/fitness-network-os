@@ -25,5 +25,11 @@ sets `PRODUCTION_PRIVATE_NETWORK=1` (VPC-only attestation). Prefer
 ## GitHub Actions
 
 `.github/workflows/deploy.yml` is `workflow_dispatch` only. It builds
-images and refuses to report success when deploy secrets are absent.
+images and refuses to report success when the long-lived backend
+secrets from `docker-compose.prod.yml` are absent:
+`DATABASE_URL`, `REDIS_URL`, `ENCRYPTION_KEY`, `AWS_KMS_KEY_ID`,
+`S3_BUCKET_NAME`, `METRICS_BEARER_TOKEN`, and `SMTP_*` when the
+provider is `smtp` (compose default). `QR_KMS_MODE` defaults to
+`aws_kms` and any other value is fail-closed. `MIGRATOR_DATABASE_URL`
+is migrate-only and is **not** required on the promote job.
 It does not invent an ECS/Kubernetes target.
