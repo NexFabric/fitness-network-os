@@ -63,6 +63,24 @@ def test_production_rejects_missing_s3_kms_key_id():
         s.validate_production()
 
 
+def test_production_rejects_smtp_starttls_disabled():
+    s = Settings(
+        **{
+            **_BASE_PROD,
+            "QR_KMS_MODE": "aws_kms",
+            "AWS_KMS_KEY_ID": "key-123",
+            "NOTIFICATION_EMAIL_PROVIDER": "smtp",
+            "SMTP_HOST": "smtp.example.com",
+            "SMTP_FROM": "noreply@example.com",
+            "SMTP_STARTTLS": "0",
+        }
+    )
+    with pytest.raises(
+        RuntimeError, match="SMTP_STARTTLS cannot be disabled in production"
+    ):
+        s.validate_production()
+
+
 def test_production_rejects_qr_kms_mode_local():
     s = Settings(**{**_BASE_PROD, "QR_KMS_MODE": "local", "AWS_KMS_KEY_ID": "key-123"})
     with pytest.raises(RuntimeError, match="QR_KMS_MODE must be aws_kms in production"):

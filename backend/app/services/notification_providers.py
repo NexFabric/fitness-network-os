@@ -171,7 +171,12 @@ class SmtpNotificationProvider:
                     context.load_verify_locations(cafile=ca_bundle)
 
                 with smtplib.SMTP(host, port, timeout=10) as server:
-                    if os.environ.get("SMTP_STARTTLS", "1") != "0":
+                    require_tls = (
+                        settings.ENVIRONMENT == "production"
+                        or os.environ.get("SMTP_STARTTLS", settings.SMTP_STARTTLS)
+                        != "0"
+                    )
+                    if require_tls:
                         server.starttls(context=context)
                     if user and password:
                         server.login(user, password)

@@ -5,6 +5,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_tenant_id_var
+from app.core.metrics import RETENTION_RECORDS, WORKER_HEARTBEAT, start_worker_metrics_server
 from app.db.session import AsyncSessionLocal
 from app.models.tenant import Tenant, TenantStatus
 from app.services.retention import DataRetentionService
@@ -36,6 +37,9 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
             try:
                 service = DataRetentionService(db)
                 stats = await service.enforce_policies_for_tenant(tenant.id)
+                for model, count in stats.items():
+                    if count:
+                        RETENTION_RECORDS.labels(model=str(model)).inc(count)
                 affected = sum(stats.values())
                 if affected > 0:
                     total_affected += affected
@@ -66,8 +70,6 @@ async def run_retention_sweep(db_override: AsyncSession | None = None) -> int:
 
 async def run_worker() -> None:
     logger.info("Starting Data Retention Worker")
-    from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
-
     start_worker_metrics_server()
     while True:
         try:

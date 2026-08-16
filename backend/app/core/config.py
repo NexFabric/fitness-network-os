@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     NOTIFICATION_EMAIL_PROVIDER: str = "console"
     SMTP_HOST: str = ""
     SMTP_FROM: str = ""
+    SMTP_STARTTLS: str = "1"
 
     # Report artifacts are local in development/test and private S3-compatible
     # objects in production. Credentials use the standard AWS environment
@@ -149,6 +150,8 @@ class Settings(BaseSettings):
                 errors.append("SMTP_HOST is required when SMTP delivery is enabled")
             if not self.SMTP_FROM.strip():
                 errors.append("SMTP_FROM is required when SMTP delivery is enabled")
+            if self.SMTP_STARTTLS.strip() == "0":
+                errors.append("SMTP_STARTTLS cannot be disabled in production")
 
         storage_provider = self.REPORT_STORAGE_PROVIDER.strip().lower()
         if storage_provider != "s3":

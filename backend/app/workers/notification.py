@@ -4,6 +4,7 @@ import logging
 from sqlalchemy import select, text
 
 from app.api.deps import current_tenant_id_var
+from app.core.metrics import NOTIFICATION_DISPATCH, WORKER_HEARTBEAT, start_worker_metrics_server
 from app.db.session import AsyncSessionLocal
 from app.models.tenant import Tenant, TenantStatus
 from app.services.notification import NotificationService
@@ -37,6 +38,14 @@ async def run_cycle() -> int:
                 processed += sent_count + failed_count
                 if sent_count > 0 or failed_count > 0:
                     logger.info("Processed notifications for %s: %s", tenant.id, res)
+                if sent_count:
+                    NOTIFICATION_DISPATCH.labels(
+                        channel="all", outcome="sent"
+                    ).inc(sent_count)
+                if failed_count:
+                    NOTIFICATION_DISPATCH.labels(
+                        channel="all", outcome="failed"
+                    ).inc(failed_count)
                 # Commit per tenant to release row locks and isolate failure
                 await db.commit()
             except Exception:
@@ -55,8 +64,6 @@ async def run_cycle() -> int:
 
 async def run_worker() -> None:
     logger.info("Starting Notification Worker")
-    from app.core.metrics import WORKER_HEARTBEAT, start_worker_metrics_server
-
     start_worker_metrics_server()
     while True:
         try:

@@ -458,7 +458,7 @@ jobs:
           aquasec/trivy:0.58.1 image
           --severity HIGH,CRITICAL
           --ignorefile /.trivyignore
-          --exit-code 0
+          --exit-code 1
           --no-progress
           fitness-network-os:scan
 
