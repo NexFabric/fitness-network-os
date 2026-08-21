@@ -139,6 +139,31 @@ export default function SuperAdminPortal() {
     void loadData()
   }, [loadData])
 
+  const isAnySuperAdminModalOpen = Boolean(
+    showAddGymModal ||
+      suspendTarget ||
+      breakGlassTarget ||
+      passportTarget ||
+      showComplianceModal ||
+      showAlertModal
+  )
+
+  useEffect(() => {
+    if (!isAnySuperAdminModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAddGymModal(false)
+        setSuspendTarget(null)
+        setBreakGlassTarget(null)
+        setPassportTarget(null)
+        setShowComplianceModal(false)
+        setShowAlertModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isAnySuperAdminModalOpen])
+
   async function enterTenant(tenantId: string) {
     setSwitching(tenantId)
     setAuth(tenantId)

@@ -229,7 +229,11 @@ export default function Classes() {
     }
   }
 
+  const isAnyModalOpen =
+    showTypeModal || showSessionModal || showGenerateModal || Boolean(selectedSessionRoster)
+
   useEffect(() => {
+    if (!isAnyModalOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowTypeModal(false)
@@ -240,7 +244,7 @@ export default function Classes() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [isAnyModalOpen])
 
   return (
     <div className="space-y-6">

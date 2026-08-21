@@ -617,6 +617,7 @@ class ClassBookingService:
                 ClassBooking.tenant_id == tenant_id,
                 ClassBooking.member_id == member_id,
                 ClassBooking.status == ClassBookingStatus.CONFIRMED,
+                ClassSession.status != ClassSessionStatus.CANCELLED,
                 ClassSession.id != session_id,
                 ClassSession.start_time_utc < session.end_time_utc,
                 ClassSession.end_time_utc > session.start_time_utc,
@@ -822,7 +823,26 @@ class ClassBookingService:
 
             for candidate in waitlist_candidates:
                 can_promote = True
-                if class_type.required_entitlement_type:
+
+                # Check if candidate has an overlapping active CONFIRMED booking
+                overlap_cand_stmt = (
+                    select(ClassBooking)
+                    .join(ClassSession, ClassBooking.session_id == ClassSession.id)
+                    .where(
+                        ClassBooking.tenant_id == tenant_id,
+                        ClassBooking.member_id == candidate.member_id,
+                        ClassBooking.status == ClassBookingStatus.CONFIRMED,
+                        ClassSession.status != ClassSessionStatus.CANCELLED,
+                        ClassSession.id != session.id,
+                        ClassSession.start_time_utc < session.end_time_utc,
+                        ClassSession.end_time_utc > session.start_time_utc,
+                    )
+                )
+                overlap_cand_res = await db.execute(overlap_cand_stmt)
+                if overlap_cand_res.scalars().first():
+                    can_promote = False
+
+                if can_promote and class_type.required_entitlement_type:
                     try:
                         consumed = await EntitlementService.consume_access(
                             db,

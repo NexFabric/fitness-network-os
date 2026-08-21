@@ -200,6 +200,7 @@ class MembershipService:
     ) -> Membership:
         # Check for overlap
         stmt = select(Membership).where(
+            Membership.tenant_id == tenant_id,
             Membership.member_id == member_id,
             Membership.status.in_(
                 {"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"}
@@ -209,7 +210,10 @@ class MembershipService:
         if existing.scalars().first():
             raise ValueError("Member already has an active or scheduled membership")
 
-        pv_stmt = select(PlanVersion).where(PlanVersion.id == plan_version_id)
+        pv_stmt = select(PlanVersion).where(
+            PlanVersion.tenant_id == tenant_id,
+            PlanVersion.id == plan_version_id,
+        )
         pv = (await self.session.execute(pv_stmt)).scalar_one_or_none()
         if not pv or not pv.is_published:
             raise ValueError("Valid published PlanVersion required")

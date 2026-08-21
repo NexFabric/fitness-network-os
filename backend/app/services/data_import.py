@@ -5,7 +5,7 @@ import re
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -275,14 +275,24 @@ class DataImportService:
                                 f"Failed to attach imported membership for member {member.id}: {ex}"
                             )
 
-                    row.status = ImportRowStatus.IMPORTED
+                    await db.execute(
+                        update(DataImportRow)
+                        .where(DataImportRow.id == row.id)
+                        .values(status=ImportRowStatus.IMPORTED)
+                    )
                     imported_count += 1
             except (SQLAlchemyError, ValueError, KeyError, TypeError) as ex:
                 logger.error(
                     f"Failed to import row {row.row_number} in batch {batch_id}: {ex}"
                 )
-                row.status = ImportRowStatus.FAILED
-                row.error_message = f"İçe aktarma hatası: {ex!s}"
+                await db.execute(
+                    update(DataImportRow)
+                    .where(DataImportRow.id == row.id)
+                    .values(
+                        status=ImportRowStatus.FAILED,
+                        error_message=f"İçe aktarma hatası: {ex!s}",
+                    )
+                )
 
         batch.imported_rows = imported_count
         batch.status = ImportBatchStatus.COMPLETED

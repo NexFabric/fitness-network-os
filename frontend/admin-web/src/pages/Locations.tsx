@@ -70,6 +70,15 @@ export default function Locations() {
     void loadLocations()
   }, [loadLocations])
 
+  useEffect(() => {
+    if (!editing) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEditing(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [editing])
+
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
     setFormError(null)
