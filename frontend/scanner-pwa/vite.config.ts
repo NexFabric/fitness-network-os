@@ -14,6 +14,8 @@ export default defineConfig({
         description: 'Üye karekodlarını okuyarak geçiş yetkisini doğrulayın',
         start_url: '/',
         id: '/',
+        scope: '/',
+        categories: ['business', 'utilities', 'productivity'],
         theme_color: '#020617',
         background_color: '#020617',
         display: 'standalone',
@@ -41,7 +43,29 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-        navigateFallbackDenylist: [/^\/api/]
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        navigateFallbackDenylist: [/^\/api/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 31536000 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          }
+        ]
       }
     })
   ],
