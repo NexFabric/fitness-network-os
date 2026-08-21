@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
+from app.models.audit import AuditEvent
 from app.models.location import Location
 from app.models.rbac import Role, UserRole
 from app.models.staff import Staff
@@ -186,8 +187,24 @@ class StaffService:
         )
         staff = existing.scalars().first()
         if staff:
+            old_role = staff.role
+            old_loc = str(staff.location_id) if staff.location_id else None
             staff.role = role
             staff.location_id = location_id
+            self.db.add(
+                AuditEvent(
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    action="staff.role_updated",
+                    resource_type="staff",
+                    resource_id=staff.id,
+                    old_state={"role": old_role, "location_id": old_loc},
+                    new_state={
+                        "role": role,
+                        "location_id": str(location_id) if location_id else None,
+                    },
+                )
+            )
             await self.db.flush()
             await self._attach_rbac_role(tenant_id, user_id, role)
             return staff
@@ -200,6 +217,19 @@ class StaffService:
             location_id=location_id,
         )
         self.db.add(staff)
+        self.db.add(
+            AuditEvent(
+                tenant_id=tenant_id,
+                user_id=user_id,
+                action="staff.linked",
+                resource_type="staff",
+                resource_id=staff.id,
+                new_state={
+                    "role": role,
+                    "location_id": str(location_id) if location_id else None,
+                },
+            )
+        )
         try:
             await self.db.flush()
         except IntegrityError as e:
