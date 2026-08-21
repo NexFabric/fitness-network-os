@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.access import Checkin
 from app.models.audit import AuditEvent
 from app.models.federation import ComplianceRecord, NetworkAlert, PassportConfig
-from app.models.finance import Payment
+from app.models.finance import Payment, PaymentStatus
 from app.models.location import Location
 from app.models.member import Member
 from app.models.membership import Membership
@@ -208,7 +208,9 @@ class FederationService:
             await self.db.execute(
                 select(func.coalesce(func.sum(Payment.amount_minor), 0)).where(
                     Payment.tenant_id == tenant_id,
-                    Payment.status == "CAPTURED",
+                    Payment.status.in_(
+                        [PaymentStatus.SUCCEEDED.value, PaymentStatus.PARTIALLY_REFUNDED.value]
+                    ),
                 )
             )
         ).scalar_one()
@@ -462,7 +464,9 @@ class FederationService:
                 await self._enter_tenant(tid)
                 stmt = select(func.coalesce(func.sum(Payment.amount_minor), 0)).where(
                     Payment.tenant_id == tid,
-                    Payment.status == "CAPTURED",
+                    Payment.status.in_(
+                        [PaymentStatus.SUCCEEDED.value, PaymentStatus.PARTIALLY_REFUNDED.value]
+                    ),
                 )
                 if start_date is not None:
                     stmt = stmt.where(Payment.created_at >= start_date)

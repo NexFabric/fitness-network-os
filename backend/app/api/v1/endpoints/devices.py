@@ -239,7 +239,10 @@ async def revoke_device(
 
     await db.execute(
         update(DeviceSession)
-        .where(DeviceSession.device_id == device.id)
+        .where(
+            DeviceSession.device_id == device.id,
+            DeviceSession.tenant_id == tenant_id,
+        )
         .values(is_revoked=True)
     )
 

@@ -229,6 +229,19 @@ export default function Classes() {
     }
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowTypeModal(false)
+        setShowSessionModal(false)
+        setShowGenerateModal(false)
+        setSelectedSessionRoster(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -252,7 +265,7 @@ export default function Classes() {
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
 
-      <div className="flex border-b border-border/40 gap-4 text-sm font-medium">
+      <div className="flex overflow-x-auto whitespace-nowrap no-scrollbar border-b border-border/40 gap-4 text-sm font-medium">
         <button
           onClick={() => setActiveTab('sessions')}
           className={`pb-3 px-2 border-b-2 transition-colors ${
@@ -325,9 +338,14 @@ export default function Classes() {
       )}
 
       {showTypeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Yeni Ders Tipi Ekle</h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-class-type-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <h3 id="create-class-type-title" className="text-lg font-bold text-foreground">Yeni Ders Tipi Ekle</h3>
             <form onSubmit={handleCreateType} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Ders Adı</label>
@@ -421,9 +439,14 @@ export default function Classes() {
       )}
 
       {showSessionModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Yeni Ders Seansı Planla</h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-class-session-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <h3 id="create-class-session-title" className="text-lg font-bold text-foreground">Yeni Ders Seansı Planla</h3>
             <form onSubmit={handleCreateSession} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Ders Tipi</label>
@@ -523,11 +546,11 @@ export default function Classes() {
                 <button
                   type="button"
                   onClick={() => setShowSessionModal(false)}
-                  className="btn btn-secondary text-sm px-4 py-2"
+                  className="btn btn-secondary text-sm px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                 >
                   Vazgeç
                 </button>
-                <button type="submit" className="btn btn-primary text-sm px-4 py-2">
+                <button type="submit" className="btn btn-primary text-sm px-4 py-2 min-h-[44px] sm:min-h-[36px]">
                   Seansı Ekle
                 </button>
               </div>
@@ -537,9 +560,14 @@ export default function Classes() {
       )}
 
       {showGenerateModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Haftalık Şablondan Toplu Seans Üret</h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="generate-sessions-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-card border border-border/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <h3 id="generate-sessions-title" className="text-lg font-bold text-foreground">Haftalık Şablondan Toplu Seans Üret</h3>
             <p className="text-xs text-muted-foreground">
               Seçilen haftalık program şablonuna göre belirtilen tarih aralığındaki seanslar otomatik oluşturulacaktır.
             </p>
@@ -590,11 +618,11 @@ export default function Classes() {
                 <button
                   type="button"
                   onClick={() => setShowGenerateModal(false)}
-                  className="btn btn-secondary text-sm px-4 py-2"
+                  className="btn btn-secondary text-sm px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                 >
                   Vazgeç
                 </button>
-                <button type="submit" className="btn btn-primary text-sm px-4 py-2">
+                <button type="submit" className="btn btn-primary text-sm px-4 py-2 min-h-[44px] sm:min-h-[36px]">
                   ⚡ Seansları Üret
                 </button>
               </div>

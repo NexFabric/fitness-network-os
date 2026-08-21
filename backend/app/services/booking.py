@@ -7,9 +7,12 @@ entitlement wallet validation, and transactional outbox events.
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 class BookingError(Exception):
@@ -593,7 +596,7 @@ class ClassBookingService:
             if not access.get("granted"):
                 raise BookingForbidden("Bu ders için geçerli hakkınız bulunmuyor.")
 
-        # 2. Check if member already has active reservation (CONFIRMED or WAITLISTED)
+        # 2. Check if member already has active reservation (CONFIRMED or WAITLISTED) in this session
         existing_stmt = select(ClassBooking).where(
             ClassBooking.tenant_id == tenant_id,
             ClassBooking.session_id == session_id,
@@ -605,6 +608,25 @@ class ClassBookingService:
         existing_res = await db.execute(existing_stmt)
         if existing_res.scalar_one_or_none():
             raise BookingInvalid("Zaten bu derse aktif rezervasyonunuz bulunmaktadır.")
+
+        # 2b. Check if member has another active CONFIRMED booking overlapping the same time
+        overlap_stmt = (
+            select(ClassBooking)
+            .join(ClassSession, ClassBooking.session_id == ClassSession.id)
+            .where(
+                ClassBooking.tenant_id == tenant_id,
+                ClassBooking.member_id == member_id,
+                ClassBooking.status == ClassBookingStatus.CONFIRMED,
+                ClassSession.id != session_id,
+                ClassSession.start_time_utc < session.end_time_utc,
+                ClassSession.end_time_utc > session.start_time_utc,
+            )
+        )
+        overlap_res = await db.execute(overlap_stmt)
+        if overlap_res.scalars().first():
+            raise BookingConflict(
+                "Bu saat aralığında onaylanmış başka bir ders rezervasyonunuz bulunmaktadır."
+            )
 
         # 3. Count current CONFIRMED bookings under the lock
         count_stmt = select(func.count(ClassBooking.id)).where(
@@ -780,9 +802,9 @@ class ClassBookingService:
             aggregate_id=booking.id,
         )
 
-        # 4. If a CONFIRMED booking was cancelled, auto-promote the top waitlisted member
+        # 4. If a CONFIRMED booking was cancelled, auto-promote the top eligible waitlisted member
         if original_status == ClassBookingStatus.CONFIRMED:
-            top_wait_stmt = (
+            waitlist_stmt = (
                 select(ClassBooking)
                 .where(
                     ClassBooking.tenant_id == tenant_id,
@@ -790,57 +812,60 @@ class ClassBookingService:
                     ClassBooking.status == ClassBookingStatus.WAITLISTED,
                 )
                 .order_by(ClassBooking.waitlist_position.asc())
-                .limit(1)
                 .with_for_update()
             )
-            top_wait_res = await db.execute(top_wait_stmt)
-            top_wait = top_wait_res.scalar_one_or_none()
+            waitlist_candidates = list((await db.execute(waitlist_stmt)).scalars().all())
 
-            if top_wait:
-                class_type = await ClassBookingService.get_class_type(
-                    db, tenant_id, session.class_type_id
-                )
+            class_type = await ClassBookingService.get_class_type(
+                db, tenant_id, session.class_type_id
+            )
+
+            for candidate in waitlist_candidates:
+                can_promote = True
                 if class_type.required_entitlement_type:
-                    consumed = await EntitlementService.consume_access(
-                        db,
-                        tenant_id,
-                        top_wait.member_id,
-                        class_type.required_entitlement_type,
-                        idempotency_key=f"class-book:{top_wait.id}",
-                    )
-                    if not consumed.get("granted"):
-                        top_wait = None
-            if top_wait:
-                # Promote top waitlist to CONFIRMED
-                top_wait.status = ClassBookingStatus.CONFIRMED
-                top_wait.waitlist_position = None
-                await db.flush()
+                    try:
+                        consumed = await EntitlementService.consume_access(
+                            db,
+                            tenant_id,
+                            candidate.member_id,
+                            class_type.required_entitlement_type,
+                            idempotency_key=f"class-book:{candidate.id}",
+                        )
+                        if not consumed.get("granted"):
+                            can_promote = False
+                    except (BookingError, ValueError, RuntimeError, KeyError, TypeError) as ex:
+                        logger.warning(
+                            "Failed to consume entitlement for auto-promotion candidate %s: %s",
+                            candidate.id,
+                            ex,
+                        )
+                        can_promote = False
 
-                # Shift all subsequent waitlisted members down by 1
-                shift_stmt = (
-                    update(ClassBooking)
-                    .where(
-                        ClassBooking.tenant_id == tenant_id,
-                        ClassBooking.session_id == session.id,
-                        ClassBooking.status == ClassBookingStatus.WAITLISTED,
-                        ClassBooking.waitlist_position > 1,
-                    )
-                    .values(waitlist_position=ClassBooking.waitlist_position - 1)
-                )
-                await db.execute(shift_stmt)
+                if can_promote:
+                    candidate.status = ClassBookingStatus.CONFIRMED
+                    candidate.waitlist_position = None
+                    await db.flush()
 
-                # Emit promotion event
-                await outbox.enqueue(
-                    tenant_id=tenant_id,
-                    event_type=CLASS_BOOKING_PROMOTED_V1,
-                    payload={
-                        "booking_id": str(top_wait.id),
-                        "session_id": str(session.id),
-                        "member_id": str(top_wait.member_id),
-                    },
-                    aggregate_type="class_booking",
-                    aggregate_id=top_wait.id,
-                )
+                    await outbox.enqueue(
+                        tenant_id=tenant_id,
+                        event_type=CLASS_BOOKING_PROMOTED_V1,
+                        payload={
+                            "booking_id": str(candidate.id),
+                            "session_id": str(session.id),
+                            "member_id": str(candidate.member_id),
+                        },
+                        aggregate_type="class_booking",
+                        aggregate_id=candidate.id,
+                    )
+                    break
+
+            # Re-index remaining waitlisted members sequentially (1, 2, 3...)
+            remaining_waitlist = [
+                b for b in waitlist_candidates if b.status == ClassBookingStatus.WAITLISTED
+            ]
+            for new_pos, wait_b in enumerate(remaining_waitlist, start=1):
+                if wait_b.waitlist_position != new_pos:
+                    wait_b.waitlist_position = new_pos
 
         elif (
             original_status == ClassBookingStatus.WAITLISTED and cancelled_waitlist_pos
@@ -1130,6 +1155,8 @@ class PtBookingService:
         member_id: UUID | None = None,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[PtAppointment]:
         stmt = select(PtAppointment).where(PtAppointment.tenant_id == tenant_id)
         if trainer_user_id:
@@ -1140,6 +1167,6 @@ class PtBookingService:
             stmt = stmt.where(PtAppointment.start_time_utc >= start_time)
         if end_time:
             stmt = stmt.where(PtAppointment.start_time_utc <= end_time)
-        stmt = stmt.order_by(PtAppointment.start_time_utc.asc())
+        stmt = stmt.order_by(PtAppointment.start_time_utc.asc()).offset(offset).limit(limit)
         res = await db.execute(stmt)
         return list(res.scalars().all())

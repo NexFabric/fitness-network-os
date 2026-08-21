@@ -132,3 +132,44 @@
   - function getDeviceKey: () => Promise<CryptoKey | null>
   - function authenticateDevice: (deviceId, tenantId, apiKey) => Promise<DeviceAuthResult>
   - _...5 more_
+- `frontend/shared/workout-engine/effort.ts`
+  - function extractRir: (set) => number | null
+  - function convertRirToScale: (scale, rir) => number | null
+  - function isHardSet: (set) => boolean
+  - function calculateAverageRir: (sets) => number | null
+  - interface RatedSet
+  - const HARD_RIR_THRESHOLD
+- `frontend/shared/workout-engine/importers.ts`
+  - function parseCsvRows: (text) => string[][]
+  - function detectSourceApp: (headerRow) => SupportedSourceApp
+  - interface ParsedWorkoutRow
+  - type SupportedSourceApp
+- `frontend/shared/workout-engine/muscles.ts`
+  - function getMuscleWeights: (ex) => Partial<Record<AnatomicalMuscle, number>>
+  - function calculateMuscleLoad: (items) => Record<AnatomicalMuscle, number>
+  - function calculateHeatmapLevels: (load, number>) => Record<AnatomicalMuscle, number>
+  - interface ExerciseMuscleMapping
+  - interface VolumeItem
+  - type AnatomicalMuscle
+  - _...2 more_
+- `frontend/shared/workout-engine/onerm.ts`
+  - function estimate1RM: (weightInput, repsInput, formula) => number | null
+  - function bestSetOf: (entry, formula) => EstimatedMaxResult | null
+  - interface SetRecord
+  - interface EntryRecord
+  - interface EstimatedMaxResult
+  - type OneRmFormula
+  - _...3 more_
+- `frontend/shared/workout-engine/progression.ts`
+  - function calculateDeload: (currentWeight, step) => number
+  - function evaluateSession: (sets, target) => WorkoutSessionSummary
+  - function calculateStallCount: (sessions) => number
+  - function determineNextPrescription: (pastSessions, cfg, unit) => Prescription
+  - interface ExerciseConfig
+  - interface ExecutedSet
+  - _...9 more_
+- `frontend/shared/workout-engine/wakelock.ts`
+  - function requestScreenWakeLock: () => void
+  - function releaseScreenWakeLock: () => void
+  - function useScreenWakeLock: (enabled) => void
+  - function isWakeLockSupported

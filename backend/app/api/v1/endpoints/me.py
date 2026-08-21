@@ -410,6 +410,8 @@ async def list_my_invoices(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: UUID = Depends(get_tenant_id),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
     """List invoices for the bound member's billing account."""
     AuthorizationService.require_self(
@@ -427,6 +429,8 @@ async def list_my_invoices(
             BillingAccount.member_id == member.id,
         )
         .order_by(Invoice.created_at.desc())
+        .offset(offset)
+        .limit(limit)
     )
     return list(result.scalars().all())
 
@@ -436,6 +440,8 @@ async def list_my_payments(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: UUID = Depends(get_tenant_id),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
     """List payments for the bound member's billing account."""
     AuthorizationService.require_self(
@@ -453,6 +459,8 @@ async def list_my_payments(
             BillingAccount.member_id == member.id,
         )
         .order_by(Payment.created_at.desc())
+        .offset(offset)
+        .limit(limit)
     )
     return list(result.scalars().all())
 
@@ -462,6 +470,8 @@ async def list_my_consents(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: UUID = Depends(get_tenant_id),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
     """List consent records for the bound member."""
     if not AuthorizationService.is_authorized(
@@ -479,6 +489,8 @@ async def list_my_consents(
             ConsentRecord.member_id == member.id,
         )
         .order_by(ConsentRecord.created_at.desc())
+        .offset(offset)
+        .limit(limit)
     )
     return list(result.scalars().all())
 
@@ -745,6 +757,8 @@ async def list_my_class_bookings(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     tenant_id: UUID = Depends(get_tenant_id),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ) -> list[ClassBookingResponse]:
     """List own booking history for the bound member."""
     if not AuthorizationService.is_authorized(
@@ -762,6 +776,8 @@ async def list_my_class_bookings(
             ClassBooking.member_id == member.id,
         )
         .order_by(ClassBooking.booked_at.desc())
+        .offset(offset)
+        .limit(limit)
     )
     res = await db.execute(stmt)
     return [ClassBookingResponse.model_validate(b) for b in res.scalars().all()]

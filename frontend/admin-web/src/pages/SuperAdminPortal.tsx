@@ -356,7 +356,7 @@ export default function SuperAdminPortal() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 font-sans">
+    <div className="min-h-[100dvh] bg-slate-950 px-4 py-8 text-slate-100 font-sans">
       <div className="mx-auto w-full max-w-7xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
           <div>
@@ -435,7 +435,7 @@ export default function SuperAdminPortal() {
           </div>
         )}
 
-        <nav className="mb-6 flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+        <nav className="mb-6 flex overflow-x-auto whitespace-nowrap no-scrollbar gap-2 border-b border-slate-800 pb-2">
           {[
             { key: 'overview', label: '🌐 Genel Bakış', count: undefined },
             { key: 'gyms', label: '🏢 Kulüpler & Salonlar', count: tenants.length },
@@ -450,7 +450,7 @@ export default function SuperAdminPortal() {
                 key={tab.key}
                 type="button"
                 onClick={() => setTab(tab.key as TabKey)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 min-h-[44px] sm:min-h-[38px] text-xs font-bold transition ${
                   isActive
                     ? 'bg-teal-500/15 text-teal-400 border border-teal-500/30'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent'
@@ -551,9 +551,14 @@ export default function SuperAdminPortal() {
         )}
 
         {showAddGymModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">🏢 Yeni Kulüp & Franchise Ekle</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-gym-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="add-gym-modal-title" className="text-lg font-bold text-white">🏢 Yeni Kulüp & Franchise Ekle</h3>
               <p className="mt-1 text-xs text-slate-400">
                 Federasyon ağına yeni bir spor salonu ve ana şubesini tanımlayın.
               </p>
@@ -566,7 +571,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: FitClub Beşiktaş"
                     value={newGymName}
                     onChange={(e) => setNewGymName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -577,7 +582,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: FIT-BESIKTAS"
                     value={newGymCode}
                     onChange={(e) => setNewGymCode(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 font-mono uppercase text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -587,7 +592,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Çarşı Şubesi"
                     value={newGymBranch}
                     onChange={(e) => setNewGymBranch(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -597,7 +602,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Beşiktaş, İstanbul"
                     value={newGymAddress}
                     onChange={(e) => setNewGymAddress(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 {newGymError && <Alert variant="error">{newGymError}</Alert>}
@@ -605,14 +610,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setShowAddGymModal(false)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     Vazgeç
                   </button>
                   <button
                     type="submit"
                     disabled={newGymSubmitting}
-                    className="rounded-xl bg-teal-600 px-4 py-2 font-bold text-white hover:bg-teal-500 transition"
+                    className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px] bg-teal-600 hover:bg-teal-500"
                   >
                     {newGymSubmitting ? 'Oluşturuluyor…' : 'Kulübü Oluştur'}
                   </button>
@@ -623,9 +628,14 @@ export default function SuperAdminPortal() {
         )}
 
         {suspendTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-rose-900/80 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">⚠️ Kulübü Askıya Al</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="suspend-gym-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-rose-900/80 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="suspend-gym-modal-title" className="text-lg font-bold text-white">⚠️ Kulübü Askıya Al</h3>
               <p className="mt-1 text-xs text-rose-300">
                 <strong>{suspendTarget.name}</strong> kulübü askıya alınacaktır. Bu işlem sonrasında kulübün turnike ve
                 portal erişimleri anında durdurulur.
@@ -639,7 +649,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Hijyen denetimi yetersizliği ve aidat gecikmesi."
                     value={suspendReason}
                     onChange={(e) => setSuspendReason(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-rose-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 {suspendError && <Alert variant="error">{suspendError}</Alert>}
@@ -647,14 +657,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setSuspendTarget(null)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
                     disabled={suspendSubmitting}
-                    className="rounded-xl bg-rose-600 px-4 py-2 font-bold text-white hover:bg-rose-500 transition"
+                    className="btn-danger text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     {suspendSubmitting ? 'İşleniyor…' : 'Askıya Almayı Onayla'}
                   </button>
@@ -665,9 +675,14 @@ export default function SuperAdminPortal() {
         )}
 
         {breakGlassTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-purple-900/80 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">🛡️ Break-Glass Acil Destek Girişi</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="break-glass-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-purple-900/80 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="break-glass-modal-title" className="text-lg font-bold text-white">🛡️ Break-Glass Acil Destek Girişi</h3>
               <p className="mt-1 text-xs text-slate-400">
                 <strong>{breakGlassTarget.name}</strong> kulübüne denetlenen süreli acil erişim oturumu başlatılır.
               </p>
@@ -680,7 +695,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: TICKET-8842"
                     value={bgTicket}
                     onChange={(e) => setBgTicket(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase focus:border-purple-500 focus:outline-none"
+                    className="input-field mt-1 font-mono uppercase text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -691,7 +706,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Turnike tarayıcı arıza giderme müdahalesi."
                     value={bgReason}
                     onChange={(e) => setBgReason(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -699,7 +714,7 @@ export default function SuperAdminPortal() {
                   <select
                     value={bgDuration}
                     onChange={(e) => setBgDuration(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   >
                     <option value={15}>15 Dakika</option>
                     <option value={30}>30 Dakika</option>
@@ -711,14 +726,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setBreakGlassTarget(null)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     Vazgeç
                   </button>
                   <button
                     type="submit"
                     disabled={bgSubmitting}
-                    className="rounded-xl bg-purple-600 px-4 py-2 font-bold text-white hover:bg-purple-500 transition"
+                    className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px] bg-purple-600 hover:bg-purple-500"
                   >
                     {bgSubmitting ? 'Yetkilendiriliyor…' : 'Oturumu Başlat & Gir'}
                   </button>
@@ -729,9 +744,14 @@ export default function SuperAdminPortal() {
         )}
 
         {passportTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">🛂 Pasaport Kurallarını Güncelle</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="passport-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="passport-modal-title" className="text-lg font-bold text-white">🛂 Pasaport Kurallarını Güncelle</h3>
               <p className="mt-1 text-xs text-slate-400">
                 <strong>{passportTarget.name}</strong> kulübünün federasyon çapraz geçiş politikaları.
               </p>
@@ -756,7 +776,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: VIP,GOLD,PLATINUM"
                     value={passportTiers}
                     onChange={(e) => setPassportTiers(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 font-mono uppercase text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -768,7 +788,7 @@ export default function SuperAdminPortal() {
                     required
                     value={passportMaxVisits}
                     onChange={(e) => setPassportMaxVisits(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -779,7 +799,7 @@ export default function SuperAdminPortal() {
                     step={1}
                     value={passportFeeMinor}
                     onChange={(e) => setPassportFeeMinor(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 {passportError && <Alert variant="error">{passportError}</Alert>}
@@ -787,14 +807,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setPassportTarget(null)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     Vazgeç
                   </button>
                   <button
                     type="submit"
                     disabled={passportSubmitting}
-                    className="rounded-xl bg-teal-600 px-4 py-2 font-bold text-white hover:bg-teal-500 transition"
+                    className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px] bg-teal-600 hover:bg-teal-500"
                   >
                     {passportSubmitting ? 'Kaydediliyor…' : 'Ayarları Kaydet'}
                   </button>
@@ -805,9 +825,14 @@ export default function SuperAdminPortal() {
         )}
 
         {showComplianceModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">🛡️ Yeni Muayene / Denetim Kaydı</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="compliance-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="compliance-modal-title" className="text-lg font-bold text-white">🛡️ Yeni Muayene / Denetim Kaydı</h3>
               <form onSubmit={(e) => void handleAddCompliance(e)} className="mt-4 space-y-3 text-xs">
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Denetlenen Kulüp *</label>
@@ -815,7 +840,7 @@ export default function SuperAdminPortal() {
                     required
                     value={compTenantId}
                     onChange={(e) => setCompTenantId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   >
                     {tenants.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -832,7 +857,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: TSE-ISO 9001 Hijyen & Güvenlik Standardı"
                     value={compCertName}
                     onChange={(e) => setCompCertName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -840,7 +865,7 @@ export default function SuperAdminPortal() {
                   <select
                     value={compStatus}
                     onChange={(e) => setCompStatus(e.target.value as 'PASSED' | 'CONDITIONAL' | 'FAILED')}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   >
                     <option value="PASSED">GEÇTİ (Uyumlu)</option>
                     <option value="CONDITIONAL">ŞARTLI (Eksikler Var)</option>
@@ -854,7 +879,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: İlkyardım ekipmanı ve yangın tüpü kontrolleri yapıldı."
                     value={compNotes}
                     onChange={(e) => setCompNotes(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 {compError && <Alert variant="error">{compError}</Alert>}
@@ -862,14 +887,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setShowComplianceModal(false)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     Vazgeç
                   </button>
                   <button
                     type="submit"
                     disabled={compSubmitting}
-                    className="rounded-xl bg-teal-600 px-4 py-2 font-bold text-white hover:bg-teal-500 transition"
+                    className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px] bg-teal-600 hover:bg-teal-500"
                   >
                     {compSubmitting ? 'Kaydediliyor…' : 'Denetimi Kaydet'}
                   </button>
@@ -880,9 +905,14 @@ export default function SuperAdminPortal() {
         )}
 
         {showAlertModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-white">📢 Yeni Ağ Duyurusu Yayınla</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="alert-modal-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <h3 id="alert-modal-title" className="text-lg font-bold text-white">📢 Yeni Ağ Duyurusu Yayınla</h3>
               <form onSubmit={(e) => void handleCreateAlert(e)} className="mt-4 space-y-3 text-xs">
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Duyuru Başlığı *</label>
@@ -892,7 +922,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Planlı Turnike Bakım Çalışması"
                     value={alertTitle}
                     onChange={(e) => setAlertTitle(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 <div>
@@ -902,7 +932,7 @@ export default function SuperAdminPortal() {
                     onChange={(e) =>
                       setAlertSeverity(e.target.value as 'INFO' | 'WARNING' | 'CRITICAL' | 'MAINTENANCE')
                     }
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   >
                     <option value="INFO">BİLGİ (Info)</option>
                     <option value="WARNING">UYARI (Warning)</option>
@@ -915,7 +945,7 @@ export default function SuperAdminPortal() {
                   <select
                     value={alertTargetTenant}
                     onChange={(e) => setAlertTargetTenant(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   >
                     <option value="">Tüm Federasyon Kulüpleri</option>
                     {tenants.map((t) => (
@@ -933,7 +963,7 @@ export default function SuperAdminPortal() {
                     placeholder="Örn: Saat 02:00 ile 04:00 arasında turnike okuyucularda yazılım güncellemesi yapılacaktır."
                     value={alertMessage}
                     onChange={(e) => setAlertMessage(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:border-teal-500 focus:outline-none"
+                    className="input-field mt-1 text-[16px] sm:text-xs"
                   />
                 </div>
                 {alertError && <Alert variant="error">{alertError}</Alert>}
@@ -941,14 +971,14 @@ export default function SuperAdminPortal() {
                   <button
                     type="button"
                     onClick={() => setShowAlertModal(false)}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 hover:bg-slate-800"
+                    className="btn-secondary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                   >
                     Vazgeç
                   </button>
                   <button
                     type="submit"
                     disabled={alertSubmitting}
-                    className="rounded-xl bg-teal-600 px-4 py-2 font-bold text-white hover:bg-teal-500 transition"
+                    className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px] bg-teal-600 hover:bg-teal-500"
                   >
                     {alertSubmitting ? 'Yayınlanıyor…' : 'Duyuruyu Yayınla'}
                   </button>

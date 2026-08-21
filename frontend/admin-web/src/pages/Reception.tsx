@@ -217,7 +217,7 @@ export default function Reception() {
                     setSelectedMemberId(m.id)
                     setOverrideMessage(null)
                   }}
-                  className={`w-full text-left rounded-xl border p-3 transition-all ${
+                  className={`w-full text-left rounded-xl border p-3.5 min-h-[52px] transition-all ${
                     selectedMemberId === m.id
                       ? 'border-brand bg-brand/10 shadow-sm'
                       : 'border-slate-800 bg-slate-900/60 hover:bg-slate-800/60'

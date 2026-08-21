@@ -51,38 +51,40 @@ export default function DsarInbox() {
         </div>
       )}
       {rows.length > 0 && (
-        <table className="mt-6 min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="px-3 py-2">Üye</th>
-              <th className="px-3 py-2">Tür</th>
-              <th className="px-3 py-2">Durum</th>
-              <th className="px-3 py-2">Son tarih</th>
-              <th className="px-3 py-2">Paket</th>
-              <th className="px-3 py-2">Ret</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td className="px-3 py-3 font-mono text-xs text-slate-400">{r.member_id}</td>
-                <td className="px-3 py-3 text-slate-300">{r.kind}</td>
-                <td className="px-3 py-3 text-slate-300">{r.status}</td>
-                <td className="px-3 py-3 text-slate-400">{r.due_at.slice(0, 10)}</td>
-                <td className="px-3 py-3">
-                  {r.download_url ? (
-                    <a className="text-teal-400 underline" href={r.download_url} target="_blank" rel="noreferrer">
-                      İndir
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-                <td className="px-3 py-3 text-xs text-rose-400">{r.rejection_reason ?? '—'}</td>
+        <div className="table-shell mt-6">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="table-th">Üye</th>
+                <th className="table-th">Tür</th>
+                <th className="table-th">Durum</th>
+                <th className="table-th">Son tarih</th>
+                <th className="table-th">Paket</th>
+                <th className="table-th">Ret</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td className="table-td font-mono text-xs text-slate-400">{r.member_id}</td>
+                  <td className="table-td text-slate-300">{r.kind}</td>
+                  <td className="table-td text-slate-300">{r.status}</td>
+                  <td className="table-td text-slate-400">{r.due_at.slice(0, 10)}</td>
+                  <td className="table-td">
+                    {r.download_url ? (
+                      <a className="text-teal-400 underline" href={r.download_url} target="_blank" rel="noreferrer">
+                        İndir
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="table-td text-xs text-rose-400">{r.rejection_reason ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

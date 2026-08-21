@@ -21,6 +21,7 @@ certification, TLS, coverage, a11y, migrate, or ops-drills branch.
 | **#89** certification | `e05e29f` | migrate-before-app, migrator-only DSN, TLS / `PRODUCTION_PRIVATE_NETWORK`, ops-drills PITR, coverage floors, Safety CLI dropped (pip-audit is SCA), EXTERNAL_GATES packets | rewrite compose, re-add Safety, invent a second migrate gate |
 | **#91** truth headers | `27fff12` | authority docs mark #89 MERGED | reopen an “#89 is OPEN” story |
 | **#93** release-truth | `d9a5c9d` | `backend/scripts/check_release_truth.py` forbids stale OPEN vs MERGED pairs | rewrite the checker; do not claim #89 OPEN |
+| **2026-08-21** audit hardening | `HEAD` | federation revenue status bug fix (`SUCCEEDED`), root `ErrorBoundary`, reception N+1 batch query, `/me` pagination caps, import plan cache, modal a11y dialog roles, Dashboard error retry | re-open federation CAPTURED bug or N+1 query loop |
 | **#94** TLS proof | `1b42ab4` | host `chown 999:999` of TLS proof certs; encrypt-only SSL context | `docker exec chown` on a dead container; re-break verify-full |
 | **#62** Phase 29 + RC | `ae6267d` | BOLA, MFA/step-up/idle, `fernet:hmac:`, portal bind, DSAR, PT EXCLUDE, … | reopen Phase 29 product work |
 | **#78** local drills | `fb3a26d` | S3 10/10 MinIO, dump/restore + PITR, observability drill | re-run as if never executed; local ≠ AWS |

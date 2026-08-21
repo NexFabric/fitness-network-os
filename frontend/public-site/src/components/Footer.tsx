@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-background pt-14 pb-8">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-6 sm:gap-10 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2">
             <Link
               href="/"

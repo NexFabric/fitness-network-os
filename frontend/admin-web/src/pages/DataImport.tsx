@@ -161,7 +161,7 @@ export default function DataImport() {
                   value={filename}
                   onChange={(e) => setFilename(e.target.value)}
                   placeholder="eski_sistem_uyeler.csv"
-                  className="input mt-1 w-full text-xs"
+                  className="input-field mt-1 w-full text-[16px] sm:text-xs"
                 />
               </div>
 
@@ -175,7 +175,7 @@ export default function DataImport() {
                   value={csvContent}
                   onChange={(e) => setCsvContent(e.target.value)}
                   placeholder={`ad,soyad,eposta,telefon,uye_no\nAhmet,Yilmaz,ahmet@example.com,5551112233,MBR-1001\nAyse,Demir,ayse@example.com,5552223344,MBR-1002`}
-                  className="input mt-1 w-full font-mono text-xs"
+                  className="input-field mt-1 w-full font-mono text-[16px] sm:text-xs"
                   required
                 />
               </div>

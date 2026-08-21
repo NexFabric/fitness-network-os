@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**83 library files** across 2 modules
+**89 library files** across 2 modules
 
 ## Backend (80 files)
 
@@ -33,11 +33,17 @@
 - `backend/alembic/versions/bc4033d03939_add_terms_json_fields.py` — upgrade, downgrade
 - _…and 55 more files_
 
-## Frontend (3 files)
+## Frontend (9 files)
 
+- `frontend/shared/workout-engine/progression.ts` — calculateDeload, evaluateSession, calculateStallCount, determineNextPrescription, ExerciseConfig, ExecutedSet, …
 - `frontend/scanner-pwa/src/api/client.ts` — getBaseUrl, getTenantId, setAuth, clearAuth, getDeviceKey, authenticateDevice, …
 - `frontend/admin-web/src/api/client.ts` — getBaseUrl, getTenantId, setAuth, clearAuth, isAuthenticated, ensureCsrf, …
+- `frontend/shared/workout-engine/onerm.ts` — estimate1RM, bestSetOf, SetRecord, EntryRecord, EstimatedMaxResult, OneRmFormula, …
 - `frontend/admin-web/src/auth/roles.ts` — homeRouteFor, RoleName, ROLES, FEDERATION_ROLES, OPS_ROLES, RECEPTION_ROLES, …
+- `frontend/shared/workout-engine/muscles.ts` — getMuscleWeights, calculateMuscleLoad, calculateHeatmapLevels, ExerciseMuscleMapping, VolumeItem, AnatomicalMuscle, …
+- `frontend/shared/workout-engine/effort.ts` — extractRir, convertRirToScale, isHardSet, calculateAverageRir, RatedSet, HARD_RIR_THRESHOLD
+- `frontend/shared/workout-engine/importers.ts` — parseCsvRows, detectSourceApp, ParsedWorkoutRow, SupportedSourceApp
+- `frontend/shared/workout-engine/wakelock.ts` — requestScreenWakeLock, releaseScreenWakeLock, useScreenWakeLock, isWakeLockSupported
 
 ---
 _Back to [overview.md](./overview.md)_

@@ -3,9 +3,9 @@
 > **Stack:** fastapi | sqlalchemy | react | python
 > **Microservices:** backend, fitness-network-os-frontend, admin-web, gymclubnex-e2e, public-site, scanner-pwa
 
-> 142 routes | 86 models | 64 components | 83 lib files | 34 env vars | 6 middleware | 36% test coverage
-> **Token savings:** this file is ~16,500 tokens. Without it, AI exploration would cost ~164,800 tokens. **Saves ~148,400 tokens per conversation.**
-> **Last scanned:** 2026-08-16 21:52 — re-run after significant changes
+> 142 routes | 86 models | 64 components | 89 lib files | 34 env vars | 6 middleware | 36% test coverage
+> **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~166,400 tokens. **Saves ~149,400 tokens per conversation.**
+> **Last scanned:** 2026-08-21 17:54 — re-run after significant changes
 
 ---
 
@@ -1080,6 +1080,47 @@
   - function getDeviceKey: () => Promise<CryptoKey | null>
   - function authenticateDevice: (deviceId, tenantId, apiKey) => Promise<DeviceAuthResult>
   - _...5 more_
+- `frontend/shared/workout-engine/effort.ts`
+  - function extractRir: (set) => number | null
+  - function convertRirToScale: (scale, rir) => number | null
+  - function isHardSet: (set) => boolean
+  - function calculateAverageRir: (sets) => number | null
+  - interface RatedSet
+  - const HARD_RIR_THRESHOLD
+- `frontend/shared/workout-engine/importers.ts`
+  - function parseCsvRows: (text) => string[][]
+  - function detectSourceApp: (headerRow) => SupportedSourceApp
+  - interface ParsedWorkoutRow
+  - type SupportedSourceApp
+- `frontend/shared/workout-engine/muscles.ts`
+  - function getMuscleWeights: (ex) => Partial<Record<AnatomicalMuscle, number>>
+  - function calculateMuscleLoad: (items) => Record<AnatomicalMuscle, number>
+  - function calculateHeatmapLevels: (load, number>) => Record<AnatomicalMuscle, number>
+  - interface ExerciseMuscleMapping
+  - interface VolumeItem
+  - type AnatomicalMuscle
+  - _...2 more_
+- `frontend/shared/workout-engine/onerm.ts`
+  - function estimate1RM: (weightInput, repsInput, formula) => number | null
+  - function bestSetOf: (entry, formula) => EstimatedMaxResult | null
+  - interface SetRecord
+  - interface EntryRecord
+  - interface EstimatedMaxResult
+  - type OneRmFormula
+  - _...3 more_
+- `frontend/shared/workout-engine/progression.ts`
+  - function calculateDeload: (currentWeight, step) => number
+  - function evaluateSession: (sets, target) => WorkoutSessionSummary
+  - function calculateStallCount: (sessions) => number
+  - function determineNextPrescription: (pastSessions, cfg, unit) => Prescription
+  - interface ExerciseConfig
+  - interface ExecutedSet
+  - _...9 more_
+- `frontend/shared/workout-engine/wakelock.ts`
+  - function requestScreenWakeLock: () => void
+  - function releaseScreenWakeLock: () => void
+  - function useScreenWakeLock: (enabled) => void
+  - function isWakeLockSupported
 
 ---
 
@@ -1193,7 +1234,7 @@
 # Test Coverage
 
 > **36%** of routes and models are covered by tests
-> 120 test files found
+> 121 test files found
 
 ## Covered Routes
 

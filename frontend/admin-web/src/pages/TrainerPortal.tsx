@@ -139,7 +139,7 @@ export default function TrainerPortal() {
   const selected = members.find((m) => m.id === selectedId) ?? null
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 font-sans">
+    <div className="min-h-[100dvh] bg-slate-950 px-4 py-8 text-slate-100 font-sans">
       <div className="mx-auto w-full max-w-5xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
           <div>
@@ -165,7 +165,7 @@ export default function TrainerPortal() {
         {message && <Alert variant="success">{message}</Alert>}
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 gap-4 mb-6 text-sm font-medium">
+        <div className="flex overflow-x-auto whitespace-nowrap no-scrollbar border-b border-slate-800 gap-4 mb-6 text-sm font-medium">
           <button
             onClick={() => setActiveTab('members')}
             className={`pb-3 px-2 border-b-2 transition-colors ${
@@ -395,11 +395,16 @@ export default function TrainerPortal() {
 
         {/* ROSTER MODAL */}
         {selectedSessionRoster && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="roster-modal-title"
+              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[85dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+            >
               <div className="flex justify-between items-start border-b border-slate-800 pb-3">
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 id="roster-modal-title" className="text-lg font-bold text-white">
                     {selectedSessionRoster.session.class_type_name} Yoklaması
                   </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -408,7 +413,8 @@ export default function TrainerPortal() {
                 </div>
                 <button
                   onClick={() => setSelectedSessionRoster(null)}
-                  className="text-slate-400 hover:text-white font-bold text-xl"
+                  className="text-slate-400 hover:text-white font-bold text-xl p-1"
+                  aria-label="Kapat"
                 >
                   ✕
                 </button>
@@ -423,7 +429,7 @@ export default function TrainerPortal() {
               ) : (
                 <div className="divide-y divide-slate-800/70">
                   {selectedSessionRoster.attendees.map((att) => (
-                    <div key={att.booking_id} className="py-3 flex items-center justify-between">
+                    <div key={att.booking_id} className="py-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-white text-sm">{att.member_name}</span>
@@ -447,16 +453,16 @@ export default function TrainerPortal() {
                       </div>
 
                       {att.status === 'CONFIRMED' && (
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleMarkAttendance(att.booking_id, 'ATTENDED')}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-bold"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold transition-colors"
                           >
                             ✓ Geldi
                           </button>
                           <button
                             onClick={() => handleMarkAttendance(att.booking_id, 'NO_SHOW')}
-                            className="bg-slate-800 hover:bg-slate-700 text-red-400 text-xs px-2.5 py-1 rounded-lg font-bold"
+                            className="bg-slate-800 hover:bg-slate-700 text-red-400 text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold border border-slate-700 transition-colors"
                           >
                             ✕ Gelmedi
                           </button>
@@ -470,7 +476,7 @@ export default function TrainerPortal() {
               <div className="pt-3 border-t border-slate-800 flex justify-end">
                 <button
                   onClick={() => setSelectedSessionRoster(null)}
-                  className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-xl border border-slate-700 px-4 py-2.5 min-h-[44px] sm:min-h-[36px] text-sm font-semibold text-slate-300 hover:bg-slate-800"
                 >
                   Kapat
                 </button>

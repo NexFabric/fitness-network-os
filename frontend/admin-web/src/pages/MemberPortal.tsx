@@ -335,7 +335,7 @@ export default function MemberPortal() {
   ).map(([id, name]) => ({ id, name }))
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100 font-sans">
+    <div className="min-h-[100dvh] bg-slate-950 px-4 py-6 text-slate-100 font-sans">
       <div className="mx-auto w-full max-w-lg">
         <header className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
@@ -407,11 +407,11 @@ export default function MemberPortal() {
               </div>
             </section>
 
-            <div className="mb-4 grid grid-cols-6 rounded-xl bg-slate-950/80 p-1 border border-slate-800 text-[11px] font-semibold text-center">
+            <div className="mb-4 flex gap-1 overflow-x-auto no-scrollbar snap-x snap-mandatory rounded-xl bg-slate-950/80 p-1 border border-slate-800 text-[11px] font-semibold text-center sm:grid sm:grid-cols-6">
               <button
                 type="button"
                 onClick={() => setActiveTab('access')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'access' ? 'bg-slate-800 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -420,7 +420,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('classes')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'classes'
                     ? 'bg-slate-800 text-emerald-400 font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -431,7 +431,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('memberships')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'memberships'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -442,7 +442,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('history')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'history'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -453,7 +453,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('finance')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'finance'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -464,7 +464,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('preferences')}
-                className={`rounded-lg py-2 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
                   activeTab === 'preferences'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'

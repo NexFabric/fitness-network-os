@@ -36,6 +36,7 @@ Diğer dökümanlar detayı taşır; buradaki tablo nerede duracağını söyler
 | Public repo / lisans kararı | `docs/ops/REPO_VISIBILITY.md` (LICENSE yok — insan) |
 | Prod deploy / TLS / migrator | `docs/ops/PRODUCTION_DEPLOY.md` |
 | Yerel ortamı ayağa kaldırma | `READY_TO_RUN.md` |
+| Antrenman & PT Sistemi (hazır motor + spesifikasyon) | `docs/plans/WORKOUT_SYSTEM_HANDOFF_GUIDE.md` — 14/14 test yeşil, RLS & PWA spesifikasyonu hazır |
 | Kurallar / mühendislik sözleşmesi | `AGENTS.md` (`CLAUDE.md` buna sembolik bağ — tek kaynak) |
 
 `.codesight` haritası **nerede** olduğunu söyler, **nasıl çalıştığını** değil —
@@ -75,6 +76,25 @@ required CI yeşilse.
 - **TD-1** `admin-web` ve `scanner-pwa` React render & hook yan etkileri temizlendi (0 error, 0 warning).
 - **TD-4** `.github/workflows/ops-drills.yml` haftalık periyodik tatbikat workflow'u eklendi.
 - **ADV-SEC** `backend/tests/api/test_adversarial_security.py` in-repo BOLA/IDOR/forgery/break-glass testleri eklendi (%100 yeşil).
+
+**Architecture & Isolation Hardening (2026-08-21):**
+- **FED-REV-BUG:** `federation.py` içindeki hatalı `Payment.status == "CAPTURED"` sorgusu `PaymentStatus.SUCCEEDED` ve `PARTIALLY_REFUNDED` ile düzeltildi (federasyon konsolu 0 ₺ ciro hatası çözüldü).
+- **ERR-BOUND:** `admin-web` için root seviyesinde `ErrorBoundary.tsx` bileşeni eklendi ve `App.tsx` sarmalandı.
+- **REC-N1:** `reception.py` arama endpoint'indeki 1 + 2N sıralı sorgu döngüsü `IN(member_ids)` ve `group_by` ile 3 toplu (batch) sorguya indirildi; detay kartı sorgularına `limit(20)` tavanı eklendi.
+- **ME-PAG:** `/me/invoices`, `/me/payments`, `/me/consents`, `/me/classes/bookings` ve `/me/pt/appointments` endpoint'lerine güvenli sayfalama (`limit: 1..100`, `offset: >=0`) parametreleri eklendi.
+- **IMPORT-CACHE:** `data_import.py` CSV içe aktarma döngüsüne `plan_cache` eklenerek mükerrer plan sorguları engellendi.
+- **MODAL-A11Y:** `Members.tsx` ve `Classes.tsx` modal pencerelerine `role="dialog"`, `aria-modal="true"` ve `aria-labelledby` eklendi.
+- **DASH-ERR:** `Dashboard.tsx` içindeki sessiz hata yutma yerine `<Alert>` hata bildirimi ve "Yeniden Dene" aksiyonu eklendi.
+- **DEV-TENANT:** `devices.py` oturum iptali sorgusuna `tenant_id` filtresi eklendi (izolasyon savunması).
+- **INV-INHERIT:** `AccountInvite` modelinin kalıtım sırası standart `(TenantMixin, Base)` formatına getirildi.
+- **DOCKER-IGN:** `frontend/.dockerignore` dosyası eklendi.
+- **PROMO-LOOP:** `booking.py` sınıf iptalinde ilk yedek üyenin hakkı yoksa sıradaki uygun üyeye geçilmesini ve kalan yedek sırasının sürekli (1, 2, 3...) yeniden indekslenmesini sağlayan döngü düzeltildi.
+- **WORKER-HC:** `docker-compose.prod.yml` içindeki tüm worker'lara (8001-8004) ve frontend konteynerlerine `healthcheck` blokları eklendi.
+- **PRECOMMIT-SYNC:** `.pre-commit-config.yaml` içindeki araç sürümleri CI ile senkronize edildi (Bandit 1.8.6, Ruff v0.9.9, Mypy v1.15.0).
+- **MOBILE-RESPONSIVE:** Tüm frontend arayüzleri (Sporcu/Antrenör/SuperAdmin portalları, operasyon masası, scanner PWA, tanıtım sitesi) iOS 16px auto-zoom engellemesi, 44px dokunmatik hedefler, 100dvh viewport, yatay kaydırılabilir sekmeler ve safe-area insets ile %100 mobil uyumlu hale getirildi.
+- **IMPORT-ISOLATION:** `data_import.py` satır işleme döngüsü `begin_nested()` ile izole edildi; 1 satırın veri hatası tüm 5.000 satırlık grubu iptal etmez.
+- **BOOK-OVERLAP:** `booking.py` aynı sporcunun aynı zaman diliminde çakışan iki farklı seansa rezervasyon yapmasını engelleyen zaman aralığı kontrolü (`BookingConflict`) eklendi.
+- **MODAL-ESC:** `Members.tsx` ve `Classes.tsx` modallarına WCAG 2.2 AA uyumlu `Escape` tuşu kapatma dinleyicisi eklendi.
 
 Önceki mercek (B1 / Fed HQ / #55–#60) checklist’te duruyor; burada tekrar edilmez.
 

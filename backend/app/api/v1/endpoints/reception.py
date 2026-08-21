@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, get_tenant_id, require_recent_step_up
@@ -105,43 +105,49 @@ async def search_members_for_reception(
         stmt = stmt.where(Member.id.in_(allowed_ids))
     members = list((await db.execute(stmt)).scalars().all())
 
-    results: list[ReceptionMemberSearchResult] = []
-    for m in members:
-        # Check active membership
-        res_act = await db.execute(
-            select(Membership.id).where(
-                Membership.tenant_id == tenant_id,
-                Membership.member_id == m.id,
-                Membership.status == "ACTIVE",
-            )
-        )
-        has_active = res_act.first() is not None
+    if not members:
+        return []
 
-        # Check remaining entitlements
-        res_wallets = await db.execute(
-            select(EntitlementWallet).where(
-                EntitlementWallet.tenant_id == tenant_id,
-                EntitlementWallet.member_id == m.id,
-            )
-        )
-        wallets = list(res_wallets.scalars().all())
-        total_remaining = sum(w.remaining for w in wallets)
+    member_ids = [m.id for m in members]
 
-        results.append(
-            ReceptionMemberSearchResult(
-                id=m.id,
-                member_number=m.member_number,
-                first_name=m.first_name,
-                last_name=m.last_name,
-                email=m.email,
-                phone=m.phone,
-                status=m.status,
-                has_active_membership=has_active,
-                total_remaining_entitlements=total_remaining,
-            )
-        )
+    # Batch query 1: Active memberships for all found members
+    active_members_stmt = select(Membership.member_id).where(
+        Membership.tenant_id == tenant_id,
+        Membership.member_id.in_(member_ids),
+        Membership.status == "ACTIVE",
+    )
+    active_member_ids = set((await db.execute(active_members_stmt)).scalars().all())
 
-    return results
+    # Batch query 2: Remaining entitlement wallet sums grouped by member
+    wallets_stmt = (
+        select(
+            EntitlementWallet.member_id,
+            func.coalesce(func.sum(EntitlementWallet.remaining), 0),
+        )
+        .where(
+            EntitlementWallet.tenant_id == tenant_id,
+            EntitlementWallet.member_id.in_(member_ids),
+        )
+        .group_by(EntitlementWallet.member_id)
+    )
+    wallet_totals: dict[UUID, int] = {
+        row[0]: int(row[1]) for row in (await db.execute(wallets_stmt)).all()
+    }
+
+    return [
+        ReceptionMemberSearchResult(
+            id=m.id,
+            member_number=m.member_number,
+            first_name=m.first_name,
+            last_name=m.last_name,
+            email=m.email,
+            phone=m.phone,
+            status=m.status,
+            has_active_membership=m.id in active_member_ids,
+            total_remaining_entitlements=wallet_totals.get(m.id, 0),
+        )
+        for m in members
+    ]
 
 
 @router.get("/member/{member_id}", response_model=ReceptionMemberDetailResponse)
@@ -180,6 +186,7 @@ async def get_reception_member_detail(
         select(Membership)
         .where(Membership.tenant_id == tenant_id, Membership.member_id == member_id)
         .order_by(Membership.created_at.desc())
+        .limit(20)
     )
     memberships = [
         {
@@ -218,6 +225,7 @@ async def get_reception_member_detail(
             BillingAccount.member_id == member_id,
         )
         .order_by(Invoice.created_at.desc())
+        .limit(20)
     )
     invoices_list = list(inv_res.scalars().all())
     invoices = [

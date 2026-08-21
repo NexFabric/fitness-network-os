@@ -15,7 +15,7 @@ PURPOSE_MEMBER_PORTAL = "member_portal"
 ALLOWED_PURPOSES = frozenset({PURPOSE_STAFF, PURPOSE_MEMBER_PORTAL})
 
 
-class AccountInvite(Base, TenantMixin):
+class AccountInvite(TenantMixin, Base):
     """Tenant-owned invite. Raw token is never stored — only sha256."""
 
     __tablename__ = "account_invites"

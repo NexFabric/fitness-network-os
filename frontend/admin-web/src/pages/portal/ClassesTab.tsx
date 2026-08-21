@@ -224,9 +224,14 @@ export function ClassesTab({
       )}
 
       {showPtModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white">1-on-1 PT Randevusu Al</h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pt-modal-title"
+            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          >
+            <h3 id="pt-modal-title" className="text-base font-bold text-white">1-on-1 PT Randevusu Al</h3>
             <form onSubmit={onBookPt} className="space-y-3">
               <div>
                 <label htmlFor="pt-trainer" className="block text-xs font-medium text-slate-400 mb-1">
@@ -239,7 +244,7 @@ export function ClassesTab({
                   aria-invalid={trainers.length === 0}
                   value={ptTrainerId}
                   onChange={(e) => onPtTrainerChange(e.target.value)}
-                  className="input w-full text-xs"
+                  className="input w-full text-[16px] sm:text-xs"
                 >
                   <option value="" disabled>
                     {trainers.length === 0 ? 'Henüz antrenör tanımlı değil' : 'Antrenör seçin'}
@@ -262,7 +267,7 @@ export function ClassesTab({
                   aria-invalid={ptLocations.length === 0}
                   value={ptLocationId}
                   onChange={(e) => onPtLocationChange(e.target.value)}
-                  className="input w-full text-xs"
+                  className="input w-full text-[16px] sm:text-xs"
                 >
                   <option value="" disabled>
                     {ptLocations.length === 0 ? 'Takvimde şube yok — önce bir seans olmalı' : 'Şube seçin'}
@@ -281,7 +286,7 @@ export function ClassesTab({
                   required
                   value={ptStart}
                   onChange={(e) => onPtStartChange(e.target.value)}
-                  className="input w-full text-xs"
+                  className="input w-full text-[16px] sm:text-xs"
                 />
               </div>
               <div>
@@ -291,7 +296,7 @@ export function ClassesTab({
                   required
                   value={ptEnd}
                   onChange={(e) => onPtEndChange(e.target.value)}
-                  className="input w-full text-xs"
+                  className="input w-full text-[16px] sm:text-xs"
                 />
               </div>
               <div>
@@ -301,17 +306,17 @@ export function ClassesTab({
                   value={ptNotes}
                   onChange={(e) => onPtNotesChange(e.target.value)}
                   placeholder="Örn: Sırt & Kol antrenmanı"
-                  className="input w-full text-xs"
+                  className="input w-full text-[16px] sm:text-xs"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClosePtModal} className="btn btn-secondary text-xs px-3 py-1.5">
+                <button type="button" onClick={onClosePtModal} className="btn-secondary text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px]">
                   Vazgeç
                 </button>
                 <button
                   type="submit"
                   disabled={bookingLoading || trainers.length === 0 || ptLocations.length === 0}
-                  className="btn btn-primary text-xs px-3 py-1.5"
+                  className="btn-primary text-xs px-4 py-2 min-h-[44px] sm:min-h-[36px]"
                 >
                   Randevu Oluştur
                 </button>

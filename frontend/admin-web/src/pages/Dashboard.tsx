@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, getTenantId } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { RECEPTION_ROLES, ROLES } from '../auth/roles'
-import { LoadingSkeleton, PageHeader } from '../components/ui'
+import { Alert, LoadingSkeleton, PageHeader } from '../components/ui'
 
 type DashboardKPIs = {
   active_members_count: number
@@ -22,6 +22,7 @@ export default function Dashboard() {
   const { hasRole } = useAuth()
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const canReception = hasRole(RECEPTION_ROLES)
   const canFinance = hasRole([
     ROLES.GYM_OWNER,
@@ -31,27 +32,22 @@ export default function Dashboard() {
   ])
   const showFinance = (kpis?.finance_visible ?? true) && canFinance
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadKPIs() {
-      try {
-        const data = await api<DashboardKPIs>('/api/v1/dashboard/kpis')
-        if (!cancelled) {
-          setKpis(data)
-        }
-      } catch {
-        // Handled silently
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    void loadKPIs()
-    return () => {
-      cancelled = true
+  const loadKPIs = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await api<DashboardKPIs>('/api/v1/dashboard/kpis')
+      setKpis(data)
+    } catch {
+      setError('Gösterge paneli verileri yüklenemedi. Lütfen tekrar deneyin.')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    void loadKPIs()
+  }, [loadKPIs])
 
   const formatMinor = (minor: number) =>
     (minor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
@@ -63,13 +59,26 @@ export default function Dashboard() {
         subtitle="Kulüp operasyonel verileri, anlık turnike geçişleri ve finansal göstergeler."
       />
 
+      {error && (
+        <div className="mt-6 space-y-3">
+          <Alert variant="error">{error}</Alert>
+          <button
+            type="button"
+            onClick={() => void loadKPIs()}
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700"
+          >
+            Yeniden Dene
+          </button>
+        </div>
+      )}
+
       {loading && (
         <div className="mt-6">
           <LoadingSkeleton rows={4} />
         </div>
       )}
 
-      {!loading && kpis && (
+      {!loading && !error && kpis && (
         <>
           {/* Main Operational KPI Cards */}
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

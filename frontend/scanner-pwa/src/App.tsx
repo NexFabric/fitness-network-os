@@ -159,13 +159,13 @@ export default function App() {
   const hasSavedCreds = paired && Boolean(getTenantId())
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface font-sans text-ink selection:bg-brand/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-[100dvh] flex flex-col bg-surface font-sans text-ink selection:bg-brand/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {!isOnline && (
         <div className="sticky top-0 z-50 bg-accent-danger px-4 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white">
           İnternet bağlantısı yok — çevrimdışı
         </div>
       )}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/50 bg-surface/80 px-6 py-4 backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800/50 bg-surface/80 px-4 sm:px-6 py-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-brand to-accent shadow-lg shadow-brand/20">
             <span className="text-sm font-bold text-white" aria-hidden="true">

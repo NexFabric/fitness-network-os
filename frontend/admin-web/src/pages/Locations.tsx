@@ -305,7 +305,7 @@ export default function Locations() {
           aria-modal="true"
           aria-labelledby="edit-location-heading"
         >
-          <form className="card w-full max-w-lg" onSubmit={handleUpdate} noValidate>
+          <form className="card w-full max-w-lg max-h-[90dvh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]" onSubmit={handleUpdate} noValidate>
             <h2
               id="edit-location-heading"
               className="text-base font-semibold text-slate-100"

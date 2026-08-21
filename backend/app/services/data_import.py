@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger("data-import")
@@ -197,83 +198,91 @@ class DataImportService:
         valid_rows = list(rows_res.scalars().all())
 
         imported_count = 0
+        plan_cache: dict[UUID, PlanVersion | None] = {}
+
         for row in valid_rows:
-            parsed = row.parsed_data or {}
-            mbr_num = parsed.get("member_number") or f"IMP-{uuid4().hex[:6].upper()}"
+            try:
+                async with db.begin_nested():
+                    parsed = row.parsed_data or {}
+                    mbr_num = parsed.get("member_number") or f"IMP-{uuid4().hex[:6].upper()}"
 
-            # Check duplicate member_number
-            existing = (
-                await db.execute(
-                    select(Member).where(
-                        Member.tenant_id == tenant_id,
-                        Member.member_number == mbr_num,
-                    )
-                )
-            ).scalar_one_or_none()
-            if existing:
-                mbr_num = f"{mbr_num}-{uuid4().hex[:4].upper()}"
-
-            member = Member(
-                id=uuid4(),
-                tenant_id=tenant_id,
-                member_number=mbr_num,
-                first_name=parsed["first_name"],
-                last_name=parsed["last_name"],
-                email=parsed.get("email"),
-                phone=parsed.get("phone"),
-                status="ACTIVE",
-            )
-            db.add(member)
-            await db.flush()
-
-            # If plan_id given, attach membership via MembershipService
-            if parsed.get("plan_id"):
-                try:
-                    plan_uuid = UUID(parsed["plan_id"])
-                    pv = (
-                        (
-                            await db.execute(
-                                select(PlanVersion)
-                                .where(
-                                    PlanVersion.tenant_id == tenant_id,
-                                    PlanVersion.plan_id == plan_uuid,
-                                    PlanVersion.is_published.is_(True),
-                                )
-                                .order_by(PlanVersion.version.desc())
+                    # Check duplicate member_number
+                    existing = (
+                        await db.execute(
+                            select(Member).where(
+                                Member.tenant_id == tenant_id,
+                                Member.member_number == mbr_num,
                             )
                         )
-                        .scalars()
-                        .first()
-                    )
+                    ).scalar_one_or_none()
+                    if existing:
+                        mbr_num = f"{mbr_num}-{uuid4().hex[:4].upper()}"
 
-                    if pv:
-                        start_dt = datetime.now(UTC)
-                        if parsed.get("start_date"):
-                            try:
-                                start_dt = datetime.fromisoformat(
-                                    str(parsed["start_date"])
+                    member = Member(
+                        id=uuid4(),
+                        tenant_id=tenant_id,
+                        member_number=mbr_num,
+                        first_name=parsed["first_name"],
+                        last_name=parsed["last_name"],
+                        email=parsed.get("email"),
+                        phone=parsed.get("phone"),
+                        status="ACTIVE",
+                    )
+                    db.add(member)
+                    await db.flush()
+
+                    # If plan_id given, attach membership via MembershipService
+                    if parsed.get("plan_id"):
+                        try:
+                            plan_uuid = UUID(parsed["plan_id"])
+                            if plan_uuid not in plan_cache:
+                                pv_res = await db.execute(
+                                    select(PlanVersion)
+                                    .where(
+                                        PlanVersion.tenant_id == tenant_id,
+                                        PlanVersion.plan_id == plan_uuid,
+                                        PlanVersion.is_published.is_(True),
+                                    )
+                                    .order_by(PlanVersion.version.desc())
                                 )
-                                if start_dt.tzinfo is None:
-                                    start_dt = start_dt.replace(tzinfo=UTC)
-                            except ValueError:
+                                plan_cache[plan_uuid] = pv_res.scalars().first()
+
+                            pv = plan_cache[plan_uuid]
+
+                            if pv:
                                 start_dt = datetime.now(UTC)
+                                if parsed.get("start_date"):
+                                    try:
+                                        start_dt = datetime.fromisoformat(
+                                            str(parsed["start_date"])
+                                        )
+                                        if start_dt.tzinfo is None:
+                                            start_dt = start_dt.replace(tzinfo=UTC)
+                                    except ValueError:
+                                        start_dt = datetime.now(UTC)
 
-                        from app.services.membership import MembershipService
+                                from app.services.membership import MembershipService
 
-                        mem_svc = MembershipService(db)
-                        await mem_svc.start_membership(
-                            member_id=member.id,
-                            plan_version_id=pv.id,
-                            start_date=start_dt,
-                            tenant_id=tenant_id,
-                        )
-                except (ValueError, TypeError) as ex:
-                    logger.warning(
-                        f"Failed to attach imported membership for member {member.id}: {ex}"
-                    )
+                                mem_svc = MembershipService(db)
+                                await mem_svc.start_membership(
+                                    member_id=member.id,
+                                    plan_version_id=pv.id,
+                                    start_date=start_dt,
+                                    tenant_id=tenant_id,
+                                )
+                        except (ValueError, TypeError) as ex:
+                            logger.warning(
+                                f"Failed to attach imported membership for member {member.id}: {ex}"
+                            )
 
-            row.status = ImportRowStatus.IMPORTED
-            imported_count += 1
+                    row.status = ImportRowStatus.IMPORTED
+                    imported_count += 1
+            except (SQLAlchemyError, ValueError, KeyError, TypeError) as ex:
+                logger.error(
+                    f"Failed to import row {row.row_number} in batch {batch_id}: {ex}"
+                )
+                row.status = ImportRowStatus.FAILED
+                row.error_message = f"İçe aktarma hatası: {ex!s}"
 
         batch.imported_rows = imported_count
         batch.status = ImportBatchStatus.COMPLETED

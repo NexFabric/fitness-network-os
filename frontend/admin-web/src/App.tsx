@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import RequireRole from './components/RequireRole'
@@ -53,10 +54,11 @@ function Portal({
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ReloadPrompt />
-        <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ReloadPrompt />
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/invite" element={<InviteAccept />} />
           <Route path="/mfa/setup" element={<MfaSetup />} />
@@ -194,8 +196,9 @@ export default function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
