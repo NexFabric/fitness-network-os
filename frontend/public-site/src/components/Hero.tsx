@@ -23,33 +23,34 @@ export function Hero() {
             transition={{ duration: 0.4 }}
             className="mb-8 flex justify-center"
           >
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-brand/30 bg-surface-raised/80 px-4 py-1.5 text-xs font-mono font-medium text-brand-light shadow-inner backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-accent" />
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-brand/40 bg-surface-raised/90 px-4 py-1.5 text-xs font-mono font-medium text-emerald-300 shadow-inner backdrop-blur-md">
+              <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
               <span>FITNESS NETWORK OS // RELEASE v2.4</span>
             </div>
           </motion.div>
 
-          {/* High-Contrast Hero Headline */}
+          {/* StoryBrand High-Conversion Hero Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.08 }}
-            className="text-4xl font-bold tracking-[-0.03em] text-foreground sm:text-6xl lg:text-7xl"
+            className="text-3xl font-bold tracking-[-0.03em] text-foreground sm:text-5xl lg:text-6xl"
             style={{ textWrap: "balance" }}
           >
-            Hız. Kontrol. <span className="text-white">Performans.</span>
+            Spor Kulüpleri ve Tesisler İçin{" "}
+            <span className="bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-100 bg-clip-text text-transparent">
+              Yeni Nesil İşletim Sistemi
+            </span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.16 }}
-            className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-muted"
+            className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg"
             style={{ textWrap: "balance" }}
           >
-            Spor kulüpleri, stüdyolar ve tesis zincirleri için yüksek güvenlikli
-            işletim sistemi. Donanım entegrasyonu, dinamik QR turnike ve kuruş
-            cinsinden faturalama.
+            Kaçak geçişleri sıfırlayan dinamik QR turnike erişimi, kuruş hassasiyetinde otomatik tahsilat ve çok şubeli veri izolasyonu. Kulübünüzü tek merkezden güvenle yönetin.
           </motion.p>
 
           {/* Premium Button Actions */}
@@ -90,14 +91,14 @@ export function Hero() {
             <div className="flex items-center justify-between border-b border-border/70 bg-surface-raised/90 px-4 py-3 text-xs font-mono text-ink-muted">
               <div className="flex items-center gap-2">
                 <Terminal className="h-3.5 w-3.5 text-brand-light" />
-                <span className="text-slate-300 font-semibold">ops.gymclubnex.internal</span>
+                <span className="text-slate-300 font-semibold">app.gymclubnex.com</span>
               </div>
               <div className="flex items-center gap-3 text-slate-400">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-accent" /> RLS ISOLATED
+                  <ShieldCheck className="h-3.5 w-3.5 text-accent" /> TAM İZOLE VERİ
                 </span>
                 <span className="hidden sm:inline text-slate-600">|</span>
-                <span className="hidden sm:inline font-mono">LATENCY: 12ms</span>
+                <span className="hidden sm:inline font-mono">GECİKME: 12ms</span>
               </div>
             </div>
 
@@ -105,13 +106,13 @@ export function Hero() {
             <div className="grid min-h-[300px] grid-cols-1 sm:grid-cols-[220px_1fr]">
               <aside className="hidden border-r border-border/70 bg-surface-raised/40 p-4 sm:block font-mono text-xs">
                 <div className="text-[11px] font-semibold tracking-wider text-ink-subtle uppercase mb-3">
-                  TENANT KAPSAMI
+                  KULÜP KAPSAMI
                 </div>
                 <div className="rounded-lg border border-brand/30 bg-brand/10 p-2.5 text-brand-light font-medium mb-4">
                   GymClub Central [HQ]
                 </div>
                 <ul className="space-y-1.5 text-ink-muted">
-                  <li className="px-2.5 py-1.5 rounded bg-white/5 text-slate-200">▶ Telemetri</li>
+                  <li className="px-2.5 py-1.5 rounded bg-white/5 text-slate-200">▶ Anlık Durum</li>
                   <li className="px-2.5 py-1.5 hover:text-slate-200">▶ Turnike Ağları</li>
                   <li className="px-2.5 py-1.5 hover:text-slate-200">▶ Üye İzinleri</li>
                   <li className="px-2.5 py-1.5 hover:text-slate-200">▶ Finans Motoru</li>
@@ -133,7 +134,7 @@ export function Hero() {
                   {[
                     { label: "Aktif Üye", val: "1.248", change: "+4.2% bu hafta", icon: Activity },
                     { label: "Doğrulanan QR Geçiş", val: "3.180 / gün", change: "0 mutabakat hatası", icon: Cpu },
-                    { label: "Şube İzolasyonu", val: "6 / 6 Şube", change: "Strict RLS", icon: Lock },
+                    { label: "Şube İzolasyonu", val: "6 / 6 Şube", change: "Tam Güvenlik", icon: Lock },
                   ].map((stat) => (
                     <div key={stat.label} className="rounded-xl border border-border/60 bg-background/60 p-4">
                       <div className="flex items-center justify-between">

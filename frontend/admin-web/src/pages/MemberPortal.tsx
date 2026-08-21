@@ -335,7 +335,7 @@ export default function MemberPortal() {
   ).map(([id, name]) => ({ id, name }))
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 px-4 py-6 text-slate-100 font-sans">
+    <div className="min-h-[100dvh] bg-slate-950 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-slate-100 font-sans">
       <div className="mx-auto w-full max-w-lg">
         <header className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
@@ -356,7 +356,7 @@ export default function MemberPortal() {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 min-h-[44px] text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center"
               title="Oturumu Kapat"
             >
               Çıkış
@@ -411,7 +411,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('access')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'access' ? 'bg-slate-800 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -420,7 +420,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('classes')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'classes'
                     ? 'bg-slate-800 text-emerald-400 font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -431,7 +431,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('memberships')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'memberships'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -442,7 +442,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('history')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'history'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -453,7 +453,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('finance')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'finance'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'
@@ -464,7 +464,7 @@ export default function MemberPortal() {
               <button
                 type="button"
                 onClick={() => setActiveTab('preferences')}
-                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg py-2.5 transition-colors ${
+                className={`flex-1 min-w-[76px] sm:min-w-0 snap-center rounded-lg min-h-[44px] flex items-center justify-center py-2 px-1 transition-colors ${
                   activeTab === 'preferences'
                     ? 'bg-slate-800 text-white font-bold shadow'
                     : 'text-slate-400 hover:text-slate-200'

@@ -168,7 +168,7 @@ export default function TrainerPortal() {
         <div className="flex overflow-x-auto whitespace-nowrap no-scrollbar border-b border-slate-800 gap-4 mb-6 text-sm font-medium">
           <button
             onClick={() => setActiveTab('members')}
-            className={`pb-3 px-2 border-b-2 transition-colors ${
+            className={`min-h-[44px] flex items-center justify-center pb-3 px-2 border-b-2 transition-colors ${
               activeTab === 'members'
                 ? 'border-emerald-500 text-emerald-400 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -178,7 +178,7 @@ export default function TrainerPortal() {
           </button>
           <button
             onClick={() => setActiveTab('classes')}
-            className={`pb-3 px-2 border-b-2 transition-colors ${
+            className={`min-h-[44px] flex items-center justify-center pb-3 px-2 border-b-2 transition-colors ${
               activeTab === 'classes'
                 ? 'border-emerald-500 text-emerald-400 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -188,7 +188,7 @@ export default function TrainerPortal() {
           </button>
           <button
             onClick={() => setActiveTab('pt')}
-            className={`pb-3 px-2 border-b-2 transition-colors ${
+            className={`min-h-[44px] flex items-center justify-center pb-3 px-2 border-b-2 transition-colors ${
               activeTab === 'pt'
                 ? 'border-emerald-500 text-emerald-400 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -453,16 +453,16 @@ export default function TrainerPortal() {
                       </div>
 
                       {att.status === 'CONFIRMED' && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={() => handleMarkAttendance(att.booking_id, 'ATTENDED')}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold transition-colors"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold transition-colors text-center"
                           >
                             ✓ Geldi
                           </button>
                           <button
                             onClick={() => handleMarkAttendance(att.booking_id, 'NO_SHOW')}
-                            className="bg-slate-800 hover:bg-slate-700 text-red-400 text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold border border-slate-700 transition-colors"
+                            className="bg-slate-800 hover:bg-slate-700 text-red-400 text-xs px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg font-bold border border-slate-700 transition-colors text-center"
                           >
                             ✕ Gelmedi
                           </button>
