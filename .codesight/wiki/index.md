@@ -43,7 +43,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - Routes: **142**
 - Models: **86**
 - Components: **64**
-- Env vars: **14** required, **20** with defaults
+- Env vars: **14** required, **21** with defaults
 
 ## How to Use
 

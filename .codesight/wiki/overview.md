@@ -8,7 +8,7 @@
 
 ## Scale
 
-142 API routes · 86 database models · 64 UI components · 89 library files · 6 middleware layers · 34 environment variables
+142 API routes · 86 database models · 64 UI components · 89 library files · 6 middleware layers · 35 environment variables
 
 ## Subsystems
 
@@ -51,8 +51,8 @@ Changes to these files have the widest blast radius across the codebase:
 - `backend/app/models/user.py` — imported by **75** files
 - `backend/app/models/tenant.py` — imported by **69** files
 - `backend/app/models/organization.py` — imported by **62** files
+- `backend/app/models/member.py` — imported by **48** files
 - `backend/app/api/deps.py` — imported by **47** files
-- `backend/app/models/member.py` — imported by **47** files
 - `backend/app/models/rbac.py` — imported by **45** files
 
 ## Required Environment Variables

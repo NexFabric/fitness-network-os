@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import { Alert, EmptyState, LoadingSkeleton, PageHeader } from '../components/ui'
 
 type Staff = {
@@ -38,17 +38,6 @@ const STAFF_ROLES = [
 ] as const
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    if (e.status === 403) return 'Bu işlem için yetkiniz yok.'
-    if (e.status === 409) return 'Bu e-posta adresiyle bir hesap zaten var.'
-    if (e.status === 422) return 'Geçerli bir e-posta adresi girin.'
-    return e.status === 400 ? e.message : `${e.status}: ${e.message}`
-  }
-  if (e instanceof Error) return e.message
-  return fallback
-}
 
 export default function Staff() {
   const [staff, setStaff] = useState<Staff[]>([])

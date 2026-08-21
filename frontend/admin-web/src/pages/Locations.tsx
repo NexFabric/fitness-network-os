@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import {
   Alert,
   EmptyState,
@@ -24,14 +24,6 @@ const emptyForm: CreateLocationForm = {
   name: '',
   timezone: 'UTC',
   address: '',
-}
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    return `${e.status}: ${e.message}`
-  }
-  if (e instanceof Error) return e.message
-  return fallback
 }
 
 export default function Locations() {

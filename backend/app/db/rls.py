@@ -1,7 +1,7 @@
 from alembic import op
 
 
-def enable_rls(table_name: str, tenant_column: str = "tenant_id"):
+def enable_rls(table_name: str, tenant_column: str = "tenant_id") -> None:
     """
     Helper function to enable RLS on a tenant-owned table.
     Should be called inside alembic upgrade() functions.
@@ -24,7 +24,7 @@ def enable_rls(table_name: str, tenant_column: str = "tenant_id"):
     op.execute(f"ALTER TABLE {table_name} FORCE ROW LEVEL SECURITY;")
 
 
-def disable_rls(table_name: str):
+def disable_rls(table_name: str) -> None:
     """
     Helper function to disable RLS.
     Should be called inside alembic downgrade() functions.

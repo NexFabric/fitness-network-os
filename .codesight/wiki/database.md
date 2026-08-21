@@ -868,7 +868,7 @@ Read and edit these files when adding columns, creating migrations, or changing 
 - `backend/app/models/user.py` — imported by **75** files
 - `backend/app/models/tenant.py` — imported by **69** files
 - `backend/app/models/organization.py` — imported by **62** files
-- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/member.py` — imported by **48** files
 - `backend/app/models/rbac.py` — imported by **45** files
 - `backend/app/db/base.py` — imported by **38** files
 - `backend/app/db/session.py` — imported by **35** files

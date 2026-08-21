@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import MemberMemberships from '../components/MemberMemberships'
 import MemberAccessLogs from '../components/MemberAccessLogs'
 import {
@@ -46,14 +46,6 @@ const emptyForm: CreateMemberForm = {
   member_number: '',
   first_name: '',
   last_name: '',
-}
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    return `${e.status}: ${e.message}`
-  }
-  if (e instanceof Error) return e.message
-  return fallback
 }
 
 function generateMemberNumber(existing: Member[]): string {

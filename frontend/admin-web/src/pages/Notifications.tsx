@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import { Alert, EmptyState, LoadingSkeleton, PageHeader, StatusBadge } from '../components/ui'
 
 type Template = {
@@ -25,15 +25,6 @@ type Delivery = {
 }
 
 const CHANNELS = ['EMAIL', 'SMS', 'PUSH', 'WHATSAPP'] as const
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    if (e.status === 403) return 'Bu işlem için yetkiniz yok.'
-    return e.status === 400 ? e.message : `${e.status}: ${e.message}`
-  }
-  if (e instanceof Error) return e.message
-  return fallback
-}
 
 export default function Notifications() {
   const [templates, setTemplates] = useState<Template[]>([])

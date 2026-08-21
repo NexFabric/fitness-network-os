@@ -19,7 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gymclubnex.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://gymclubnex.com"),
   title: {
     default: "GymClubNex | Fitness Network OS",
     template: "%s | GymClubNex",

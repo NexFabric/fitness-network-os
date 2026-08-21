@@ -262,14 +262,14 @@ export function CameraQrScanner({
       )}
       <div className="flex items-center justify-between gap-2 border-t border-slate-800 bg-slate-900/95 px-3 py-2.5">
         <p className="text-xs text-slate-400">
-          Point the back camera at the member QR
+          Arka kamerayı üyenin QR koduna doğrultun
         </p>
         <button
           type="button"
           onClick={handleStop}
-          className="shrink-0 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+          className="inline-flex shrink-0 items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border border-slate-600 px-3.5 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
         >
-          Stop camera
+          Kamerayı durdur
         </button>
       </div>
     </div>

@@ -16,6 +16,7 @@
 - `MINIO_ROOT_PASSWORD` (has default) — backend/scripts/s3_runtime_proof.py
 - `MINIO_ROOT_USER` (has default) — backend/scripts/s3_runtime_proof.py
 - `NEXT_PUBLIC_ADMIN_URL` **required** — frontend/public-site/src/components/Cta.tsx
+- `NEXT_PUBLIC_SITE_URL` (has default) — frontend/public-site/src/app/layout.tsx
 - `OTEL_EXPORTER_OTLP_ENDPOINT` (has default) — backend/app/core/tracing.py
 - `QR_KMS_MODE` (has default) — backend/app/core/qr_crypto.py
 - `REDIS_URL` (has default) — backend/.env.example

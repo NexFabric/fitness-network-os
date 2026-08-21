@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import {
   Alert,
   LoadingSkeleton,
@@ -34,12 +34,6 @@ function formatCurrency(amount_minor: number, currency: string) {
     style: 'currency',
     currency: currency,
   }).format(amount_minor / 100)
-}
-
-function formatApiError(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) return `${e.status}: ${e.message}`
-  if (e instanceof Error) return e.message
-  return fallback
 }
 
 export default function Finance() {

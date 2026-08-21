@@ -24,6 +24,7 @@ from app.models.access import Checkin
 from app.models.booking import ClassBooking
 from app.models.consent import ConsentRecord
 from app.models.finance import BillingAccount, Invoice, Payment
+from app.models.member import Member
 from app.models.user import User
 from app.schemas.booking import (
     ClassBookingCancelRequest,
@@ -179,7 +180,9 @@ class MeConsentRecordRequest(BaseModel):
     status: str = "GIVEN"
 
 
-async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID):
+async def _bound_member_or_404(
+    db: AsyncSession, tenant_id: UUID, user_id: UUID
+) -> Member:
     member = await MemberService(db).get_member_by_user_id(tenant_id, user_id)
     if member is None:
         raise HTTPException(
