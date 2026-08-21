@@ -69,13 +69,22 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 response.headers[REQUEST_ID_HEADER] = request_id
                 response.headers[CORRELATION_ID_HEADER] = correlation_id
 
+            tenant_id = None
+            try:
+                from app.api.deps import current_tenant_id_var
+
+                tenant_id = current_tenant_id_var.get(None)
+            except (ImportError, LookupError):
+                tenant_id = None
+
             # Structured single-line log. Path only — never query/body/headers.
             logger.info(
-                "method=%s path=%s status=%s duration_ms=%.2f request_id=%s correlation_id=%s",
+                "method=%s path=%s status=%s duration_ms=%.2f request_id=%s correlation_id=%s tenant_id=%s",
                 request.method,
                 request.url.path,
                 status_code,
                 duration_ms,
                 request_id,
                 correlation_id,
+                tenant_id,
             )

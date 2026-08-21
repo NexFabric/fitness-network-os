@@ -178,7 +178,8 @@ def create_app() -> FastAPI:
         if settings.is_production:
             authorization = request.headers.get("authorization", "")
             supplied = authorization.removeprefix("Bearer ")
-            if not hmac.compare_digest(supplied, settings.METRICS_BEARER_TOKEN):
+            token = settings.METRICS_BEARER_TOKEN or ""
+            if not token or not hmac.compare_digest(supplied, token):
                 return Response(content="Unauthorized", status_code=401)
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 

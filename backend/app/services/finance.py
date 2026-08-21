@@ -746,6 +746,20 @@ class FinanceService:
         if payment.currency.upper() != item.currency.upper():
             raise ValueError("Currency mismatch")
 
+        # Prevent double-matching: check if payment is already matched elsewhere
+        already_matched = (
+            await self.session.execute(
+                select(ReconciliationItem).where(
+                    ReconciliationItem.tenant_id == tenant_id,
+                    ReconciliationItem.matched_payment_id == payment.id,
+                    ReconciliationItem.status == ReconciliationItemStatus.MATCHED.value,
+                    ReconciliationItem.id != item_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if already_matched:
+            raise ValueError("Payment is already matched to another reconciliation item")
+
         item.matched_payment_id = payment.id
         item.status = ReconciliationItemStatus.MATCHED.value
         await self.session.flush()
