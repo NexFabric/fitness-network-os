@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, formatApiError } from '../api/client'
 import { Alert, EmptyState, LoadingSkeleton, PageHeader } from '../components/ui'
 
 type MemberSearchResult = {
@@ -97,25 +97,35 @@ export default function Reception() {
     void loadLocations()
   }, [])
 
-  // Search members debounce
+  // Search members debounce with race condition protection
   useEffect(() => {
     const trimmed = query.trim()
     if (!trimmed) {
       return
     }
+    let isCurrent = true
     const timer = setTimeout(async () => {
       setSearching(true)
       try {
         const res = await api<MemberSearchResult[]>(`/api/v1/reception/search?q=${encodeURIComponent(trimmed)}`)
-        setSearchResults(res)
-      } catch (err) {
-        console.error('Arama hatası:', err)
+        if (isCurrent) {
+          setSearchResults(res)
+        }
+      } catch {
+        if (isCurrent) {
+          setSearchResults([])
+        }
       } finally {
-        setSearching(false)
+        if (isCurrent) {
+          setSearching(false)
+        }
       }
     }, 300)
 
-    return () => clearTimeout(timer)
+    return () => {
+      isCurrent = false
+      clearTimeout(timer)
+    }
   }, [query])
 
   // Load selected member detail
@@ -157,11 +167,10 @@ export default function Reception() {
       setOverrideReason('')
       await loadMemberDetail(selectedMemberId)
     } catch (err) {
-      if (err instanceof ApiError) {
-        setOverrideMessage({ type: 'error', text: err.message || 'Manuel geçiş onaylanamadı.' })
-      } else {
-        setOverrideMessage({ type: 'error', text: 'İşlem gerçekleştirilemedi. Lütfen tekrar deneyin.' })
-      }
+      setOverrideMessage({
+        type: 'error',
+        text: formatApiError(err, 'Manuel geçiş onaylanamadı.'),
+      })
     } finally {
       setOverriding(false)
     }
@@ -312,7 +321,7 @@ export default function Reception() {
                       </span>
                     ))}
                     {memberDetail.notes.map((n, i) => (
-                      <span key={i} className="rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-[11px]">
+                      <span key={`${n}-${i}`} className="rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-[11px]">
                         📝 {n}
                       </span>
                     ))}

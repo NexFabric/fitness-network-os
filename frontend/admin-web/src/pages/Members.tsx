@@ -160,13 +160,13 @@ export default function Members() {
     setEditError(null)
   }
 
-  function closeEditModal() {
+  const closeEditModal = useCallback(() => {
     setEditingMember(null)
     setEditForm(null)
     setPortalAccount(null)
     setPortalError(null)
     setPortalCopied(false)
-  }
+  }, [])
 
   useEffect(() => {
     if (!editingMember) return
@@ -175,7 +175,7 @@ export default function Members() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [editingMember])
+  }, [editingMember, closeEditModal])
 
   async function provisionPortalAccount() {
     if (!editingMember) return
