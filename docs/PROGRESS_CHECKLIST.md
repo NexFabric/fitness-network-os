@@ -218,6 +218,18 @@ Alembic: `xb3c4d5e6f7a` (`reception:read`) → `xc4d5e6f7a8b` (`last_seen_at` / 
 
 Register: `docs/CAMPAIGN_REGISTER.md`.
 
+### Executed 2026-08-21 — audit hardening, StoryBrand conversion & mobile a11y
+
+- [x] **FIN-MATCH** Bank reconciliation double matching prevention: added `already_matched` check in `match_reconciliation_item` ([finance.py](file:///Users/emrah/GymClubNex/backend/app/services/finance.py)).
+- [x] **STAFF-AUDIT** Audit trail on staff roles: emitted immutable `AuditEvent` records for `staff.linked` and `staff.role_updated` ([staff.py](file:///Users/emrah/GymClubNex/backend/app/services/staff.py)).
+- [x] **LOG-TENANT** Structured request logging: integrated `current_tenant_id_var` context into access logs and global exception handling ([request_logging.py](file:///Users/emrah/GymClubNex/backend/app/api/middleware/request_logging.py)).
+- [x] **METRICS-AUTH** Metrics probe auth hardening: secured `METRICS_BEARER_TOKEN` comparison against `None` via `hmac.compare_digest` ([main.py](file:///Users/emrah/GymClubNex/backend/app/main.py)).
+- [x] **DRY-ERR** Centralized frontend API error formatting: consolidated duplicate error formatters across 8 admin pages into `formatApiError` in `api/client.ts`.
+- [x] **REC-RACE** Reception search race condition guard: added `isCurrent` boolean tracking to prevent out-of-order API responses from overwriting active searches ([Reception.tsx](file:///Users/emrah/GymClubNex/frontend/admin-web/src/pages/Reception.tsx)).
+- [x] **STORYBRAND-HERO** StoryBrand conversion optimization: updated Public Site Hero headline and copy to directly address club owner value propositions ([Hero.tsx](file:///Users/emrah/GymClubNex/frontend/public-site/src/components/Hero.tsx)).
+- [x] **PRICING-PLAIN** De-jargonized commercial pricing tiers: replaced technical jargon with plain business value points ([Pricing.tsx](file:///Users/emrah/GymClubNex/frontend/public-site/src/components/Pricing.tsx)).
+- [x] **MOBILE-TOUCH-44** WCAG 2.2 AA & Apple HIG mobile ergonomics: enforced 44px minimum touch targets on all tabs/actions, stacked attendance buttons on mobile, and added iOS Home Bar safe-area insets (`pb-safe`) in [TrainerPortal.tsx](file:///Users/emrah/GymClubNex/frontend/admin-web/src/pages/TrainerPortal.tsx) and [MemberPortal.tsx](file:///Users/emrah/GymClubNex/frontend/admin-web/src/pages/MemberPortal.tsx).
+
 ### Executed 2026-08-16 — real runtime drills & code hardening
 
 - [x] **TD-1** Frontend React hook & render correctness: refactored all impure state updates, sync `setState` in `useEffect` calls, and hook dependency loops across `frontend/admin-web` and `frontend/scanner-pwa` (0 lint errors, 0 warnings).

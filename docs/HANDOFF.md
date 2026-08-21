@@ -92,8 +92,15 @@ required CI yeşilse.
 - **WORKER-HC:** `docker-compose.prod.yml` içindeki tüm worker'lara (8001-8004) ve frontend konteynerlerine `healthcheck` blokları eklendi.
 - **PRECOMMIT-SYNC:** `.pre-commit-config.yaml` içindeki araç sürümleri CI ile senkronize edildi (Bandit 1.8.6, Ruff v0.9.9, Mypy v1.15.0).
 - **MOBILE-RESPONSIVE:** Tüm frontend arayüzleri (Sporcu/Antrenör/SuperAdmin portalları, operasyon masası, scanner PWA, tanıtım sitesi) iOS 16px auto-zoom engellemesi, 44px dokunmatik hedefler, 100dvh viewport, yatay kaydırılabilir sekmeler ve safe-area insets ile %100 mobil uyumlu hale getirildi.
-- **IMPORT-ISOLATION:** `data_import.py` satır işleme döngüsü `begin_nested()` ile izole edildi; 1 satırın veri hatası tüm 5.000 satırlık grubu iptal etmez.
-- **BOOK-OVERLAP:** `booking.py` aynı sporcunun aynı zaman diliminde çakışan iki farklı seansa rezervasyon yapmasını engelleyen zaman aralığı kontrolü (`BookingConflict`) eklendi.
+- **FIN-MATCH:** `finance.py` banka mutabakat eşleştirmesine `already_matched` koruması eklendi; tek bir ödeme birden fazla mutabakat satırıyla mükerrer eşleştirilemez.
+- **STAFF-AUDIT:** `staff.py` personel yetkilendirme ve rol değişikliklerine `AuditEvent` (`staff.linked`, `staff.role_updated`) loglaması eklendi.
+- **LOG-TENANT:** `request_logging.py` erişim loglarına ve global exception handler'a `tenant_id` context propagation entegre edildi.
+- **METRICS-AUTH:** `/metrics` endpoint'inde `METRICS_BEARER_TOKEN` `NoneType` durumuna karşı `hmac.compare_digest` sağlamlaştırıldı.
+- **DRY-ERR:** `admin-web` içinde 8 sayfada tekrarlanan API hata formatlama fonksiyonu `api/client.ts` (`formatApiError`) altında birleştirildi.
+- **REC-RACE:** `Reception.tsx` canlı arama alanına geciken API yanıtlarının güncel aramayı ezmesini engelleyen `isCurrent` yarış durumu koruması eklendi.
+- **STORYBRAND-HERO:** Tanıtım sitesi `Hero.tsx` başlığı StoryBrand 5 saniye kuralına uygun olarak doğrudan kulüp acı noktası ve faydasına odaklandı (*"Spor Kulüpleri ve Tesisler İçin Yeni Nesil İşletim Sistemi"*).
+- **PRICING-PLAIN:** `Pricing.tsx` paketlerindeki teknik jargonlar temizlendi (*"Otomatik Tahsilat & Gecikme Takibi"*, *"Kurumsal SLA"*).
+- **MOBILE-TOUCH-44:** `TrainerPortal.tsx`, `MemberPortal.tsx` ve `scanner-pwa` bileşenlerinde tüm sekmeler ve butonlar `min-h-[44px]` (WCAG 2.2 AA) standardına ve iOS Home Bar safe-area boşluklarına kavuşturuldu.
 - **MODAL-ESC:** `Members.tsx` ve `Classes.tsx` modallarına WCAG 2.2 AA uyumlu `Escape` tuşu kapatma dinleyicisi eklendi.
 
 Önceki mercek (B1 / Fed HQ / #55–#60) checklist’te duruyor; burada tekrar edilmez.
