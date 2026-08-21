@@ -115,7 +115,7 @@
   - function clearAuth: () => void
   - function isAuthenticated: () => boolean
   - function ensureCsrf: () => Promise<string>
-  - _...3 more_
+  - _...4 more_
 - `frontend/admin-web/src/auth/roles.ts`
   - function homeRouteFor: (roles, isSuperuser) => string
   - type RoleName

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
 # Strict int money fields — reject float coercion (100.5, 100.0, True)
 MoneyMinor = Annotated[StrictInt, Field(description="Integer minor currency units")]
@@ -26,7 +26,7 @@ class BillingAccountResponse(BaseModel):
     currency: str
     status: str
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceItemCreate(BaseModel):
@@ -55,7 +55,7 @@ class InvoiceItemResponse(BaseModel):
     quantity: int
     amount_minor: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceResponse(BaseModel):
@@ -74,7 +74,7 @@ class InvoiceResponse(BaseModel):
     issued_at: datetime | None
     items: list[InvoiceItemResponse] = []
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AllocationCreate(BaseModel):
@@ -104,7 +104,7 @@ class PaymentResponse(BaseModel):
     provider: str | None
     provider_ref: str | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RefundCreate(BaseModel):
@@ -120,7 +120,7 @@ class RefundResponse(BaseModel):
     status: str
     reason: str | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreditNoteCreate(BaseModel):
@@ -139,7 +139,7 @@ class CreditNoteResponse(BaseModel):
     status: str
     reason: str | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreditApplyRequest(BaseModel):
@@ -162,7 +162,7 @@ class DiscountResponse(BaseModel):
     percent_bps: int | None
     is_active: bool
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReconciliationItemCreate(BaseModel):
@@ -185,7 +185,7 @@ class ReconciliationRunResponse(BaseModel):
     started_at: datetime
     completed_at: datetime | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReconciliationMatchRequest(BaseModel):

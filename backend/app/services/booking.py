@@ -1129,6 +1129,7 @@ class PtBookingService:
         appointment_id: UUID,
         member_id: UUID | None = None,
         is_staff: bool = False,
+        reason: str | None = None,
     ) -> PtAppointment:
         stmt = (
             select(PtAppointment)
@@ -1151,6 +1152,10 @@ class PtBookingService:
 
         appt.status = PtAppointmentStatus.CANCELLED
         appt.cancelled_at = datetime.now(UTC)
+        if reason and not appt.notes:
+            appt.notes = f"İptal gerekçesi: {reason}"
+        elif reason:
+            appt.notes = f"{appt.notes} | İptal: {reason}"
         await db.flush()
 
         outbox = OutboxService(db)
@@ -1161,6 +1166,7 @@ class PtBookingService:
                 "appointment_id": str(appt.id),
                 "trainer_user_id": str(appt.trainer_user_id),
                 "member_id": str(appt.member_id),
+                "cancellation_reason": reason,
             },
             aggregate_type="pt_appointment",
             aggregate_id=appt.id,

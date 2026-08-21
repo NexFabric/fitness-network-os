@@ -870,6 +870,7 @@ async def cancel_my_pt_appointment(
         appointment_id=appointment_id,
         member_id=member.id,
         is_staff=False,
+        reason=body.cancellation_reason,
     )
     await db.commit()
     await db.refresh(appt)

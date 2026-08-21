@@ -552,6 +552,7 @@ async def admin_cancel_pt_appointment(
         tenant_id=tenant_id,
         appointment_id=appointment_id,
         is_staff=True,
+        reason=data.cancellation_reason,
     )
     await db.commit()
     await db.refresh(appt)

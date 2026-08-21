@@ -180,3 +180,32 @@ export async function api<T = unknown>(
 
   return data as T
 }
+
+/**
+ * Helper to normalize and translate API error messages into Turkish user-facing text.
+ */
+export function formatApiError(e: unknown, fallback: string): string {
+  if (e instanceof ApiError) {
+    if (e.status === 401) return 'Oturum süreniz doldu, lütfen tekrar giriş yapın.'
+    if (e.status === 403) return 'Bu işlem için yetkiniz yok.'
+    if (e.status === 404) return 'İstenen kaynak bulunamadı.'
+    if (e.status === 409) return e.message || 'Bu işlem başka bir kayıtla çakışıyor.'
+    if (e.status === 422) {
+      if (typeof e.body === 'object' && e.body !== null && 'detail' in e.body) {
+        const detail = (e.body as { detail: unknown }).detail
+        if (Array.isArray(detail) && detail.length > 0) {
+          const first = detail[0]
+          if (typeof first === 'object' && first !== null && 'msg' in first) {
+            return String(first.msg)
+          }
+        }
+      }
+      return 'Lütfen form alanlarını kontrol edin.'
+    }
+    if (e.status >= 500) return 'Sunucu hatası oluştu, lütfen daha sonra tekrar deneyin.'
+    return e.message || fallback
+  }
+  if (e instanceof Error) return e.message
+  return fallback
+}
+

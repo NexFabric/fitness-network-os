@@ -88,6 +88,15 @@ export default function Devices() {
     void load()
   }, [load])
 
+  useEffect(() => {
+    if (!confirmRevoke) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmRevoke(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [confirmRevoke])
+
   async function handleProvision(e: FormEvent) {
     e.preventDefault()
     setFormError(null)

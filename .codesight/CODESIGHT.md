@@ -5,7 +5,7 @@
 
 > 142 routes | 86 models | 64 components | 89 lib files | 34 env vars | 6 middleware | 36% test coverage
 > **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~166,400 tokens. **Saves ~149,400 tokens per conversation.**
-> **Last scanned:** 2026-08-21 18:50 — re-run after significant changes
+> **Last scanned:** 2026-08-21 19:10 — re-run after significant changes
 
 ---
 
@@ -1063,7 +1063,7 @@
   - function clearAuth: () => void
   - function isAuthenticated: () => boolean
   - function ensureCsrf: () => Promise<string>
-  - _...3 more_
+  - _...4 more_
 - `frontend/admin-web/src/auth/roles.ts`
   - function homeRouteFor: (roles, isSuperuser) => string
   - type RoleName

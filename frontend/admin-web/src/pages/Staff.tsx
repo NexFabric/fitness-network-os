@@ -95,6 +95,18 @@ export default function Staff() {
     void load()
   }, [load])
 
+  useEffect(() => {
+    if (!created) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setCreated(null)
+        setCopied(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [created])
+
   async function handleLink(e: FormEvent) {
     e.preventDefault()
     setFormError(null)

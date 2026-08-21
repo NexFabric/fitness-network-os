@@ -54,7 +54,7 @@ services:
       NOTIFICATION_EMAIL_PROVIDER: disabled
       METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN}
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/live', timeout=4)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=4)"]
       interval: 30s
       timeout: 5s
       retries: 3

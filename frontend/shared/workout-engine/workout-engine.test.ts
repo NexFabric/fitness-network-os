@@ -25,6 +25,20 @@ describe('Workout Engine - 1RM Estimations', () => {
     expect(est).toBe(133.3);
   });
 
+  it('calculates accurate 1RM using Brzycki formula', () => {
+    // 100kg x 5 reps = 100 * 36 / (37 - 5) = 112.5 kg
+    const est = estimate1RM(100, 5, 'brzycki');
+    expect(est).toBe(112.5);
+  });
+
+  it('calculates accurate 1RM using Lombardi, Lander, Mayhew, OConner, Wathan formulas', () => {
+    expect(estimate1RM(100, 5, 'lombardi')).toBe(117.5);
+    expect(estimate1RM(100, 5, 'lander')).toBe(113.7);
+    expect(estimate1RM(100, 5, 'mayhew')).toBe(119.0);
+    expect(estimate1RM(100, 5, 'oconner')).toBe(112.5);
+    expect(estimate1RM(100, 5, 'wathan')).toBe(116.5);
+  });
+
   it('returns exact weight for a 1-rep set', () => {
     expect(estimate1RM(140, 1)).toBe(140);
   });

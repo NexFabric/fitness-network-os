@@ -10,7 +10,14 @@
 
 export const REP_CAP = 12;
 
-export type OneRmFormula = 'epley' | 'brzycki' | 'lombardi';
+export type OneRmFormula =
+  | 'epley'
+  | 'brzycki'
+  | 'lombardi'
+  | 'lander'
+  | 'mayhew'
+  | 'oconner'
+  | 'wathan';
 
 export interface SetRecord {
   w: number; // weight in kg / lbs
@@ -36,6 +43,14 @@ export const ONE_RM_FORMULAS: Record<OneRmFormula, (w: number, r: number) => num
   brzycki: (w: number, r: number) => (w * 36) / (37 - r),
   // Lombardi 1989 — w * (r ^ 0.10)
   lombardi: (w: number, r: number) => w * Math.pow(r, 0.1),
+  // Lander 1985 — (100 * w) / (101.3 - 2.67123 * r)
+  lander: (w: number, r: number) => (100 * w) / (101.3 - 2.67123 * r),
+  // Mayhew et al. 1992 — (100 * w) / (52.2 + 41.9 * e^(-0.055 * r))
+  mayhew: (w: number, r: number) => (100 * w) / (52.2 + 41.9 * Math.exp(-0.055 * r)),
+  // O'Conner et al. 1989 — w * (1 + r / 40)
+  oconner: (w: number, r: number) => w * (1 + r / 40),
+  // Wathan 1994 — (100 * w) / (48.8 + 53.8 * e^(-0.075 * r))
+  wathan: (w: number, r: number) => (100 * w) / (48.8 + 53.8 * Math.exp(-0.075 * r)),
 };
 
 export const DEFAULT_FORMULA: OneRmFormula = 'epley';
