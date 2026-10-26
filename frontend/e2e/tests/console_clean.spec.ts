@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { completeOwnerMfaIfNeeded } from './helpers/auth'
 
 /**
  * Every portal must render without console errors or failed requests.
@@ -15,6 +16,7 @@ const PORTALS = [
   { email: 'e2e.trainer@e2e.local', path: '/trainer', label: 'antrenör portalı' },
   { email: 'e2e.analyst@e2e.local', path: '/superadmin', label: 'federasyon konsolu' },
   { email: 'e2e.owner@e2e.local', path: '/', label: 'ops konsolu' },
+  { email: 'e2e.desk@e2e.local', path: '/', label: 'resepsiyon konsolu' },
   { email: 'e2e.member@e2e.local', path: '/portal', label: 'portal geçidi' },
 ] as const
 
@@ -45,6 +47,7 @@ for (const portal of PORTALS) {
     await page.fill('input[type="email"]', portal.email)
     await page.fill('input[type="password"]', PASSWORD)
     await page.click('button[type="submit"]')
+    await completeOwnerMfaIfNeeded(page, portal.email)
     await page.waitForURL((url) => !url.pathname.startsWith('/login'), {
       timeout: 15_000,
     })

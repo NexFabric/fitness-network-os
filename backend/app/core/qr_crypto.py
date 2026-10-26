@@ -21,7 +21,10 @@ from typing import Any
 from uuid import UUID, uuid4
 
 LOCAL_HMAC_PREFIX = "local:hmac:"
-KMS_PREFIX = "kms:alias/"
+FERNET_HMAC_PREFIX = "fernet:hmac:"
+KMS_ENC_PREFIX = "kms:enc:"
+KMS_ALIAS_PREFIX = "kms:alias/"
+KMS_MOCK_PREFIX = "kms:mock:"
 DEFAULT_ALGORITHM = "HMAC_SHA256"
 REQUIRED_CLAIMS = frozenset(
     {"kid", "credential_id", "jti", "iat", "exp", "aud", "tenant_id", "member_id"}
@@ -30,40 +33,6 @@ REQUIRED_CLAIMS = frozenset(
 
 class QrCryptoError(ValueError):
     """Invalid token structure, signature, or claims."""
-
-
-def new_local_hmac_ref() -> str:
-    """Generate a local HMAC secret reference (never log the returned value)."""
-    mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
-    
-    if mode == "kms":
-        # In a real implementation this would create/refer to a KMS key
-        return KMS_PREFIX + f"qr-key-{uuid4().hex[:8]}"
-        
-    # Local or mock
-    raw = secrets.token_bytes(32)
-    return LOCAL_HMAC_PREFIX + base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-
-
-def resolve_hmac_secret(key_material: str) -> bytes:
-    if key_material.startswith(KMS_PREFIX):
-        # Stub for KMS resolution
-        # E.g., fetch plaintext data key from AWS KMS / HashiCorp Vault
-        # For mock/local fallback during dev:
-        if os.environ.get("QR_KMS_MODE") == "mock":
-            # Deterministic mock key based on the reference for testing
-            return hashlib.sha256(key_material.encode()).digest()
-        raise NotImplementedError("Real KMS resolution requires provider SDK (e.g. boto3)")
-        
-    if not key_material.startswith(LOCAL_HMAC_PREFIX):
-        raise QrCryptoError("unsupported_key_material_ref")
-    b64 = key_material[len(LOCAL_HMAC_PREFIX) :]
-    # restore padding
-    pad = "=" * (-len(b64) % 4)
-    try:
-        return base64.urlsafe_b64decode(b64 + pad)
-    except Exception as e:
-        raise QrCryptoError("invalid_key_material") from e
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -76,6 +45,105 @@ def _b64url_decode(data: str) -> bytes:
         return base64.urlsafe_b64decode(data + pad)
     except Exception as e:
         raise QrCryptoError("invalid_token_encoding") from e
+
+
+def _get_kms_client() -> Any:
+    import boto3
+    from botocore.config import Config  # type: ignore[import-untyped]
+
+    return boto3.client(
+        "kms",
+        config=Config(connect_timeout=5, read_timeout=5, retries={"max_attempts": 2}),
+    )
+
+
+def new_local_hmac_ref() -> str:
+    """Generate a HMAC secret reference using envelope encryption or local secret.
+
+    When QR_KMS_MODE=aws_kms: Generates a data key via AWS KMS, stores the CiphertextBlob
+    in the reference (kms:enc:<b64>), and uses the decrypted key for HMAC.
+    """
+    mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
+
+    if mode == "aws_kms":
+        from botocore.exceptions import (  # type: ignore[import-untyped]
+            BotoCoreError,
+            ClientError,
+        )
+
+        key_id = (os.environ.get("AWS_KMS_KEY_ID") or "").strip()
+        if not key_id:
+            raise QrCryptoError("missing_aws_kms_key_id")
+        try:
+            client = _get_kms_client()
+            resp = client.generate_data_key(KeyId=key_id, KeySpec="AES_256")
+        except (BotoCoreError, ClientError) as e:
+            raise QrCryptoError(f"kms_generate_data_key_failed: {e}") from e
+        ciphertext_blob: bytes = resp["CiphertextBlob"]
+        return f"{KMS_ENC_PREFIX}{_b64url_encode(ciphertext_blob)}"
+
+    if mode in {"kms", "mock"}:
+        return f"{KMS_MOCK_PREFIX}qr-key-{uuid4().hex[:8]}"
+
+    # Local or mock default
+    raw = secrets.token_bytes(32)
+    return f"{LOCAL_HMAC_PREFIX}{_b64url_encode(raw)}"
+
+
+def resolve_hmac_secret(key_material: str) -> bytes:
+    """Deterministically resolves the plaintext HMAC secret from the key reference.
+
+    For kms:enc:<ciphertext>, calls KMS Decrypt to recover the original plaintext key.
+    For local:hmac:<secret>, decodes the base64url secret bytes.
+    """
+    kms_mode = os.environ.get("QR_KMS_MODE", "local").strip().lower()
+
+    if key_material.startswith(KMS_ENC_PREFIX):
+        if kms_mode == "aws_kms":
+            from botocore.exceptions import (  # type: ignore[import-untyped]
+                BotoCoreError,
+                ClientError,
+            )
+
+            ciphertext = _b64url_decode(key_material[len(KMS_ENC_PREFIX) :])
+            try:
+                client = _get_kms_client()
+                resp = client.decrypt(CiphertextBlob=ciphertext)
+                plaintext: bytes = resp["Plaintext"]
+                if len(plaintext) < 16:
+                    raise QrCryptoError("invalid_kms_plaintext_length")
+                return plaintext
+            except (BotoCoreError, ClientError) as e:
+                raise QrCryptoError(f"kms_decryption_failed: {e}") from e
+        if kms_mode in {"mock", "local", "test"}:
+            return hashlib.sha256(key_material.encode("utf-8")).digest()
+        raise QrCryptoError(
+            f"Unsupported KMS mode '{kms_mode}' for encrypted key resolution"
+        )
+
+    if key_material.startswith((KMS_ALIAS_PREFIX, KMS_MOCK_PREFIX)):
+        if kms_mode in {"mock", "local", "test", "kms"}:
+            return hashlib.sha256(key_material.encode("utf-8")).digest()
+        raise QrCryptoError(
+            f"Unsupported KMS mode '{kms_mode}' for alias key material resolution"
+        )
+
+    if key_material.startswith(FERNET_HMAC_PREFIX):
+        from app.core.security import get_fernet
+
+        token = key_material[len(FERNET_HMAC_PREFIX) :].encode("ascii")
+        try:
+            plaintext = get_fernet().decrypt(token)
+        except Exception as e:
+            raise QrCryptoError(f"fernet_hmac_decrypt_failed: {e}") from e
+        if len(plaintext) < 16:
+            raise QrCryptoError("invalid_fernet_hmac_length")
+        return plaintext
+
+    if not key_material.startswith(LOCAL_HMAC_PREFIX):
+        raise QrCryptoError("unsupported_key_material_ref")
+
+    return _b64url_decode(key_material[len(LOCAL_HMAC_PREFIX) :])
 
 
 def build_payload(

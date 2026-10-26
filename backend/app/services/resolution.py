@@ -51,7 +51,7 @@ class ResolutionEngine:
                 async with self.session.begin_nested():
                     # MembershipService.activate_scheduled_membership allocates wallets
                     await self.membership_service.activate_scheduled_membership(mid)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error("Failed to activate membership %s: %s", mid, e)
 
     async def process_expirations(self, tenant_id: UUID) -> None:
@@ -70,7 +70,7 @@ class ResolutionEngine:
             try:
                 async with self.session.begin_nested():
                     await self.membership_service.expire_membership(mid)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error("Failed to expire membership %s: %s", mid, e)
 
     async def process_renewals(self, tenant_id: UUID) -> None:
@@ -160,7 +160,7 @@ class ResolutionEngine:
                     )
 
                     renewal.status = RenewalStatus.APPLIED.value
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error("Failed to process renewal %s: %s", rid, e)
                 try:
                     async with self.session.begin_nested():
@@ -173,7 +173,7 @@ class ResolutionEngine:
                             await self.session.execute(renewal_stmt)
                         ).scalar_one()
                         renewal.status = RenewalStatus.FAILED.value
-                except Exception as ex:
+                except Exception as ex:  # noqa: BLE001
                     logger.error("Failed to mark renewal %s as failed: %s", rid, ex)
 
     async def run_all(self) -> None:
@@ -184,5 +184,5 @@ class ResolutionEngine:
             try:
                 async with self.session.begin_nested():
                     await self.run_for_tenant(tid)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error("Resolution failed for tenant %s: %s", tid, e)

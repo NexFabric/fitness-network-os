@@ -10,7 +10,7 @@
 ## Goals
 
 1. **Keep** existing backend gates unchanged:
-   - `security` — TruffleHog, Bandit, pip-audit, Safety  
+   - `security` — Bandit + pip-audit + TruffleHog (Safety CLI removed — it no longer boots; pip-audit is the SCA gate). CodeQL is a separate required job.  
    - `lint` — ruff, mypy, tenancy static, permissions matrix, no-money-floats  
    - `test` — migrations, schema drift, dynamic tenancy, permissions DB parity, pytest  
 2. **Add** frontend production-build jobs so Phase 19 (admin-web) and Phase 20 (scanner-pwa) cannot merge broken TypeScript/Vite output.  

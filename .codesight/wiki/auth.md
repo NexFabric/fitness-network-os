@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Auth subsystem handles **5 routes** and touches: auth, db.
+The Auth subsystem handles **7 routes** and touches: auth, db.
 
 ## Routes
 
@@ -10,11 +10,15 @@ The Auth subsystem handles **5 routes** and touches: auth, db.
   `backend/app/api/v1/endpoints/auth.py`
 - `POST` `/login` → in: LoginRequest, out: CsrfResponse [auth, db]
   `backend/app/api/v1/endpoints/auth.py`
+- `POST` `/invite/accept` → in: LoginRequest, out: CsrfResponse [auth]
+  `backend/app/api/v1/endpoints/auth.py`
+- `POST` `/password` → in: LoginRequest, out: CsrfResponse [auth, db]
+  `backend/app/api/v1/endpoints/auth.py`
 - `POST` `/logout` → in: LoginRequest, out: CsrfResponse [auth, db]
   `backend/app/api/v1/endpoints/auth.py`
 - `POST` `/auth` → in: ProvisionDeviceRequest, out: ProvisionDeviceResponse [auth, db]
   `backend/app/api/v1/endpoints/devices.py`
-- `POST` `/verify` → in: Use, out: MfaSetupResponse [db]
+- `POST` `/verify` → out: MfaSetupResponse [auth, db]
   `backend/app/api/v1/endpoints/mfa.py`
 
 ## Middleware
@@ -22,6 +26,7 @@ The Auth subsystem handles **5 routes** and touches: auth, db.
 - **csrf** (auth) — `backend/app/api/middleware/csrf.py`
 - **request_logging** (auth) — `backend/app/api/middleware/request_logging.py`
 - **test_rate_limit** (auth) — `backend/tests/api/test_rate_limit.py`
+- **auth** (auth) — `frontend/e2e/tests/helpers/auth.ts`
 
 ## Source Files
 

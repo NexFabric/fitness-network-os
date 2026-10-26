@@ -71,7 +71,9 @@ def _expected_minor_from_seed(value: float | None) -> int | None:
     if value is None:
         return None
     return int(
-        (Decimal(str(value)) * Decimal(100)).quantize(Decimal(1), rounding=ROUND_HALF_UP)
+        (Decimal(str(value)) * Decimal(100)).quantize(
+            Decimal(1), rounding=ROUND_HALF_UP
+        )
     )
 
 
@@ -296,16 +298,20 @@ async def test_phase11_expand_migration_from_legacy_float_rows():
 
         for oid, val in opp_cases:
             row = (
-                await conn.execute(
-                    text(
-                        """
+                (
+                    await conn.execute(
+                        text(
+                            """
                         SELECT value, value_amount_minor, currency
                         FROM opportunities WHERE id = :id
                         """
-                    ),
-                    {"id": oid},
+                        ),
+                        {"id": oid},
+                    )
                 )
-            ).mappings().one()
+                .mappings()
+                .one()
+            )
             expected = _expected_minor_from_seed(val)
             # Allow ±1 minor for float IEEE edge cases on ROUND boundaries
             if expected is None:
@@ -325,16 +331,20 @@ async def test_phase11_expand_migration_from_legacy_float_rows():
 
         for rid, prob in ret_cases:
             row = (
-                await conn.execute(
-                    text(
-                        """
+                (
+                    await conn.execute(
+                        text(
+                            """
                         SELECT churn_probability, churn_probability_bps
                         FROM retention_cockpit WHERE id = :id
                         """
-                    ),
-                    {"id": rid},
+                        ),
+                        {"id": rid},
+                    )
                 )
-            ).mappings().one()
+                .mappings()
+                .one()
+            )
             expected_bps = _expected_bps(prob)
             assert row["churn_probability_bps"] == expected_bps, (
                 f"ret {rid}: prob={prob} expected bps={expected_bps} "

@@ -4,7 +4,7 @@ Pattern matches POST /access/qr/issue-self (Phase 15.5B/C):
 current_user.id → members.user_id binding → server-owned member_id.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -21,8 +21,20 @@ from app.api.deps import (
 )
 from app.core.authorization import AuthorizationService, SecurityException
 from app.models.access import Checkin
+from app.models.booking import ClassBooking
+from app.models.consent import ConsentRecord
+from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.user import User
+from app.schemas.booking import (
+    ClassBookingCancelRequest,
+    ClassBookingResponse,
+    ClassSessionResponse,
+    PtAppointmentCancelRequest,
+    PtAppointmentCreate,
+    PtAppointmentResponse,
+)
 from app.schemas.membership import MembershipResponse
+from app.services.booking import ClassBookingService, PtBookingService
 from app.services.entitlement import EntitlementService
 from app.services.member import MemberService
 from app.services.membership import MembershipService
@@ -120,6 +132,51 @@ class MeCheckinResponse(BaseModel):
     checkout_time: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MeInvoiceResponse(BaseModel):
+    id: UUID
+    invoice_number: str | None = None
+    status: str
+    total_amount_minor: int
+    paid_amount_minor: int
+    discount_amount_minor: int
+    currency: str
+    due_date: datetime | None = None
+    issued_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MePaymentResponse(BaseModel):
+    id: UUID
+    amount_minor: int
+    refunded_amount_minor: int = 0
+    currency: str
+    status: str
+    method: str
+    paid_at: datetime | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeConsentRecordResponse(BaseModel):
+    id: UUID
+    consent_type: str
+    document_version: str
+    status: str
+    given_at: datetime | None = None
+    withdrawn_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeConsentRecordRequest(BaseModel):
+    consent_type: str
+    document_version: str = "v1.0"
+    status: str = "GIVEN"
 
 
 async def _bound_member_or_404(db: AsyncSession, tenant_id: UUID, user_id: UUID):
@@ -245,9 +302,7 @@ async def list_my_memberships(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    rows = await MembershipService(db).list_memberships_for_member(
-        tenant_id, member.id
-    )
+    rows = await MembershipService(db).list_memberships_for_member(tenant_id, member.id)
     return rows
 
 
@@ -265,9 +320,7 @@ async def list_my_entitlements(
         resource_owner_id=current_user.id,
     )
     member = await _bound_member_or_404(db, tenant_id, current_user.id)
-    wallets = await EntitlementService.list_wallets_for_member(
-        db, tenant_id, member.id
-    )
+    wallets = await EntitlementService.list_wallets_for_member(db, tenant_id, member.id)
     return MeEntitlementsSummaryResponse(
         member_id=member.id,
         wallets=[
@@ -350,3 +403,458 @@ async def check_my_entitlement(
         remaining=result.get("remaining"),
         member_id=member.id,
     )
+
+
+@router.get("/invoices", response_model=list[MeInvoiceResponse])
+async def list_my_invoices(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List invoices for the bound member's billing account."""
+    AuthorizationService.require_self(
+        current_user,
+        "finance:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(Invoice)
+        .join(BillingAccount, Invoice.billing_account_id == BillingAccount.id)
+        .where(
+            Invoice.tenant_id == tenant_id,
+            BillingAccount.member_id == member.id,
+        )
+        .order_by(Invoice.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/payments", response_model=list[MePaymentResponse])
+async def list_my_payments(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List payments for the bound member's billing account."""
+    AuthorizationService.require_self(
+        current_user,
+        "finance:read:self",
+        tenant_id,
+        resource_owner_id=current_user.id,
+    )
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(Payment)
+        .join(BillingAccount, Payment.billing_account_id == BillingAccount.id)
+        .where(
+            Payment.tenant_id == tenant_id,
+            BillingAccount.member_id == member.id,
+        )
+        .order_by(Payment.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/consents", response_model=list[MeConsentRecordResponse])
+async def list_my_consents(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """List consent records for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    result = await db.execute(
+        select(ConsentRecord)
+        .where(
+            ConsentRecord.tenant_id == tenant_id,
+            ConsentRecord.member_id == member.id,
+        )
+        .order_by(ConsentRecord.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+class MeDsarRequestResponse(BaseModel):
+    id: UUID
+    kind: str
+    status: str
+    due_at: datetime
+    created: bool = False
+    download_url: str | None = None
+    rejection_reason: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+@router.get("/dsar", response_model=list[MeDsarRequestResponse])
+async def list_my_dsar(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarService
+
+    svc = DsarService(db)
+    rows = await svc.list_for_member(tenant_id, member.id)
+    out: list[MeDsarRequestResponse] = []
+    for row in rows:
+        out.append(
+            MeDsarRequestResponse(
+                id=row.id,
+                kind=row.kind,
+                status=row.status,
+                due_at=row.due_at,
+                download_url=await svc.download_url(tenant_id, row),
+                rejection_reason=row.rejection_reason,
+            )
+        )
+    return out
+
+
+@router.post("/dsar/export", response_model=MeDsarRequestResponse, status_code=201)
+async def request_my_dsar_export(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Package the bound member's self-service data. Erasure is not this path."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:read",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarService
+
+    svc = DsarService(db)
+    try:
+        row, created = await svc.request_export(
+            tenant_id, member, requested_by_user_id=current_user.id
+        )
+        await db.commit()
+        await db.refresh(row)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return MeDsarRequestResponse(
+        id=row.id,
+        kind=row.kind,
+        status=row.status,
+        due_at=row.due_at,
+        created=created,
+        download_url=await svc.download_url(tenant_id, row),
+        rejection_reason=row.rejection_reason,
+    )
+
+
+@router.post("/dsar/erasure", response_model=MeDsarRequestResponse, status_code=201)
+async def request_my_dsar_erasure(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Anonymize the bound member. Open invoices are a legal hold (409)."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:write",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    from app.services.dsar import DsarLegalHold, DsarService
+
+    svc = DsarService(db)
+    try:
+        row, created = await svc.request_erasure(
+            tenant_id, member, requested_by_user_id=current_user.id
+        )
+        await db.commit()
+        await db.refresh(row)
+    except DsarLegalHold as e:
+        await db.commit()
+        raise HTTPException(status_code=409, detail=e.reason) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return MeDsarRequestResponse(
+        id=row.id,
+        kind=row.kind,
+        status=row.status,
+        due_at=row.due_at,
+        created=created,
+        download_url=None,
+        rejection_reason=row.rejection_reason,
+    )
+
+
+@router.post("/consents", response_model=MeConsentRecordResponse)
+async def record_my_consent(
+    body: MeConsentRecordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+):
+    """Record or withdraw a consent decision for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="profile:write",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    now = datetime.now(UTC)
+    given_at = now if body.status == "GIVEN" else None
+    withdrawn_at = now if body.status == "WITHDRAWN" else None
+
+    record = ConsentRecord(
+        tenant_id=tenant_id,
+        member_id=member.id,
+        consent_type=body.consent_type,
+        document_version=body.document_version,
+        status=body.status,
+        given_at=given_at,
+        withdrawn_at=withdrawn_at,
+        source="MEMBER_PORTAL",
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record
+
+
+# ---------------------------------------------------------
+# Group Classes Self-Service
+# ---------------------------------------------------------
+
+
+@router.get("/classes/sessions", response_model=list[ClassSessionResponse])
+async def list_my_available_classes(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+    location_id: UUID | None = Query(None),
+    class_type_id: UUID | None = Query(None),
+    start_time: datetime | None = Query(None),
+    end_time: datetime | None = Query(None),
+) -> list[ClassSessionResponse]:
+    """List class timetable enriched with current user's booking status."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    return await ClassBookingService.list_sessions(
+        db,
+        tenant_id=tenant_id,
+        location_id=location_id,
+        class_type_id=class_type_id,
+        start_time=start_time,
+        end_time=end_time,
+        member_id=member.id,
+    )
+
+
+@router.post(
+    "/classes/sessions/{session_id}/book",
+    response_model=ClassBookingResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def book_my_class_session(
+    session_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> ClassBookingResponse:
+    """Reserve a spot or waitlist in a class session for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    booking = await ClassBookingService.book_session(
+        db,
+        tenant_id=tenant_id,
+        session_id=session_id,
+        member_id=member.id,
+    )
+    await db.commit()
+    await db.refresh(booking)
+    return ClassBookingResponse.model_validate(booking)
+
+
+@router.post(
+    "/classes/bookings/{booking_id}/cancel",
+    response_model=ClassBookingResponse,
+)
+async def cancel_my_class_booking(
+    booking_id: UUID,
+    body: ClassBookingCancelRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> ClassBookingResponse:
+    """Cancel own class booking and automatically promote waitlisted member if applicable."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    booking = await ClassBookingService.cancel_booking(
+        db,
+        tenant_id=tenant_id,
+        booking_id=booking_id,
+        member_id=member.id,
+        reason=body.cancellation_reason,
+        is_staff=False,
+    )
+    await db.commit()
+    await db.refresh(booking)
+    return ClassBookingResponse.model_validate(booking)
+
+
+@router.get("/classes/bookings", response_model=list[ClassBookingResponse])
+async def list_my_class_bookings(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> list[ClassBookingResponse]:
+    """List own booking history for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="classes:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    stmt = (
+        select(ClassBooking)
+        .where(
+            ClassBooking.tenant_id == tenant_id,
+            ClassBooking.member_id == member.id,
+        )
+        .order_by(ClassBooking.booked_at.desc())
+    )
+    res = await db.execute(stmt)
+    return [ClassBookingResponse.model_validate(b) for b in res.scalars().all()]
+
+
+# ---------------------------------------------------------
+# Personal Training (PT) Self-Service
+# ---------------------------------------------------------
+
+
+@router.get("/pt/appointments", response_model=list[PtAppointmentResponse])
+async def list_my_pt_appointments(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> list[PtAppointmentResponse]:
+    """List own 1-on-1 PT appointments for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:read:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appts = await PtBookingService.list_appointments(
+        db, tenant_id=tenant_id, member_id=member.id
+    )
+    return [PtAppointmentResponse.model_validate(a) for a in appts]
+
+
+@router.post(
+    "/pt/appointments",
+    response_model=PtAppointmentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def book_my_pt_appointment(
+    body: PtAppointmentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> PtAppointmentResponse:
+    """Book a 1-on-1 PT appointment for the bound member."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appt = await PtBookingService.book_appointment(
+        db,
+        tenant_id=tenant_id,
+        trainer_user_id=body.trainer_user_id,
+        member_id=member.id,
+        location_id=body.location_id,
+        start_time_utc=body.start_time_utc,
+        end_time_utc=body.end_time_utc,
+        notes=body.notes,
+    )
+    await db.commit()
+    await db.refresh(appt)
+    return PtAppointmentResponse.model_validate(appt)
+
+
+@router.post(
+    "/pt/appointments/{appointment_id}/cancel",
+    response_model=PtAppointmentResponse,
+)
+async def cancel_my_pt_appointment(
+    appointment_id: UUID,
+    body: PtAppointmentCancelRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant_id: UUID = Depends(get_tenant_id),
+) -> PtAppointmentResponse:
+    """Cancel own 1-on-1 PT appointment."""
+    if not AuthorizationService.is_authorized(
+        user=current_user,
+        permission="pt:book:self",
+        resource_tenant_id=tenant_id,
+        resource_owner_id=current_user.id,
+    ):
+        raise SecurityException()
+    member = await _bound_member_or_404(db, tenant_id, current_user.id)
+    appt = await PtBookingService.cancel_appointment(
+        db,
+        tenant_id=tenant_id,
+        appointment_id=appointment_id,
+        member_id=member.id,
+        is_staff=False,
+    )
+    await db.commit()
+    await db.refresh(appt)
+    return PtAppointmentResponse.model_validate(appt)

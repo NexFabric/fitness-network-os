@@ -10,24 +10,26 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.19.1",
     "asyncpg>=0.31.0",
+    "boto3>=1.40.0,<2",
     "cryptography>=50.0.0",
     "fastapi>=0.141.1",
-    "greenlet>=3.5.4",
+    "greenlet>=3.5.5",
     "passlib[argon2]>=1.7.4",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",
     "pyotp>=2.10.0",
+    "prometheus-client>=0.23.1,<1",
     "python-dateutil>=2.9.0.post0",
     "redis>=8.1.0",
-    "sqlalchemy>=2.0.51",
-    "uvicorn>=0.52.1",
+    "sqlalchemy>=2.0.52",
+    "uvicorn>=0.52.2",
 ]
 
 [project.scripts]
 backend = "backend:main"
 
 [build-system]
-requires = ["uv_build>=0.11.21,<0.12.0"]
+requires = ["uv_build>=0.12.3,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -54,11 +56,23 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-lint.extend-ignore = ["B008", "SIM103", "F841", "TRY002", "F821", "EXE001", "S110", "BLE001", "SIM102"]
+lint.extend-ignore = ["B008", "SIM103", "F841", "TRY002", "EXE001", "SIM102"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["BLE001", "S110"]
+"scripts/**" = ["BLE001", "S110"]
 
 [tool.mypy]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = "passlib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "boto3.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "opentelemetry.*"
 ignore_missing_imports = true

@@ -97,8 +97,12 @@ class MembershipEntitlement(TenantMixin, Base):
     source_plan_version_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
     granted_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     unlimited: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    valid_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    valid_from: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    valid_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         String, nullable=False, default=MembershipEntitlementStatus.ACTIVE.value
     )
@@ -147,7 +151,9 @@ class EntitlementWallet(TenantMixin, Base):
     consumed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     remaining: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     _model_table_args = (
         ForeignKeyConstraint(
@@ -183,10 +189,14 @@ class EntitlementWallet(TenantMixin, Base):
             "entitlement_id",
             unique=True,
         ),
-        CheckConstraint("allocated >= 0", name="ck_entitlement_wallets_allocated_nonneg"),
+        CheckConstraint(
+            "allocated >= 0", name="ck_entitlement_wallets_allocated_nonneg"
+        ),
         CheckConstraint("reserved >= 0", name="ck_entitlement_wallets_reserved_nonneg"),
         CheckConstraint("consumed >= 0", name="ck_entitlement_wallets_consumed_nonneg"),
-        CheckConstraint("remaining >= 0", name="ck_entitlement_wallets_remaining_nonneg"),
+        CheckConstraint(
+            "remaining >= 0", name="ck_entitlement_wallets_remaining_nonneg"
+        ),
     )
 
 
@@ -212,6 +222,8 @@ class EntitlementTransaction(TenantMixin, Base):
             ["entitlement_wallets.tenant_id", "entitlement_wallets.id"],
             ondelete="RESTRICT",
         ),
-        Index("ix_entit_tx_tenant_idem_key", "tenant_id", "idempotency_key", unique=True),
+        Index(
+            "ix_entit_tx_tenant_idem_key", "tenant_id", "idempotency_key", unique=True
+        ),
         Index("ix_entit_tx_tenant_wallet", "tenant_id", "wallet_id"),
     )

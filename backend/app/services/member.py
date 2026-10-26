@@ -9,8 +9,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import get_password_hash
 from app.models.consent import ConsentDefinition, ConsentRecord
 from app.models.member import Member, Note, Tag
+from app.models.rbac import Role, UserRole
+from app.models.user import User
+from app.services.staff import generate_one_time_password
 
 ALLOWED_STATUSES = frozenset(
     {"LEAD", "PROSPECT", "ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"}
@@ -152,6 +156,73 @@ class MemberService:
                 raise ValueError("user_id_conflict") from e
             raise
         return member
+
+    async def provision_portal_account(
+        self, tenant_id: UUID, member_id: UUID
+    ) -> tuple[Member, User, str]:
+        """Create a MEMBER login and bind it to this profile.
+
+        The one-time password is returned once and is never stored in the clear.
+        An address that already has an account is a conflict, not a silent rebind.
+        """
+        member = await self.get_member(tenant_id, member_id)
+        if member is None:
+            raise ValueError("member_not_found")
+        if member.user_id is not None:
+            raise ValueError("portal_already_bound")
+        email = (member.email or "").strip().lower()
+        if not email or "@" not in email:
+            raise ValueError("member_email_required")
+
+        existing = await self.db.execute(select(User).where(User.email == email))
+        if existing.scalars().first() is not None:
+            raise ValueError("email_already_registered")
+
+        one_time_password = generate_one_time_password()
+        user = User(
+            id=uuid4(),
+            email=email,
+            hashed_password=get_password_hash(one_time_password),
+            is_active=True,
+            is_superuser=False,
+            must_change_password=True,
+        )
+        self.db.add(user)
+        try:
+            await self.db.flush()
+        except IntegrityError as e:
+            raise ValueError("email_already_registered") from e
+
+        await self._attach_member_role(tenant_id, user.id)
+        try:
+            member.user_id = user.id
+            async with self.db.begin_nested():
+                await self.db.flush()
+        except IntegrityError as e:
+            raise ValueError("user_id_conflict") from e
+        return member, user, one_time_password
+
+    async def _attach_member_role(self, tenant_id: UUID, user_id: UUID) -> None:
+        role = (
+            await self.db.execute(select(Role).where(Role.name == "MEMBER"))
+        ).scalar_one_or_none()
+        if role is None:
+            role = Role(name="MEMBER", description="MEMBER", is_system=True)
+            self.db.add(role)
+            await self.db.flush()
+        existing = (
+            await self.db.execute(
+                select(UserRole).where(
+                    UserRole.user_id == user_id,
+                    UserRole.role_id == role.id,
+                    UserRole.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return
+        self.db.add(UserRole(user_id=user_id, role_id=role.id, tenant_id=tenant_id))
+        await self.db.flush()
 
     async def set_status(
         self, tenant_id: UUID, member_id: UUID, new_status: str

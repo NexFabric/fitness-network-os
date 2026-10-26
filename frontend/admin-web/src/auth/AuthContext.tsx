@@ -35,9 +35,22 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+function shouldProbeOnMount(): boolean {
+  if (typeof window === 'undefined') return true
+  const path = window.location.pathname
+  if (
+    path.startsWith('/mfa/setup') ||
+    path.startsWith('/password/change') ||
+    (path.startsWith('/login') && !getTenantId())
+  ) {
+    return false
+  }
+  return true
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(() => shouldProbeOnMount())
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async ({ probe = false } = {}) => {
@@ -45,14 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // skip the probe rather than firing a request that can only 401.
     // A stored tenant means a prior session, which is worth re-checking so a
     // returning user is bounced straight to its portal.
-    if (
-      probe &&
-      typeof window !== 'undefined' &&
-      window.location.pathname.startsWith('/login') &&
-      !getTenantId()
-    ) {
-      setSession(null)
-      setLoading(false)
+    if (probe && !shouldProbeOnMount()) {
       return
     }
     setLoading(true)
@@ -77,7 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh({ probe: true })
   }, [refresh])
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    try {
+      await api('/api/v1/auth/logout', { method: 'POST', skipAuth: true })
+    } catch {
+      // Best-effort server cleanup
+    }
     clearAuth()
     setSession(null)
   }, [])

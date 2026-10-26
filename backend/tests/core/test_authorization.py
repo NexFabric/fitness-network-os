@@ -10,79 +10,134 @@ def test_authorization_superuser():
     assert AuthorizationService.evaluate_permissions(user, ["some:permission"])
     assert AuthorizationService.evaluate_scope(user, Scope.PLATFORM)
 
+
 def test_authorization_evaluate_permissions():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     tenant_id = uuid4()
-    
+
     perm_read = Permission(id=uuid4(), name="users:read")
     perm_write = Permission(id=uuid4(), name="users:write")
-    
+
     role = Role(id=uuid4(), name="admin", permissions=[perm_read, perm_write])
-    
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=role.id, tenant_id=tenant_id, role=role)
+
+    user_role = UserRole(
+        id=uuid4(), user_id=user.id, role_id=role.id, tenant_id=tenant_id, role=role
+    )
     user.user_roles = [user_role]
-    
-    assert AuthorizationService.evaluate_permissions(user, ["users:read"], tenant_id=tenant_id)
-    assert AuthorizationService.evaluate_permissions(user, ["users:read", "users:write"], tenant_id=tenant_id)
-    
+
+    assert AuthorizationService.evaluate_permissions(
+        user, ["users:read"], tenant_id=tenant_id
+    )
+    assert AuthorizationService.evaluate_permissions(
+        user, ["users:read", "users:write"], tenant_id=tenant_id
+    )
+
     other_tenant_id = uuid4()
-    assert not AuthorizationService.evaluate_permissions(user, ["users:read"], tenant_id=other_tenant_id)
-    
-    assert not AuthorizationService.evaluate_permissions(user, ["users:delete"], tenant_id=tenant_id)
+    assert not AuthorizationService.evaluate_permissions(
+        user, ["users:read"], tenant_id=other_tenant_id
+    )
+
+    assert not AuthorizationService.evaluate_permissions(
+        user, ["users:delete"], tenant_id=tenant_id
+    )
+
 
 def test_authorization_evaluate_scope_self():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
-    
-    assert AuthorizationService.evaluate_scope(user, Scope.SELF, resource_owner_id=user.id)
-    assert not AuthorizationService.evaluate_scope(user, Scope.SELF, resource_owner_id=uuid4())
+
+    assert AuthorizationService.evaluate_scope(
+        user, Scope.SELF, resource_owner_id=user.id
+    )
+    assert not AuthorizationService.evaluate_scope(
+        user, Scope.SELF, resource_owner_id=uuid4()
+    )
+
 
 def test_authorization_evaluate_scope_assigned():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     client1_id = uuid4()
     client2_id = uuid4()
-    
-    assert AuthorizationService.evaluate_scope(user, Scope.ASSIGNED, assigned_user_ids=[user.id, client1_id])
-    assert not AuthorizationService.evaluate_scope(user, Scope.ASSIGNED, assigned_user_ids=[client1_id, client2_id])
+
+    assert AuthorizationService.evaluate_scope(
+        user, Scope.ASSIGNED, assigned_user_ids=[user.id, client1_id]
+    )
+    assert not AuthorizationService.evaluate_scope(
+        user, Scope.ASSIGNED, assigned_user_ids=[client1_id, client2_id]
+    )
+
 
 def test_authorization_evaluate_scope_tenant():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     tenant_id = uuid4()
-    
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id)
+
+    user_role = UserRole(
+        id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id
+    )
     user.user_roles = [user_role]
-    
-    assert AuthorizationService.evaluate_scope(user, Scope.TENANT, resource_tenant_id=tenant_id)
-    assert not AuthorizationService.evaluate_scope(user, Scope.TENANT, resource_tenant_id=uuid4())
+
+    assert AuthorizationService.evaluate_scope(
+        user, Scope.TENANT, resource_tenant_id=tenant_id
+    )
+    assert not AuthorizationService.evaluate_scope(
+        user, Scope.TENANT, resource_tenant_id=uuid4()
+    )
+
 
 def test_authorization_evaluate_scope_platform():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
-    
+
     role = Role(id=uuid4(), name="PLATFORM_SUPER_ADMIN")
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=role.id, tenant_id=None, organization_id=None, role=role)
+    user_role = UserRole(
+        id=uuid4(),
+        user_id=user.id,
+        role_id=role.id,
+        tenant_id=None,
+        organization_id=None,
+        role=role,
+    )
     user.user_roles = [user_role]
-    
+
     assert AuthorizationService.evaluate_scope(user, Scope.PLATFORM)
+
 
 def test_authorization_evaluate_scope_location():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     tenant_id = uuid4()
-    
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id)
+
+    user_role = UserRole(
+        id=uuid4(), user_id=user.id, role_id=uuid4(), tenant_id=tenant_id
+    )
     user.user_roles = [user_role]
-    
-    assert AuthorizationService.evaluate_scope(user, Scope.LOCATION, resource_tenant_id=tenant_id)
-    assert not AuthorizationService.evaluate_scope(user, Scope.LOCATION, resource_tenant_id=uuid4())
+
+    assert AuthorizationService.evaluate_scope(
+        user, Scope.LOCATION, resource_tenant_id=tenant_id
+    )
+    assert not AuthorizationService.evaluate_scope(
+        user, Scope.LOCATION, resource_tenant_id=uuid4()
+    )
+
 
 def test_authorization_evaluate_scope_federation_aggregate():
     user = User(id=uuid4(), email="user@test.com", is_superuser=False)
     org_id = uuid4()
-    
+
     role = Role(id=uuid4(), name="FEDERATION_ADMIN")
-    user_role = UserRole(id=uuid4(), user_id=user.id, role_id=role.id, tenant_id=None, organization_id=org_id, role=role)
+    user_role = UserRole(
+        id=uuid4(),
+        user_id=user.id,
+        role_id=role.id,
+        tenant_id=None,
+        organization_id=org_id,
+        role=role,
+    )
     user.user_roles = [user_role]
-    
-    assert AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=org_id)
-    assert not AuthorizationService.evaluate_scope(user, Scope.FEDERATION_AGGREGATE, resource_organization_id=uuid4())
+
+    assert AuthorizationService.evaluate_scope(
+        user, Scope.FEDERATION_AGGREGATE, resource_organization_id=org_id
+    )
+    assert not AuthorizationService.evaluate_scope(
+        user, Scope.FEDERATION_AGGREGATE, resource_organization_id=uuid4()
+    )
 
 
 def test_member_role_cannot_cross_tenant_on_own_resources():

@@ -5,6 +5,7 @@ Revises: f7a8b9c0d1e2
 Create Date: 2026-08-09 22:00:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -75,9 +76,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "id", name="uq_idempotency_records_tenant_id"
-        ),
+        sa.UniqueConstraint("tenant_id", "id", name="uq_idempotency_records_tenant_id"),
     )
     op.create_index(
         "ix_idempotency_records_tenant_op_key",

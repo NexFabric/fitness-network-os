@@ -62,7 +62,9 @@ def test_fitness_script_passes():
     import sys
     from pathlib import Path
 
-    script = Path(__file__).resolve().parents[1] / "scripts" / "check_no_money_floats.py"
+    script = (
+        Path(__file__).resolve().parents[1] / "scripts" / "check_no_money_floats.py"
+    )
     result = subprocess.run(
         [sys.executable, str(script)],
         capture_output=True,

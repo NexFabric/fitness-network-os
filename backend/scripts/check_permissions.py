@@ -7,6 +7,7 @@ import yaml
 # A basic script to validate that all permissions listed under roles
 # actually exist in the permissions list.
 
+
 def main():
     root_dir = Path(__file__).resolve().parent.parent
     yaml_path = root_dir / "permissions.yml"
@@ -20,9 +21,9 @@ def main():
 
     permissions_list = data.get("permissions", [])
     valid_permission_ids = {p["id"] for p in permissions_list}
-    
+
     roles_dict = data.get("roles", {})
-    
+
     REQUIRED_ROLES = {
         "PLATFORM_SUPER_ADMIN",
         "FEDERATION_ADMIN",
@@ -36,13 +37,15 @@ def main():
         "TRAINER",
         "MEMBER",
     }
-    
+
     has_error = False
-    
+
     # Check for missing roles
     for req_role in REQUIRED_ROLES:
         if req_role not in roles_dict:
-            print(f"Error: Required canonical role '{req_role}' is missing from permissions.yml")
+            print(
+                f"Error: Required canonical role '{req_role}' is missing from permissions.yml"
+            )
             has_error = True
 
     for role_name, role_data in roles_dict.items():
@@ -58,9 +61,10 @@ def main():
     if has_error:
         print("Permission validation failed.")
         sys.exit(1)
-        
+
     print("Permission matrix is valid.")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

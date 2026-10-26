@@ -21,6 +21,7 @@ class MembershipFreezeResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MembershipResponse(BaseModel):
     id: UUID
     tenant_id: UUID
@@ -32,9 +33,11 @@ class MembershipResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MembershipCancellationCreate(BaseModel):
     effective_date: datetime
     reason: str | None = None
+
 
 class MembershipCancellationResponse(BaseModel):
     id: UUID
@@ -46,9 +49,11 @@ class MembershipCancellationResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MembershipRenewalCreate(BaseModel):
     next_plan_version_id: UUID
     renewal_date: datetime
+
 
 class MembershipRenewalResponse(BaseModel):
     id: UUID

@@ -8,6 +8,7 @@ and assert_amount_minor at service boundaries.
 
 Exit code 1 if any Float ORM column is found.
 """
+
 from __future__ import annotations
 
 import ast

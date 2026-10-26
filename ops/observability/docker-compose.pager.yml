@@ -1,0 +1,14 @@
+# Pager overlay for docker-compose.obs.yml.
+#
+#   PAGER_WEBHOOK_URL_FILE=$HOME/.secrets/fitness-os-pager-url \
+#     docker compose -f docker-compose.yml -f docker-compose.obs.yml \
+#       -f ops/observability/docker-compose.pager.yml up -d alertmanager
+#
+# The file at PAGER_WEBHOOK_URL_FILE must contain a single https URL.
+# Relative volume paths resolve from the first -f file (repo root).
+
+services:
+  alertmanager:
+    volumes:
+      - ./ops/observability/alertmanager/alertmanager.pager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ${PAGER_WEBHOOK_URL_FILE}:/etc/alertmanager/webhook_url:ro

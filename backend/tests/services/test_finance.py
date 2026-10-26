@@ -279,10 +279,14 @@ async def test_reconciliation_match(db_session, tenant, member):
     from app.models.finance import ReconciliationItem
 
     ri = (
-        await db_session.execute(
-            select(ReconciliationItem).where(ReconciliationItem.run_id == run.id)
+        (
+            await db_session.execute(
+                select(ReconciliationItem).where(ReconciliationItem.run_id == run.id)
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     assert ri is not None
     matched = await svc.match_reconciliation_item(tenant.id, ri.id, pay.id)
     assert matched.status == ReconciliationItemStatus.MATCHED.value

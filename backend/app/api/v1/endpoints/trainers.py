@@ -73,6 +73,11 @@ async def assign_member_to_trainer(
     if member is None:
         raise HTTPException(status_code=404, detail="member_not_found")
 
+    from app.services.staff import StaffService
+
+    if not await StaffService.is_employed(db, tenant_id, trainer_user_id):
+        raise HTTPException(status_code=400, detail="trainer_not_employed")
+
     assignment = await TrainerAssignmentService(db).assign(
         tenant_id, trainer_user_id, body.member_id
     )

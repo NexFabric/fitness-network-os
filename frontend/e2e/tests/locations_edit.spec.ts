@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { completeOwnerMfaIfNeeded } from './helpers/auth'
 
 test('owner edits a location and the list reflects it', async ({ page }) => {
   const stamp = Date.now()
@@ -6,6 +7,7 @@ test('owner edits a location and the list reflects it', async ({ page }) => {
   await page.fill('input[type="email"]', 'e2e.owner@e2e.local')
   await page.fill('input[type="password"]', 'E2ePortal123!')
   await page.click('button[type="submit"]')
+  await completeOwnerMfaIfNeeded(page, 'e2e.owner@e2e.local')
   await page.waitForURL((u) => !u.pathname.startsWith('/login'))
 
   await page.goto('/locations')

@@ -48,22 +48,65 @@
 - `backend/alembic/versions/s2f3a4b5c6d7_trainer_assignments_and_member_read_all.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/t3a4b5c6d7e8_audit_events_rls.py` — function upgrade: () -> None, function downgrade: () -> None
 - `backend/alembic/versions/u4b5c6d7e8f9_device_channel_request_signing.py` — function upgrade: () -> None, function downgrade: () -> None
-- `backend/fix_tests.py` — function repl_success: (m)
+- `backend/alembic/versions/v5c6d7e8f9a0_privileged_mfa_session_level.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/w6d7e8f9a0b1_forced_password_rotation.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x1a2b3c4d5e6_tenant_lifecycle_status.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x2b3c4d5e6f7_break_glass_sessions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x3c4d5e6f7a8_data_retention_policies.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x4d5e6f7a8b9_seed_finance_read_self.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x5e6f7a8b9c0_access_attempt_snapshot.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x6f7a8b9c0d1_wave3_migration_dunning_onboarding.py`
+  - function enable_rls: (table_name) -> None
+  - function disable_rls: (table_name) -> None
+  - function upgrade: () -> None
+  - function downgrade: () -> None
+- `backend/alembic/versions/x7a8b9c0d1e2_seed_access_override_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x8b9c0d1e2f3_sync_wave3_schema_drift.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/x9c0d1e2f3a4_seed_federation_permissions.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa1b2c3d4e5f_add_federation_performance_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xa2b3c4d5e6f_add_class_and_pt_booking_engine.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xb3c4d5e6f7a_seed_reception_read_permission.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xc4d5e6f7a8b_session_step_up_and_idle.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xd5e6f7a8b9c_account_invites.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xe6f7a8b9c0d_dsar_requests.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xf7a8b9c0d1e_align_model_indexes.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xg8b9c0d1e2f_user_roles_unique.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xh9c0d1e2f3a_trainer_staff_composite_fk.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/alembic/versions/xi0d1e2f3a4b_pt_overlap_exclusion.py` — function upgrade: () -> None, function downgrade: () -> None
+- `backend/scripts/check_critical_coverage.py` — function main: () -> int
 - `backend/scripts/check_no_money_floats.py`
   - function scan_models: () -> list[str]
   - function scan_source_ast: () -> list[str]
   - function main: () -> int
 - `backend/scripts/check_permissions.py` — function main: ()
 - `backend/scripts/check_permissions_db.py` — function main: () -> int
+- `backend/scripts/check_release_truth.py`
+  - function require: (path, *needles) -> list[str]
+  - function forbid: (path, *needles) -> list[str]
+  - function exclusive_pair_errors: (path, text, left, right) -> list[str]
+  - function forbid_both: (path, left, right) -> list[str]
+  - function authority_exclusive_errors: (path, text) -> list[str]
+  - function main: () -> int
 - `backend/scripts/check_tenancy.py` — function check_db_rls: (errors, table_name), function main_async: ()
+- `backend/scripts/kms_iam_verify.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function skip: (reason) -> None
+  - function main: () -> None
 - `backend/scripts/process_notification_due.py`
   - function build_parser: () -> argparse.ArgumentParser
   - function main: (argv) -> int
   - function process_due_for_tenant: (session, tenant_id, *, limit, max_attempts) -> dict[str, int]
+- `backend/scripts/s3_runtime_proof.py`
+  - function ok: (step, detail) -> None
+  - function die: (step, detail) -> None
+  - function main: () -> None
 - `backend/scripts/seed_active_membership.py` — function seed_active_membership: ()
 - `backend/scripts/seed_demo_tenant.py` — function main: (argv) -> int, function seed_demo: (*, email, password, role_name, with_member, with_location) -> dict[str, str | None]
 - `backend/scripts/seed_entitlements.py` — function seed_entitlements: ()
 - `backend/scripts/seed_role_matrix.py` — function main: () -> int, function seed: () -> dict[str, object]
+- `backend/scripts/smtp_delivery_proof.py` — function main: () -> int
+- `backend/scripts/tls_connection_proof.py` — function main: () -> int
 - `backend/src/backend/__init__.py` — function main: () -> None
 - `frontend/admin-web/src/api/client.ts`
   - function getBaseUrl: () => string
@@ -79,8 +122,8 @@
   - const ROLES
   - const FEDERATION_ROLES: RoleName[]
   - const OPS_ROLES: RoleName[]
-  - const TRAINER_ROLES: RoleName[]
-  - _...1 more_
+  - const RECEPTION_ROLES: RoleName[]
+  - _...2 more_
 - `frontend/scanner-pwa/src/api/client.ts`
   - function getBaseUrl: () => string
   - function getTenantId: () => string | null

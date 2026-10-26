@@ -21,6 +21,7 @@ from app.models.entitlement import (
     MembershipEntitlement,
     MembershipEntitlementStatus,
 )
+from app.models.finance import BillingAccount, Invoice, Payment
 from app.models.location import Location
 from app.models.member import Member
 from app.models.membership import Membership, Plan, PlanVersion
@@ -101,6 +102,7 @@ MEMBER_SELF_PERMS = [
     "entitlements:read:self",
     "entitlements:check:self",
     "access:issue:self",
+    "finance:read:self",
 ]
 
 STAFF_MEMBER_READ = [
@@ -197,9 +199,13 @@ async def test_me_profile_member_memberships_bound_allow(api_client, pg_engine):
     """MEMBER with user↔member binding ALLOW on /me/profile, /member, /memberships."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, user, token, member, membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            user,
+            token,
+            member,
+            membership,
+        ) = await _seed_bound_member_with_membership(db)
         await db.commit()
         tenant_id = tenant.id
         member_id = member.id
@@ -245,9 +251,13 @@ async def test_me_entitlements_list_bound(api_client, pg_engine):
     """GET /me/entitlements returns wallet snapshot for bound member only."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, _user, token, member, membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            _user,
+            token,
+            member,
+            membership,
+        ) = await _seed_bound_member_with_membership(db)
         ent = EntitlementDefinition(
             id=uuid4(),
             tenant_id=tenant.id,
@@ -370,9 +380,13 @@ async def test_me_checkins_list_bound(api_client, pg_engine):
     """GET /me/checkins lists only bound member checkins."""
     maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
     async with maker() as db:
-        tenant, _user, token, member, _membership = (
-            await _seed_bound_member_with_membership(db)
-        )
+        (
+            tenant,
+            _user,
+            token,
+            member,
+            _membership,
+        ) = await _seed_bound_member_with_membership(db)
         loc = Location(tenant_id=tenant.id, name="Main", timezone="UTC")
         db.add(loc)
         await db.flush()
@@ -605,9 +619,7 @@ async def test_me_no_client_member_id_path_and_staff_path_unchanged(
     }
 
     # Staff path: MEMBER lacks members:read → 403
-    r_staff = await api_client.get(
-        f"/api/v1/members/{member_b_id}", headers=headers_a
-    )
+    r_staff = await api_client.get(f"/api/v1/members/{member_b_id}", headers=headers_a)
     assert r_staff.status_code == 403
 
     # Self path returns A only
@@ -692,3 +704,177 @@ async def test_staff_members_list_unchanged(api_client, pg_engine):
     )
     assert r.status_code == 200
     assert len(r.json()) >= 1
+
+
+@pytest.mark.asyncio
+async def test_me_invoices_and_payments(api_client, pg_engine):
+    """Member can fetch own invoices and payments via /me."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(name="Fin Org", domain=f"fin-{uuid4().hex[:6]}.com")
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="Fin T",
+            organization_id=org.id,
+            location_code=f"F-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        user, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="MEMBER",
+            perm_names=MEMBER_SELF_PERMS,
+            email_prefix="finmember",
+        )
+        member = Member(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            member_number=f"FM-{uuid4().hex[:6]}",
+            first_name="Fin",
+            last_name="Member",
+            user_id=user.id,
+            status="ACTIVE",
+        )
+        db.add(member)
+        await db.flush()
+
+        billing_account = BillingAccount(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            member_id=member.id,
+            user_id=user.id,
+            currency="TRY",
+            status="ACTIVE",
+        )
+        db.add(billing_account)
+        await db.flush()
+
+        invoice = Invoice(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            billing_account_id=billing_account.id,
+            invoice_number=f"INV-{uuid4().hex[:6]}",
+            status="OPEN",
+            total_amount_minor=12000,
+            paid_amount_minor=0,
+            discount_amount_minor=0,
+            currency="TRY",
+        )
+        db.add(invoice)
+
+        payment = Payment(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            billing_account_id=billing_account.id,
+            amount_minor=5000,
+            currency="TRY",
+            status="SUCCEEDED",
+            method="CREDIT_CARD",
+        )
+        db.add(payment)
+        await db.commit()
+
+        tenant_id = tenant.id
+
+    # Test /me/invoices
+    r_inv = await api_client.get(
+        "/api/v1/me/invoices",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(tenant_id),
+        },
+    )
+    assert r_inv.status_code == 200, r_inv.text
+    invoices = r_inv.json()
+    assert len(invoices) == 1
+    assert invoices[0]["total_amount_minor"] == 12000
+    assert invoices[0]["status"] == "OPEN"
+
+    # Test /me/payments
+    r_pay = await api_client.get(
+        "/api/v1/me/payments",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(tenant_id),
+        },
+    )
+    assert r_pay.status_code == 200, r_pay.text
+    payments = r_pay.json()
+    assert len(payments) == 1
+    assert payments[0]["amount_minor"] == 5000
+    assert payments[0]["status"] == "SUCCEEDED"
+    assert payments[0]["method"] == "CREDIT_CARD"
+
+
+@pytest.mark.asyncio
+async def test_me_consents_flow(api_client, pg_engine):
+    """Member can record and list consent preferences via /me."""
+    maker = async_sessionmaker(pg_engine, class_=AsyncSession, expire_on_commit=False)
+    async with maker() as db:
+        org = Organization(name="Consent Org", domain=f"co-{uuid4().hex[:6]}.com")
+        db.add(org)
+        await db.flush()
+        tenant = Tenant(
+            id=uuid4(),
+            name="Consent T",
+            organization_id=org.id,
+            location_code=f"C-{uuid4().hex[:6]}",
+        )
+        db.add(tenant)
+        await db.flush()
+
+        user, token = await _user_with_role(
+            db,
+            tenant_id=tenant.id,
+            role_name="MEMBER",
+            perm_names=MEMBER_SELF_PERMS,
+            email_prefix="conmember",
+        )
+        member = Member(
+            id=uuid4(),
+            tenant_id=tenant.id,
+            member_number=f"CM-{uuid4().hex[:6]}",
+            first_name="Consent",
+            last_name="User",
+            user_id=user.id,
+            status="ACTIVE",
+        )
+        db.add(member)
+        await db.commit()
+        tenant_id = tenant.id
+
+    # POST consent
+    r_post = await api_client.post(
+        "/api/v1/me/consents",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(tenant_id),
+        },
+        json={
+            "consent_type": "MARKETING_SMS",
+            "document_version": "v1.0",
+            "status": "GIVEN",
+        },
+    )
+    assert r_post.status_code == 200, r_post.text
+    res = r_post.json()
+    assert res["consent_type"] == "MARKETING_SMS"
+    assert res["status"] == "GIVEN"
+    assert res["given_at"] is not None
+
+    # GET consents
+    r_get = await api_client.get(
+        "/api/v1/me/consents",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(tenant_id),
+        },
+    )
+    assert r_get.status_code == 200, r_get.text
+    consents = r_get.json()
+    assert len(consents) == 1
+    assert consents[0]["consent_type"] == "MARKETING_SMS"

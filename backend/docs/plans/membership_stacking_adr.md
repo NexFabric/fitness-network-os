@@ -22,7 +22,7 @@ Implemented at the application service level inside `start_membership` with an e
 ```python
 stmt = select(Membership).where(
     Membership.member_id == member_id,
-    Membership.status.in_({"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"})
+    Membership.status.in_({"ACTIVE", "FROZEN", "PAST_DUE", "SCHEDULED", "PENDING"}),
 )
 ```
 

@@ -21,8 +21,8 @@ export default function MemberAccessLogs({ memberId }: { memberId: string }) {
       try {
         const data = await api<AccessLog[]>(`/api/v1/members/${memberId}/access-logs`)
         setLogs(data)
-      } catch (err: any) {
-        setError(err?.message || 'Giriş logları yüklenemedi')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Giriş logları yüklenemedi')
       } finally {
         setLoading(false)
       }

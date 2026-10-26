@@ -9,7 +9,9 @@ from app.db.base import Base, TenantMixin
 class Staff(TenantMixin, Base):
     __tablename__ = "staff"
 
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
     location_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
 
     _model_table_args = (

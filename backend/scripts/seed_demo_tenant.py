@@ -219,13 +219,17 @@ async def seed_demo(
 
             # --- Session: revoke prior demo sessions, mint new raw token ---
             prior = (
-                await session.execute(
-                    select(UserSession).where(
-                        UserSession.user_id == user.id,
-                        UserSession.is_revoked.is_(False),
+                (
+                    await session.execute(
+                        select(UserSession).where(
+                            UserSession.user_id == user.id,
+                            UserSession.is_revoked.is_(False),
+                        )
                     )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
             for s in prior:
                 s.is_revoked = True
 
@@ -325,7 +329,9 @@ def _print_result(result: dict[str, str | None]) -> None:
     # The password is never echoed: it is either the value the operator passed
     # via --password or the documented DEMO_PASSWORD default, so printing it
     # only leaks a credential into terminal scrollback, shell logs and CI output.
-    print("password:       (--password value, or the DEMO_PASSWORD default in this script)")
+    print(
+        "password:       (--password value, or the DEMO_PASSWORD default in this script)"
+    )
     print(f"role:           {result['role']} ({result['role_permission_count']} perms)")
     print(f"bearer_token:   {token}")
     print(f"member_id:      {result['member_id'] or '(none)'}")

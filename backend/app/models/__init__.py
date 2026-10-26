@@ -9,7 +9,26 @@ from app.models.access import (
     SigningKey,
 )
 from app.models.audit import AuditEvent
+from app.models.booking import (
+    ClassBooking,
+    ClassBookingStatus,
+    ClassSchedule,
+    ClassSession,
+    ClassSessionStatus,
+    ClassType,
+    PtAppointment,
+    PtAppointmentStatus,
+    TrainerAvailability,
+)
+from app.models.break_glass import BreakGlassSession, BreakGlassStatus
 from app.models.consent import ConsentDefinition, ConsentRecord, ConsentVersion
+from app.models.data_import import (
+    DataImportBatch,
+    DataImportRow,
+    ImportBatchStatus,
+    ImportRowStatus,
+)
+from app.models.dsar import DsarRequest
 from app.models.entitlement import (
     EntitlementDefinition,
     EntitlementTransaction,
@@ -23,18 +42,22 @@ from app.models.finance import (
     CreditApplication,
     CreditNote,
     Discount,
+    DunningPolicy,
     Invoice,
     InvoiceDiscount,
     InvoiceItem,
     Payment,
     PaymentAllocation,
     PaymentAllocationReversal,
+    PaymentAttempt,
+    PaymentAttemptStatus,
     ReconciliationItem,
     ReconciliationRun,
     Refund,
 )
 from app.models.growth import Lead, Opportunity, RetentionCockpit, Task
 from app.models.idempotency import IdempotencyKey, IdempotencyRecord, IdempotencyStatus
+from app.models.invite import AccountInvite
 from app.models.location import Location
 from app.models.member import Member, Note, Tag
 from app.models.membership import (
@@ -50,10 +73,12 @@ from app.models.membership import (
     RenewalStatus,
 )
 from app.models.notification import NotificationDelivery, NotificationTemplate
+from app.models.onboarding import OnboardingStage, TenantOnboarding
 from app.models.organization import Organization
 from app.models.outbox import InboxEvent, OutboxEvent
 from app.models.rbac import Permission, Role, UserRole
 from app.models.report import ReportDefinition, ReportRun
+from app.models.retention import DataRetentionPolicy, DeletionMethod
 from app.models.staff import Staff
 from app.models.tenant import Tenant
 from app.models.trainer_assignment import TrainerAssignment
@@ -62,18 +87,33 @@ from app.models.user import User, UserDevice, UserMfaMethod, UserSession
 __all__ = [
     "AccessAttempt",
     "AccessMethod",
+    "AccountInvite",
     "AuditEvent",
     "BillingAccount",
+    "BreakGlassSession",
+    "BreakGlassStatus",
     "Checkin",
+    "ClassBooking",
+    "ClassBookingStatus",
+    "ClassSchedule",
+    "ClassSession",
+    "ClassSessionStatus",
+    "ClassType",
     "ComplianceRecord",
     "ConsentDefinition",
     "ConsentRecord",
     "ConsentVersion",
     "CreditApplication",
     "CreditNote",
+    "DataImportBatch",
+    "DataImportRow",
+    "DataRetentionPolicy",
+    "DeletionMethod",
     "Device",
     "DeviceNonce",
     "Discount",
+    "DsarRequest",
+    "DunningPolicy",
     "Entitlement",
     "EntitlementDefinition",
     "EntitlementTransaction",
@@ -81,6 +121,8 @@ __all__ = [
     "IdempotencyKey",
     "IdempotencyRecord",
     "IdempotencyStatus",
+    "ImportBatchStatus",
+    "ImportRowStatus",
     "InboxEvent",
     "Invoice",
     "InvoiceDiscount",
@@ -100,6 +142,7 @@ __all__ = [
     "NotificationDelivery",
     "NotificationTemplate",
     "OfflineSnapshot",
+    "OnboardingStage",
     "Opportunity",
     "Organization",
     "OutboxEvent",
@@ -107,10 +150,14 @@ __all__ = [
     "Payment",
     "PaymentAllocation",
     "PaymentAllocationReversal",
+    "PaymentAttempt",
+    "PaymentAttemptStatus",
     "Permission",
     "Plan",
     "PlanEntitlement",
     "PlanVersion",
+    "PtAppointment",
+    "PtAppointmentStatus",
     "QrJtiReplay",
     "ReconciliationItem",
     "ReconciliationRun",
@@ -125,7 +172,9 @@ __all__ = [
     "Tag",
     "Task",
     "Tenant",
+    "TenantOnboarding",
     "TrainerAssignment",
+    "TrainerAvailability",
     "User",
     "UserDevice",
     "UserMfaMethod",

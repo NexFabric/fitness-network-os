@@ -49,6 +49,8 @@ export type ApiOptions = {
   skipAuth?: boolean
   /** Skip CSRF header (e.g. bootstrap). */
   skipCsrf?: boolean
+  /** Do not prompt for TOTP step-up on 403 step_up_required. */
+  skipStepUp?: boolean
 }
 
 /**
@@ -137,6 +139,26 @@ export async function api<T = unknown>(
   }
 
   if (!res.ok) {
+    const detailPeek =
+      typeof data === 'object' && data !== null && 'detail' in data
+        ? String((data as { detail: unknown }).detail)
+        : ''
+    if (
+      res.status === 403 &&
+      detailPeek === 'step_up_required' &&
+      !options.skipStepUp &&
+      typeof window !== 'undefined'
+    ) {
+      const code = window.prompt('Bu işlem için doğrulama kodu (TOTP) gerekli:')
+      if (code && code.trim()) {
+        await api('/api/v1/auth/mfa/step-up', {
+          method: 'POST',
+          body: { code: code.trim() },
+          skipStepUp: true,
+        })
+        return api<T>(path, { ...options, skipStepUp: true })
+      }
+    }
     if (res.status === 401 && !options.skipAuth) {
       clearAuth()
       if (

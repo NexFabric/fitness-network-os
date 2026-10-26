@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import uuid4
 
+from app.core.config import settings
 from app.models.notification import NotificationDelivery
 
 logger = logging.getLogger(__name__)
@@ -111,67 +112,98 @@ class FailingNotificationProvider:
         )
 
 
-import smtplib
 from email.message import EmailMessage
+
+
+def _delivery_body(delivery: NotificationDelivery) -> str:
+    """Prefer the rendered ledger body; context['body'] is a fallback only."""
+    if delivery.body and delivery.body.strip():
+        return delivery.body
+    if isinstance(delivery.context, dict):
+        extra = delivery.context.get("body")
+        if isinstance(extra, str) and extra.strip():
+            return extra
+    return "Size yeni bir mesajımız var."
 
 
 class SmtpNotificationProvider:
     """Real SMTP adapter for production email delivery.
-    
+
     Reads SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.
     Never logs PAN/CVV or full context body.
     """
+
     name = "smtp"
 
     async def send(self, delivery: NotificationDelivery) -> ProviderResult:
-        host = os.environ.get("SMTP_HOST")
+        host = settings.SMTP_HOST
         port = int(os.environ.get("SMTP_PORT", "587"))
         user = os.environ.get("SMTP_USER")
         password = os.environ.get("SMTP_PASS")
-        from_address = os.environ.get("SMTP_FROM", "no-reply@gymclubnex.com")
+        from_address = settings.SMTP_FROM or "no-reply@gymclubnex.com"
 
         if not host:
-            logger.error("notification.email.smtp error=missing_host delivery_id=%s", delivery.id)
-            return ProviderResult(success=False, provider=self.name, error="missing_smtp_config")
+            logger.error(
+                "notification.email.smtp error=missing_host delivery_id=%s", delivery.id
+            )
+            return ProviderResult(
+                success=False, provider=self.name, error="missing_smtp_config"
+            )
 
         mid = f"smtp-{delivery.id.hex[:12]}-{uuid4().hex[:8]}"
-        
+
         msg = EmailMessage()
         msg["Subject"] = delivery.subject or "GymClubNex Bildirim"
         msg["From"] = from_address
         msg["To"] = delivery.recipient_address
 
-        # In a real app, body is rendered from delivery.template_id + delivery.context
-        # We assume body is passed or we send a generic message
-        body = delivery.context.get("body", "Size yeni bir mesajımız var.") if delivery.context else "Yeni mesaj."
-        msg.set_content(body)
+        msg.set_content(_delivery_body(delivery))
 
         try:
-            # We use synchronous smtplib wrapped in a thread/executor conceptually, 
-            # but for simplicity/MVP here we just block briefly or use aiosmtplib.
-            # Using smtplib directly is a blocking call, but OK for MVP exit gate.
             import asyncio
-            
+            import smtplib
+            import ssl
+
             def _send():
+                context = ssl.create_default_context()
+                ca_bundle = os.environ.get("SMTP_CA_BUNDLE")
+                if ca_bundle:
+                    context.load_verify_locations(cafile=ca_bundle)
+
                 with smtplib.SMTP(host, port, timeout=10) as server:
-                    server.starttls()
+                    require_tls = (
+                        settings.ENVIRONMENT == "production"
+                        or os.environ.get("SMTP_STARTTLS", settings.SMTP_STARTTLS)
+                        != "0"
+                    )
+                    if require_tls:
+                        server.starttls(context=context)
                     if user and password:
                         server.login(user, password)
                     server.send_message(msg)
 
             await asyncio.to_thread(_send)
-            
+
             logger.info(
                 "notification.email.smtp delivery_id=%s provider_message_id=%s",
-                delivery.id, mid
+                delivery.id,
+                mid,
             )
-            return ProviderResult(success=True, provider=self.name, provider_message_id=mid)
-        except Exception as e:
+            return ProviderResult(
+                success=True, provider=self.name, provider_message_id=mid
+            )
+        except Exception as e:  # noqa: BLE001
             logger.error(
                 "notification.email.smtp error=%s delivery_id=%s",
-                type(e).__name__, delivery.id
+                type(e).__name__,
+                delivery.id,
             )
-            return ProviderResult(success=False, provider=self.name, error=str(e))
+            return ProviderResult(
+                success=False,
+                provider=self.name,
+                error="smtp_send_failed",
+            )
+
 
 def _email_provider() -> NotificationProvider:
     """Resolve EMAIL channel adapter.
@@ -179,17 +211,12 @@ def _email_provider() -> NotificationProvider:
     NOTIFICATION_EMAIL_PROVIDER=log|console|smtp (default: console).
     Unknown values fall back to console (safe, no network).
     """
-    mode = os.environ.get(_EMAIL_PROVIDER_ENV, "console").strip().lower()
-    env = os.environ.get("ENVIRONMENT", "development")
-    
-    if env == "production":
-        if mode not in ("smtp", "disabled"):
-            if os.environ.get("ALLOW_MOCK_EMAIL") != "true":
-                raise RuntimeError(
-                    "Production requires NOTIFICATION_EMAIL_PROVIDER=smtp (or 'disabled' "
-                    "or ALLOW_MOCK_EMAIL=true)"
-                )
-    
+    mode = (
+        os.environ.get(_EMAIL_PROVIDER_ENV, settings.NOTIFICATION_EMAIL_PROVIDER)
+        .strip()
+        .lower()
+    )
+
     if mode == "log":
         return LogNotificationProvider()
     elif mode == "smtp":
@@ -200,8 +227,7 @@ def _email_provider() -> NotificationProvider:
 
 
 def default_providers() -> dict[str, NotificationProvider]:
-    env = os.environ.get("ENVIRONMENT", "development").strip().lower()
-    if env == "production" and os.environ.get("ALLOW_MOCK_SMS_WA_PUSH") != "true":
+    if settings.is_production:
         # Do not treat log/mock as successful delivery in production.
         return {
             "EMAIL": _email_provider(),

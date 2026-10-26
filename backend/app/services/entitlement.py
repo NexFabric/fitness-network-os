@@ -63,7 +63,9 @@ class EntitlementService:
         stmt = select(Membership).where(
             Membership.tenant_id == tenant_id,
             Membership.member_id == member_id,
-            Membership.status.in_(list(EntitlementService.CONSUMABLE_MEMBERSHIP_STATUSES)),
+            Membership.status.in_(
+                list(EntitlementService.CONSUMABLE_MEMBERSHIP_STATUSES)
+            ),
         )
         if for_update:
             stmt = stmt.with_for_update()
@@ -129,7 +131,9 @@ class EntitlementService:
         membership = await cls._get_active_membership(db, tenant_id, member_id)
         if not membership:
             return cls._result(
-                granted=False, reason="NO_ACTIVE_MEMBERSHIP", last_known_state="INACTIVE"
+                granted=False,
+                reason="NO_ACTIVE_MEMBERSHIP",
+                last_known_state="INACTIVE",
             )
 
         ent_def = await cls._get_definition(db, tenant_id, action)
@@ -163,7 +167,9 @@ class EntitlementService:
             if wallet.remaining < quantity:
                 return cls._result(
                     granted=False,
-                    reason="ZERO_BALANCE" if wallet.remaining <= 0 else "INSUFFICIENT_BALANCE",
+                    reason="ZERO_BALANCE"
+                    if wallet.remaining <= 0
+                    else "INSUFFICIENT_BALANCE",
                     last_known_state=membership.status,
                     remaining=wallet.remaining,
                 )
@@ -202,7 +208,9 @@ class EntitlementService:
     ) -> dict:
         if not idempotency_key:
             return cls._result(
-                granted=False, reason="MISSING_IDEMPOTENCY_KEY", last_known_state="INACTIVE"
+                granted=False,
+                reason="MISSING_IDEMPOTENCY_KEY",
+                last_known_state="INACTIVE",
             )
         try:
             quantity = assert_quantity(quantity)
@@ -229,7 +237,9 @@ class EntitlementService:
         )
         if not membership:
             return cls._result(
-                granted=False, reason="NO_ACTIVE_MEMBERSHIP", last_known_state="INACTIVE"
+                granted=False,
+                reason="NO_ACTIVE_MEMBERSHIP",
+                last_known_state="INACTIVE",
             )
 
         ent_def = await cls._get_definition(db, tenant_id, action)
@@ -415,7 +425,8 @@ class EntitlementService:
             select(EntitlementWallet)
             .where(
                 EntitlementWallet.tenant_id == membership.tenant_id,
-                EntitlementWallet.membership_entitlement_id == membership_entitlement.id,
+                EntitlementWallet.membership_entitlement_id
+                == membership_entitlement.id,
             )
             .with_for_update()
         )
@@ -456,7 +467,9 @@ class EntitlementService:
                 qty = delta
             else:
                 qty = 0
-            wallet.expires_at = membership_entitlement.valid_until or membership.end_date
+            wallet.expires_at = (
+                membership_entitlement.valid_until or membership.end_date
+            )
             balance_after = wallet.remaining
             await db.flush()
 

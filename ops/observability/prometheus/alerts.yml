@@ -1,0 +1,88 @@
+# Alert rules bound to the metrics the application actually exports
+# (app/core/metrics.py). Do not add rules for metrics that do not exist —
+# a rule that can never fire is worse than no rule.
+
+groups:
+  - name: fitness-os-availability
+    rules:
+      - alert: BackendTargetDown
+        expr: up{job="fitness-os-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend /metrics unreachable"
+          description: "Prometheus cannot scrape {{ $labels.instance }} for 2m. API is likely down."
+
+      - alert: DependencyDown
+        expr: fitness_network_os_dependency_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dependency {{ $labels.dependency }} is down"
+          description: "Readiness probe reports {{ $labels.dependency }} unreachable for 2m."
+
+  - name: fitness-os-traffic
+    rules:
+      - alert: HighServerErrorRate
+        expr: |
+          (
+            sum(rate(fitness_network_os_http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(fitness_network_os_http_requests_total[5m])), 0.001)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx rate above 5%"
+          description: "More than 5% of responses have been 5xx for 5m."
+
+      - alert: HighRequestLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, route) (rate(fitness_network_os_http_request_duration_seconds_bucket[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency above 1s on {{ $labels.route }}"
+          description: "Route {{ $labels.route }} p95 has exceeded 1s for 10m."
+
+      - alert: AuthBruteForceSurge
+        expr: |
+          sum(rate(fitness_network_os_http_requests_total{route="/api/v1/auth/login", status="429"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained login rate-limit rejections"
+          description: "Login endpoint has been shedding >1 req/s with 429 for 10m — possible credential stuffing."
+
+  - name: fitness-os-outbox
+    rules:
+      - alert: OutboxDispatchFailing
+        expr: rate(fitness_network_os_outbox_dispatch_total{outcome="failed"}[5m]) > 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Outbox dispatch is failing"
+          description: "The outbox worker has been recording failed dispatches for 10m. Events are not reaching consumers."
+
+      - alert: OutboxFailureRatioHigh
+        expr: |
+          (
+            sum(rate(fitness_network_os_outbox_dispatch_total{outcome="failed"}[15m]))
+            /
+            clamp_min(sum(rate(fitness_network_os_outbox_dispatch_total[15m])), 0.001)
+          ) > 0.1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Outbox failure ratio above 10%"
+          description: "More than 10% of outbox dispatches failed over 15m."

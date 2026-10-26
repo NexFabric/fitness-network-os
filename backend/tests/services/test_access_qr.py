@@ -171,10 +171,14 @@ async def test_issue_and_validate_grant(db_session, tenant):
     assert result.checkin_id is not None
 
     attempts = (
-        await db_session.execute(
-            select(AccessAttempt).where(AccessAttempt.tenant_id == tenant.id)
+        (
+            await db_session.execute(
+                select(AccessAttempt).where(AccessAttempt.tenant_id == tenant.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(attempts) == 1
     assert attempts[0].status == AccessStatus.GRANTED
     assert attempts[0].jti == issued.jti
@@ -197,10 +201,14 @@ async def test_replay_denied(db_session, tenant):
     assert second.reason == "replay"
 
     replays = (
-        await db_session.execute(
-            select(QrJtiReplay).where(QrJtiReplay.tenant_id == tenant.id)
+        (
+            await db_session.execute(
+                select(QrJtiReplay).where(QrJtiReplay.tenant_id == tenant.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(replays) == 1
 
 
@@ -209,9 +217,7 @@ async def test_expired_token_denied(db_session, tenant):
     member, _ = await _seed_member_with_entry(db_session, tenant)
     svc = AccessService(db_session)
     past = datetime.now(UTC) - timedelta(seconds=120)
-    issued = await svc.issue_qr_token(
-        tenant.id, member.id, ttl_seconds=30, now=past
-    )
+    issued = await svc.issue_qr_token(tenant.id, member.id, ttl_seconds=30, now=past)
     await db_session.commit()
 
     result = await svc.validate_qr(tenant.id, issued.token)
@@ -380,6 +386,8 @@ async def test_signing_key_tenant_scoped_kids(db_session, tenant):
     await db_session.commit()
 
     found = (
-        await db_session.execute(select(SigningKey).where(SigningKey.kid == k1.kid))
-    ).scalars().all()
+        (await db_session.execute(select(SigningKey).where(SigningKey.kid == k1.kid)))
+        .scalars()
+        .all()
+    )
     assert len(found) == 2

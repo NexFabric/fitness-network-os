@@ -1,0 +1,67 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "Least-privilege policy for the Fitness Network OS application principal. Replace ACCOUNT_ID, REGION, REPORT_BUCKET and the two key ids before applying. Grants exactly the operations the code performs: S3 report object lifecycle (app/services/storage.py) and KMS envelope encryption for QR HMAC secrets (app/core/qr_crypto.py).",
+  "Statement": [
+    {
+      "Sid": "ReportObjectLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::REPORT_BUCKET/*"
+    },
+    {
+      "Sid": "ReportBucketMetadataOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "arn:aws:s3:::REPORT_BUCKET"
+    },
+    {
+      "Sid": "DenyUnencryptedReportWrites",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::REPORT_BUCKET/*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption": ["AES256", "aws:kms"]
+        }
+      }
+    },
+    {
+      "Sid": "DenyInsecureTransport",
+      "Effect": "Deny",
+      "Action": ["s3:*", "kms:*"],
+      "Resource": "*",
+      "Condition": {
+        "Bool": { "aws:SecureTransport": "false" }
+      }
+    },
+    {
+      "Sid": "QrHmacEnvelopeEncryption",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "arn:aws:kms:REGION:ACCOUNT_ID:key/QR_CMK_KEY_ID"
+    },
+    {
+      "Sid": "ReportBucketSseKms",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "arn:aws:kms:REGION:ACCOUNT_ID:key/S3_CMK_KEY_ID",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "s3.REGION.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

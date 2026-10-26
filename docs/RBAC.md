@@ -1,6 +1,6 @@
-# RBAC — Roller, İzinler ve Kapsamlar
+# GymClubNex (Fitness Network OS) — RBAC & Scope Modeli
 
-**Son güncelleme:** 2026-08-12
+**Son güncelleme:** 2026-08-16
 
 Bu doküman canlı referanstır. Daha önce yalnızca arşiv olarak işaretlenmiş
 `docs/CORE_GATE_CLOSURE.md` içinde duruyordu.
@@ -9,6 +9,9 @@ Bu doküman canlı referanstır. Daha önce yalnızca arşiv olarak işaretlenmi
 iki kez doğrulanır — `scripts/check_permissions.py` (YAML iç tutarlılığı) ve
 `scripts/check_permissions_db.py` (YAML ↔ PostgreSQL). Doküman ile YAML
 ayrışırsa **YAML doğrudur**.
+
+**2026-08-16:** 11 kanonik rol değişmedi. `Scope.LOCATION` bilinçli ertelendi —
+açma. IsolationProvider icat etme. Sistem haritası: `docs/ARCHITECTURE.md`.
 
 ---
 
@@ -48,10 +51,18 @@ ayrışırsa **YAML doğrudur**.
 | İzin çifti | Fark |
 |---|---|
 | `access:issue` / `access:issue:self` | İlki personelin herhangi bir üye için QR üretmesi; ikincisi üyenin yalnızca kendisi için. Self uç `member_id` alanını hiç kabul etmez. |
+| `access:override` | Turnike arızası, unutan üye veya acil durumlarda resepsiyonun zorunlu gerekçeli manuel giriş izni (`FRONT_DESK`, `GYM_ADMIN`, `GYM_OWNER`). |
 | `members:read` / `members:read:all` | İlki uca erişimi, ikincisi **satır kapsamını** verir. TRAINER ikincisini almaz. |
+| `reception:read` | Resepsiyon arama ve üye kartı. `GYM_OWNER` / `GYM_ADMIN` / `GYM_MANAGER` / `FRONT_DESK`. TRAINER almaz — `members:read` resepsiyonu açmaz. |
 | `memberships:read` / `memberships:read:self` | Personel geneli vs. bağlı üyenin kendi kayıtları. |
-| `devices:manage` | Cihaz sağlama/iptal. `GYM_OWNER` + `GYM_ADMIN`. (Bir dönem hiçbir role verilmemişti; yalnız superuser cihaz sağlayabiliyordu.) |
+| `finance:read:self` | Üyenin kendi fatura ve ödeme geçmişini görmesi (`MEMBER` rolü). |
+| `devices:manage` | Cihaz sağlama/iptal. `GYM_OWNER` + `GYM_ADMIN`. |
 | `staff:write` | Antrenör↔üye ataması bunun arkasındadır — TRAINER bu izne sahip değildir, yani kendi görünürlüğünü genişletemez. |
+| `passport:manage` | Federasyon çapraz salon dolaşım (pasaport) kuralları ve mahsuplaşma ayarlarını yönetme (`FEDERATION_ADMIN`). |
+| `compliance:read` / `compliance:write` | Kulüplerin TSE, ISO ve hijyen denetim sicilini görüntüleme ve yeni muayene kaydı ekleme (`FEDERATION_ADMIN`). |
+| `alerts:broadcast` | Federasyon ağı genelinde veya belirli kulübe anlık uyarı/duyuru yayınlama (`FEDERATION_ADMIN`). |
+| `classes:read` / `classes:read:self` | Kulüp personeli genel takvim erişimi vs. üyenin yalnızca kendi programı ve katılabileceği seansları görmesi. |
+| `classes:book:self` / `pt:book:self` | Üyenin kendi adına grup dersi veya birebir PT randevusu alması (`MEMBER` rolü; başkası adına rezervasyon yapamaz). |
 
 ---
 

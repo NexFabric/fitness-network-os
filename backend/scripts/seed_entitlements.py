@@ -124,5 +124,6 @@ async def seed_entitlements():
 
     await engine.dispose()
 
+
 if __name__ == "__main__":
     asyncio.run(seed_entitlements())

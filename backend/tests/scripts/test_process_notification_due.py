@@ -17,7 +17,9 @@ from scripts.process_notification_due import (
 
 def test_build_parser_tenant_id():
     tenant = uuid4()
-    args = build_parser().parse_args([str(tenant), "--limit", "10", "--max-attempts", "3"])
+    args = build_parser().parse_args(
+        [str(tenant), "--limit", "10", "--max-attempts", "3"]
+    )
     assert args.tenant_id == tenant
     assert args.limit == 10
     assert args.max_attempts == 3
@@ -32,9 +34,7 @@ async def test_process_due_for_tenant_sets_rls_and_returns_stats():
     session.rollback = AsyncMock()
 
     # NotificationService is imported inside process_due_for_tenant (lazy).
-    with patch(
-        "app.services.notification.NotificationService"
-    ) as svc_cls:
+    with patch("app.services.notification.NotificationService") as svc_cls:
         instance = MagicMock()
         instance.process_due_failed = AsyncMock(
             return_value={"sent": 2, "failed": 1, "dead": 0}
@@ -51,11 +51,20 @@ async def test_process_due_for_tenant_sets_rls_and_returns_stats():
     )
     session.commit.assert_awaited_once()
     session.rollback.assert_not_awaited()
-    # RLS SET LOCAL issued
+    # RLS SET LOCAL issued (tenant id is bound, not interpolated)
     assert session.execute.await_count >= 1
-    sql = str(session.execute.await_args_list[0].args[0])
+    first = session.execute.await_args_list[0]
+    sql = str(first.args[0])
     assert "app.current_tenant_id" in sql
-    assert str(tenant_id) in sql
+    params = (
+        first.args[1]
+        if len(first.args) > 1
+        else first.kwargs.get("parameters") or first.kwargs
+    )
+    if isinstance(params, dict):
+        assert params.get("tid") == str(tenant_id)
+    else:
+        assert str(tenant_id) in str(first)
 
 
 @pytest.mark.asyncio
@@ -66,9 +75,7 @@ async def test_process_due_for_tenant_rolls_back_on_error():
     session.commit = AsyncMock()
     session.rollback = AsyncMock()
 
-    with patch(
-        "app.services.notification.NotificationService"
-    ) as svc_cls:
+    with patch("app.services.notification.NotificationService") as svc_cls:
         instance = MagicMock()
         instance.process_due_failed = AsyncMock(side_effect=RuntimeError("boom"))
         svc_cls.return_value = instance

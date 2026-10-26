@@ -106,10 +106,14 @@ async def test_schedule_for_member_user_enqueues_notification_requested(
     assert result.outbox_event_id is not None
 
     outbox_row = (
-        await db_session.execute(
-            select(OutboxEvent).where(OutboxEvent.id == result.outbox_event_id)
+        (
+            await db_session.execute(
+                select(OutboxEvent).where(OutboxEvent.id == result.outbox_event_id)
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     assert outbox_row is not None
     assert outbox_row.event_type == NOTIFICATION_REQUESTED_V1
     assert outbox_row.tenant_id == tenant.id
@@ -162,13 +166,17 @@ async def test_schedule_from_domain_event_idempotent_dedupe(db_session, tenant):
 
     # Only one delivery for the dedupe key
     rows = (
-        await db_session.execute(
-            select(NotificationDelivery).where(
-                NotificationDelivery.tenant_id == tenant.id,
-                NotificationDelivery.dedupe_key == key,
+        (
+            await db_session.execute(
+                select(NotificationDelivery).where(
+                    NotificationDelivery.tenant_id == tenant.id,
+                    NotificationDelivery.dedupe_key == key,
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(rows) == 1
 
 

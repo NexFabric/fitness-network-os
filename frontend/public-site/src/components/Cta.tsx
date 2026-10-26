@@ -11,10 +11,10 @@ export function Cta() {
   return (
     <section
       id="demo"
-      className="relative isolate scroll-mt-20 overflow-hidden border-t border-border bg-background py-20 sm:py-28"
+      className="relative isolate scroll-mt-20 overflow-hidden border-t border-border bg-background py-24 sm:py-32"
     >
       <div
-        className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_40rem_at_top,var(--brand-deep)_0%,transparent_70%)] opacity-25"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(50rem_40rem_at_top,rgba(13,148,136,0.2)_0%,transparent_70%)]"
         aria-hidden="true"
       />
 
@@ -24,7 +24,7 @@ export function Cta() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold tracking-tight sm:text-4xl"
+            className="text-3xl font-bold tracking-tight sm:text-4xl text-white"
           >
             Kulübünüzü yeni sürüme yükseltin
           </motion.h2>
@@ -35,8 +35,8 @@ export function Cta() {
             transition={{ delay: 0.08 }}
             className="mt-5 text-lg leading-relaxed text-ink-muted"
           >
-            Klasik yazılımların hantallığından kurtulun. Athletic Ops Console
-            ile tanışın ve operasyonunuzu geleceğe taşıyın.
+            Klasik yazılımların hantallığından kurtulun. GymClubNex ile tanışın
+            ve kulüp operasyonunuzu modern güvenlik standartlarına yükseltin.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -47,14 +47,14 @@ export function Cta() {
           >
             <a
               href="mailto:hello@gymclubnex.com?subject=GymClubNex%20Demo"
-              className="btn-glow group inline-flex h-12 items-center gap-2 rounded-lg bg-brand px-8 text-base font-semibold text-white transition-colors hover:bg-brand-deep"
+              className="btn-primary group inline-flex h-12 items-center gap-2 rounded-xl px-8 text-base font-semibold text-white"
             >
               Demoyu başlat
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
               href={`${ADMIN_URL}/login`}
-              className="inline-flex h-12 items-center rounded-lg border border-border px-6 text-sm font-semibold text-foreground transition-colors hover:border-brand/40 hover:bg-white/5"
+              className="btn-secondary inline-flex h-12 items-center rounded-xl px-6 text-sm font-medium text-foreground"
             >
               Konsola giriş
             </a>

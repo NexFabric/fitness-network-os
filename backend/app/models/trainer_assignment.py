@@ -40,4 +40,10 @@ class TrainerAssignment(TenantMixin, Base):
             "tenant_id",
             "trainer_user_id",
         ),
+        ForeignKeyConstraint(
+            ["tenant_id", "trainer_user_id"],
+            ["staff.tenant_id", "staff.user_id"],
+            name="fk_trainer_assignments_trainer_staff",
+            ondelete="RESTRICT",
+        ),
     )

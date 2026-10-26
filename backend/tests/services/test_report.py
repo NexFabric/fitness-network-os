@@ -1,7 +1,5 @@
 """Phase 16 report service — real PostgreSQL tests."""
 
-import os
-import tempfile
 from collections.abc import AsyncGenerator
 from uuid import uuid4
 
@@ -127,9 +125,9 @@ async def test_execute_run_succeeded_with_result_url(db_session, tenant):
     run = await svc.execute_run(tenant.id, requested.run.id)
     await db_session.commit()
 
-    storage_dir = os.environ.get("REPORT_STORAGE_DIR", tempfile.gettempdir())
     assert run.status == REPORT_STATUS_SUCCEEDED
-    assert run.result_url == f"file://{storage_dir}/{tenant.id}/{run.id}.csv"
+    assert run.result_url is not None
+    assert run.result_url == f"local://{tenant.id}/{run.id}"
     assert run.started_at is not None
     assert run.finished_at is not None
     assert run.row_count >= 0

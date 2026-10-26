@@ -64,7 +64,9 @@ async def seed_active_membership():
             await session.flush()
 
         res_pv = await session.execute(
-            select(PlanVersion).where(PlanVersion.tenant_id == tenant.id, PlanVersion.plan_id == plan.id)
+            select(PlanVersion).where(
+                PlanVersion.tenant_id == tenant.id, PlanVersion.plan_id == plan.id
+            )
         )
         pv = res_pv.scalars().first()
         if not pv:
@@ -108,6 +110,7 @@ async def seed_active_membership():
         await session.commit()
 
     await engine.dispose()
+
 
 if __name__ == "__main__":
     asyncio.run(seed_active_membership())

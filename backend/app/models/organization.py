@@ -11,4 +11,6 @@ class Organization(Base):
     domain: Mapped[str] = mapped_column(String, unique=True, nullable=True)
 
     # One Organization has many Tenants
-    tenants = relationship("Tenant", back_populates="organization", cascade="all, delete-orphan")
+    tenants = relationship(
+        "Tenant", back_populates="organization", cascade="all, delete-orphan"
+    )

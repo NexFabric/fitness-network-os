@@ -35,6 +35,10 @@ logs
 # Coverage
 htmlcov/
 .coverage
+backend/coverage.json
+
+# Locally generated audit / coverage output — never committed
+reports/
 
 # Frontend
 node_modules/
@@ -48,3 +52,4 @@ backend/fix_tests.py
 # Playwright / pytest run artifacts
 test-results/
 playwright-report/
+architecture_report.html

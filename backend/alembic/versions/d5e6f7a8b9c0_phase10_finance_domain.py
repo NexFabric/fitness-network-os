@@ -5,6 +5,7 @@ Revises: c4f9a1b2e3d0
 Create Date: 2026-08-09 20:00:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -22,7 +23,9 @@ def upgrade() -> None:
     # --- Extend billing_accounts ---
     op.add_column(
         "billing_accounts",
-        sa.Column("currency", sa.String(length=3), nullable=False, server_default="TRY"),
+        sa.Column(
+            "currency", sa.String(length=3), nullable=False, server_default="TRY"
+        ),
     )
     op.add_column(
         "billing_accounts",
@@ -38,7 +41,9 @@ def upgrade() -> None:
 
     # --- Extend invoices ---
     op.add_column("invoices", sa.Column("membership_id", sa.Uuid(), nullable=True))
-    op.add_column("invoices", sa.Column("invoice_number", sa.String(length=64), nullable=True))
+    op.add_column(
+        "invoices", sa.Column("invoice_number", sa.String(length=64), nullable=True)
+    )
     op.add_column(
         "invoices", sa.Column("issued_at", sa.DateTime(timezone=True), nullable=True)
     )
@@ -47,7 +52,9 @@ def upgrade() -> None:
     )
     op.add_column(
         "invoices",
-        sa.Column("paid_amount_minor", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "paid_amount_minor", sa.Integer(), nullable=False, server_default="0"
+        ),
     )
     op.add_column(
         "invoices",
@@ -98,7 +105,9 @@ def upgrade() -> None:
     # --- Extend invoice_items ---
     op.add_column(
         "invoice_items",
-        sa.Column("unit_amount_minor", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "unit_amount_minor", sa.Integer(), nullable=False, server_default="0"
+        ),
     )
     op.add_column(
         "invoice_items", sa.Column("source_type", sa.String(length=64), nullable=True)
@@ -124,7 +133,9 @@ def upgrade() -> None:
             "refunded_amount_minor", sa.Integer(), nullable=False, server_default="0"
         ),
     )
-    op.add_column("payments", sa.Column("provider", sa.String(length=64), nullable=True))
+    op.add_column(
+        "payments", sa.Column("provider", sa.String(length=64), nullable=True)
+    )
     op.add_column(
         "payments", sa.Column("provider_ref", sa.String(length=128), nullable=True)
     )
@@ -182,7 +193,10 @@ def upgrade() -> None:
     op.create_index("ix_refunds_payment_id", "refunds", ["payment_id"])
     op.create_index("ix_refunds_tenant_id", "refunds", ["tenant_id"])
     op.create_index(
-        "ix_refunds_tenant_idem", "refunds", ["tenant_id", "idempotency_key"], unique=True
+        "ix_refunds_tenant_idem",
+        "refunds",
+        ["tenant_id", "idempotency_key"],
+        unique=True,
     )
 
     op.create_table(
@@ -266,7 +280,9 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("amount_minor", sa.Integer(), nullable=True),
         sa.Column("percent_bps", sa.Integer(), nullable=True),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("tenant_id", sa.Uuid(), nullable=False),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
@@ -302,9 +318,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.CheckConstraint(
-            "amount_minor > 0", name="ck_invoice_discounts_amount_pos"
-        ),
+        sa.CheckConstraint("amount_minor > 0", name="ck_invoice_discounts_amount_pos"),
         sa.ForeignKeyConstraint(
             ["tenant_id", "invoice_id"],
             ["invoices.tenant_id", "invoices.id"],
@@ -335,9 +349,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "tenant_id", "id", name="uq_reconciliation_runs_tenant_id"
-        ),
+        sa.UniqueConstraint("tenant_id", "id", name="uq_reconciliation_runs_tenant_id"),
     )
     op.create_index(
         "ix_reconciliation_runs_tenant_id", "reconciliation_runs", ["tenant_id"]

@@ -6,7 +6,7 @@ from app.core.config import Settings
 
 _REQUIRED = {
     "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
-    "MIGRATOR_DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/db",
+    "MIGRATOR_DATABASE_URL": None,
     "REDIS_URL": "redis://localhost:6379/0",
 }
 
@@ -70,5 +70,58 @@ def test_production_ok_with_cors_and_hosts():
         ENVIRONMENT="production",
         CORS_ORIGINS="https://admin.example.com",
         ALLOWED_HOSTS="api.example.com",
+        NOTIFICATION_EMAIL_PROVIDER="disabled",
+        REPORT_STORAGE_PROVIDER="s3",
+        S3_BUCKET_NAME="private-reports",
+        S3_SSE_ALGORITHM="aws:kms",
+        S3_KMS_KEY_ID="alias/gym-reports",
+        METRICS_BEARER_TOKEN="m" * 32,
+        QR_KMS_MODE="aws_kms",
+        AWS_KMS_KEY_ID="alias/gym-qr-signing",
+        ENCRYPTION_KEY="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
+        REDIS_URL="rediss://localhost:6379/0",
     )
     s.validate_production()  # does not raise
+
+
+def test_production_rejects_http_cors_origin():
+    s = _settings(
+        ENVIRONMENT="production",
+        CORS_ORIGINS="http://admin.example.com",
+        ALLOWED_HOSTS="api.example.com",
+        NOTIFICATION_EMAIL_PROVIDER="disabled",
+        REPORT_STORAGE_PROVIDER="s3",
+        S3_BUCKET_NAME="private-reports",
+        S3_SSE_ALGORITHM="aws:kms",
+        S3_KMS_KEY_ID="alias/gym-reports",
+        METRICS_BEARER_TOKEN="m" * 32,
+        QR_KMS_MODE="aws_kms",
+        AWS_KMS_KEY_ID="alias/gym-qr-signing",
+        ENCRYPTION_KEY="MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/db?sslmode=require",
+        REDIS_URL="rediss://localhost:6379/0",
+    )
+    with pytest.raises(RuntimeError, match="https://"):
+        s.validate_production()
+
+
+def test_test_environment_refused_outside_pytest():
+    s = _settings(ENVIRONMENT="test")
+    with pytest.raises(RuntimeError, match="only valid under pytest"):
+        s.assert_runtime_environment_allowed(pytest_loaded=False)
+    s.assert_runtime_environment_allowed(pytest_loaded=True)
+
+
+def test_production_rejects_mock_notifications_and_local_reports():
+    s = _settings(
+        ENVIRONMENT="production",
+        CORS_ORIGINS="https://admin.example.com",
+        ALLOWED_HOSTS="api.example.com",
+    )
+    with pytest.raises(RuntimeError) as exc_info:
+        s.validate_production()
+    message = str(exc_info.value)
+    assert "NOTIFICATION_EMAIL_PROVIDER" in message
+    assert "REPORT_STORAGE_PROVIDER" in message
+    assert "S3_BUCKET_NAME" in message

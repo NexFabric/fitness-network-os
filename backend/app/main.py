@@ -1,3 +1,5 @@
+import hmac
+import logging
 from datetime import UTC, datetime
 
 from fastapi import FastAPI, Request
@@ -12,9 +14,12 @@ from app.api.middleware.rate_limit import SimpleRateLimitMiddleware
 from app.api.middleware.request_logging import RequestLoggingMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.metrics import DEPENDENCY_UP, MetricsMiddleware
+from app.core.tracing import setup_tracing
 
 # Tight default for a JSON API (no HTML assets). Not a full browser app CSP.
 _API_CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+logger = logging.getLogger("app.error")
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -45,18 +50,21 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 def create_app() -> FastAPI:
     # Fail closed before wiring routes when production config is incomplete.
     settings.validate_production()
+    settings.assert_runtime_environment_allowed()
 
     app = FastAPI(
         title="Fitness Network OS",
         version="0.1.0",
         description="Core backend for Fitness Network OS",
     )
+    setup_tracing(app)
 
     # Last registered runs first on the request path (Starlette).
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(MetricsMiddleware)
     # Phase 24: X-Request-ID / X-Correlation-ID + structured access log (no PII/secrets).
     app.add_middleware(RequestLoggingMiddleware)
-    # Light in-process rate limit on POST /api/v1/auth/login (MVP; not multi-worker).
+    # Redis-backed limiter on unauthenticated / weakly authenticated writes.
     app.add_middleware(
         SimpleRateLimitMiddleware,
         max_requests=settings.RATE_LIMIT_LOGIN_MAX_REQUESTS,
@@ -99,26 +107,34 @@ def create_app() -> FastAPI:
         from sqlalchemy import text
 
         from app.db.session import engine
-        
+
         checks = {}
-        
+
         # Check DB
         try:
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             checks["db"] = "up"
-        except Exception:
+            DEPENDENCY_UP.labels("postgresql").set(1)
+        except Exception:  # noqa: BLE001
             checks["db"] = "down"
-            
+            DEPENDENCY_UP.labels("postgresql").set(0)
+
         # Check Redis
         try:
-            r = Redis.from_url(str(settings.REDIS_URL))
+            r = Redis.from_url(
+                str(settings.REDIS_URL),
+                socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
+            )
             await r.ping()
             await r.aclose()
             checks["redis"] = "up"
-        except Exception:
+            DEPENDENCY_UP.labels("redis").set(1)
+        except Exception:  # noqa: BLE001
             checks["redis"] = "down"
-            
+            DEPENDENCY_UP.labels("redis").set(0)
+
         status = "ok" if all(v == "up" for v in checks.values()) else "degraded"
 
         return {
@@ -139,23 +155,54 @@ def create_app() -> FastAPI:
             from sqlalchemy import text
 
             from app.db.session import engine
-            
+
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
-            r = Redis.from_url(str(settings.REDIS_URL))
+            r = Redis.from_url(
+                str(settings.REDIS_URL),
+                socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                socket_connect_timeout=settings.REDIS_CONNECT_TIMEOUT,
+            )
             await r.ping()
             await r.aclose()
             return Response(content="OK", status_code=200, media_type="text/plain")
-        except Exception:
-            return Response(content="Service Unavailable", status_code=503, media_type="text/plain")
+        except Exception:  # noqa: BLE001
+            return Response(
+                content="Service Unavailable", status_code=503, media_type="text/plain"
+            )
 
     @app.get("/metrics", tags=["ops"])
-    async def metrics_probe():
-        # Placeholder for Prometheus metrics (Phase 24+)
-        return Response(content="# TYPE http_requests_total counter\nhttp_requests_total 0\n", media_type="text/plain")
+    async def metrics_probe(request: Request):
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+        if settings.is_production:
+            authorization = request.headers.get("authorization", "")
+            supplied = authorization.removeprefix("Bearer ")
+            if not hmac.compare_digest(supplied, settings.METRICS_BEARER_TOKEN):
+                return Response(content="Unauthorized", status_code=401)
+        return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+    from app.services.booking import BookingError
+
+    @app.exception_handler(BookingError)
+    async def booking_error_handler(request: Request, exc: BookingError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
+        from app.api.deps import current_tenant_id_var
+
+        logger.exception(
+            "request.unhandled request_id=%s tenant_id=%s method=%s path=%s",
+            getattr(request.state, "request_id", None),
+            current_tenant_id_var.get(),
+            request.method,
+            request.url.path,
+            exc_info=exc,
+        )
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

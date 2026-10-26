@@ -8,61 +8,68 @@
 
 ## Scale
 
-85 API routes · 71 database models · 36 UI components · 57 library files · 5 middleware layers · 23 environment variables
+142 API routes · 86 database models · 64 UI components · 83 library files · 6 middleware layers · 34 environment variables
 
 ## Subsystems
 
-- **[Auth](./auth.md)** — 5 routes — touches: auth, db
+- **[Auth](./auth.md)** — 7 routes — touches: auth, db
 - **[Access](./access.md)** — 5 routes — touches: auth
-- **[Admin](./admin.md)** — 5 routes
+- **[Admin](./admin.md)** — 17 routes — touches: auth, db
+- **[Break_glass](./break_glass.md)** — 3 routes — touches: auth, db
+- **[Classes](./classes.md)** — 16 routes — touches: auth, db
+- **[Dashboard](./dashboard.md)** — 1 routes — touches: auth, db
+- **[Data_import](./data_import.md)** — 4 routes — touches: auth, upload, db
 - **[Devices](./devices.md)** — 2 routes — touches: auth, db
+- **[Dsar_admin](./dsar_admin.md)** — 2 routes
 - **[Entitlements](./entitlements.md)** — 2 routes — touches: auth
 - **[Finance](./finance.md)** — 14 routes
-- **[Locations](./locations.md)** — 4 routes
-- **[Me](./me.md)** — 7 routes — touches: auth, db
-- **[Members](./members.md)** — 10 routes — touches: db
+- **[Locations](./locations.md)** — 3 routes
+- **[Me](./me.md)** — 16 routes — touches: auth, db
+- **[Members](./members.md)** — 11 routes — touches: cache, db
 - **[Memberships](./memberships.md)** — 6 routes — touches: auth
-- **[Mfa](./mfa.md)** — 1 routes — touches: db
+- **[Mfa](./mfa.md)** — 2 routes — touches: db, cache, auth
 - **[Notifications](./notifications.md)** — 5 routes — touches: db
+- **[Onboarding](./onboarding.md)** — 1 routes — touches: auth, db
 - **[Plans](./plans.md)** — 3 routes
-- **[Reports](./reports.md)** — 5 routes
-- **[Staff](./staff.md)** — 1 routes
+- **[Reception](./reception.md)** — 3 routes — touches: auth, db
+- **[Reports](./reports.md)** — 6 routes
+- **[Staff](./staff.md)** — 2 routes — touches: auth, cache
 - **[Telemetry](./telemetry.md)** — 1 routes
 - **[Trainers](./trainers.md)** — 3 routes — touches: auth, db
-- **[Infra](./infra.md)** — 6 routes — touches: auth, db, cache
+- **[Infra](./infra.md)** — 7 routes — touches: auth, db, cache
 
-**Database:** sqlalchemy, 71 models — see [database.md](./database.md)
+**Database:** sqlalchemy, 86 models — see [database.md](./database.md)
 
-**UI:** 36 components (react) — see [ui.md](./ui.md)
+**UI:** 64 components (react) — see [ui.md](./ui.md)
 
-**Libraries:** 57 files — see [libraries.md](./libraries.md)
+**Libraries:** 83 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `backend/app/models/user.py` — imported by **42** files
-- `backend/app/models/tenant.py` — imported by **38** files
-- `backend/app/models/organization.py` — imported by **33** files
-- `backend/app/db/base.py` — imported by **32** files
-- `backend/app/api/deps.py` — imported by **30** files
-- `backend/app/models/member.py` — imported by **30** files
+- `backend/app/models/user.py` — imported by **75** files
+- `backend/app/models/tenant.py` — imported by **69** files
+- `backend/app/models/organization.py` — imported by **62** files
+- `backend/app/api/deps.py` — imported by **47** files
+- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **45** files
 
 ## Required Environment Variables
 
 - `ALLOW_DESTRUCTIVE_TEST_RESET` — `backend/tests/conftest.py`
-- `ALLOW_MOCK_EMAIL` — `backend/app/services/notification_providers.py`
-- `ALLOW_MOCK_SMS_WA_PUSH` — `backend/app/services/notification_providers.py`
+- `AWS_KMS_KEY_ID` — `backend/app/core/qr_crypto.py`
 - `CI` — `frontend/e2e/playwright.config.ts`
-- `ENCRYPTION_KEY` — `backend/app/core/security.py`
 - `ENVIRONMENT` — `backend/app/core/security.py`
+- `FITNESS_OS_TLS_SMOKE` — `backend/tests/test_asyncpg_tls_smoke.py`
+- `METRICS_PORT` — `backend/app/core/metrics.py`
 - `NEXT_PUBLIC_ADMIN_URL` — `frontend/public-site/src/components/Cta.tsx`
-- `S3_BUCKET_NAME` — `backend/app/services/storage.py`
-- `S3_ENDPOINT_URL` — `backend/app/services/storage.py`
-- `SMTP_HOST` — `backend/app/services/notification_providers.py`
+- `S3_BUCKET_NAME` — `backend/scripts/kms_iam_verify.py`
+- `S3_ENDPOINT_URL` — `backend/scripts/s3_runtime_proof.py`
+- `S3_KMS_KEY_ID` — `backend/scripts/kms_iam_verify.py`
+- `SMTP_CA_BUNDLE` — `backend/app/services/notification_providers.py`
 - `SMTP_PASS` — `backend/app/services/notification_providers.py`
-- `SMTP_USER` — `backend/app/services/notification_providers.py`
-- _...1 more_
+- _...2 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-08-13_
+_Back to [index.md](./index.md) · Generated 2026-08-16_

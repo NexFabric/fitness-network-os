@@ -5,19 +5,28 @@ import RequireRole from './components/RequireRole'
 import Dashboard from './pages/Dashboard'
 import Locations from './pages/Locations'
 import Login from './pages/Login'
+import MfaSetup from './pages/MfaSetup'
+import PasswordChange from './pages/PasswordChange'
 import Members from './pages/Members'
 import Devices from './pages/Devices'
 import Notifications from './pages/Notifications'
 import Plans from './pages/Plans'
 import Reports from './pages/Reports'
 import Staff from './pages/Staff'
+import Onboarding from './pages/Onboarding'
+import DsarInbox from './pages/DsarInbox'
+import InviteAccept from './pages/InviteAccept'
 import Finance from './pages/Finance'
+import Reception from './pages/Reception'
+import DataImport from './pages/DataImport'
+import Classes from './pages/Classes'
 import { ReloadPrompt } from './components/ReloadPrompt'
 import { AuthProvider } from './auth/AuthContext'
 import {
   FEDERATION_ROLES,
   MEMBER_ROLES,
   OPS_ROLES,
+  RECEPTION_ROLES,
   ROLES,
   TRAINER_ROLES,
 } from './auth/roles'
@@ -49,6 +58,9 @@ export default function App() {
         <ReloadPrompt />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/invite" element={<InviteAccept />} />
+          <Route path="/mfa/setup" element={<MfaSetup />} />
+          <Route path="/password/change" element={<PasswordChange />} />
 
           {/* Gateway: needs a session, but no particular role — it shows the
               caller which portals its roles unlock. */}
@@ -99,7 +111,24 @@ export default function App() {
             }
           >
             <Route index element={<Dashboard />} />
+            <Route
+              path="reception"
+              element={
+                <RequireRole allowed={RECEPTION_ROLES}>
+                  <Reception />
+                </RequireRole>
+              }
+            />
+            <Route path="classes" element={<Classes />} />
             <Route path="members" element={<Members />} />
+            <Route
+              path="import"
+              element={
+                <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN]}>
+                  <DataImport />
+                </RequireRole>
+              }
+            />
             <Route path="locations" element={<Locations />} />
             <Route path="finance" element={<Finance />} />
             {/* devices:manage is held only by GYM_OWNER/GYM_ADMIN — the API is
@@ -143,6 +172,22 @@ export default function App() {
               element={
                 <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN]}>
                   <Staff />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="onboarding"
+              element={
+                <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN]}>
+                  <Onboarding />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="dsar"
+              element={
+                <RequireRole allowed={[ROLES.GYM_OWNER, ROLES.GYM_ADMIN]}>
+                  <DsarInbox />
                 </RequireRole>
               }
             />

@@ -24,6 +24,7 @@ def _build_app(**kwargs):
 
     `add_middleware` would bury it in a stack Starlette only builds on startup.
     """
+
     async def login(request: Request):
         await request.json()
         return JSONResponse({"ok": True})
@@ -95,6 +96,32 @@ async def test_redis_failure_falls_open_to_in_process_window():
             assert (await _post(client, "c@example.com")).status_code == 200
         # Still enforcing, just locally.
         assert (await _post(client, "c@example.com")).status_code == 429
+
+
+@pytest.mark.asyncio
+async def test_device_auth_is_limited_per_device_id():
+    device_path = "/api/v1/devices/auth"
+
+    async def auth(request: Request):
+        await request.json()
+        return JSONResponse({"ok": True})
+
+    inner = Starlette(routes=[Route(device_path, auth, methods=["POST"])])
+    app = SimpleRateLimitMiddleware(inner, max_requests=3, window_seconds=60)
+    app._redis_failed = True
+    async with _client(app) as client:
+        payload = {
+            "device_id": "11111111-1111-1111-1111-111111111111",
+            "tenant_id": "22222222-2222-2222-2222-222222222222",
+            "api_key": "x",
+        }
+        for _ in range(3):
+            assert (await client.post(device_path, json=payload)).status_code == 200
+        blocked = await client.post(device_path, json=payload)
+        assert blocked.status_code == 429
+        other = dict(payload)
+        other["device_id"] = "33333333-3333-3333-3333-333333333333"
+        assert (await client.post(device_path, json=other)).status_code == 200
 
 
 @pytest.mark.asyncio

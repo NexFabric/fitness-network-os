@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { currentOwnerTotp } from './helpers/auth'
 
 /**
  * Member issues a QR from the portal; the same token is validated once and
@@ -48,7 +49,11 @@ test('QR issued by the member portal validates once, then replays are denied', a
   const { csrf_token: csrf } = (await csrfRes.json()) as { csrf_token: string }
 
   const loginRes = await request.post(`${API}/api/v1/auth/login`, {
-    data: { email: OWNER_EMAIL, password: PASSWORD },
+    data: {
+      email: OWNER_EMAIL,
+      password: PASSWORD,
+      mfa_code: currentOwnerTotp(),
+    },
   })
   expect(loginRes.ok()).toBeTruthy()
   const { tenant_id: tenantId } = (await loginRes.json()) as {

@@ -23,6 +23,7 @@ from uuid import UUID
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 PASSWORD = "E2ePortal123!"  # local seed fixture, never a real secret
+OWNER_TOTP_SECRET = os.environ.get("E2E_OWNER_TOTP_SECRET", "JBSWY3DPEHPK3PXP")
 
 ORG_NAME = "E2E Federation"
 TENANT_NAME = "E2E Club"
@@ -34,6 +35,7 @@ ROLE_USERS: dict[str, str] = {
     "trainer": "TRAINER",
     "member": "MEMBER",
     "analyst": "FEDERATION_ANALYST",
+    "desk": "FRONT_DESK",
 }
 
 
@@ -204,13 +206,13 @@ async def seed() -> dict[str, object]:
         create_async_engine,
     )
 
-    from app.core.security import get_password_hash
+    from app.core.security import encrypt_string, get_password_hash
     from app.models.member import Member
     from app.models.organization import Organization
     from app.models.rbac import Role, UserRole
     from app.models.tenant import Tenant
     from app.models.trainer_assignment import TrainerAssignment
-    from app.models.user import User
+    from app.models.user import User, UserMfaMethod
 
     engine = create_async_engine(_engine_url(), pool_pre_ping=True, echo=False)
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -301,7 +303,64 @@ async def seed() -> dict[str, object]:
                     "user_id": str(user.id),
                 }
 
+                if role_name != "MEMBER":
+                    mfa = (
+                        (
+                            await session.execute(
+                                select(UserMfaMethod).where(
+                                    UserMfaMethod.user_id == user.id,
+                                    UserMfaMethod.provider_id == "totp",
+                                )
+                            )
+                        )
+                        .scalars()
+                        .first()
+                    )
+                    if mfa is None:
+                        session.add(
+                            UserMfaMethod(
+                                user_id=user.id,
+                                encrypted_secret=encrypt_string(OWNER_TOTP_SECRET),
+                                provider_id="totp",
+                                is_active=True,
+                                hashed_recovery_codes=[],
+                            )
+                        )
+                    else:
+                        mfa.encrypted_secret = encrypt_string(OWNER_TOTP_SECRET)
+                        mfa.is_active = True
+                        mfa.failed_attempts = 0
+                        mfa.locked_until = None
+                    await session.flush()
+
             await _set_tenant_rls(session, tenant.id)
+
+            from app.models.staff import Staff
+
+            # UserRole is the permission mapping; staff is the HR link.
+            # Class/PT pickers and /staff both need the row, not just RBAC.
+            for suffix, job in (("trainer", "TRAINER"), ("desk", "FRONT_DESK")):
+                staff_user_id = UUID(users[suffix]["user_id"])
+                staff_row = (
+                    await session.execute(
+                        select(Staff).where(
+                            Staff.tenant_id == tenant.id,
+                            Staff.user_id == staff_user_id,
+                        )
+                    )
+                ).scalar_one_or_none()
+                if staff_row is None:
+                    session.add(
+                        Staff(
+                            tenant_id=tenant.id,
+                            user_id=staff_user_id,
+                            role=job,
+                        )
+                    )
+                    await session.flush()
+                elif staff_row.role != job:
+                    staff_row.role = job
+                    await session.flush()
 
             # Member row bound to the MEMBER user so /me/* resolves.
             member_user_id = UUID(users["member"]["user_id"])

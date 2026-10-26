@@ -37,6 +37,7 @@
 - denial_reason: String (nullable)
 - jti: String (nullable, index)
 - method: String (nullable, default)
+- snapshot_data: with_variant (nullable)
 - timestamp: DateTime (default)
 - _relations_: member: Member, device: Device
 
@@ -77,6 +78,81 @@
 - ip_address: String (nullable)
 - user_agent: String (nullable)
 
+### ClassType
+- name: String
+- category: String (default)
+- duration_minutes: Integer (default)
+- default_capacity: Integer (default)
+- color_hex: String (default)
+- required_entitlement_type: String (nullable)
+- cancellation_cutoff_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### ClassSchedule
+- location_id: UUID
+- class_type_id: UUID
+- trainer_user_id: UUID (fk, index)
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- room_name: String (nullable)
+- capacity: Integer
+- is_active: Boolean (default)
+
+### ClassSession
+- location_id: UUID
+- class_type_id: UUID
+- schedule_id: unknown (nullable)
+- trainer_user_id: UUID (fk, index)
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- room_name: String (nullable)
+- capacity: Integer
+- status: ClassSessionStatus (default)
+
+### ClassBooking
+- session_id: UUID
+- member_id: UUID
+- status: ClassBookingStatus (default)
+- waitlist_position: Integer (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
+- cancellation_reason: String (nullable)
+- is_late_cancellation: Boolean (default)
+
+### TrainerAvailability
+- trainer_user_id: UUID (fk, index)
+- location_id: UUID
+- day_of_week: SmallInteger
+- start_time: Time
+- end_time: Time
+- slot_duration_minutes: Integer (default)
+- is_active: Boolean (default)
+
+### PtAppointment
+- trainer_user_id: UUID (fk, index)
+- member_id: UUID
+- location_id: UUID
+- start_time_utc: DateTime (index)
+- end_time_utc: DateTime
+- status: PtAppointmentStatus (default)
+- notes: Text (nullable)
+- booked_at: DateTime
+- attended_at: DateTime (nullable)
+- cancelled_at: DateTime (nullable)
+
+### BreakGlassSession
+- actor_id: UUID (index)
+- target_tenant_id: UUID (index)
+- reason: Text
+- ticket_reference: String
+- status: String (default)
+- granted_at: DateTime
+- expires_at: DateTime
+- revoked_at: DateTime (nullable)
+- actions_taken: Text (nullable)
+
 ### ConsentDefinition
 - name: String
 - consent_type: String
@@ -96,6 +172,37 @@
 - withdrawn_at: DateTime (nullable)
 - source: String (nullable)
 - ip_address: String (nullable)
+
+### DataImportBatch
+- filename: String
+- status: String (default)
+- total_rows: Integer (default)
+- valid_rows: Integer (default)
+- invalid_rows: Integer (default)
+- imported_rows: Integer (default)
+- created_by_user_id: UUID
+- created_at: DateTime (default)
+- completed_at: DateTime (nullable)
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+- batch_id: UUID (index)
+- row_number: Integer
+- status: String (default)
+- raw_data: with_variant
+- parsed_data: with_variant (nullable)
+- error_message: Text (nullable)
+- _relations_: batch: DataImportBatch
+
+### DsarRequest
+- member_id: UUID
+- requested_by_user_id: unknown (fk, nullable)
+- kind: String
+- status: String
+- due_at: DateTime
+- package_uri: String (nullable)
+- rejection_reason: Text (nullable)
+- dedupe_key: String (nullable)
 
 ### EntitlementDefinition
 - code: String
@@ -180,6 +287,8 @@
 - total_amount_minor: Integer (default)
 - paid_amount_minor: Integer (default)
 - discount_amount_minor: Integer (default)
+- retry_count: Integer (default)
+- next_retry_at: DateTime (nullable)
 - idempotency_key: String (nullable)
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -271,6 +380,27 @@
 - status: String (default)
 - matched_payment_id: unknown (nullable)
 
+### PaymentAttempt
+- invoice_id: UUID (index)
+- billing_account_id: UUID (index)
+- attempt_number: Integer (default)
+- amount_minor: Integer
+- currency: String (default)
+- status: String (default)
+- gateway_provider: String (nullable)
+- gateway_attempt_ref: String (nullable)
+- error_code: String (nullable)
+- error_message: Text (nullable)
+- attempted_at: DateTime (default)
+
+### DunningPolicy
+- name: String (default)
+- grace_period_days: Integer (default)
+- max_retry_attempts: Integer (default)
+- retry_interval_days: Integer (default)
+- block_access_on_failure: Boolean (default)
+- is_active: Boolean (default)
+
 ### Lead
 - first_name: String
 - last_name: String
@@ -325,6 +455,13 @@
 - locked_until: DateTime (nullable)
 - owner_token: String (nullable)
 - attempt_count: Integer (default)
+
+### AccountInvite
+- user_id: UUID (fk)
+- token_hash: String
+- purpose: String
+- expires_at: DateTime
+- accepted_at: DateTime (nullable)
 
 ### Location
 - name: String
@@ -448,6 +585,12 @@
 - correlation_id: String (nullable)
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+- current_stage: String (default)
+- step_data: with_variant
+- is_completed: Boolean (default)
+- completed_at: DateTime (nullable)
+
 ### Organization
 - name: String
 - domain: String (unique, nullable)
@@ -518,6 +661,15 @@
 - finished_at: DateTime (nullable)
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+- data_category: String
+- description: Text
+- retention_days: Integer (nullable)
+- deletion_method: String (default)
+- legal_basis: String (nullable)
+- is_active: Boolean (default)
+- requires_legal_review: Boolean (default)
+
 ### Staff
 - user_id: UUID (fk, index)
 - location_id: unknown (nullable)
@@ -527,6 +679,11 @@
 - name: String
 - organization_id: UUID (fk)
 - location_code: String (unique)
+- status: String (default)
+- suspended_at: DateTime (nullable)
+- closed_at: DateTime (nullable)
+- suspension_reason: Text (nullable)
+- closure_reason: Text (nullable)
 - _relations_: organization: Organization
 
 ### TrainerAssignment
@@ -539,6 +696,7 @@
 - hashed_password: String
 - is_active: Boolean (default)
 - is_superuser: Boolean (default)
+- must_change_password: Boolean (default)
 - _relations_: sessions: UserSession, devices: UserDevice, mfa_methods: UserMfaMethod, user_roles: UserRole
 
 ### UserSession
@@ -548,6 +706,9 @@
 - user_agent: String (nullable)
 - expires_at: DateTime
 - is_revoked: Boolean (default)
+- auth_level: String (default)
+- last_seen_at: DateTime (nullable)
+- last_step_up_at: DateTime (nullable)
 - _relations_: user: User
 
 ### UserDevice

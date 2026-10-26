@@ -212,7 +212,7 @@ export type ValidateQrResponse = {
 }
 
 /**
- * POST /api/v1/access/qr/validate
+ * POST /api/v1/devices/qr/validate (device principal + HMAC).
  * Backend may return 200 (granted), 403 (denied), or 409 (replay).
  * Denied bodies often nest under `detail`.
  */
@@ -260,21 +260,12 @@ export async function validateQr(
   const devicePath = '/api/v1/devices/qr/validate'
   const signature = await deviceSignatureHeaders('POST', devicePath, bodyText)
 
-  let res = await fetch(`${base}${devicePath}`, {
+  const res = await fetch(`${base}${devicePath}`, {
     method: 'POST',
     headers: { ...headers, ...signature },
     body: bodyText,
     credentials: 'include',
   })
-
-  if (res.status === 401 || res.status === 404) {
-    res = await fetch(`${base}/api/v1/access/qr/validate`, {
-      method: 'POST',
-      headers,
-      body: bodyText,
-      credentials: 'include',
-    })
-  }
 
   const text = await res.text()
   let data: unknown = null

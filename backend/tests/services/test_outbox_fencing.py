@@ -79,9 +79,7 @@ async def test_stale_worker_cannot_publish_or_fail(db_session, tenant):
 @pytest.mark.asyncio
 async def test_inbox_handler_savepoint_rolls_back_domain(db_session, tenant):
     svc = OutboxService(db_session)
-    await svc.receive_inbox(
-        tenant.id, event_id="e-atom", event_type="h.v1", payload={}
-    )
+    await svc.receive_inbox(tenant.id, event_id="e-atom", event_type="h.v1", payload={})
     await db_session.commit()
     side = f"side-{uuid4().hex}.com"
 

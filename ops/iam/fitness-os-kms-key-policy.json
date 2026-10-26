@@ -1,0 +1,56 @@
+{
+  "Version": "2012-10-17",
+  "Id": "fitness-os-qr-cmk",
+  "Comment": "Key policy for the QR HMAC CMK. The application may only derive and decrypt data keys; it can never schedule deletion, disable rotation or change this policy. Replace ACCOUNT_ID, APP_ROLE_NAME and ADMIN_ROLE_NAME before applying.",
+  "Statement": [
+    {
+      "Sid": "KeyAdministration",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/ADMIN_ROLE_NAME"
+      },
+      "Action": [
+        "kms:Create*",
+        "kms:Describe*",
+        "kms:Enable*",
+        "kms:List*",
+        "kms:Put*",
+        "kms:Update*",
+        "kms:Revoke*",
+        "kms:Disable*",
+        "kms:Get*",
+        "kms:Delete*",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ApplicationEnvelopeUseOnly",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/APP_ROLE_NAME"
+      },
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyApplicationKeyLifecycle",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/APP_ROLE_NAME"
+      },
+      "Action": [
+        "kms:ScheduleKeyDeletion",
+        "kms:DisableKey",
+        "kms:DisableKeyRotation",
+        "kms:PutKeyPolicy"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

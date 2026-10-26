@@ -2,13 +2,17 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**57 library files** across 2 modules
+**83 library files** across 2 modules
 
-## Backend (54 files)
+## Backend (80 files)
 
+- `backend/scripts/check_release_truth.py` — require, forbid, exclusive_pair_errors, forbid_both, authority_exclusive_errors, main
 - `backend/alembic/env.py` — include_object, run_migrations_offline, do_run_migrations, run_migrations_online, run_async_migrations
+- `backend/alembic/versions/x6f7a8b9c0d1_wave3_migration_dunning_onboarding.py` — enable_rls, disable_rls, upgrade, downgrade
+- `backend/scripts/kms_iam_verify.py` — ok, die, skip, main
 - `backend/scripts/check_no_money_floats.py` — scan_models, scan_source_ast, main
 - `backend/scripts/process_notification_due.py` — build_parser, main, process_due_for_tenant
+- `backend/scripts/s3_runtime_proof.py` — ok, die, main
 - `backend/alembic/versions/0a561fd73793_update_rbac_models.py` — upgrade, downgrade
 - `backend/alembic/versions/261bdee314d7_sync_usermfamethod.py` — upgrade, downgrade
 - `backend/alembic/versions/32bea30c0ed8_add_federation_models.py` — upgrade, downgrade
@@ -27,17 +31,13 @@
 - `backend/alembic/versions/b3e2852df357_add_entitlement_models.py` — upgrade, downgrade
 - `backend/alembic/versions/b5994ffbd643_add_membership_cancellation_and_renewal_.py` — upgrade, downgrade
 - `backend/alembic/versions/bc4033d03939_add_terms_json_fields.py` — upgrade, downgrade
-- `backend/alembic/versions/c4f9a1b2e3d0_seed_entitlement_permissions.py` — upgrade, downgrade
-- `backend/alembic/versions/c938894ffe0d_add_organization_and_tenant_models.py` — upgrade, downgrade
-- `backend/alembic/versions/c938894ffe0e_add_wave_1_core_gym_models.py` — upgrade, downgrade
-- `backend/alembic/versions/c938894ffe0f_add_wave_2_membership.py` — upgrade, downgrade
-- _…and 29 more files_
+- _…and 55 more files_
 
 ## Frontend (3 files)
 
 - `frontend/scanner-pwa/src/api/client.ts` — getBaseUrl, getTenantId, setAuth, clearAuth, getDeviceKey, authenticateDevice, …
 - `frontend/admin-web/src/api/client.ts` — getBaseUrl, getTenantId, setAuth, clearAuth, isAuthenticated, ensureCsrf, …
-- `frontend/admin-web/src/auth/roles.ts` — homeRouteFor, RoleName, ROLES, FEDERATION_ROLES, OPS_ROLES, TRAINER_ROLES, …
+- `frontend/admin-web/src/auth/roles.ts` — homeRouteFor, RoleName, ROLES, FEDERATION_ROLES, OPS_ROLES, RECEPTION_ROLES, …
 
 ---
 _Back to [overview.md](./overview.md)_

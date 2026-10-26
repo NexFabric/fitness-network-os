@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -16,6 +16,7 @@ from app.models.finance import (
     CreditNote,
     CreditNoteStatus,
     Discount,
+    DunningPolicy,
     Invoice,
     InvoiceDiscount,
     InvoiceItem,
@@ -23,6 +24,8 @@ from app.models.finance import (
     Payment,
     PaymentAllocation,
     PaymentAllocationReversal,
+    PaymentAttempt,
+    PaymentAttemptStatus,
     PaymentStatus,
     ReconciliationItem,
     ReconciliationItemStatus,
@@ -370,7 +373,9 @@ class FinanceService:
                 InvoiceStatus.OPEN.value,
                 InvoiceStatus.PARTIALLY_PAID.value,
             ):
-                raise ValueError(f"Cannot allocate to invoice in status {invoice.status}")
+                raise ValueError(
+                    f"Cannot allocate to invoice in status {invoice.status}"
+                )
 
             remaining = invoice.total_amount_minor - invoice.paid_amount_minor
             if amount > remaining:
@@ -459,13 +464,17 @@ class FinanceService:
         self, tenant_id: UUID, allocation: PaymentAllocation
     ) -> int:
         rev = (
-            await self.session.execute(
-                select(PaymentAllocationReversal.amount_minor).where(
-                    PaymentAllocationReversal.tenant_id == tenant_id,
-                    PaymentAllocationReversal.allocation_id == allocation.id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocationReversal.amount_minor).where(
+                        PaymentAllocationReversal.tenant_id == tenant_id,
+                        PaymentAllocationReversal.allocation_id == allocation.id,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return allocation.amount_minor - sum(rev)
 
     async def _unwind_allocations_for_refund(
@@ -478,16 +487,20 @@ class FinanceService:
     ) -> None:
         """LIFO reverse allocations via append-only PaymentAllocationReversal rows."""
         allocs = (
-            await self.session.execute(
-                select(PaymentAllocation)
-                .where(
-                    PaymentAllocation.tenant_id == tenant_id,
-                    PaymentAllocation.payment_id == payment.id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocation)
+                    .where(
+                        PaymentAllocation.tenant_id == tenant_id,
+                        PaymentAllocation.payment_id == payment.id,
+                    )
+                    .order_by(PaymentAllocation.created_at.desc())
+                    .with_for_update()
                 )
-                .order_by(PaymentAllocation.created_at.desc())
-                .with_for_update()
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         remaining_refund = refund_amount
         for alloc in allocs:
@@ -604,7 +617,9 @@ class FinanceService:
             InvoiceStatus.OPEN.value,
             InvoiceStatus.PARTIALLY_PAID.value,
         ):
-            raise ValueError(f"Cannot apply credit to invoice in status {invoice.status}")
+            raise ValueError(
+                f"Cannot apply credit to invoice in status {invoice.status}"
+            )
 
         remaining = invoice.total_amount_minor - invoice.paid_amount_minor
         if amount_minor > remaining:
@@ -792,13 +807,13 @@ class FinanceService:
     ) -> tuple[list[Invoice], int]:
         from sqlalchemy import func
         from sqlalchemy.orm import selectinload
-        
+
         stmt = select(Invoice).where(Invoice.tenant_id == tenant_id)
         if member_id:
             stmt = stmt.join(
                 BillingAccount, Invoice.billing_account_id == BillingAccount.id
             ).where(BillingAccount.member_id == member_id)
-            
+
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await self.session.execute(count_stmt)).scalar_one()
 
@@ -820,13 +835,13 @@ class FinanceService:
         member_id: UUID | None = None,
     ) -> tuple[list[Payment], int]:
         from sqlalchemy import func
-        
+
         stmt = select(Payment).where(Payment.tenant_id == tenant_id)
         if member_id:
             stmt = stmt.join(
                 BillingAccount, Payment.billing_account_id == BillingAccount.id
             ).where(BillingAccount.member_id == member_id)
-            
+
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = (await self.session.execute(count_stmt)).scalar_one()
 
@@ -877,13 +892,17 @@ class FinanceService:
     async def _payment_allocated_total(self, tenant_id: UUID, payment_id: UUID) -> int:
         """Net allocated = sum(allocations) - sum(reversals for those allocations)."""
         allocs = (
-            await self.session.execute(
-                select(PaymentAllocation).where(
-                    PaymentAllocation.tenant_id == tenant_id,
-                    PaymentAllocation.payment_id == payment_id,
+            (
+                await self.session.execute(
+                    select(PaymentAllocation).where(
+                        PaymentAllocation.tenant_id == tenant_id,
+                        PaymentAllocation.payment_id == payment_id,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         total = 0
         for alloc in allocs:
             total += await self._allocation_remaining(tenant_id, alloc)
@@ -891,3 +910,90 @@ class FinanceService:
 
     def invoice_remaining(self, invoice: Invoice) -> int:
         return invoice.total_amount_minor - invoice.paid_amount_minor
+
+    # ------------------------------------------------------------------
+    # Payment attempts & Dunning
+    # ------------------------------------------------------------------
+
+    async def get_or_create_dunning_policy(self, tenant_id: UUID) -> DunningPolicy:
+        stmt = select(DunningPolicy).where(
+            DunningPolicy.tenant_id == tenant_id,
+            DunningPolicy.is_active.is_(True),
+        )
+        policy = (await self.session.execute(stmt)).scalars().first()
+        if not policy:
+            policy = DunningPolicy(
+                tenant_id=tenant_id,
+                name="Default Dunning Policy",
+                grace_period_days=3,
+                max_retry_attempts=3,
+                retry_interval_days=2,
+                block_access_on_failure=True,
+                is_active=True,
+            )
+            self.session.add(policy)
+            await self.session.flush()
+        return policy
+
+    async def record_payment_attempt(
+        self,
+        tenant_id: UUID,
+        *,
+        invoice_id: UUID,
+        amount_minor: int,
+        status: PaymentAttemptStatus | str,
+        currency: str = "TRY",
+        gateway_provider: str | None = None,
+        gateway_attempt_ref: str | None = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
+    ) -> PaymentAttempt:
+        assert_amount_minor(amount_minor)
+        invoice = await self._get_invoice(tenant_id, invoice_id, for_update=True)
+        status_val = (
+            status.value if isinstance(status, PaymentAttemptStatus) else str(status)
+        )
+
+        attempt = PaymentAttempt(
+            tenant_id=tenant_id,
+            invoice_id=invoice_id,
+            billing_account_id=invoice.billing_account_id,
+            attempt_number=invoice.retry_count + 1,
+            amount_minor=amount_minor,
+            currency=currency,
+            status=status_val,
+            gateway_provider=gateway_provider,
+            gateway_attempt_ref=gateway_attempt_ref,
+            error_code=error_code,
+            error_message=error_message,
+            attempted_at=datetime.now(UTC),
+        )
+        self.session.add(attempt)
+        invoice.retry_count += 1
+
+        if status_val == PaymentAttemptStatus.FAILED.value:
+            policy = await self.get_or_create_dunning_policy(tenant_id)
+            if invoice.retry_count >= policy.max_retry_attempts:
+                invoice.next_retry_at = None
+            else:
+                invoice.next_retry_at = datetime.now(UTC) + timedelta(
+                    days=policy.retry_interval_days
+                )
+        elif status_val == PaymentAttemptStatus.SUCCEEDED.value:
+            invoice.next_retry_at = None
+
+        await self.session.flush()
+        return attempt
+
+    async def list_payment_attempts(
+        self, tenant_id: UUID, invoice_id: UUID
+    ) -> list[PaymentAttempt]:
+        stmt = (
+            select(PaymentAttempt)
+            .where(
+                PaymentAttempt.tenant_id == tenant_id,
+                PaymentAttempt.invoice_id == invoice_id,
+            )
+            .order_by(PaymentAttempt.attempt_number.asc())
+        )
+        return list((await self.session.execute(stmt)).scalars().all())

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { acceptOwnerStepUp, completeOwnerMfaIfNeeded } from './helpers/auth'
 
 /**
  * Device management, end to end against the real API.
@@ -23,6 +24,7 @@ async function login(page: Page, email: string) {
   await page.fill('input[type="email"]', email)
   await page.fill('input[type="password"]', PASSWORD)
   await page.click('button[type="submit"]')
+  await completeOwnerMfaIfNeeded(page, email)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 })
 }
 
@@ -32,6 +34,7 @@ test.describe('device provisioning', () => {
     const locationName = `E2E Şube ${stamp}`
     const deviceName = `E2E Turnike ${stamp}`
 
+    acceptOwnerStepUp(page)
     await login(page, USERS.owner)
 
     // A device needs a location, and the role-matrix seed creates none.
@@ -49,7 +52,7 @@ test.describe('device provisioning', () => {
 
     // The key is displayed exactly once — that panel is the whole point.
     const keyPanel = page.getByRole('region', { name: `"${deviceName}" için eşleştirme anahtarı` })
-    await expect(keyPanel).toBeVisible()
+    await expect(keyPanel).toBeVisible({ timeout: 15_000 })
     await expect(keyPanel.getByText('Bu anahtar bir daha gösterilmez.', { exact: false })).toBeVisible()
 
     const apiKey = await keyPanel.locator('dd.text-teal-300').innerText()

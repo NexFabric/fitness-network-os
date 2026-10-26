@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**sqlalchemy** — 71 models
+**sqlalchemy** — 86 models
 
 ### Base
 
@@ -48,6 +48,7 @@ pk: `id` (UUID)
 - `denial_reason`: String _(nullable)_
 - `jti`: String _(nullable, index)_
 - `method`: String _(nullable, default)_
+- `snapshot_data`: with_variant _(nullable)_
 - `timestamp`: DateTime _(default)_
 - _relations_: member: Member, device: Device
 
@@ -93,6 +94,96 @@ pk: `id` (UUID)
 - `ip_address`: String _(nullable)_
 - `user_agent`: String _(nullable)_
 
+### ClassType
+
+- `name`: String
+- `category`: String _(default)_
+- `duration_minutes`: Integer _(default)_
+- `default_capacity`: Integer _(default)_
+- `color_hex`: String _(default)_
+- `required_entitlement_type`: String _(nullable)_
+- `cancellation_cutoff_minutes`: Integer _(default)_
+- `is_active`: Boolean _(default)_
+
+### ClassSchedule
+
+fk: trainer_user_id
+
+- `location_id`: UUID
+- `class_type_id`: UUID
+- `trainer_user_id`: UUID _(fk, index)_
+- `day_of_week`: SmallInteger
+- `start_time`: Time
+- `end_time`: Time
+- `room_name`: String _(nullable)_
+- `capacity`: Integer
+- `is_active`: Boolean _(default)_
+
+### ClassSession
+
+fk: trainer_user_id
+
+- `location_id`: UUID
+- `class_type_id`: UUID
+- `schedule_id`: unknown _(nullable)_
+- `trainer_user_id`: UUID _(fk, index)_
+- `start_time_utc`: DateTime _(index)_
+- `end_time_utc`: DateTime
+- `room_name`: String _(nullable)_
+- `capacity`: Integer
+- `status`: ClassSessionStatus _(default)_
+
+### ClassBooking
+
+- `session_id`: UUID
+- `member_id`: UUID
+- `status`: ClassBookingStatus _(default)_
+- `waitlist_position`: Integer _(nullable)_
+- `booked_at`: DateTime
+- `attended_at`: DateTime _(nullable)_
+- `cancelled_at`: DateTime _(nullable)_
+- `cancellation_reason`: String _(nullable)_
+- `is_late_cancellation`: Boolean _(default)_
+
+### TrainerAvailability
+
+fk: trainer_user_id
+
+- `trainer_user_id`: UUID _(fk, index)_
+- `location_id`: UUID
+- `day_of_week`: SmallInteger
+- `start_time`: Time
+- `end_time`: Time
+- `slot_duration_minutes`: Integer _(default)_
+- `is_active`: Boolean _(default)_
+
+### PtAppointment
+
+fk: trainer_user_id
+
+- `trainer_user_id`: UUID _(fk, index)_
+- `member_id`: UUID
+- `location_id`: UUID
+- `start_time_utc`: DateTime _(index)_
+- `end_time_utc`: DateTime
+- `status`: PtAppointmentStatus _(default)_
+- `notes`: Text _(nullable)_
+- `booked_at`: DateTime
+- `attended_at`: DateTime _(nullable)_
+- `cancelled_at`: DateTime _(nullable)_
+
+### BreakGlassSession
+
+- `actor_id`: UUID _(index)_
+- `target_tenant_id`: UUID _(index)_
+- `reason`: Text
+- `ticket_reference`: String
+- `status`: String _(default)_
+- `granted_at`: DateTime
+- `expires_at`: DateTime
+- `revoked_at`: DateTime _(nullable)_
+- `actions_taken`: Text _(nullable)_
+
 ### ConsentDefinition
 
 - `name`: String
@@ -115,6 +206,42 @@ pk: `id` (UUID)
 - `withdrawn_at`: DateTime _(nullable)_
 - `source`: String _(nullable)_
 - `ip_address`: String _(nullable)_
+
+### DataImportBatch
+
+- `filename`: String
+- `status`: String _(default)_
+- `total_rows`: Integer _(default)_
+- `valid_rows`: Integer _(default)_
+- `invalid_rows`: Integer _(default)_
+- `imported_rows`: Integer _(default)_
+- `created_by_user_id`: UUID
+- `created_at`: DateTime _(default)_
+- `completed_at`: DateTime _(nullable)_
+- _relations_: rows: DataImportRow
+
+### DataImportRow
+
+- `batch_id`: UUID _(index)_
+- `row_number`: Integer
+- `status`: String _(default)_
+- `raw_data`: with_variant
+- `parsed_data`: with_variant _(nullable)_
+- `error_message`: Text _(nullable)_
+- _relations_: batch: DataImportBatch
+
+### DsarRequest
+
+fk: requested_by_user_id
+
+- `member_id`: UUID
+- `requested_by_user_id`: unknown _(fk, nullable)_
+- `kind`: String
+- `status`: String
+- `due_at`: DateTime
+- `package_uri`: String _(nullable)_
+- `rejection_reason`: Text _(nullable)_
+- `dedupe_key`: String _(nullable)_
 
 ### EntitlementDefinition
 
@@ -213,6 +340,8 @@ fk: user_id
 - `total_amount_minor`: Integer _(default)_
 - `paid_amount_minor`: Integer _(default)_
 - `discount_amount_minor`: Integer _(default)_
+- `retry_count`: Integer _(default)_
+- `next_retry_at`: DateTime _(nullable)_
 - `idempotency_key`: String _(nullable)_
 - _relations_: billing_account: BillingAccount, items: InvoiceItem, allocations: PaymentAllocation
 
@@ -315,6 +444,29 @@ fk: user_id
 - `status`: String _(default)_
 - `matched_payment_id`: unknown _(nullable)_
 
+### PaymentAttempt
+
+- `invoice_id`: UUID _(index)_
+- `billing_account_id`: UUID _(index)_
+- `attempt_number`: Integer _(default)_
+- `amount_minor`: Integer
+- `currency`: String _(default)_
+- `status`: String _(default)_
+- `gateway_provider`: String _(nullable)_
+- `gateway_attempt_ref`: String _(nullable)_
+- `error_code`: String _(nullable)_
+- `error_message`: Text _(nullable)_
+- `attempted_at`: DateTime _(default)_
+
+### DunningPolicy
+
+- `name`: String _(default)_
+- `grace_period_days`: Integer _(default)_
+- `max_retry_attempts`: Integer _(default)_
+- `retry_interval_days`: Integer _(default)_
+- `block_access_on_failure`: Boolean _(default)_
+- `is_active`: Boolean _(default)_
+
 ### Lead
 
 - `first_name`: String
@@ -377,6 +529,16 @@ fk: assigned_to
 - `locked_until`: DateTime _(nullable)_
 - `owner_token`: String _(nullable)_
 - `attempt_count`: Integer _(default)_
+
+### AccountInvite
+
+fk: user_id
+
+- `user_id`: UUID _(fk)_
+- `token_hash`: String
+- `purpose`: String
+- `expires_at`: DateTime
+- `accepted_at`: DateTime _(nullable)_
 
 ### Location
 
@@ -519,6 +681,13 @@ fk: recipient_user_id
 - `correlation_id`: String _(nullable)_
 - _relations_: template: NotificationTemplate, recipient: User
 
+### TenantOnboarding
+
+- `current_stage`: String _(default)_
+- `step_data`: with_variant
+- `is_completed`: Boolean _(default)_
+- `completed_at`: DateTime _(nullable)_
+
 ### Organization
 
 - `name`: String
@@ -599,6 +768,16 @@ fk: user_id, role_id, tenant_id, organization_id
 - `finished_at`: DateTime _(nullable)_
 - _relations_: definition: ReportDefinition
 
+### DataRetentionPolicy
+
+- `data_category`: String
+- `description`: Text
+- `retention_days`: Integer _(nullable)_
+- `deletion_method`: String _(default)_
+- `legal_basis`: String _(nullable)_
+- `is_active`: Boolean _(default)_
+- `requires_legal_review`: Boolean _(default)_
+
 ### Staff
 
 fk: user_id
@@ -614,6 +793,11 @@ fk: organization_id
 - `name`: String
 - `organization_id`: UUID _(fk)_
 - `location_code`: String _(unique)_
+- `status`: String _(default)_
+- `suspended_at`: DateTime _(nullable)_
+- `closed_at`: DateTime _(nullable)_
+- `suspension_reason`: Text _(nullable)_
+- `closure_reason`: Text _(nullable)_
 - _relations_: organization: Organization
 
 ### TrainerAssignment
@@ -630,6 +814,7 @@ fk: trainer_user_id
 - `hashed_password`: String
 - `is_active`: Boolean _(default)_
 - `is_superuser`: Boolean _(default)_
+- `must_change_password`: Boolean _(default)_
 - _relations_: sessions: UserSession, devices: UserDevice, mfa_methods: UserMfaMethod, user_roles: UserRole
 
 ### UserSession
@@ -642,6 +827,9 @@ fk: user_id
 - `user_agent`: String _(nullable)_
 - `expires_at`: DateTime
 - `is_revoked`: Boolean _(default)_
+- `auth_level`: String _(default)_
+- `last_seen_at`: DateTime _(nullable)_
+- `last_step_up_at`: DateTime _(nullable)_
 - _relations_: user: User
 
 ### UserDevice
@@ -677,19 +865,19 @@ fk: user_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `backend/app/models/user.py` — imported by **42** files
-- `backend/app/models/tenant.py` — imported by **38** files
-- `backend/app/models/organization.py` — imported by **33** files
-- `backend/app/db/base.py` — imported by **32** files
-- `backend/app/models/member.py` — imported by **30** files
-- `backend/app/models/rbac.py` — imported by **26** files
-- `backend/app/db/session.py` — imported by **21** files
-- `backend/app/models/membership.py` — imported by **20** files
-- `backend/app/db/rls.py` — imported by **18** files
-- `backend/app/models/location.py` — imported by **12** files
-- `backend/app/models/outbox.py` — imported by **12** files
-- `backend/app/models/access.py` — imported by **11** files
-- `backend/app/models/entitlement.py` — imported by **10** files
+- `backend/app/models/user.py` — imported by **75** files
+- `backend/app/models/tenant.py` — imported by **69** files
+- `backend/app/models/organization.py` — imported by **62** files
+- `backend/app/models/member.py` — imported by **47** files
+- `backend/app/models/rbac.py` — imported by **45** files
+- `backend/app/db/base.py` — imported by **38** files
+- `backend/app/db/session.py` — imported by **35** files
+- `backend/app/models/membership.py` — imported by **30** files
+- `backend/app/models/location.py` — imported by **27** files
+- `backend/app/db/rls.py` — imported by **22** files
+- `backend/app/models/access.py` — imported by **20** files
+- `backend/app/models/finance.py` — imported by **18** files
+- `backend/app/models/outbox.py` — imported by **17** files
 
 ---
 _Back to [overview.md](./overview.md)_

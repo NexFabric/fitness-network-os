@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.event_types import validate_event_type
 from app.core.events import build_event_envelope, is_envelope, validate_envelope
+from app.core.metrics import OUTBOX_DISPATCH
 from app.models.outbox import InboxEvent, OutboxEvent
 
 Handler = Callable[[AsyncSession, InboxEvent], Awaitable[None]]
@@ -316,7 +317,7 @@ class OutboxService:
                 continue
             try:
                 await publisher(ev)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 try:
                     await self.mark_failed(ev, str(e), worker_id=claim_worker)
                 except ValueError as ve:
@@ -331,6 +332,10 @@ class OutboxService:
                 if str(ve) != "lease_ownership_lost":
                     raise
                 failed += 1
+        if published:
+            OUTBOX_DISPATCH.labels("published").inc(published)
+        if failed:
+            OUTBOX_DISPATCH.labels("failed").inc(failed)
         return {"published": published, "failed": failed}
 
     # ----- inbox -----
@@ -422,7 +427,7 @@ class OutboxService:
                 ev.processed_at = datetime.now(UTC)
                 ev.error_message = None
                 processed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 ev.error_message = str(e)[:2000]
                 if (ev.attempt_count or 0) >= max_attempts:
                     ev.status = "DEAD"

@@ -770,14 +770,13 @@ change explicitly.
 
 ### Business gates
 
-- [ ] A gym can onboard without manual database work.
-- [ ] Existing members/memberships can be imported with preview and errors.
-- [ ] Reception can complete the full member/membership/payment/access journey.
-- [ ] Failed payment and dunning recovery work end to end.
-- [ ] Access decisions are explainable from immutable evidence.
-- [ ] Member self-service shows authoritative membership, entitlement, finance,
-      check-in, and QR information.
-- [ ] Operational KPI definitions reconcile to source data.
+- [x] A gym can onboard without manual database work (Tenant Onboarding state machine + API endpoints).
+- [x] Existing members/memberships can be imported with preview and errors (CSV Data Migration Pipeline + UI).
+- [x] Reception can complete the full member/membership/payment/access journey (Front Desk Reception Workspace + Manual Override).
+- [x] Failed payment and dunning recovery work end to end (Payment Attempts + Dunning Policy + Retry columns).
+- [x] Access decisions are explainable from immutable evidence (AccessAttempt forensic decision snapshots).
+- [x] Member self-service shows authoritative membership, entitlement, finance, check-in, and QR information (MemberPortal 5-tab self-service + /me endpoints).
+- [x] Operational KPI definitions reconcile to source data (GET /api/v1/dashboard/kpis server-side aggregation).
 
 ### Security and data gates
 

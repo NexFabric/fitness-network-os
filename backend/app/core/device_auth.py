@@ -24,7 +24,7 @@ import hashlib
 import hmac
 import secrets
 
-from app.core.qr_crypto import LOCAL_HMAC_PREFIX, resolve_hmac_secret
+from app.core.qr_crypto import FERNET_HMAC_PREFIX, resolve_hmac_secret
 
 # A signed request is accepted this far either side of server time. Scanner
 # tablets drift; anything wider needlessly widens the replay window.
@@ -50,14 +50,15 @@ class DeviceSignatureError(ValueError):
 def new_device_signing_material() -> tuple[str, str]:
     """Return ``(key_material_ref, raw_secret)`` for a new device session.
 
-    The ref is stored on the session row; the raw secret is returned to the
-    device exactly once. Unlike QR signing keys this never resolves to KMS —
-    the device itself must hold the plaintext, so a non-exportable key would be
-    useless here.
+    The ref is stored on the session row (Fernet-wrapped); the raw secret is
+    returned to the device exactly once. Cookie theft still cannot sign.
     """
     raw = secrets.token_bytes(32)
     encoded = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-    return LOCAL_HMAC_PREFIX + encoded, encoded
+    from app.core.security import get_fernet
+
+    wrapped = get_fernet().encrypt(raw).decode("ascii")
+    return FERNET_HMAC_PREFIX + wrapped, encoded
 
 
 def build_canonical_string(

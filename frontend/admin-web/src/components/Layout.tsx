@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clearAuth, getTenantId } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import { ROLES, type RoleName } from '../auth/roles'
+import { RECEPTION_ROLES, ROLES, type RoleName } from '../auth/roles'
 
 type NavItem = {
   to: string
@@ -16,9 +16,18 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: '/', end: true, label: 'Panel', icon: IconPanel },
+  { to: '/reception', end: false, label: 'Resepsiyon', icon: IconReception, roles: RECEPTION_ROLES },
+  { to: '/classes', end: false, label: 'Dersler & PT', icon: IconCalendar },
   { to: '/members', end: false, label: 'Üyeler', icon: IconMembers },
   { to: '/locations', end: false, label: 'Şubeler', icon: IconLocations },
   { to: '/finance', end: false, label: 'Finans', icon: IconFinance },
+  {
+    to: '/import',
+    end: false,
+    label: 'Veri Göçü',
+    icon: IconImport,
+    roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
+  },
   {
     to: '/devices',
     end: false,
@@ -51,6 +60,20 @@ const navItems: NavItem[] = [
     to: '/staff',
     end: false,
     label: 'Personel',
+    icon: IconStaff,
+    roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
+  },
+  {
+    to: '/onboarding',
+    end: false,
+    label: 'Kurulum',
+    icon: IconStaff,
+    roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
+  },
+  {
+    to: '/dsar',
+    end: false,
+    label: 'KVKK',
     icon: IconStaff,
     roles: [ROLES.GYM_OWNER, ROLES.GYM_ADMIN],
   },
@@ -286,3 +309,28 @@ function IconPlans() {
     </svg>
   )
 }
+
+function IconReception() {
+  return (
+    <svg className="h-4 w-4 shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+  )
+}
+
+function IconImport() {
+  return (
+    <svg className="h-4 w-4 shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+    </svg>
+  )
+}
+
+function IconCalendar() {
+  return (
+    <svg className="h-4 w-4 shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+    </svg>
+  )
+}
+

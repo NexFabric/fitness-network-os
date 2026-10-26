@@ -41,15 +41,19 @@ class Member(TenantMixin, Base):
         ),
     )
 
+
 class Tag(TenantMixin, Base):
     __tablename__ = "member_tags"
 
     member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
 
     _model_table_args = (
-        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+        ForeignKeyConstraint(
+            ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
+
 
 class Note(TenantMixin, Base):
     __tablename__ = "member_notes"
@@ -57,6 +61,8 @@ class Note(TenantMixin, Base):
     member_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
 
     _model_table_args = (
-        ForeignKeyConstraint(["tenant_id", "member_id"], ["members.tenant_id", "members.id"]),
+        ForeignKeyConstraint(
+            ["tenant_id", "member_id"], ["members.tenant_id", "members.id"]
+        ),
     )
     content: Mapped[str] = mapped_column(String, nullable=False)
